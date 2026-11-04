@@ -1,0 +1,17 @@
+{
+  "name": "desordem-normal",
+  "version": "1.0.0",
+  "description": "Este é um conteúdo não oficial, publicado sob a Licença da Comunidade de Ordem Paranormal.",
+  "main": "eslint.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "eslint": "^10.14.0",
+    "prettier": "^3.9.10"
+  }
+}
