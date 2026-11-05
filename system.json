@@ -1,0 +1,41 @@
+{
+  "id": "desordem-normal",
+  "title": "Desordem-Normal",
+  "description": "Sistema de regras para mesa. Conteúdo não oficial, publicado sob a Licença da Comunidade de Ordem Paranormal. Contém material gerado por inteligência artificial.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13.351"
+  },
+  "authors": [
+    {
+      "name": "Marlom"
+    }
+  ],
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/main.css"
+  ],
+  "languages": [
+    {
+      "lang": "pt-BR",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
+    }
+  ],
+  "url": "https://github.com/MarlomX/desordem-normal",
+  "manifest": "https://github.com/MarlomX/desordem-normal/releases/latest/download/system.json",
+  "download": "https://github.com/MarlomX/desordem-normal/releases/latest/download/system.zip",
+  "documentTypes": {
+    "Actor": {
+      "personagem": {}
+    }
+  },
+  "primaryTokenAttribute": "pv",
+  "grid": {
+    "distance": 1,
+    "units": "m"
+  }
+}
