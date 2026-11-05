@@ -1,1 +1,98 @@
-/* Estilos do módulo */
+/* Estilos do sistema Desordem-Normal */
+
+.desordem-teste {
+  --desordem-cor: rgba(128, 128, 128, 0.7);
+  border: 1px solid var(--desordem-cor);
+  border-left-width: 4px;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.desordem-teste--sucesso {
+  --desordem-cor: rgba(46, 160, 67, 0.9);
+}
+
+.desordem-teste--falha {
+  --desordem-cor: rgba(200, 60, 60, 0.9);
+}
+
+.desordem-teste--sucesso-critico {
+  --desordem-cor: rgba(212, 160, 23, 1);
+}
+
+.desordem-teste--falha-critica {
+  --desordem-cor: rgba(140, 30, 30, 1);
+}
+
+.desordem-teste__cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.desordem-teste__titulo {
+  margin: 0;
+  border: none;
+}
+
+.desordem-teste__dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-dado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 38px;
+  padding: 2px 6px;
+  border: 1px solid var(--desordem-cor);
+  border-radius: 4px;
+}
+
+.desordem-dado--ignorado {
+  opacity: 0.45;
+}
+
+.desordem-dado__tipo {
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+
+.desordem-dado__valor {
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.desordem-teste__resumo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.desordem-teste__total {
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+.desordem-teste__resultado {
+  font-weight: bold;
+  color: var(--desordem-cor);
+}
+
+.desordem-teste__ajustes,
+.desordem-teste__detalhes,
+.desordem-teste__nota {
+  margin: 2px 0;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
+.desordem-teste__ajustes span + span {
+  margin-left: 8px;
+}

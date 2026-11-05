@@ -11,7 +11,8 @@ export default [
         foundry: 'readonly',
         ui: 'readonly',
         Roll: 'readonly',
-        ChatMessage: 'readonly'
+        ChatMessage: 'readonly',
+        console: 'readonly'
       }
     },
     rules: {

@@ -1,0 +1,43 @@
+<div class="desordem-teste desordem-teste--{{outcomeClass}}">
+  <header class="desordem-teste__cabecalho">
+    <h3 class="desordem-teste__titulo">{{label}}</h3>
+    <span class="desordem-teste__dt">{{localize "DESORDEM.Teste.DT"}} {{dt}}</span>
+  </header>
+
+  {{#if adjustments.length}}
+  <p class="desordem-teste__ajustes">
+    {{#each adjustments}}<span>{{name}}: d{{from}} → d{{to}}</span>{{/each}}
+  </p>
+  {{/if}}
+
+  <ol class="desordem-teste__dados">
+    {{#each dice}}
+    <li class="desordem-dado{{#unless counted}} desordem-dado--ignorado{{/unless}}">
+      <span class="desordem-dado__tipo">d{{sides}}</span>
+      <span class="desordem-dado__valor">{{value}}</span>
+    </li>
+    {{/each}}
+  </ol>
+
+  {{#if hasIgnored}}
+  <p class="desordem-teste__nota">{{localize "DESORDEM.Teste.NotaIgnorado"}}</p>
+  {{/if}}
+
+  <div class="desordem-teste__resumo">
+    <span class="desordem-teste__total">{{total}}</span>
+    <span class="desordem-teste__resultado">{{localize outcomeKey}}</span>
+  </div>
+
+  <p class="desordem-teste__detalhes">
+    {{localize "DESORDEM.Teste.RolagemAlta"}}: {{highRoll}}
+    · {{localize "DESORDEM.Teste.RolagemBaixa"}}: {{lowRoll}}
+  </p>
+
+  {{#if discardedList}}
+  <p class="desordem-teste__nota">{{localize "DESORDEM.Teste.Descartados"}}: {{discardedList}}</p>
+  {{/if}}
+
+  {{#if criticalFailure}}
+  <p class="desordem-teste__nota">{{localize "DESORDEM.Teste.NotaFalhaCritica"}}</p>
+  {{/if}}
+</div>

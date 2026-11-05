@@ -1,3 +1,45 @@
 {
-  "TYPES.Actor.personagem": "Personagem"
+  "TYPES.Actor.personagem": "Personagem",
+  "DESORDEM": {
+    "Atributos": {
+      "fisico": "Físico",
+      "mente": "Mente",
+      "emocao": "Emoção"
+    },
+    "Pericias": {
+      "acrobacia": "Acrobacia",
+      "animais": "Animais",
+      "atletismo": "Atletismo",
+      "bruxaria": "Bruxaria",
+      "crime": "Crime",
+      "disciplina": "Disciplina",
+      "enganacao": "Enganação",
+      "furtividade": "Furtividade",
+      "intimidar": "Intimidar",
+      "intuicao": "Intuição",
+      "inspecionar": "Inspecionar",
+      "luta": "Luta",
+      "medicina": "Medicina",
+      "metalurgia": "Metalurgia",
+      "percepcao": "Percepção",
+      "persuasao": "Persuasão",
+      "pontaria": "Pontaria",
+      "sobrevivencia": "Sobrevivência",
+      "vigor": "Vigor"
+    },
+    "Teste": {
+      "Atributo": "Atributo",
+      "Pericia": "Perícia",
+      "DT": "DT",
+      "Sucesso": "Sucesso",
+      "Falha": "Falha",
+      "SucessoCritico": "Sucesso crítico",
+      "FalhaCritica": "Falha crítica",
+      "RolagemAlta": "Rolagem alta",
+      "RolagemBaixa": "Rolagem baixa",
+      "Descartados": "Dados extras descartados",
+      "NotaIgnorado": "Dado esmaecido: rolado, mas fora da soma.",
+      "NotaFalhaCritica": "Há uma penalidade adicional: o mestre escolhe ou sorteia (1d8)."
+    }
+  }
 }
