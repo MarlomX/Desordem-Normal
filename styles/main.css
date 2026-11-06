@@ -99,8 +99,13 @@
 /* Ficha de personagem */
 
 .desordem-normal.personagem .window-content {
-  gap: 8px;
   overflow-y: auto;
+}
+
+.desordem-ficha {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .desordem-ficha__cabecalho {
