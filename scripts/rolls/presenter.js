@@ -22,9 +22,16 @@ function outcomeOf(result) {
  * @param {string} [labels.label] Título da rolagem (padrão: "atributo + perícia").
  * @param {string} [labels.attrLabel] Nome do atributo, já traduzido.
  * @param {string} [labels.skillLabel] Nome da perícia, já traduzida.
+ * @param {boolean} [labels.showDt=true] Falso em testes opostos: não há DT, então o cartão
+ *   mostra apenas os críticos, sem "sucesso" ou "falha".
+ * @param {{name: string, skillLabel: string, die: number}[]} [labels.helpers] Ajudas recebidas.
  */
-export function buildChatContext(result, { label, attrLabel, skillLabel } = {}) {
+export function buildChatContext(
+  result,
+  { label, attrLabel, skillLabel, showDt = true, helpers = [] } = {},
+) {
   const outcome = outcomeOf(result);
+  const neutral = !showDt && !result.criticalSuccess && !result.criticalFailure;
 
   const adjustments = [];
   const { attribute, skill } = result.base;
@@ -45,17 +52,36 @@ export function buildChatContext(result, { label, attrLabel, skillLabel } = {}) 
   return {
     label: label ?? [attrLabel, skillLabel].filter(Boolean).join(' + '),
     dt: result.dt,
+    showDt,
+    helpers,
+    hasHelpers: helpers.length > 0,
     total: result.total,
     highRoll: result.highRoll,
     lowRoll: result.lowRoll,
     success: result.success,
     criticalSuccess: result.criticalSuccess,
     criticalFailure: result.criticalFailure,
-    outcomeKey: `DESORDEM.Teste.${outcome}`,
-    outcomeClass: OUTCOMES[outcome],
+    outcomeKey: neutral ? null : `DESORDEM.Teste.${outcome}`,
+    outcomeClass: neutral ? 'neutro' : OUTCOMES[outcome],
     dice,
     hasIgnored: dice.some((d) => !d.counted),
     adjustments,
     discardedList: result.discardedExtras.map((sides) => `d${sides}`).join(', '),
+  };
+}
+
+/**
+ * Dados do resumo de um teste oposto, a partir do retorno de `resolveOpposed`.
+ * @param {ReturnType<import('./opposed.js').resolveOpposed>} outcome
+ */
+export function buildOpposedContext({ winner, margin, decidedBy }) {
+  return {
+    winner,
+    isTie: winner === 'empate',
+    winnerA: winner === 'a',
+    winnerB: winner === 'b',
+    margin,
+    hasMargin: margin > 0,
+    byCritical: decidedBy === 'critical',
   };
 }

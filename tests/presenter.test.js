@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveTest } from '../scripts/rolls/test.js';
-import { buildChatContext } from '../scripts/rolls/presenter.js';
+import { buildChatContext, buildOpposedContext } from '../scripts/rolls/presenter.js';
 import { fixedRng } from './helpers.js';
 
 const run = (opts, values) => resolveTest({ ...opts, rng: fixedRng(values) });
@@ -57,4 +57,34 @@ test('dados extras descartados viram uma lista de texto', () => {
   assert.equal(buildChatContext(r).discardedList, 'd8');
   const sem = run({ attrDie: 6, skillDie: 6 }, [3, 3]);
   assert.equal(buildChatContext(sem).discardedList, '');
+});
+
+test('sem DT (teste oposto) não há sucesso ou falha, só críticos', () => {
+  const neutro = buildChatContext(run({ attrDie: 6, skillDie: 6 }, [2, 3]), { showDt: false });
+  assert.equal(neutro.showDt, false);
+  assert.equal(neutro.outcomeKey, null);
+  assert.equal(neutro.outcomeClass, 'neutro');
+
+  const critico = buildChatContext(run({ attrDie: 8, skillDie: 8 }, [6, 6]), { showDt: false });
+  assert.equal(critico.outcomeKey, 'DESORDEM.Teste.SucessoCritico');
+});
+
+test('ajudas recebidas aparecem na exibição', () => {
+  const r = run({ attrDie: 6, skillDie: 6 }, [3, 3]);
+  const ctx = buildChatContext(r, { helpers: [{ name: 'Ana', skillLabel: 'Medicina', die: 8 }] });
+  assert.equal(ctx.hasHelpers, true);
+  assert.equal(ctx.helpers[0].name, 'Ana');
+  assert.equal(buildChatContext(r).hasHelpers, false);
+});
+
+test('resumo do teste oposto indica vencedor, margem e crítico', () => {
+  const vence = buildOpposedContext({ winner: 'b', margin: 4, decidedBy: 'total' });
+  assert.equal(vence.winnerB, true);
+  assert.equal(vence.winnerA, false);
+  assert.equal(vence.hasMargin, true);
+  assert.equal(vence.byCritical, false);
+
+  const empate = buildOpposedContext({ winner: 'empate', margin: 0, decidedBy: 'empate' });
+  assert.equal(empate.isTie, true);
+  assert.equal(empate.hasMargin, false);
 });

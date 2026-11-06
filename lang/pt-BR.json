@@ -58,6 +58,17 @@
       "guerra": "Guerra",
       "nobreza": "Nobreza",
       "religiao": "Religião"
+    },
+    "Oposto": {
+      "Titulo": "Teste oposto",
+      "Vence": "{nome} vence",
+      "Empate": "Empate — o mestre decide",
+      "Margem": "Margem",
+      "PorCritico": "Decidido por sucesso ou falha crítica."
+    },
+    "Ajuda": {
+      "Recebida": "Ajuda de",
+      "SemDado": "{nome} não pode ajudar com {pericia}: é preciso pelo menos d6."
     }
   }
 }

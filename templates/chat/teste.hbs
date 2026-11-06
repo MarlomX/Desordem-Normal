@@ -1,8 +1,14 @@
 <div class="desordem-teste desordem-teste--{{outcomeClass}}">
   <header class="desordem-teste__cabecalho">
     <h3 class="desordem-teste__titulo">{{label}}</h3>
-    <span class="desordem-teste__dt">{{localize "DESORDEM.Teste.DT"}} {{dt}}</span>
+    {{#if showDt}}<span class="desordem-teste__dt">{{localize "DESORDEM.Teste.DT"}} {{dt}}</span>{{/if}}
   </header>
+
+  {{#if hasHelpers}}
+  <p class="desordem-teste__ajustes">
+    {{#each helpers}}<span>{{localize "DESORDEM.Ajuda.Recebida"}}: {{name}} ({{skillLabel}} d{{die}})</span>{{/each}}
+  </p>
+  {{/if}}
 
   {{#if adjustments.length}}
   <p class="desordem-teste__ajustes">
@@ -25,7 +31,7 @@
 
   <div class="desordem-teste__resumo">
     <span class="desordem-teste__total">{{total}}</span>
-    <span class="desordem-teste__resultado">{{localize outcomeKey}}</span>
+    {{#if outcomeKey}}<span class="desordem-teste__resultado">{{localize outcomeKey}}</span>{{/if}}
   </div>
 
   <p class="desordem-teste__detalhes">

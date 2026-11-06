@@ -1,0 +1,18 @@
+<div class="desordem-oposto">
+  <h3 class="desordem-oposto__titulo">{{localize "DESORDEM.Oposto.Titulo"}}</h3>
+
+  <div class="desordem-oposto__lado{{#if winnerA}} desordem-oposto__lado--vencedor{{/if}}">{{{cardA}}}</div>
+  <div class="desordem-oposto__lado{{#if winnerB}} desordem-oposto__lado--vencedor{{/if}}">{{{cardB}}}</div>
+
+  <p class="desordem-oposto__veredito">
+    {{#if isTie}}
+    {{localize "DESORDEM.Oposto.Empate"}}
+    {{else}}
+    {{localize "DESORDEM.Oposto.Vence" nome=winnerName}}
+    {{#if hasMargin}}· {{localize "DESORDEM.Oposto.Margem"}}: {{margin}}{{/if}}
+    {{/if}}
+  </p>
+  {{#if byCritical}}
+  <p class="desordem-teste__nota">{{localize "DESORDEM.Oposto.PorCritico"}}</p>
+  {{/if}}
+</div>

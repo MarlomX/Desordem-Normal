@@ -210,3 +210,28 @@
 .desordem-ficha__pericia select {
   width: 4.5em;
 }
+/* Teste oposto */
+
+.desordem-teste--neutro {
+  --desordem-cor: rgba(128, 128, 128, 0.7);
+}
+
+.desordem-oposto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desordem-oposto__titulo {
+  margin: 0;
+  border: none;
+}
+
+.desordem-oposto__lado--vencedor .desordem-teste {
+  box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.8);
+}
+
+.desordem-oposto__veredito {
+  margin: 0;
+  font-weight: bold;
+}
