@@ -40,6 +40,15 @@
       "Descartados": "Dados extras descartados",
       "NotaIgnorado": "Dado esmaecido: rolado, mas fora da soma.",
       "NotaFalhaCritica": "Há uma penalidade adicional: o mestre escolhe ou sorteia (1d8)."
+    },
+    "Ficha": {
+      "Personagem": "Ficha de Personagem",
+      "Nivel": "Nível",
+      "PV": "PV",
+      "PD": "PD",
+      "Atributos": "Atributos",
+      "Pericias": "Perícias",
+      "DicaRolagem": "Clique no nome de uma perícia para fazer o teste."
     }
   }
 }

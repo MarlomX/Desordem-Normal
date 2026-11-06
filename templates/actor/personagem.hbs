@@ -1,0 +1,58 @@
+<header class="desordem-ficha__cabecalho">
+  <img class="desordem-ficha__retrato" src="{{actor.img}}" alt="{{actor.name}}" data-edit="img" data-action="editImage">
+
+  <div class="desordem-ficha__identidade">
+    <input class="desordem-ficha__nome" type="text" name="name" value="{{actor.name}}" {{#unless editable}}disabled{{/unless}}>
+    <label class="desordem-ficha__campo">
+      <span>{{localize "DESORDEM.Ficha.Nivel"}}</span>
+      <input type="number" name="system.nivel" value="{{system.nivel}}" min="1" max="10" {{#unless editable}}disabled{{/unless}}>
+    </label>
+  </div>
+
+  <div class="desordem-ficha__recursos">
+    <div class="desordem-ficha__recurso">
+      <span>{{localize "DESORDEM.Ficha.PV"}}</span>
+      <input type="number" name="system.pv.value" value="{{system.pv.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
+      <span>/</span>
+      <input type="number" name="system.pv.max" value="{{system.pv.max}}" min="0" {{#unless editable}}disabled{{/unless}}>
+    </div>
+    <div class="desordem-ficha__recurso">
+      <span>{{localize "DESORDEM.Ficha.PD"}}</span>
+      <input type="number" name="system.pd.value" value="{{system.pd.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
+      <span>/</span>
+      <input type="number" name="system.pd.max" value="{{system.pd.max}}" min="0" {{#unless editable}}disabled{{/unless}}>
+    </div>
+  </div>
+</header>
+
+<section class="desordem-ficha__secao">
+  <h3>{{localize "DESORDEM.Ficha.Atributos"}}</h3>
+  <div class="desordem-ficha__atributos">
+    {{#each attributes}}
+    <label class="desordem-ficha__campo">
+      <span>{{label}}</span>
+      <select name="system.atributos.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+    </label>
+    {{/each}}
+  </div>
+</section>
+
+<section class="desordem-ficha__secao">
+  <h3>{{localize "DESORDEM.Ficha.Pericias"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaRolagem"}}</p>
+  <div class="desordem-ficha__pericias">
+    {{#each skills}}
+    <div class="desordem-ficha__pericia">
+      <button type="button" class="desordem-ficha__rolar" data-action="rollSkill" data-skill="{{key}}">
+        <span class="desordem-ficha__pericia-nome">{{label}}</span>
+        <span class="desordem-ficha__pericia-attr">{{attrLabel}}</span>
+      </button>
+      <select name="system.pericias.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+    </div>
+    {{/each}}
+  </div>
+</section>

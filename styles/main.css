@@ -96,3 +96,112 @@
 .desordem-teste__ajustes span + span {
   margin-left: 8px;
 }
+/* Ficha de personagem */
+
+.desordem-normal.personagem .window-content {
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.desordem-ficha__cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.desordem-ficha__retrato {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border: 1px solid rgba(128, 128, 128, 0.7);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.desordem-ficha__identidade {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.desordem-ficha__nome {
+  font-size: 1.4em;
+  font-weight: bold;
+}
+
+.desordem-ficha__campo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.desordem-ficha__recursos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.desordem-ficha__recurso {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+}
+
+.desordem-ficha__recurso input {
+  width: 3.5em;
+  text-align: center;
+}
+
+.desordem-ficha__secao h3 {
+  margin: 4px 0;
+}
+
+.desordem-ficha__atributos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.desordem-ficha__atributos .desordem-ficha__campo {
+  justify-content: space-between;
+}
+
+.desordem-ficha__dica {
+  margin: 0 0 4px;
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.desordem-ficha__pericias {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 12px;
+}
+
+.desordem-ficha__pericia {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.desordem-ficha__rolar {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 8px;
+  text-align: left;
+}
+
+.desordem-ficha__pericia-attr {
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+.desordem-ficha__pericia select {
+  width: 4.5em;
+}
