@@ -48,7 +48,16 @@
       "PD": "PD",
       "Atributos": "Atributos",
       "Pericias": "Perícias",
-      "DicaRolagem": "Clique no nome de uma perícia para fazer o teste."
+      "DicaRolagem": "Clique no nome de uma perícia para fazer o teste.",
+      "Aptidoes": "Aptidões"
+    },
+    "Aptidoes": {
+      "artes": "Artes",
+      "erudicao": "Erudição",
+      "folclore": "Folclore",
+      "guerra": "Guerra",
+      "nobreza": "Nobreza",
+      "religiao": "Religião"
     }
   }
 }

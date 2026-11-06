@@ -1,6 +1,6 @@
-import { SYSTEM_ID, ATRIBUTOS, PERICIAS } from '../config.js';
-import { rollSkill } from '../rolls/chat.js';
-import { buildAttributeRows, buildSkillRows } from './context.js';
+import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES } from '../config.js';
+import { rollSkill, rollAptitude } from '../rolls/chat.js';
+import { buildAttributeRows, buildSkillRows, buildAptitudeRows } from './context.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -14,6 +14,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     form: { submitOnChange: true },
     actions: {
       rollSkill: PersonagemSheet.#onRollSkill,
+      rollAptitude: PersonagemSheet.#onRollAptitude,
     },
   };
 
@@ -38,11 +39,20 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
         attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
       }),
+      aptitudes: buildAptitudeRows(system.aptidoes, APTIDOES, (key) =>
+        t(`DESORDEM.Aptidoes.${key}`),
+      ),
+      aptitudeAttrLabel: t('DESORDEM.Atributos.mente'),
     };
   }
 
   /** Clique no nome de uma perícia: faz o teste e publica no chat. */
   static async #onRollSkill(event, target) {
     await rollSkill(this.document, target.dataset.skill);
+  }
+
+  /** Clique no nome de uma área de Aptidão: faz o teste (Mente + área) e publica no chat. */
+  static async #onRollAptitude(event, target) {
+    await rollAptitude(this.document, target.dataset.aptitude);
   }
 }

@@ -47,3 +47,13 @@ export function buildSkillRows(skills, skillAttributes, { skillLabel, attrLabel 
     }))
     .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
 }
+
+/**
+ * Linhas das áreas de Aptidão (mesmo formato dos atributos: um dado por área).
+ * @param {Record<string, number>} aptitudes Ex.: { erudicao: 6, ... }
+ * @param {string[]} keys Chaves das áreas, na ordem de exibição.
+ * @param {(key: string) => string} label Devolve o nome traduzido.
+ */
+export function buildAptitudeRows(aptitudes, keys, label) {
+  return buildAttributeRows(aptitudes, keys, label);
+}

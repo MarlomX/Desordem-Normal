@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dieOptions, buildAttributeRows, buildSkillRows } from '../scripts/sheets/context.js';
+import {
+  dieOptions,
+  buildAttributeRows,
+  buildSkillRows,
+  buildAptitudeRows,
+} from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
   const opcoes = dieOptions(8);
@@ -49,4 +54,16 @@ test('buildSkillRows ordena por nome traduzido (com acentos) e traz o atributo-b
   );
   assert.equal(linhas[2].attrLabel, 'attr:emocao');
   assert.equal(linhas[0].options.find((o) => o.selected).value, 8);
+});
+
+test('buildAptitudeRows lista as áreas na ordem e marca o dado de cada uma', () => {
+  const linhas = buildAptitudeRows({ artes: 4, erudicao: 8 }, ['erudicao', 'artes'], (k) =>
+    k.toUpperCase(),
+  );
+  assert.deepEqual(
+    linhas.map((l) => l.label),
+    ['ERUDICAO', 'ARTES'],
+  );
+  assert.equal(linhas[0].options.find((o) => o.selected).value, 8);
+  assert.equal(linhas[1].options.find((o) => o.selected).value, 4);
 });

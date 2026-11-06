@@ -1,7 +1,7 @@
 /**
  * Ligação entre a lógica pura dos testes e o Foundry (rolagem de dados e mensagem no chat).
  */
-import { SYSTEM_ID, PERICIAS } from '../config.js';
+import { SYSTEM_ID, PERICIAS, APTIDOES } from '../config.js';
 import { sequenceRng } from './dice.js';
 import { planDice, resolveTest } from './test.js';
 import { buildChatContext } from './presenter.js';
@@ -87,5 +87,27 @@ export function rollSkill(actor, skillKey, { attribute, ...options } = {}) {
     skillDie: pericias[skillKey],
     attrLabel: game.i18n.localize(`DESORDEM.Atributos.${attrKey}`),
     skillLabel: game.i18n.localize(`DESORDEM.Pericias.${skillKey}`),
+  });
+}
+
+/**
+ * Teste de uma área de Aptidão (usa Mente como atributo-base, salvo se outro for informado).
+ * @param {Actor} actor
+ * @param {string} areaKey Chave da área (ex.: 'erudicao').
+ * @param {Object} [options] Aceita dt, extraDice, stepMods e attribute (chave do atributo).
+ */
+export function rollAptitude(actor, areaKey, { attribute = 'mente', ...options } = {}) {
+  if (!APTIDOES.includes(areaKey)) {
+    throw new Error(`${SYSTEM_ID} | área de aptidão desconhecida: ${areaKey}`);
+  }
+
+  const { atributos, aptidoes } = actor.system;
+  return rollTest({
+    ...options,
+    actor,
+    attrDie: atributos[attribute],
+    skillDie: aptidoes[areaKey],
+    attrLabel: game.i18n.localize(`DESORDEM.Atributos.${attribute}`),
+    skillLabel: game.i18n.localize(`DESORDEM.Aptidoes.${areaKey}`),
   });
 }

@@ -57,4 +57,21 @@
     {{/each}}
   </div>
 </section>
+
+<section class="desordem-ficha__secao">
+  <h3>{{localize "DESORDEM.Ficha.Aptidoes"}}</h3>
+  <div class="desordem-ficha__pericias">
+    {{#each aptitudes}}
+    <div class="desordem-ficha__pericia">
+      <button type="button" class="desordem-ficha__rolar" data-action="rollAptitude" data-aptitude="{{key}}">
+        <span class="desordem-ficha__pericia-nome">{{label}}</span>
+        <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
+      </button>
+      <select name="system.aptidoes.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+    </div>
+    {{/each}}
+  </div>
+</section>
 </div>
