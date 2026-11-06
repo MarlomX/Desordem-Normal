@@ -2,21 +2,20 @@
  * Ligação entre a lógica pura dos testes e o Foundry (rolagem de dados e mensagem no chat).
  */
 import { SYSTEM_ID, PERICIAS } from '../config.js';
-import { resolveTest } from './test.js';
+import { sequenceRng } from './dice.js';
+import { planDice, resolveTest } from './test.js';
 import { buildChatContext } from './presenter.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
 
 /**
- * Gerador que rola cada dado pelo motor do Foundry e guarda o Roll,
- * para que as rolagens sejam anexadas à mensagem (e animadas por módulos de dados 3D).
+ * Rola os dados pelo motor do Foundry (assíncrono, respeita a configuração de dados do jogador).
+ * Devolve os Rolls, que serão anexados à mensagem (e animados por módulos de dados 3D).
+ * @param {number[]} sides
+ * @returns {Promise<Roll[]>}
  */
-function createFoundryRng(rolls) {
-  return (sides) => {
-    const roll = new Roll(`1d${sides}`).evaluateSync({ allowInteractive: false });
-    rolls.push(roll);
-    return roll.total;
-  };
+function rollDice(sides) {
+  return Promise.all(sides.map((faces) => new Roll(`1d${faces}`).evaluate()));
 }
 
 /**
@@ -43,14 +42,16 @@ export async function rollTest({
   skillLabel = game.i18n.localize('DESORDEM.Teste.Pericia'),
   actor,
 }) {
-  const rolls = [];
+  // Os dados são definidos e rolados antes; a lógica pura só os interpreta
+  const { rolledSides } = planDice({ attrDie, skillDie, extraDice, stepMods });
+  const rolls = await rollDice(rolledSides);
   const result = resolveTest({
     attrDie,
     skillDie,
     dt,
     extraDice,
     stepMods,
-    rng: createFoundryRng(rolls),
+    rng: sequenceRng(rolls.map((roll) => roll.total)),
   });
 
   const context = buildChatContext(result, { label, attrLabel, skillLabel });

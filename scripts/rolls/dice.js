@@ -39,3 +39,16 @@ export function rollDie(sides, rng = defaultRng) {
   }
   return value;
 }
+
+/**
+ * Gerador que devolve, em ordem, valores já rolados (ex.: por rolagens assíncronas do Foundry).
+ * @param {number[]} values
+ * @returns {(sides: number) => number}
+ */
+export function sequenceRng(values) {
+  const queue = [...values];
+  return () => {
+    if (queue.length === 0) throw new Error('sequenceRng: acabaram os valores');
+    return queue.shift();
+  };
+}

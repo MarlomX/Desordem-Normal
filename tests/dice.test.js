@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stepUp, stepDown, stepShift, rollDie } from '../scripts/rolls/dice.js';
+import { stepUp, stepDown, stepShift, rollDie, sequenceRng } from '../scripts/rolls/dice.js';
 
 test('stepUp sobe um passo na escada', () => {
   assert.equal(stepUp(4), 6);
@@ -34,4 +34,11 @@ test('rollDie valida o gerador', () => {
   assert.throws(() => rollDie(6, () => 7), RangeError);
   assert.throws(() => rollDie(6, () => 0), RangeError);
   assert.throws(() => rollDie(1), RangeError);
+});
+
+test('sequenceRng devolve os valores em ordem e acusa falta de valores', () => {
+  const rng = sequenceRng([3, 5]);
+  assert.equal(rng(6), 3);
+  assert.equal(rng(8), 5);
+  assert.throws(() => rng(6), Error);
 });

@@ -17,6 +17,38 @@ const TARGETS = ['attribute', 'skill', 'both'];
  */
 
 /**
+ * Define quais dados serão rolados, sem rolar nada.
+ * Aplica os passos aos dados base e respeita o limite de 4 dados rolados.
+ * Permite rolar os dados fora desta função (ex.: de forma assíncrona no Foundry).
+ * @param {Object} opts
+ * @param {number} opts.attrDie
+ * @param {number} opts.skillDie
+ * @param {number[]} [opts.extraDice=[]]
+ * @param {StepMod[]} [opts.stepMods=[]]
+ */
+export function planDice({ attrDie, skillDie, extraDice = [], stepMods = [] }) {
+  // Passos líquidos por dado base
+  let attrShift = 0;
+  let skillShift = 0;
+  for (const mod of stepMods) {
+    if (!TARGETS.includes(mod.target)) throw new RangeError(`Alvo de passo inválido: ${mod.target}`);
+    if (mod.target !== 'skill') attrShift += mod.steps;
+    if (mod.target !== 'attribute') skillShift += mod.steps;
+  }
+  const attrFinal = stepShift(attrDie, attrShift);
+  const skillFinal = stepShift(skillDie, skillShift);
+
+  // Dados a rolar (máximo 4; o excedente é descartado)
+  const allSides = [attrFinal, skillFinal, ...extraDice];
+  return {
+    attrFinal,
+    skillFinal,
+    rolledSides: allSides.slice(0, MAX_ROLLED),
+    discardedExtras: allSides.slice(MAX_ROLLED),
+  };
+}
+
+/**
  * Resolve um teste básico.
  * @param {Object} opts
  * @param {number} opts.attrDie Dado do atributo (4 a 12).
@@ -34,21 +66,13 @@ export function resolveTest({
   stepMods = [],
   rng = defaultRng,
 }) {
-  // 1. Passos líquidos por dado base
-  let attrShift = 0;
-  let skillShift = 0;
-  for (const mod of stepMods) {
-    if (!TARGETS.includes(mod.target)) throw new RangeError(`Alvo de passo inválido: ${mod.target}`);
-    if (mod.target !== 'skill') attrShift += mod.steps;
-    if (mod.target !== 'attribute') skillShift += mod.steps;
-  }
-  const attrFinal = stepShift(attrDie, attrShift);
-  const skillFinal = stepShift(skillDie, skillShift);
-
-  // 2. Dados a rolar (máximo 4; o excedente é descartado)
-  const allSides = [attrFinal, skillFinal, ...extraDice];
-  const rolledSides = allSides.slice(0, MAX_ROLLED);
-  const discardedExtras = allSides.slice(MAX_ROLLED);
+  // 1-2. Dados a rolar (passos aplicados, máximo de 4 rolados)
+  const { attrFinal, skillFinal, rolledSides, discardedExtras } = planDice({
+    attrDie,
+    skillDie,
+    extraDice,
+    stepMods,
+  });
 
   const sources = ['attribute', 'skill'];
   const dice = rolledSides.map((sides, i) => ({

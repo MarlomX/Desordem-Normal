@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveTest } from '../scripts/rolls/test.js';
+import { resolveTest, planDice } from '../scripts/rolls/test.js';
 import { fixedRng } from './helpers.js';
 
 test('soma atributo e perícia e compara com a DT padrão 7', () => {
@@ -117,5 +117,28 @@ test('alvo de passo inválido gera erro', () => {
   assert.throws(
     () => resolveTest({ attrDie: 6, skillDie: 6, stepMods: [{ target: 'x', steps: 1 }], rng: fixedRng([1, 1]) }),
     RangeError,
+  );
+});
+
+test('planDice aplica passos, limita a 4 dados e não rola nada', () => {
+  const plano = planDice({
+    attrDie: 8,
+    skillDie: 8,
+    extraDice: [6, 6, 10],
+    stepMods: [{ target: 'skill', steps: -1 }],
+  });
+  assert.deepEqual(plano.rolledSides, [8, 6, 6, 6]);
+  assert.deepEqual(plano.discardedExtras, [10]);
+  assert.equal(plano.attrFinal, 8);
+  assert.equal(plano.skillFinal, 6);
+});
+
+test('resolveTest com valores pré-rolados dá o mesmo resultado que o plano', () => {
+  const opts = { attrDie: 6, skillDie: 8, extraDice: [6] };
+  const plano = planDice(opts);
+  const r = resolveTest({ ...opts, rng: fixedRng([4, 5, 2]) });
+  assert.deepEqual(
+    r.dice.map((d) => d.sides),
+    plano.rolledSides,
   );
 });
