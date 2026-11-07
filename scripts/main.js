@@ -5,6 +5,12 @@ import { rollTest, rollSkill, rollAptitude, rollOpposed } from './rolls/chat.js'
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { computeDamage } from './rolls/damage.js';
 import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
+import {
+  invokeRelation,
+  motivateRelation,
+  renderRecoveryButton,
+  registerRelationSocket,
+} from './rolls/relation-chat.js';
 
 Hooks.once('init', () => {
   console.log(`${SYSTEM_ID} | inicializando o sistema`);
@@ -29,9 +35,14 @@ Hooks.once('init', () => {
     computeDamage,
     emotionalDamage,
     rollTraumaTest,
+    invokeRelation,
+    motivateRelation,
   };
 });
 
+Hooks.on('renderChatMessageHTML', renderRecoveryButton);
+
 Hooks.once('ready', () => {
+  registerRelationSocket();
   console.log(`${SYSTEM_ID} | pronto`);
 });

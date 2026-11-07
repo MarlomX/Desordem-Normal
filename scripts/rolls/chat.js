@@ -28,12 +28,13 @@ function rollDice(sides) {
 }
 
 /** Publica uma mensagem de rolagem no chat, respeitando o modo de rolagem. */
-export async function postMessage({ actor, content, rolls = [] }) {
+export async function postMessage({ actor, content, rolls = [], flags }) {
   const messageData = {
     speaker: ChatMessage.getSpeaker({ actor }),
     content,
     rolls,
     sound: rolls.length ? CONFIG.sounds.dice : undefined,
+    ...(flags ? { flags: { [SYSTEM_ID]: flags } } : {}),
   };
   ChatMessage.applyRollMode(messageData, game.settings.get('core', 'rollMode'));
   return ChatMessage.create(messageData);

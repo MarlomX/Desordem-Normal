@@ -33,6 +33,7 @@
       "personagem": {}
     }
   },
+  "socket": true,
   "primaryTokenAttribute": "pv",
   "grid": {
     "distance": 1,

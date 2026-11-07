@@ -7,6 +7,7 @@ import {
   buildAptitudeRows,
   buildLesionRows,
   buildFearChoices,
+  buildRelationRows,
 } from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
@@ -95,4 +96,40 @@ test('buildFearChoices marca o dado atual e rotula a opção sem pavor', () => {
     opcoes.filter((o) => o.selected).map((o) => o.value),
     [8],
   );
+});
+
+test('buildRelationRows monta bolinhas e libera os botões conforme o grau', () => {
+  const rows = buildRelationRows(
+    [
+      { pessoa: 'A', grau: 0, descricao: '', usada: false },
+      { pessoa: 'B', grau: 2, descricao: 'x', usada: false },
+      { pessoa: 'C', grau: 3, descricao: '', usada: true },
+    ],
+    { degreeLabel: (key) => `g:${key}` },
+  );
+  assert.deepEqual(
+    rows.map((r) => r.dots.filter((d) => d.filled).length),
+    [0, 2, 3],
+  );
+  assert.deepEqual(rows[0].dots.map((d) => d.n), [1, 2, 3]);
+  assert.equal(rows[1].grauLabel, 'g:vinculo');
+  assert.deepEqual(
+    rows.map((r) => [r.showInvoke, r.showMotivate, r.canInvoke, r.canMotivate]),
+    [
+      [false, false, false, false],
+      [true, true, true, true],
+      [true, true, false, false],
+    ],
+  );
+  assert.equal(rows[2].index, 2);
+});
+
+test('buildRelationRows trava tudo quando a ficha não é editável', () => {
+  const [row] = buildRelationRows([{ pessoa: 'A', grau: 3, descricao: '', usada: false }], {
+    degreeLabel: (key) => key,
+    editable: false,
+  });
+  assert.equal(row.locked, true);
+  assert.equal(row.canInvoke, false);
+  assert.equal(row.canMotivate, false);
 });

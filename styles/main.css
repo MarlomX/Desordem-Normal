@@ -317,3 +317,58 @@
   font-size: 0.85em;
   opacity: 0.8;
 }
+
+/* Relações */
+
+.desordem-relacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.35);
+}
+
+.desordem-relacao--usada .desordem-relacao__pessoa,
+.desordem-relacao--usada .desordem-relacao__descricao {
+  opacity: 0.6;
+}
+
+.desordem-relacao__grau {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.desordem-relacao__bolinha {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  line-height: 1;
+  font-size: 1.2em;
+}
+
+.desordem-relacao__pessoa {
+  flex: 1 1 8em;
+}
+
+.desordem-relacao__descricao {
+  flex: 3 1 14em;
+}
+
+.desordem-relacao-chat__titulo,
+.desordem-relacao-chat__descricao {
+  margin: 0 0 4px;
+}
+
+.desordem-relacao-chat__descricao {
+  font-style: italic;
+}
+
+.desordem-relacao-chat__beneficios {
+  margin: 0 0 4px;
+  padding-left: 1.2em;
+}

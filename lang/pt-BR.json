@@ -84,7 +84,17 @@
       "TestesTraumaCena": "Testes de trauma na cena",
       "Traumas": "Traumas",
       "SemTraumas": "Nenhum trauma",
-      "RemoverTrauma": "Remover trauma"
+      "RemoverTrauma": "Remover trauma",
+      "Relacoes": "Relações",
+      "DicaRelacoes": "As bolinhas são o grau do laço (clique para mudar). Os benefícios são aplicados à mão; invocar só marca o laço como usado nesta missão e avisa a mesa.",
+      "AdicionarRelacao": "Adicionar relação",
+      "RemoverRelacao": "Remover relação",
+      "SemRelacoes": "Nenhuma relação",
+      "RelacaoPessoa": "Pessoa",
+      "RelacaoDescricao": "O que você sente por ela (só narrativa)",
+      "Invocar": "Invocar",
+      "Motivar": "Motivar",
+      "LacoUsado": "Usada nesta missão"
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -237,6 +247,36 @@
         "Nome": "Injeção de Ânimo",
         "Descricao": "O trauma não deixa sequelas e uma onda de ânimo faz recuperar 1 PD."
       }
+    },
+    "Relacao": {
+      "SemNome": "alguém",
+      "Grau": {
+        "neutro": "Neutro",
+        "afinidade": "Afinidade",
+        "vinculo": "Vínculo",
+        "devocao": "Devoção"
+      },
+      "Aviso": {
+        "semGrau": "Uma relação neutra (sem bolinhas) não pode ser invocada.",
+        "jaUsada": "Esta relação já foi usada nesta missão.",
+        "semMotivar": "Motivar exige uma relação de grau 2 ou 3."
+      },
+      "Chat": {
+        "Invoca": "invoca a relação com {pessoa} ({grau}).",
+        "Beneficios": "Benefícios deste grau (escolha um):",
+        "Teste": "+1d{dado} em um teste diretamente ligado a {pessoa}.",
+        "Ajuda": "Ao ajudar {pessoa}: +1d{dado} no teste dela, além do aumento de passo da ajuda.",
+        "Motivar": "Gastando uma ação para motivar {pessoa}: ela recupera {dados}d{faces} PD.",
+        "AcaoExtra": "Se {pessoa} estiver em perigo: uma ação extra para ajudá-la (avise o mestre; a resolução fica por conta da mesa).",
+        "Manual": "Quem recebe o bônus o anota à mão no teste. O mestre também pode dar bônus por fora da regra."
+      }
+    },
+    "Recuperacao": {
+      "Motiva": "motiva {pessoa}.",
+      "Botao": "Recuperar {valor} {recurso}",
+      "Recupera": "recupera {valor} {recurso}",
+      "JaAplicada": "Já aplicado por {nome}.",
+      "SemAlvo": "Selecione o token do seu personagem (ou tenha um personagem atribuído) para recuperar."
     }
   }
 }

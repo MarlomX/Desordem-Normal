@@ -4,12 +4,20 @@ import { damageActor, rollInjuryTest } from '../rolls/health.js';
 import { injuryDT } from '../rolls/injury.js';
 import { emotionalDamage, rollTraumaTest } from '../rolls/mind.js';
 import { traumaDT } from '../rolls/emotional.js';
+import { invokeRelation, motivateRelation } from '../rolls/relation-chat.js';
+import {
+  addRelation,
+  removeRelation,
+  updateRelation,
+  setRelationDegree,
+} from '../rolls/relation.js';
 import {
   buildAttributeRows,
   buildSkillRows,
   buildAptitudeRows,
   buildLesionRows,
   buildFearChoices,
+  buildRelationRows,
 } from './context.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -47,6 +55,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       applyEmotionalDamage: PersonagemSheet.#onApplyEmotionalDamage,
       rollTrauma: PersonagemSheet.#onRollTrauma,
       removeTrauma: PersonagemSheet.#onRemoveTrauma,
+      addRelation: PersonagemSheet.#onAddRelation,
+      removeRelation: PersonagemSheet.#onRemoveRelation,
+      setRelationDegree: PersonagemSheet.#onSetRelationDegree,
+      invokeRelation: PersonagemSheet.#onInvokeRelation,
+      motivateRelation: PersonagemSheet.#onMotivateRelation,
     },
   };
 
@@ -80,7 +93,37 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       traumas: buildLesionRows(system.traumas, (key) => t(`DESORDEM.Traumas.${key}.Nome`)),
       fearChoices: buildFearChoices(system.estado.pavor, t('DESORDEM.Ficha.SemPavor')),
       lesions: buildLesionRows(system.lesoes, (key) => t(`DESORDEM.Lesoes.${key}.Nome`)),
+      relations: buildRelationRows(system.relacoes, {
+        degreeLabel: (key) => t(`DESORDEM.Relacao.Grau.${key}`),
+        editable: this.isEditable,
+      }),
     };
+  }
+
+  /** Liga os campos de texto e a caixa "usada" das relações (sem `name`, fora do formulário). */
+  async _onRender(context, options) {
+    await super._onRender(context, options);
+    for (const field of this.element.querySelectorAll('[data-relacao-campo]')) {
+      field.addEventListener('change', (event) => this.#onRelationField(event.currentTarget));
+    }
+  }
+
+  /** Lista de relações como dados simples, pronta para ser alterada e regravada. */
+  #relations() {
+    return this.document.toObject().system.relacoes;
+  }
+
+  /** Grava a nova lista de relações. */
+  async #saveRelations(relations) {
+    await this.document.update({ 'system.relacoes': relations });
+  }
+
+  /** Edição de um campo de uma relação (pessoa, descrição ou "usada"). */
+  async #onRelationField(field) {
+    const value = field.type === 'checkbox' ? field.checked : field.value;
+    const changes = { [field.dataset.relacaoCampo]: value };
+    const index = Number(field.dataset.index);
+    await this.#saveRelations(updateRelation(this.#relations(), index, changes));
   }
 
   /** Clique no nome de uma perícia: faz o teste e publica no chat. */
@@ -135,5 +178,32 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     if (index < 0) return;
     traumas.splice(index, 1);
     await this.document.update({ 'system.traumas': traumas });
+  }
+
+  /** Acrescenta uma relação nova (grau 1) à ficha. */
+  static async #onAddRelation() {
+    await this.#saveRelations(addRelation(this.#relations()));
+  }
+
+  /** Remove a relação clicada. */
+  static async #onRemoveRelation(event, target) {
+    await this.#saveRelations(removeRelation(this.#relations(), Number(target.dataset.index)));
+  }
+
+  /** Clique em uma bolinha: muda o grau da relação. */
+  static async #onSetRelationDegree(event, target) {
+    const index = Number(target.dataset.index);
+    const degree = Number(target.dataset.degree);
+    await this.#saveRelations(setRelationDegree(this.#relations(), index, degree));
+  }
+
+  /** Invoca a relação: marca como usada e avisa a mesa no chat. */
+  static async #onInvokeRelation(event, target) {
+    await invokeRelation(this.document, Number(target.dataset.index));
+  }
+
+  /** Motiva a pessoa: rola a recuperação de PD e publica o cartão com o botão de recuperar. */
+  static async #onMotivateRelation(event, target) {
+    await motivateRelation(this.document, Number(target.dataset.index));
   }
 }

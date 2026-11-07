@@ -41,7 +41,16 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         testesTrauma: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 })
       }),
       lesoes: new f.ArrayField(new f.StringField({ required: true, blank: false })),
-      traumas: new f.ArrayField(new f.StringField({ required: true, blank: false }))
+      traumas: new f.ArrayField(new f.StringField({ required: true, blank: false })),
+      // Relações: grau 0 a 3 (as bolinhas), descrição narrativa e marcador "usada"
+      relacoes: new f.ArrayField(
+        new f.SchemaField({
+          pessoa: new f.StringField({ required: true, blank: true, initial: '' }),
+          grau: new f.NumberField({ required: true, integer: true, min: 0, max: 3, initial: 1 }),
+          descricao: new f.StringField({ required: true, blank: true, initial: '' }),
+          usada: new f.BooleanField({ initial: false })
+        })
+      )
     };
   }
 }

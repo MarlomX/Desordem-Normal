@@ -2,6 +2,7 @@
  * Preparação de dados para a ficha. Funções puras (sem Foundry), testadas em Node.
  */
 import { DIE_STEPS } from '../rolls/dice.js';
+import { RELATION_MAX_DEGREE, degreeKey, invokeCheck, motivateCheck } from '../rolls/relation.js';
 
 /**
  * Opções de um seletor de dado (d4 a d12). Se o valor atual estiver fora da escada
@@ -84,5 +85,32 @@ export function buildFearChoices(current, noneLabel) {
     value,
     label: value === 0 ? noneLabel : `d${value}`,
     selected: value === current,
+  }));
+}
+
+/**
+ * Linhas da lista de relações da ficha (bolinhas de grau e estado dos botões).
+ * @param {{pessoa: string, grau: number, descricao: string, usada: boolean}[]} relations
+ * @param {Object} options
+ * @param {(key: string) => string} options.degreeLabel Nome traduzido do grau (chave de degreeKey).
+ * @param {boolean} [options.editable=true] Se falso, nenhum botão fica ativo.
+ */
+export function buildRelationRows(relations, { degreeLabel, editable = true }) {
+  return relations.map((relation, index) => ({
+    index,
+    pessoa: relation.pessoa,
+    descricao: relation.descricao,
+    grau: relation.grau,
+    grauLabel: degreeLabel(degreeKey(relation.grau)),
+    usada: relation.usada,
+    locked: !editable,
+    dots: Array.from({ length: RELATION_MAX_DEGREE }, (_, i) => ({
+      n: i + 1,
+      filled: i + 1 <= relation.grau,
+    })),
+    showInvoke: relation.grau > 0,
+    showMotivate: relation.grau >= 2,
+    canInvoke: editable && invokeCheck(relation).ok,
+    canMotivate: editable && motivateCheck(relation).ok,
   }));
 }

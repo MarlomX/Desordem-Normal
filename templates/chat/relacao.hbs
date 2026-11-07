@@ -1,0 +1,12 @@
+<div class="desordem-relacao-chat">
+  <p class="desordem-relacao-chat__titulo"><strong>{{actorName}}</strong> {{localize "DESORDEM.Relacao.Chat.Invoca" pessoa=pessoa grau=degreeLabel}}</p>
+  {{#if descricao}}<p class="desordem-relacao-chat__descricao">{{descricao}}</p>{{/if}}
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Relacao.Chat.Beneficios"}}</p>
+  <ul class="desordem-relacao-chat__beneficios">
+    <li>{{localize "DESORDEM.Relacao.Chat.Teste" dado=benefits.testDie pessoa=pessoa}}</li>
+    <li>{{localize "DESORDEM.Relacao.Chat.Ajuda" dado=benefits.helpDie pessoa=pessoa}}</li>
+    {{#if benefits.motivate}}<li>{{localize "DESORDEM.Relacao.Chat.Motivar" pessoa=pessoa dados=benefits.motivate.count faces=benefits.motivate.sides}}</li>{{/if}}
+    {{#if benefits.extraAction}}<li>{{localize "DESORDEM.Relacao.Chat.AcaoExtra" pessoa=pessoa}}</li>{{/if}}
+  </ul>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Relacao.Chat.Manual"}}</p>
+</div>
