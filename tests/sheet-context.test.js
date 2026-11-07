@@ -114,11 +114,11 @@ test('buildRelationRows monta bolinhas e libera os botões conforme o grau', () 
   assert.deepEqual(rows[0].dots.map((d) => d.n), [1, 2, 3]);
   assert.equal(rows[1].grauLabel, 'g:vinculo');
   assert.deepEqual(
-    rows.map((r) => [r.showInvoke, r.showMotivate, r.canInvoke, r.canMotivate]),
+    rows.map((r) => [r.showInvoke, r.canInvoke]),
     [
-      [false, false, false, false],
-      [true, true, true, true],
-      [true, true, false, false],
+      [false, false],
+      [true, true],
+      [true, false],
     ],
   );
   assert.equal(rows[2].index, 2);
@@ -131,5 +131,4 @@ test('buildRelationRows trava tudo quando a ficha não é editável', () => {
   });
   assert.equal(row.locked, true);
   assert.equal(row.canInvoke, false);
-  assert.equal(row.canMotivate, false);
 });

@@ -4,7 +4,7 @@ import { damageActor, rollInjuryTest } from '../rolls/health.js';
 import { injuryDT } from '../rolls/injury.js';
 import { emotionalDamage, rollTraumaTest } from '../rolls/mind.js';
 import { traumaDT } from '../rolls/emotional.js';
-import { invokeRelation, motivateRelation } from '../rolls/relation-chat.js';
+import { invokeRelation } from '../rolls/relation-chat.js';
 import {
   addRelation,
   removeRelation,
@@ -59,7 +59,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       removeRelation: PersonagemSheet.#onRemoveRelation,
       setRelationDegree: PersonagemSheet.#onSetRelationDegree,
       invokeRelation: PersonagemSheet.#onInvokeRelation,
-      motivateRelation: PersonagemSheet.#onMotivateRelation,
     },
   };
 
@@ -197,13 +196,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     await this.#saveRelations(setRelationDegree(this.#relations(), index, degree));
   }
 
-  /** Invoca a relação: marca como usada e avisa a mesa no chat. */
+  /** Invoca a relação: marca como usada e avisa a mesa no chat (o cartão traz o botão de motivar). */
   static async #onInvokeRelation(event, target) {
     await invokeRelation(this.document, Number(target.dataset.index));
-  }
-
-  /** Motiva a pessoa: rola a recuperação de PD e publica o cartão com o botão de recuperar. */
-  static async #onMotivateRelation(event, target) {
-    await motivateRelation(this.document, Number(target.dataset.index));
   }
 }

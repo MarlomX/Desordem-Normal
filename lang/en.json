@@ -1,0 +1,283 @@
+{
+  "TYPES.Actor.personagem": "Character",
+  "DESORDEM": {
+    "Atributos": {
+      "fisico": "Physical",
+      "mente": "Mind",
+      "emocao": "Emotion"
+    },
+    "Pericias": {
+      "acrobacia": "Acrobatics",
+      "animais": "Animals",
+      "atletismo": "Athletics",
+      "bruxaria": "Witchcraft",
+      "crime": "Crime",
+      "disciplina": "Discipline",
+      "enganacao": "Deception",
+      "furtividade": "Stealth",
+      "intimidar": "Intimidation",
+      "intuicao": "Intuition",
+      "inspecionar": "Inspect",
+      "luta": "Fighting",
+      "medicina": "Medicine",
+      "metalurgia": "Metalwork",
+      "percepcao": "Perception",
+      "persuasao": "Persuasion",
+      "pontaria": "Marksmanship",
+      "sobrevivencia": "Survival",
+      "vigor": "Vigor"
+    },
+    "Teste": {
+      "Atributo": "Attribute",
+      "Pericia": "Skill",
+      "DT": "DC",
+      "Sucesso": "Success",
+      "Falha": "Failure",
+      "SucessoCritico": "Critical success",
+      "FalhaCritica": "Critical failure",
+      "RolagemAlta": "High roll",
+      "RolagemBaixa": "Low roll",
+      "Descartados": "Extra dice discarded",
+      "NotaIgnorado": "Faded die: rolled, but left out of the sum.",
+      "NotaFalhaCritica": "There is an extra penalty: the GM picks one or rolls for it (1d8).",
+      "Modificador": "Modifier",
+      "PavorLinha": "Dread die d{lados}: {valor}",
+      "PavorDevorou": "wiped out {n} die/dice",
+      "PavorFim": "the dread effect has ended",
+      "NotaDesastre": "Every die was wiped out by dread: disaster (critical failure)."
+    },
+    "Ficha": {
+      "Personagem": "Character Sheet",
+      "Nivel": "Level",
+      "PV": "HP",
+      "PD": "DP",
+      "Atributos": "Attributes",
+      "Pericias": "Skills",
+      "DicaRolagem": "Click a skill name to make the test.",
+      "Aptidoes": "Aptitudes",
+      "Saude": "Health",
+      "Dano": "Damage",
+      "NaoLetal": "Non-lethal",
+      "AplicarDano": "Apply damage",
+      "TesteLesao": "Injury test",
+      "TestesLesaoCena": "Injury tests this scene",
+      "Lesoes": "Injuries",
+      "SemLesoes": "No injuries",
+      "RemoverLesao": "Remove injury",
+      "Estado": {
+        "inconsciente": "Unconscious",
+        "moribundo": "Dying",
+        "morteLenta": "Slow death",
+        "contusao": "Bruised",
+        "morto": "Dead",
+        "estupor": "Stupor",
+        "colapso": "Total collapse"
+      },
+      "Medo": "Fear and trauma",
+      "DadoPavor": "Dread die",
+      "SemPavor": "No dread",
+      "ControlarPavor": "Control dread (1 DP)",
+      "AbracarPavor": "Embrace dread (5 DP)",
+      "DicaPavor": "They only apply to the next skill or aptitude test.",
+      "DanoEmocional": "Emotional damage",
+      "TesteTrauma": "Trauma test",
+      "TestesTraumaCena": "Trauma tests this scene",
+      "Traumas": "Traumas",
+      "SemTraumas": "No traumas",
+      "RemoverTrauma": "Remove trauma",
+      "Relacoes": "Relationships",
+      "DicaRelacoes": "The dots are the bond's degree (click to change). Benefits are applied by hand; invoking marks the bond as used this mission and tells the table (at degrees 2 and 3, the chat card has a motivate button).",
+      "AdicionarRelacao": "Add relationship",
+      "RemoverRelacao": "Remove relationship",
+      "SemRelacoes": "No relationships",
+      "RelacaoPessoa": "Person",
+      "RelacaoDescricao": "How you feel about them (narrative only)",
+      "Invocar": "Invoke",
+      "LacoUsado": "Used this mission"
+    },
+    "Aptidoes": {
+      "artes": "Arts",
+      "erudicao": "Scholarship",
+      "folclore": "Folklore",
+      "guerra": "War",
+      "nobreza": "Nobility",
+      "religiao": "Religion"
+    },
+    "Oposto": {
+      "Titulo": "Opposed test",
+      "Vence": "{nome} wins",
+      "Empate": "Tie — the GM decides",
+      "Margem": "Margin",
+      "PorCritico": "Decided by a critical success or failure."
+    },
+    "Ajuda": {
+      "Recebida": "Help from",
+      "SemDado": "{nome} cannot help with {pericia}: at least d6 is required."
+    },
+    "Dano": {
+      "Sofre": "takes {valor} damage",
+      "NaoLetal": "non-lethal",
+      "SofreEmocional": "takes {valor} emotional damage",
+      "ExtraTrauma": "+{extra} from trauma"
+    },
+    "Lesao": {
+      "Titulo": "Injury test",
+      "TesteTitulo": "Physical + Vigor",
+      "NotaNaoLetal": "Non-lethal damage: +1d6 on the test and 2d20 (the best) on the injury table.",
+      "RolagensTabela": "d20 on the table",
+      "Resultado": {
+        "criticalSuccess": "Critical success",
+        "success": "Success",
+        "failure": "Failure",
+        "criticalFailure": "Critical failure"
+      },
+      "Efeito": {
+        "recuperaPV": "Recovers 1 HP.",
+        "removeCondicoes": "Is no longer unconscious and dying.",
+        "inconscienteMoribundo": "Becomes unconscious and dying.",
+        "sofreLesao": "Suffers an injury.",
+        "morre": "Dies."
+      }
+    },
+    "Lesoes": {
+      "morteSubita": {
+        "Nome": "Sudden Death",
+        "Descricao": "The blow is instantly fatal. The character dies."
+      },
+      "morteLenta": {
+        "Nome": "Slow Death",
+        "Descricao": "The wound is mortal, but adrenaline allows one last action. Recovers 1 HP and, if unconscious, wakes up. Acts in the next round and dies at the end of it; nothing can prevent this."
+      },
+      "lacearacaoProfunda": {
+        "Nome": "Deep Laceration",
+        "Descricao": "A grave, permanent cut. Maximum HP is reduced by 2 forever. It can happen several times, and the effects stack."
+      },
+      "semOlho": {
+        "Nome": "Missing Eye",
+        "Descricao": "Loses the use of an eye: −1 to Perception and Marksmanship."
+      },
+      "semMao": {
+        "Nome": "Missing Hand",
+        "Descricao": "Loses the use of a hand or an arm. Can only wield one item; on two-handed tasks, takes a step reduction or fails automatically, at the GM's discretion."
+      },
+      "semPe": {
+        "Nome": "Missing Foot",
+        "Descricao": "Loses the use of a foot or a leg. Takes two step reductions when advancing in foot chases and on movement actions."
+      },
+      "tendaoComprometido": {
+        "Nome": "Damaged Tendon",
+        "Descricao": "A tendon loses capacity, reducing agility and flexibility: −2 to Acrobatics."
+      },
+      "musculoComprometido": {
+        "Nome": "Damaged Muscle",
+        "Descricao": "A muscle loses capacity, reducing strength and speed: −2 to Athletics."
+      },
+      "orgaoInternoComprometido": {
+        "Nome": "Damaged Internal Organ",
+        "Descricao": "An internal organ (heart, lung, liver...) loses capacity: −2 to Vigor."
+      },
+      "orgaoSensorialComprometido": {
+        "Nome": "Damaged Sense Organ",
+        "Descricao": "A sense organ (eye, ear, nose...) loses capacity: −2 to Perception."
+      },
+      "cicatrizAssustadora": {
+        "Nome": "Frightening Scar",
+        "Descricao": "A mark that keeps people away: −2 to Persuasion and +1 to Intimidation."
+      },
+      "contusao": {
+        "Nome": "Bruise",
+        "Descricao": "A blow too hard to shrug off: Physical drops one step until the end of the scene."
+      },
+      "surtoAdrenalina": {
+        "Nome": "Adrenaline Surge",
+        "Descricao": "The wound leaves no lasting effects and adrenaline restores 1 HP."
+      }
+    },
+    "Pavor": {
+      "PDInsuficiente": "Not enough DP to control or embrace dread."
+    },
+    "Trauma": {
+      "Titulo": "Trauma test",
+      "TesteTitulo": "Emotion + Discipline",
+      "RolagensTabela": "d20 on the table",
+      "Resultado": {
+        "success": "Success",
+        "failure": "Failure"
+      },
+      "Efeito": {
+        "semEfeito": "Suffers no effect.",
+        "sofreTrauma": "Suffers a trauma."
+      }
+    },
+    "Traumas": {
+      "colapsoTotal": {
+        "Nome": "Total Collapse",
+        "Descricao": "The mind cannot bear the horror. The body stays alive, but empty."
+      },
+      "estressePosTraumatico": {
+        "Nome": "Post-Traumatic Stress Disorder",
+        "Descricao": "Every time the character takes emotional damage, the damage increases by 1. Lasts until cured."
+      },
+      "degradacaoCognitiva": {
+        "Nome": "Cognitive Decay",
+        "Descricao": "Fear eats away at reasoning: −1 to tests that use Mind. Lasts until cured."
+      },
+      "maculaPsiquica": {
+        "Nome": "Psychic Stain",
+        "Descricao": "The world looks greyer: −1 to tests that use Emotion. Lasts until cured."
+      },
+      "chagaAlma": {
+        "Nome": "Wound of the Soul",
+        "Descricao": "Something breaks in the spirit. Maximum DP is reduced by 2 until cured. It can happen several times, and the effects stack."
+      },
+      "retracaoDefensiva": {
+        "Nome": "Defensive Withdrawal",
+        "Descricao": "The character shuts down and avoids social contact: −2 to Persuasion and Intuition. Lasts until cured."
+      },
+      "panico": {
+        "Nome": "Panic",
+        "Descricao": "Gains a dread die (d6). If the character already has dread, the die goes up one step."
+      },
+      "estupor": {
+        "Nome": "Catatonic Stupor",
+        "Descricao": "The character freezes and loses their action in the next round."
+      },
+      "injecaoAnimo": {
+        "Nome": "Surge of Spirit",
+        "Descricao": "The trauma leaves no lasting effects and a surge of spirit restores 1 DP."
+      }
+    },
+    "Relacao": {
+      "SemNome": "someone",
+      "Grau": {
+        "neutro": "Neutral",
+        "afinidade": "Affinity",
+        "vinculo": "Bond",
+        "devocao": "Devotion"
+      },
+      "Aviso": {
+        "semGrau": "A neutral relationship (no dots) cannot be invoked.",
+        "jaUsada": "This relationship has already been used this mission.",
+        "SoDono": "Only whoever controls the character who invoked the bond can motivate."
+      },
+      "Chat": {
+        "Invoca": "invokes the relationship with {pessoa} ({grau}).",
+        "Beneficios": "Benefits of this degree (pick one):",
+        "Teste": "+1d{dado} on a test directly tied to {pessoa}.",
+        "Ajuda": "When helping {pessoa}: +1d{dado} on their test, on top of the help's step increase.",
+        "Motivar": "Spending an action to motivate {pessoa}: they recover {dados}d{faces} DP.",
+        "AcaoExtra": "If {pessoa} is in danger: an extra action to help them (tell the GM; the table decides how it plays out).",
+        "Manual": "Whoever receives the bonus writes it down by hand on the test. The GM may also grant bonuses outside the rules.",
+        "BotaoMotivar": "Motivate {pessoa} (roll {dados}d{faces} DP)",
+        "JaMotivou": "Motivation already rolled."
+      }
+    },
+    "Recuperacao": {
+      "Motiva": "motivates {pessoa}.",
+      "Botao": "Recover {valor} {recurso}",
+      "Recupera": "recovers {valor} {recurso}",
+      "JaAplicada": "Already applied by {nome}.",
+      "SemAlvo": "Select your character's token (or have a character assigned) to recover."
+    }
+  }
+}

@@ -53,18 +53,6 @@ export function invokeCheck(relation) {
   return { ok: true, reason: null };
 }
 
-/**
- * Verifica se a relação pode ser usada para motivar (grau 2 ou 3, ainda não usada).
- * @returns {{ok: boolean, reason: ('semGrau'|'semMotivar'|'jaUsada'|null)}}
- */
-export function motivateCheck(relation) {
-  const benefits = relationBenefits(relation.grau);
-  if (!benefits) return { ok: false, reason: 'semGrau' };
-  if (!benefits.motivate) return { ok: false, reason: 'semMotivar' };
-  if (relation.usada) return { ok: false, reason: 'jaUsada' };
-  return { ok: true, reason: null };
-}
-
 /** Acrescenta uma relação nova ao fim da lista (devolve uma lista nova). */
 export function addRelation(relations) {
   return [...relations.map((r) => ({ ...r })), newRelation()];

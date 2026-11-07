@@ -5,7 +5,6 @@ import {
   degreeKey,
   relationBenefits,
   invokeCheck,
-  motivateCheck,
   addRelation,
   removeRelation,
   updateRelation,
@@ -40,13 +39,6 @@ test('invokeCheck: precisa de grau e de a relação não ter sido usada', () => 
   assert.deepEqual(invokeCheck(base({ grau: 0 })), { ok: false, reason: 'semGrau' });
   assert.deepEqual(invokeCheck(base({ grau: 2, usada: true })), { ok: false, reason: 'jaUsada' });
   assert.deepEqual(invokeCheck(base({ grau: 1 })), { ok: true, reason: null });
-});
-
-test('motivateCheck: só a partir do grau 2', () => {
-  assert.equal(motivateCheck(base({ grau: 0 })).reason, 'semGrau');
-  assert.equal(motivateCheck(base({ grau: 1 })).reason, 'semMotivar');
-  assert.equal(motivateCheck(base({ grau: 2, usada: true })).reason, 'jaUsada');
-  assert.equal(motivateCheck(base({ grau: 3 })).ok, true);
 });
 
 test('addRelation e removeRelation devolvem listas novas', () => {

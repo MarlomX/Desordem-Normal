@@ -174,7 +174,6 @@
     <input type="text" class="desordem-relacao__descricao" data-relacao-campo="descricao" data-index="{{index}}" value="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.RelacaoDescricao"}}" {{#if locked}}disabled{{/if}}>
     <label class="desordem-relacao__usada"><input type="checkbox" data-relacao-campo="usada" data-index="{{index}}" {{#if usada}}checked{{/if}} {{#if locked}}disabled{{/if}}> {{localize "DESORDEM.Ficha.LacoUsado"}}</label>
     {{#if showInvoke}}<button type="button" data-action="invokeRelation" data-index="{{index}}" {{#unless canInvoke}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.Invocar"}}</button>{{/if}}
-    {{#if showMotivate}}<button type="button" data-action="motivateRelation" data-index="{{index}}" {{#unless canMotivate}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.Motivar"}}</button>{{/if}}
     {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="removeRelation" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.RemoverRelacao"}}">×</button>{{/unless}}
   </div>
   {{else}}

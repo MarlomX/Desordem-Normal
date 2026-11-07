@@ -2,7 +2,7 @@
  * Preparação de dados para a ficha. Funções puras (sem Foundry), testadas em Node.
  */
 import { DIE_STEPS } from '../rolls/dice.js';
-import { RELATION_MAX_DEGREE, degreeKey, invokeCheck, motivateCheck } from '../rolls/relation.js';
+import { RELATION_MAX_DEGREE, degreeKey, invokeCheck } from '../rolls/relation.js';
 
 /**
  * Opções de um seletor de dado (d4 a d12). Se o valor atual estiver fora da escada
@@ -109,8 +109,6 @@ export function buildRelationRows(relations, { degreeLabel, editable = true }) {
       filled: i + 1 <= relation.grau,
     })),
     showInvoke: relation.grau > 0,
-    showMotivate: relation.grau >= 2,
     canInvoke: editable && invokeCheck(relation).ok,
-    canMotivate: editable && motivateCheck(relation).ok,
   }));
 }

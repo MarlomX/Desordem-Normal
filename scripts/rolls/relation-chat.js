@@ -1,17 +1,11 @@
 /**
- * Ligação ao Foundry das relações: invocar um laço, motivar (rolar a recuperação de PD) e o botão
- * de recuperar do cartão do chat, que quem recebe clica para aplicar o valor ao próprio personagem.
+ * Ligação ao Foundry das relações: invocar um laço (o cartão do chat traz os benefícios e, nos graus
+ * 2 e 3, o botão de motivar, que rola a recuperação de PD) e o botão de recuperar, que quem recebe
+ * clica para aplicar o valor ao próprio personagem.
  */
 import { SYSTEM_ID } from '../config.js';
 import { render, postMessage } from './chat.js';
-import {
-  degreeKey,
-  relationBenefits,
-  invokeCheck,
-  motivateCheck,
-  updateRelation,
-  buildInvocationContext,
-} from './relation.js';
+import { degreeKey, invokeCheck, updateRelation, buildInvocationContext } from './relation.js';
 import { applyRecovery } from './recovery.js';
 
 const TEMPLATE_RELACAO = `systems/${SYSTEM_ID}/templates/chat/relacao.hbs`;
@@ -34,9 +28,6 @@ async function markUsed(actor, index) {
   await actor.update({ 'system.relacoes': list });
 }
 
-/** Nome mostrado no chat para a pessoa da relação. */
-const personName = (relation) => relation.pessoa.trim() || t('DESORDEM.Relacao.SemNome');
-
 /**
  * Invoca uma relação: marca como usada e avisa a mesa no chat, listando os benefícios do grau
  * (aplicados à mão pelos jogadores). Devolve null, com um aviso, se a relação não puder ser invocada.
@@ -56,31 +47,44 @@ export async function invokeRelation(actor, index) {
     degreeLabel: t(`DESORDEM.Relacao.Grau.${degreeKey(relation.grau)}`),
     noPerson: t('DESORDEM.Relacao.SemNome'),
   });
-  await postMessage({ actor, content: await render(TEMPLATE_RELACAO, context) });
+  await postMessage({
+    actor,
+    content: await render(TEMPLATE_RELACAO, context),
+    flags: {
+      invocacao: {
+        actorUuid: actor.uuid,
+        pessoa: context.pessoa,
+        motivar: context.benefits.motivate,
+        motivado: false,
+      },
+    },
+  });
   return context;
 }
 
 /**
- * Usa a relação para motivar a pessoa: marca como usada, rola a recuperação de PD (2d4 no grau 2,
- * 2d6 no grau 3) e publica um cartão com o botão de recuperar.
- * @param {Actor} actor
- * @param {number} index Posição da relação na ficha.
- * @returns {Promise<number|null>} Total rolado, ou null se não for possível.
+ * Botão "motivar" do cartão de invocação: rola a recuperação de PD (2d4 no grau 2, 2d6 no grau 3)
+ * e publica o cartão com o botão de recuperar. Só o dono do personagem que invocou pode usar, e
+ * só uma vez por cartão.
+ * @param {ChatMessage} message Cartão de invocação.
+ * @returns {Promise<boolean>} Se a motivação foi rolada.
  */
-export async function motivateRelation(actor, index) {
-  const relation = relationOf(actor, index);
-  const check = motivateCheck(relation);
-  if (!check.ok) {
-    ui.notifications.warn(t(`DESORDEM.Relacao.Aviso.${check.reason}`));
-    return null;
+async function rollMotivation(message) {
+  const data = message.flags?.[SYSTEM_ID]?.invocacao;
+  if (!data?.motivar || data.motivado) return false;
+  const actor = await foundry.utils.fromUuid(data.actorUuid);
+  if (!actor?.isOwner || !message.canUserModify(game.user, 'update')) {
+    ui.notifications.warn(t('DESORDEM.Relacao.Aviso.SoDono'));
+    return false;
   }
-  const { count, sides } = relationBenefits(relation.grau).motivate;
+  // Reserva o cartão antes de rolar, para não rolar duas vezes com cliques repetidos
+  await message.update({ [`flags.${SYSTEM_ID}.invocacao.motivado`]: true });
+  const { count, sides } = data.motivar;
   const roll = await new Roll(`${count}d${sides}`).evaluate();
   const values = roll.dice.flatMap((die) => die.results.map((result) => result.result));
-  await markUsed(actor, index);
   const content = await render(TEMPLATE_RECUPERACAO, {
     actorName: actor.name,
-    pessoa: personName(relation),
+    pessoa: data.pessoa,
     formula: `${count}d${sides}`,
     values: values.join(' + '),
     total: roll.total,
@@ -92,7 +96,7 @@ export async function motivateRelation(actor, index) {
     rolls: [roll],
     flags: { recuperacao: { recurso: 'pd', total: roll.total, curado: false } },
   });
-  return roll.total;
+  return true;
 }
 
 /** Personagem que recebe a recuperação: o token selecionado ou, sem ele, o personagem do usuário. */
@@ -147,19 +151,42 @@ async function applyRecoveryFromMessage(message) {
   return true;
 }
 
-/**
- * Hook renderChatMessageHTML: liga o botão de recuperar dos cartões de motivar e, nos cartões
- * já aplicados, troca o botão por um aviso.
- */
-export function renderRecoveryButton(message, html) {
+/** Troca um botão por um aviso em texto. */
+function replaceWithNote(button, text) {
+  const note = button.ownerDocument.createElement('p');
+  note.className = 'desordem-ficha__dica';
+  note.textContent = text;
+  button.replaceWith(note);
+}
+
+/** Liga o botão de motivar do cartão de invocação (ou o troca por um aviso, se já foi usado). */
+function renderMotivateButton(message, html) {
+  const data = message.flags?.[SYSTEM_ID]?.invocacao;
+  const button = html.querySelector('[data-desordem-motivar]');
+  if (!data || !button) return;
+  if (data.motivado) {
+    replaceWithNote(button, t('DESORDEM.Relacao.Chat.JaMotivou'));
+    return;
+  }
+  button.addEventListener('click', async (event) => {
+    event.preventDefault();
+    button.disabled = true;
+    let done = false;
+    try {
+      done = await rollMotivation(message);
+    } finally {
+      if (!done) button.disabled = false;
+    }
+  });
+}
+
+/** Liga o botão de recuperar dos cartões de motivar (ou o troca por um aviso, se já aplicado). */
+function renderRecoveryButton(message, html) {
   const data = message.flags?.[SYSTEM_ID]?.recuperacao;
   const button = html.querySelector('[data-desordem-curar]');
   if (!data || !button) return;
   if (data.curado) {
-    const note = html.ownerDocument.createElement('p');
-    note.className = 'desordem-ficha__dica';
-    note.textContent = t('DESORDEM.Recuperacao.JaAplicada', { nome: data.curadoPor ?? '' });
-    button.replaceWith(note);
+    replaceWithNote(button, t('DESORDEM.Recuperacao.JaAplicada', { nome: data.curadoPor ?? '' }));
     return;
   }
   button.addEventListener('click', async (event) => {
@@ -172,6 +199,12 @@ export function renderRecoveryButton(message, html) {
       if (!applied) button.disabled = false;
     }
   });
+}
+
+/** Hook renderChatMessageHTML: liga os botões dos cartões de invocação e de recuperação. */
+export function renderRelationCard(message, html) {
+  renderMotivateButton(message, html);
+  renderRecoveryButton(message, html);
 }
 
 /** Escuta o pedido dos jogadores para marcar cartões como aplicados (só o mestre ativo atende). */

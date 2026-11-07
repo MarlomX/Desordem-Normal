@@ -86,14 +86,13 @@
       "SemTraumas": "Nenhum trauma",
       "RemoverTrauma": "Remover trauma",
       "Relacoes": "Relações",
-      "DicaRelacoes": "As bolinhas são o grau do laço (clique para mudar). Os benefícios são aplicados à mão; invocar só marca o laço como usado nesta missão e avisa a mesa.",
+      "DicaRelacoes": "As bolinhas são o grau do laço (clique para mudar). Os benefícios são aplicados à mão; invocar marca o laço como usado nesta missão e avisa a mesa (nos graus 2 e 3, o cartão tem o botão de motivar).",
       "AdicionarRelacao": "Adicionar relação",
       "RemoverRelacao": "Remover relação",
       "SemRelacoes": "Nenhuma relação",
       "RelacaoPessoa": "Pessoa",
       "RelacaoDescricao": "O que você sente por ela (só narrativa)",
       "Invocar": "Invocar",
-      "Motivar": "Motivar",
       "LacoUsado": "Usada nesta missão"
     },
     "Aptidoes": {
@@ -259,7 +258,7 @@
       "Aviso": {
         "semGrau": "Uma relação neutra (sem bolinhas) não pode ser invocada.",
         "jaUsada": "Esta relação já foi usada nesta missão.",
-        "semMotivar": "Motivar exige uma relação de grau 2 ou 3."
+        "SoDono": "Só quem controla o personagem que invocou o laço pode motivar."
       },
       "Chat": {
         "Invoca": "invoca a relação com {pessoa} ({grau}).",
@@ -268,7 +267,9 @@
         "Ajuda": "Ao ajudar {pessoa}: +1d{dado} no teste dela, além do aumento de passo da ajuda.",
         "Motivar": "Gastando uma ação para motivar {pessoa}: ela recupera {dados}d{faces} PD.",
         "AcaoExtra": "Se {pessoa} estiver em perigo: uma ação extra para ajudá-la (avise o mestre; a resolução fica por conta da mesa).",
-        "Manual": "Quem recebe o bônus o anota à mão no teste. O mestre também pode dar bônus por fora da regra."
+        "Manual": "Quem recebe o bônus o anota à mão no teste. O mestre também pode dar bônus por fora da regra.",
+        "BotaoMotivar": "Motivar {pessoa} (rolar {dados}d{faces} PD)",
+        "JaMotivou": "Motivação já rolada."
       }
     },
     "Recuperacao": {

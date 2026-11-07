@@ -8,5 +8,6 @@
     {{#if benefits.motivate}}<li>{{localize "DESORDEM.Relacao.Chat.Motivar" pessoa=pessoa dados=benefits.motivate.count faces=benefits.motivate.sides}}</li>{{/if}}
     {{#if benefits.extraAction}}<li>{{localize "DESORDEM.Relacao.Chat.AcaoExtra" pessoa=pessoa}}</li>{{/if}}
   </ul>
+  {{#if benefits.motivate}}<button type="button" data-desordem-motivar>{{localize "DESORDEM.Relacao.Chat.BotaoMotivar" pessoa=pessoa dados=benefits.motivate.count faces=benefits.motivate.sides}}</button>{{/if}}
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Relacao.Chat.Manual"}}</p>
 </div>

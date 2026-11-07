@@ -7,8 +7,7 @@ import { computeDamage } from './rolls/damage.js';
 import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
 import {
   invokeRelation,
-  motivateRelation,
-  renderRecoveryButton,
+  renderRelationCard,
   registerRelationSocket,
 } from './rolls/relation-chat.js';
 
@@ -36,11 +35,10 @@ Hooks.once('init', () => {
     emotionalDamage,
     rollTraumaTest,
     invokeRelation,
-    motivateRelation,
   };
 });
 
-Hooks.on('renderChatMessageHTML', renderRecoveryButton);
+Hooks.on('renderChatMessageHTML', renderRelationCard);
 
 Hooks.once('ready', () => {
   registerRelationSocket();
