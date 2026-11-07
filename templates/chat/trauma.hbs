@@ -1,0 +1,18 @@
+<div class="desordem-lesao">
+  <h3 class="desordem-lesao__titulo">{{localize "DESORDEM.Trauma.Titulo"}} #{{testNumber}}</h3>
+
+  {{{testCard}}}
+
+  <p class="desordem-lesao__veredito desordem-lesao__veredito--{{outcomeClass}}">{{localize outcomeText}}</p>
+  <ul class="desordem-lesao__efeitos">
+    <li>{{localize effect}}</li>
+  </ul>
+
+  {{#if trauma}}
+  <div class="desordem-lesao__tabela">
+    {{#if hasTraumaRolls}}<p class="desordem-teste__nota">{{localize "DESORDEM.Trauma.RolagensTabela"}}: {{#each traumaRolls}}{{#unless @first}}, {{/unless}}{{this}}{{/each}}</p>{{/if}}
+    <p class="desordem-lesao__nome">{{localize trauma.name}}</p>
+    <p class="desordem-lesao__descricao">{{localize trauma.description}}</p>
+  </div>
+  {{/if}}
+</div>

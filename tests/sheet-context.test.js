@@ -6,6 +6,7 @@ import {
   buildSkillRows,
   buildAptitudeRows,
   buildLesionRows,
+  buildFearChoices,
 } from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
@@ -76,5 +77,22 @@ test('buildLesionRows agrupa lesões repetidas e mantém a ordem', () => {
     { key: 'semOlho', label: 'SEMOLHO', count: 1, repeated: false },
     { key: 'lacearacaoProfunda', label: 'LACEARACAOPROFUNDA', count: 2, repeated: true },
   ]);
-  assert.deepEqual(buildLesionRows([], (k) => k), []);
+  assert.deepEqual(
+    buildLesionRows([], (k) => k),
+    [],
+  );
+});
+
+test('buildFearChoices marca o dado atual e rotula a opção sem pavor', () => {
+  const opcoes = buildFearChoices(8, 'Sem pavor');
+  assert.deepEqual(
+    opcoes.map((o) => o.value),
+    [0, 4, 6, 8, 10, 12],
+  );
+  assert.equal(opcoes[0].label, 'Sem pavor');
+  assert.equal(opcoes[3].label, 'd8');
+  assert.deepEqual(
+    opcoes.filter((o) => o.selected).map((o) => o.value),
+    [8],
+  );
 });

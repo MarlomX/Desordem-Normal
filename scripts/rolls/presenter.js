@@ -42,11 +42,12 @@ export function buildChatContext(
     adjustments.push({ name: skillLabel, from: skill.original, to: skill.final });
   }
 
-  const dice = result.dice.map(({ sides, value, counted, source }) => ({
+  const dice = result.dice.map(({ sides, value, counted, source, annulled }) => ({
     sides,
     value,
     counted,
     source,
+    annulled: Boolean(annulled),
   }));
 
   return {
@@ -66,7 +67,10 @@ export function buildChatContext(
     outcomeKey: neutral ? null : `DESORDEM.Teste.${outcome}`,
     outcomeClass: neutral ? 'neutro' : OUTCOMES[outcome],
     dice,
-    hasIgnored: dice.some((d) => !d.counted),
+    hasIgnored: dice.some((d) => !d.counted && !d.annulled),
+    fear: result.fear ?? null,
+    hasFear: Boolean(result.fear),
+    devouredAll: Boolean(result.devouredAll),
     adjustments,
     discardedList: result.discardedExtras.map((sides) => `d${sides}`).join(', '),
   };
@@ -117,6 +121,29 @@ export function buildInjuryContext({
     lesionRolls,
     hasLesionRolls: lesionRolls.length > 0,
     nonLethal,
+    testNumber,
+  };
+}
+
+/**
+ * Dados do resumo de um teste de trauma (chaves de idioma já montadas).
+ * @param {Object} opts
+ * @param {'success'|'failure'} opts.outcome
+ * @param {{key: string}|null} [opts.trauma] Trauma sorteado, se houver.
+ * @param {number[]} [opts.traumaRolls] Todos os d20 rolados na tabela (inclui repetições).
+ * @param {number} opts.testNumber Número do teste na cena (1, 2, 3...).
+ */
+export function buildTraumaContext({ outcome, trauma = null, traumaRolls = [], testNumber }) {
+  return {
+    outcomeText: `DESORDEM.Trauma.Resultado.${outcome}`,
+    outcomeClass: outcome,
+    effect: `DESORDEM.Trauma.Efeito.${outcome === 'success' ? 'semEfeito' : 'sofreTrauma'}`,
+    trauma: trauma && {
+      name: `DESORDEM.Traumas.${trauma.key}.Nome`,
+      description: `DESORDEM.Traumas.${trauma.key}.Descricao`,
+    },
+    traumaRolls,
+    hasTraumaRolls: traumaRolls.length > 0,
     testNumber,
   };
 }

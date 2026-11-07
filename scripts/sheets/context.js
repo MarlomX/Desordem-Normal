@@ -66,5 +66,23 @@ export function buildAptitudeRows(aptitudes, keys, label) {
 export function buildLesionRows(keys, label) {
   const counts = new Map();
   for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
-  return [...counts].map(([key, count]) => ({ key, label: label(key), count, repeated: count > 1 }));
+  return [...counts].map(([key, count]) => ({
+    key,
+    label: label(key),
+    count,
+    repeated: count > 1,
+  }));
+}
+
+/**
+ * Opções do seletor do dado de pavor (0 = sem pavor, d4 a d12).
+ * @param {number} current Dado de pavor atual.
+ * @param {string} noneLabel Texto de "sem pavor".
+ */
+export function buildFearChoices(current, noneLabel) {
+  return [0, 4, 6, 8, 10, 12].map((value) => ({
+    value,
+    label: value === 0 ? noneLabel : `d${value}`,
+    selected: value === current,
+  }));
 }

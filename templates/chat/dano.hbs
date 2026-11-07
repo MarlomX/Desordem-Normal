@@ -1,7 +1,7 @@
 <div class="desordem-dano">
   <p class="desordem-dano__linha">
     <strong>{{name}}</strong>
-    {{localize "DESORDEM.Dano.Sofre" valor=amount}}{{#if nonLethal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}}
+    {{#if emotional}}{{localize "DESORDEM.Dano.SofreEmocional" valor=amount}}{{#if extra}} ({{localize "DESORDEM.Dano.ExtraTrauma" extra=extra}}){{/if}}{{else}}{{localize "DESORDEM.Dano.Sofre" valor=amount}}{{/if}}{{#if nonLethal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}}
   </p>
-  <p class="desordem-dano__pv">{{localize "DESORDEM.Ficha.PV"}}: {{before}} → {{after}}</p>
+  <p class="desordem-dano__pv">{{#if emotional}}{{localize "DESORDEM.Ficha.PD"}}{{else}}{{localize "DESORDEM.Ficha.PV"}}{{/if}}: {{before}} → {{after}}</p>
 </div>

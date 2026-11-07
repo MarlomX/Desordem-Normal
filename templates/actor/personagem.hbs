@@ -67,6 +67,52 @@
   </div>
 </section>
 
+<section class="desordem-ficha__secao desordem-ficha__medo">
+  <h3>{{localize "DESORDEM.Ficha.Medo"}}</h3>
+
+  <div class="desordem-ficha__estado">
+    <label class="desordem-ficha__campo">
+      <span>{{localize "DESORDEM.Ficha.DadoPavor"}}</span>
+      <select name="system.estado.pavor" {{#unless editable}}disabled{{/unless}}>
+        {{#each fearChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+    </label>
+    <label><input type="checkbox" name="system.estado.estupor" {{#if system.estado.estupor}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.estupor"}}</label>
+    <label><input type="checkbox" name="system.estado.colapso" {{#if system.estado.colapso}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.colapso"}}</label>
+  </div>
+
+  <div class="desordem-ficha__estado">
+    <label><input type="checkbox" data-controlar-pavor {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.ControlarPavor"}}</label>
+    <label><input type="checkbox" data-abracar-pavor {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.AbracarPavor"}}</label>
+    <span class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaPavor"}}</span>
+  </div>
+
+  <div class="desordem-ficha__acoes-saude">
+    <label class="desordem-ficha__campo">
+      <span>{{localize "DESORDEM.Ficha.DanoEmocional"}}</span>
+      <input type="number" data-dano-emocional min="0" value="0" {{#unless editable}}disabled{{/unless}}>
+    </label>
+    <button type="button" data-action="applyEmotionalDamage" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.AplicarDano"}}</button>
+    <button type="button" data-action="rollTrauma" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.TesteTrauma"}} ({{localize "DESORDEM.Teste.DT"}} {{nextTraumaDT}})</button>
+  </div>
+
+  <label class="desordem-ficha__campo">
+    <span>{{localize "DESORDEM.Ficha.TestesTraumaCena"}}</span>
+    <input type="number" name="system.cena.testesTrauma" value="{{system.cena.testesTrauma}}" min="0" {{#unless editable}}disabled{{/unless}}>
+  </label>
+
+  <div class="desordem-ficha__lesoes">
+    <strong>{{localize "DESORDEM.Ficha.Traumas"}}:</strong>
+    {{#each traumas}}
+    <span class="desordem-ficha__lesao">{{label}}{{#if repeated}} ×{{count}}{{/if}}
+      {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeTrauma" data-trauma="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverTrauma"}}">×</button>{{/if}}
+    </span>
+    {{else}}
+    <span class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemTraumas"}}</span>
+    {{/each}}
+  </div>
+</section>
+
 <section class="desordem-ficha__secao">
   <h3>{{localize "DESORDEM.Ficha.Atributos"}}</h3>
   <div class="desordem-ficha__atributos">

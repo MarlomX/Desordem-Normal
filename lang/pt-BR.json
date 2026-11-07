@@ -40,7 +40,11 @@
       "Descartados": "Dados extras descartados",
       "NotaIgnorado": "Dado esmaecido: rolado, mas fora da soma.",
       "NotaFalhaCritica": "Há uma penalidade adicional: o mestre escolhe ou sorteia (1d8).",
-      "Modificador": "Modificador"
+      "Modificador": "Modificador",
+      "PavorLinha": "Dado de pavor d{lados}: {valor}",
+      "PavorDevorou": "devorou {n} dado(s)",
+      "PavorFim": "o efeito de pavor terminou",
+      "NotaDesastre": "Todos os dados foram devorados pelo pavor: desastre (falha crítica)."
     },
     "Ficha": {
       "Personagem": "Ficha de Personagem",
@@ -65,8 +69,22 @@
         "moribundo": "Moribundo",
         "morteLenta": "Morte lenta",
         "contusao": "Contusão",
-        "morto": "Morto"
-      }
+        "morto": "Morto",
+        "estupor": "Estupor",
+        "colapso": "Colapso total"
+      },
+      "Medo": "Medo e trauma",
+      "DadoPavor": "Dado de pavor",
+      "SemPavor": "Sem pavor",
+      "ControlarPavor": "Controlar pavor (1 PD)",
+      "AbracarPavor": "Abraçar pavor (5 PD)",
+      "DicaPavor": "Valem só para o próximo teste de perícia ou aptidão.",
+      "DanoEmocional": "Dano emocional",
+      "TesteTrauma": "Teste de trauma",
+      "TestesTraumaCena": "Testes de trauma na cena",
+      "Traumas": "Traumas",
+      "SemTraumas": "Nenhum trauma",
+      "RemoverTrauma": "Remover trauma"
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -89,7 +107,9 @@
     },
     "Dano": {
       "Sofre": "sofre {valor} de dano",
-      "NaoLetal": "não letal"
+      "NaoLetal": "não letal",
+      "SofreEmocional": "sofre {valor} de dano emocional",
+      "ExtraTrauma": "+{extra} por trauma"
     },
     "Lesao": {
       "Titulo": "Teste de lesão",
@@ -162,6 +182,60 @@
       "surtoAdrenalina": {
         "Nome": "Surto de Adrenalina",
         "Descricao": "O ferimento não deixa sequelas e a adrenalina faz recuperar 1 PV."
+      }
+    },
+    "Pavor": {
+      "PDInsuficiente": "PD insuficientes para controlar ou abraçar o pavor."
+    },
+    "Trauma": {
+      "Titulo": "Teste de trauma",
+      "TesteTitulo": "Emoção + Disciplina",
+      "RolagensTabela": "d20 na tabela",
+      "Resultado": {
+        "success": "Sucesso",
+        "failure": "Falha"
+      },
+      "Efeito": {
+        "semEfeito": "Não sofre nenhum efeito.",
+        "sofreTrauma": "Sofre um trauma."
+      }
+    },
+    "Traumas": {
+      "colapsoTotal": {
+        "Nome": "Colapso Total",
+        "Descricao": "A mente não suporta o horror. O corpo continua vivo, mas vazio: é hora de criar um personagem novo."
+      },
+      "estressePosTraumatico": {
+        "Nome": "Transtorno de Estresse Pós-Traumático",
+        "Descricao": "Toda vez que sofre dano emocional, o dano aumenta em 1. Dura até ser curado."
+      },
+      "degradacaoCognitiva": {
+        "Nome": "Degradação Cognitiva",
+        "Descricao": "O medo corrói o raciocínio: −1 em testes que usam Mente. Dura até ser curado."
+      },
+      "maculaPsiquica": {
+        "Nome": "Mácula Psíquica",
+        "Descricao": "O mundo parece mais cinzento: −1 em testes que usam Emoção. Dura até ser curado."
+      },
+      "chagaAlma": {
+        "Nome": "Chaga da Alma",
+        "Descricao": "Algo se quebra no espírito. O PD máximo diminui em 2 até a cura. Pode ocorrer várias vezes, e os efeitos se acumulam."
+      },
+      "retracaoDefensiva": {
+        "Nome": "Retração Defensiva",
+        "Descricao": "O personagem se fecha e evita contato social: −2 em Persuasão e em Intuição. Dura até ser curado."
+      },
+      "panico": {
+        "Nome": "Pânico",
+        "Descricao": "Recebe um dado de pavor (d6). Se já tem pavor, o dado sobe um passo."
+      },
+      "estupor": {
+        "Nome": "Estupor Catatônico",
+        "Descricao": "O personagem fica paralisado e perde a ação na rodada seguinte."
+      },
+      "injecaoAnimo": {
+        "Nome": "Injeção de Ânimo",
+        "Descricao": "O trauma não deixa sequelas e uma onda de ânimo faz recuperar 1 PD."
       }
     }
   }

@@ -18,12 +18,24 @@
 
   <ol class="desordem-teste__dados">
     {{#each dice}}
-    <li class="desordem-dado{{#unless counted}} desordem-dado--ignorado{{/unless}}">
+    <li class="desordem-dado{{#if annulled}} desordem-dado--devorado{{else}}{{#unless counted}} desordem-dado--ignorado{{/unless}}{{/if}}">
       <span class="desordem-dado__tipo">d{{sides}}</span>
       <span class="desordem-dado__valor">{{value}}</span>
     </li>
     {{/each}}
   </ol>
+
+  {{#if hasFear}}
+  <p class="desordem-teste__nota">
+    {{localize "DESORDEM.Teste.PavorLinha" lados=fear.sides valor=fear.value}}
+    · {{localize "DESORDEM.Teste.PavorDevorou" n=fear.devoured}}
+    {{#if fear.ended}}· {{localize "DESORDEM.Teste.PavorFim"}}{{/if}}
+  </p>
+  {{/if}}
+
+  {{#if devouredAll}}
+  <p class="desordem-teste__nota">{{localize "DESORDEM.Teste.NotaDesastre"}}</p>
+  {{/if}}
 
   {{#if hasIgnored}}
   <p class="desordem-teste__nota">{{localize "DESORDEM.Teste.NotaIgnorado"}}</p>

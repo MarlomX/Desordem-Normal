@@ -30,12 +30,18 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         moribundo: new f.BooleanField({ initial: false }),
         morto: new f.BooleanField({ initial: false }),
         morteLenta: new f.BooleanField({ initial: false }),
-        contusao: new f.BooleanField({ initial: false })
+        contusao: new f.BooleanField({ initial: false }),
+        // Estado mental: dado de pavor (0 = sem pavor, ou 4 a 12), estupor e colapso total
+        pavor: new f.NumberField({ required: true, integer: true, min: 0, max: 12, initial: 0 }),
+        estupor: new f.BooleanField({ initial: false }),
+        colapso: new f.BooleanField({ initial: false })
       }),
       cena: new f.SchemaField({
-        testesLesao: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 })
+        testesLesao: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
+        testesTrauma: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 })
       }),
-      lesoes: new f.ArrayField(new f.StringField({ required: true, blank: false }))
+      lesoes: new f.ArrayField(new f.StringField({ required: true, blank: false })),
+      traumas: new f.ArrayField(new f.StringField({ required: true, blank: false }))
     };
   }
 }

@@ -2,7 +2,7 @@
  * Ligação ao Foundry do dano, do teste de lesão e das lesões (estado de saúde do personagem).
  */
 import { SYSTEM_ID } from '../config.js';
-import { render, postMessage, executeTest, skillTestOptions } from './chat.js';
+import { render, postMessage, runTest, skillTestOptions } from './chat.js';
 import { applyDamage } from './damage.js';
 import {
   LESION_DIE,
@@ -89,7 +89,7 @@ export async function rollInjuryTest(actor, { nonLethal = false } = {}) {
     extraDice: rule.extraDice,
     label: `${actor.name}: ${game.i18n.localize('DESORDEM.Lesao.TesteTitulo')}`,
   });
-  const { result, rolls, card } = await executeTest(options);
+  const { result, rolls, card } = await runTest(actor, options);
 
   const outcome = injuryOutcome(result);
   const before = healthState(actor);

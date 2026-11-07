@@ -4,6 +4,7 @@ import PersonagemSheet from './sheets/personagem-sheet.js';
 import { rollTest, rollSkill, rollAptitude, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { computeDamage } from './rolls/damage.js';
+import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
 
 Hooks.once('init', () => {
   console.log(`${SYSTEM_ID} | inicializando o sistema`);
@@ -26,6 +27,8 @@ Hooks.once('init', () => {
     damageActor,
     rollInjuryTest,
     computeDamage,
+    emotionalDamage,
+    rollTraumaTest,
   };
 });
 

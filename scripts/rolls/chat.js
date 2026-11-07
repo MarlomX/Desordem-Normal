@@ -8,6 +8,8 @@ import { canHelp, applyHelp } from './help.js';
 import { resolveOpposed } from './opposed.js';
 import { buildChatContext, buildOpposedContext } from './presenter.js';
 import { lesionModifier, contusionStepMods } from './injury.js';
+import { traumaModifier } from './emotional.js';
+import { resolveFearOptions } from './fear.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
 const TEMPLATE_OPOSTO = `systems/${SYSTEM_ID}/templates/chat/oposto.hbs`;
@@ -85,6 +87,7 @@ export async function executeTest({
   extraDice = [],
   stepMods = [],
   modifier = 0,
+  fearDie = null,
   helpers = [],
   label,
   attrLabel,
@@ -100,7 +103,8 @@ export async function executeTest({
     extraDice: helped.extraDice,
     stepMods: helped.stepMods,
   });
-  const rolls = await rollDice(rolledSides);
+  // O dado de pavor é rolado junto, depois dos demais dados
+  const rolls = await rollDice(fearDie ? [...rolledSides, fearDie] : rolledSides);
   const result = resolveTest({
     attrDie,
     skillDie,
@@ -108,6 +112,7 @@ export async function executeTest({
     extraDice: helped.extraDice,
     stepMods: helped.stepMods,
     modifier,
+    fearDie,
     rng: sequenceRng(rolls.map((roll) => roll.total)),
   });
 
@@ -119,6 +124,22 @@ export async function executeTest({
     helpers: helped.notes,
   });
   return { result, rolls, card: await render(TEMPLATE, context) };
+}
+
+/**
+ * Executa um teste de um ator: paga os PD de controlar/abraçar o pavor, rola e, se o dado de
+ * pavor tirar 1, encerra o pavor guardado na ficha. Sem ator, só rola.
+ * @returns {Promise<{result: object, rolls: Roll[], card: string}>}
+ */
+export async function runTest(actor, options) {
+  if (actor && options.pdCost > 0) {
+    await actor.update({ 'system.pd.value': Math.max(0, actor.system.pd.value - options.pdCost) });
+  }
+  const outcome = await executeTest(options);
+  if (actor && options.fearStored && outcome.result.fear?.ended) {
+    await actor.update({ 'system.estado.pavor': 0 });
+  }
+  return outcome;
 }
 
 /**
@@ -141,7 +162,7 @@ export async function rollTest({
   actor,
   ...options
 }) {
-  const { result, rolls, card } = await executeTest({ ...options, attrLabel, skillLabel });
+  const { result, rolls, card } = await runTest(actor, { ...options, attrLabel, skillLabel });
   await postMessage({ actor, content: card, rolls });
   return result;
 }
@@ -151,11 +172,35 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   const isAptitude = !PERICIAS[skillKey];
   const attrKey = attribute ?? (isAptitude ? 'mente' : PERICIAS[skillKey]);
   const { system } = actor;
+
+  // Dado de pavor (ignoreFear: testes que não sofrem pavor), com controlar/abraçar só neste teste
+  const { ignoreFear, controlFear, embraceFear, ...rest } = options;
+  let fear;
+  try {
+    fear = resolveFearOptions({
+      fearDie: system.estado.pavor,
+      ignore: ignoreFear,
+      control: controlFear,
+      embrace: embraceFear,
+      pd: system.pd.value,
+    });
+  } catch (error) {
+    ui.notifications.warn(game.i18n.localize('DESORDEM.Pavor.PDInsuficiente'));
+    throw error;
+  }
+
   return {
-    ...options,
-    // Contusão (Físico -1 passo) e penalidades fixas de lesões permanentes
-    stepMods: [...(options.stepMods ?? []), ...contusionStepMods(system.estado, attrKey)],
-    modifier: (options.modifier ?? 0) + lesionModifier(system.lesoes, skillKey),
+    ...rest,
+    // Contusão (Físico -1 passo) e penalidades fixas de lesões e traumas
+    stepMods: [...(rest.stepMods ?? []), ...contusionStepMods(system.estado, attrKey)],
+    extraDice: [...(rest.extraDice ?? []), ...(fear.bonusDie ? [fear.bonusDie] : [])],
+    modifier:
+      (rest.modifier ?? 0) +
+      lesionModifier(system.lesoes, skillKey) +
+      traumaModifier(system.traumas, { attrKey, skillKey }),
+    fearDie: fear.fearDie,
+    fearStored: fear.fearDie !== null, // o dado rolado é o pavor guardado na ficha
+    pdCost: fear.pdCost,
     attrDie: actor.system.atributos[attrKey],
     skillDie: skillDieOf(actor, skillKey),
     attrLabel: game.i18n.localize(`DESORDEM.Atributos.${attrKey}`),
@@ -199,7 +244,7 @@ export function rollAptitude(actor, areaKey, { attribute, ...options } = {}) {
 export async function rollOpposed(a, b) {
   const prepare = ({ actor, skill, attribute, ...options }) => {
     const opts = skillTestOptions(actor, skill, attribute, options);
-    return executeTest({
+    return runTest(actor, {
       ...opts,
       showDt: false,
       label: `${actor.name}: ${opts.attrLabel} + ${opts.skillLabel}`,

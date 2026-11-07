@@ -5,6 +5,7 @@ import {
   buildChatContext,
   buildOpposedContext,
   buildInjuryContext,
+  buildTraumaContext,
 } from '../scripts/rolls/presenter.js';
 import { fixedRng } from './helpers.js';
 
@@ -117,4 +118,39 @@ test('resumo do teste de lesão monta as chaves de idioma', () => {
   const semLesao = buildInjuryContext({ outcome: 'criticalFailure', testNumber: 1 });
   assert.equal(semLesao.lesion, null);
   assert.equal(semLesao.outcomeClass, 'falha-critica');
+});
+
+test('dados devorados pelo pavor aparecem como tal e o pavor aparece no resumo', () => {
+  const r = run({ attrDie: 8, skillDie: 8, fearDie: 6 }, [7, 2, 4]);
+  const ctx = buildChatContext(r);
+  assert.deepEqual(
+    ctx.dice.map((d) => d.annulled),
+    [false, true],
+  );
+  assert.equal(ctx.hasIgnored, false); // o dado devorado não é "ignorado por excesso"
+  assert.equal(ctx.hasFear, true);
+  assert.deepEqual(ctx.fear, { sides: 6, value: 4, ended: false, devoured: 1 });
+  assert.equal(ctx.devouredAll, false);
+
+  const todos = buildChatContext(run({ attrDie: 6, skillDie: 6, fearDie: 6 }, [3, 1, 5]));
+  assert.equal(todos.devouredAll, true);
+  assert.equal(todos.outcomeKey, 'DESORDEM.Teste.FalhaCritica');
+  assert.equal(buildChatContext(run({ attrDie: 6, skillDie: 6 }, [3, 4])).hasFear, false);
+});
+
+test('resumo do teste de trauma monta as chaves de idioma', () => {
+  const falha = buildTraumaContext({
+    outcome: 'failure',
+    trauma: { key: 'panico' },
+    traumaRolls: [3, 16],
+    testNumber: 2,
+  });
+  assert.equal(falha.outcomeText, 'DESORDEM.Trauma.Resultado.failure');
+  assert.equal(falha.effect, 'DESORDEM.Trauma.Efeito.sofreTrauma');
+  assert.equal(falha.trauma.name, 'DESORDEM.Traumas.panico.Nome');
+  assert.equal(falha.hasTraumaRolls, true);
+
+  const ok = buildTraumaContext({ outcome: 'success', testNumber: 1 });
+  assert.equal(ok.trauma, null);
+  assert.equal(ok.effect, 'DESORDEM.Trauma.Efeito.semEfeito');
 });

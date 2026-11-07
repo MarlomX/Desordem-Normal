@@ -58,6 +58,10 @@ export function planDice({ attrDie, skillDie, extraDice = [], stepMods = [] }) {
  * @param {StepMod[]} [opts.stepMods=[]] Aumentos/reduções de passo.
  * @param {number} [opts.modifier=0] Modificador fixo somado ao total (ex.: penalidade de lesão).
  *   Não altera RA, RB nem críticos, que dependem só dos dados.
+ * @param {number|null} [opts.fearDie=null] Lados do dado de pavor (4 a 12), rolado junto ao teste
+ *   e depois dos demais dados. Ele não soma: anula os dados do teste menores que ele (os iguais
+ *   ficam). Dados anulados não somam, não entram em RA/RB nem em sucesso crítico; se todos forem
+ *   anulados, o teste é falha crítica. Fica fora dos limites de 4 rolados e 3 somados.
  * @param {(sides: number) => number} [opts.rng]
  */
 export function resolveTest({
@@ -67,6 +71,7 @@ export function resolveTest({
   extraDice = [],
   stepMods = [],
   modifier = 0,
+  fearDie = null,
   rng = defaultRng,
 }) {
   // 1-2. Dados a rolar (passos aplicados, máximo de 4 rolados)
@@ -83,11 +88,20 @@ export function resolveTest({
     value: rollDie(sides, rng),
     source: sources[i] ?? 'extra',
     counted: false,
+    annulled: false,
   }));
+
+  // Dado de pavor: rolado depois dos dados do teste; anula os dados menores que ele
+  const fearValue = fearDie ? rollDie(fearDie, rng) : null;
+  if (fearValue !== null) {
+    for (const die of dice) die.annulled = die.value < fearValue;
+  }
+  const devouredAll = dice.length > 0 && dice.every((d) => d.annulled);
 
   // 3. Soma só os 3 maiores (empate: o dado mais à esquerda é mantido)
   dice
     .map((die, index) => ({ die, index }))
+    .filter(({ die }) => !die.annulled)
     .sort((a, b) => b.die.value - a.die.value || a.index - b.index)
     .slice(0, MAX_COUNTED)
     .forEach(({ die }) => {
@@ -99,14 +113,16 @@ export function resolveTest({
   const total = countedValues.reduce((sum, v) => sum + v, 0) + modifier;
 
   // 4. RA e RB (só dados somados)
-  const highRoll = countedValues[0];
-  const lowRoll = countedValues[countedValues.length - 1];
+  const highRoll = countedValues[0] ?? 0;
+  const lowRoll = countedValues[countedValues.length - 1] ?? 0;
 
   // 5. Críticos (consideram todos os dados rolados)
   const occurrences = new Map();
-  for (const { value } of dice) occurrences.set(value, (occurrences.get(value) ?? 0) + 1);
+  for (const { value, annulled } of dice) {
+    if (!annulled) occurrences.set(value, (occurrences.get(value) ?? 0) + 1);
+  }
   const criticalSuccess = [...occurrences].some(([v, n]) => n >= 2 && v >= CRIT_MIN_VALUE);
-  const criticalFailure = dice.every((d) => d.value === 1);
+  const criticalFailure = devouredAll || dice.every((d) => d.value === 1);
 
   // Em ataques e testes estendidos, o crítico soma as duas maiores rolagens
   const highSum = criticalSuccess ? countedValues[0] + (countedValues[1] ?? 0) : highRoll;
@@ -125,6 +141,16 @@ export function resolveTest({
     criticalFailure,
     success,
     discardedExtras,
+    devouredAll,
+    fear:
+      fearValue === null
+        ? null
+        : {
+            sides: fearDie,
+            value: fearValue,
+            ended: fearValue === 1, // 1 no dado de pavor encerra o efeito
+            devoured: dice.filter((d) => d.annulled).length,
+          },
     base: {
       attribute: { original: attrDie, final: attrFinal },
       skill: { original: skillDie, final: skillFinal },
