@@ -39,6 +39,10 @@
     · {{localize "DESORDEM.Teste.RolagemBaixa"}}: {{lowRoll}}
   </p>
 
+  {{#if modifier}}
+  <p class="desordem-teste__nota">{{localize "DESORDEM.Teste.Modificador"}}: {{modifierLabel}}</p>
+  {{/if}}
+
   {{#if discardedList}}
   <p class="desordem-teste__nota">{{localize "DESORDEM.Teste.Descartados"}}: {{discardedList}}</p>
   {{/if}}

@@ -7,11 +7,12 @@ import { planDice, resolveTest } from './test.js';
 import { canHelp, applyHelp } from './help.js';
 import { resolveOpposed } from './opposed.js';
 import { buildChatContext, buildOpposedContext } from './presenter.js';
+import { lesionModifier, contusionStepMods } from './injury.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
 const TEMPLATE_OPOSTO = `systems/${SYSTEM_ID}/templates/chat/oposto.hbs`;
 
-const render = (template, context) =>
+export const render = (template, context) =>
   foundry.applications.handlebars.renderTemplate(template, context);
 
 /**
@@ -25,12 +26,12 @@ function rollDice(sides) {
 }
 
 /** Publica uma mensagem de rolagem no chat, respeitando o modo de rolagem. */
-async function postMessage({ actor, content, rolls }) {
+export async function postMessage({ actor, content, rolls = [] }) {
   const messageData = {
     speaker: ChatMessage.getSpeaker({ actor }),
     content,
     rolls,
-    sound: CONFIG.sounds.dice,
+    sound: rolls.length ? CONFIG.sounds.dice : undefined,
   };
   ChatMessage.applyRollMode(messageData, game.settings.get('core', 'rollMode'));
   return ChatMessage.create(messageData);
@@ -77,12 +78,13 @@ function applyHelpers(opts, helpers) {
  * Rola os dados de um teste e monta o resultado e o cartão HTML, sem publicar nada.
  * @returns {Promise<{result: object, rolls: Roll[], card: string}>}
  */
-async function executeTest({
+export async function executeTest({
   attrDie,
   skillDie,
   dt,
   extraDice = [],
   stepMods = [],
+  modifier = 0,
   helpers = [],
   label,
   attrLabel,
@@ -105,6 +107,7 @@ async function executeTest({
     dt,
     extraDice: helped.extraDice,
     stepMods: helped.stepMods,
+    modifier,
     rng: sequenceRng(rolls.map((roll) => roll.total)),
   });
 
@@ -144,11 +147,15 @@ export async function rollTest({
 }
 
 /** Opções de teste de um ator para uma perícia ou aptidão (atributo-base ou o informado). */
-function skillTestOptions(actor, skillKey, attribute, options) {
+export function skillTestOptions(actor, skillKey, attribute, options) {
   const isAptitude = !PERICIAS[skillKey];
   const attrKey = attribute ?? (isAptitude ? 'mente' : PERICIAS[skillKey]);
+  const { system } = actor;
   return {
     ...options,
+    // Contusão (Físico -1 passo) e penalidades fixas de lesões permanentes
+    stepMods: [...(options.stepMods ?? []), ...contusionStepMods(system.estado, attrKey)],
+    modifier: (options.modifier ?? 0) + lesionModifier(system.lesoes, skillKey),
     attrDie: actor.system.atributos[attrKey],
     skillDie: skillDieOf(actor, skillKey),
     attrLabel: game.i18n.localize(`DESORDEM.Atributos.${attrKey}`),

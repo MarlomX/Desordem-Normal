@@ -55,6 +55,8 @@ export function buildChatContext(
     showDt,
     helpers,
     hasHelpers: helpers.length > 0,
+    modifier: result.modifier ?? 0,
+    modifierLabel: (result.modifier ?? 0) > 0 ? `+${result.modifier}` : `${result.modifier ?? 0}`,
     total: result.total,
     highRoll: result.highRoll,
     lowRoll: result.lowRoll,
@@ -83,5 +85,38 @@ export function buildOpposedContext({ winner, margin, decidedBy }) {
     margin,
     hasMargin: margin > 0,
     byCritical: decidedBy === 'critical',
+  };
+}
+
+/**
+ * Dados do resumo de um teste de lesão (chaves de idioma já montadas).
+ * @param {Object} opts
+ * @param {'criticalSuccess'|'success'|'failure'|'criticalFailure'} opts.outcome
+ * @param {string[]} [opts.effects] Chaves de efeito (veja `outcomeEffects`).
+ * @param {{key: string}|null} [opts.lesion] Lesão sorteada, se houver.
+ * @param {number[]} [opts.lesionRolls] Todos os d20 rolados na tabela (inclui repetições).
+ * @param {boolean} [opts.nonLethal]
+ * @param {number} opts.testNumber Número do teste na cena (1, 2, 3...).
+ */
+export function buildInjuryContext({
+  outcome,
+  effects = [],
+  lesion = null,
+  lesionRolls = [],
+  nonLethal = false,
+  testNumber,
+}) {
+  return {
+    outcomeText: `DESORDEM.Lesao.Resultado.${outcome}`,
+    outcomeClass: outcome === 'criticalFailure' ? 'falha-critica' : outcome,
+    effects: effects.map((effect) => `DESORDEM.Lesao.Efeito.${effect}`),
+    lesion: lesion && {
+      name: `DESORDEM.Lesoes.${lesion.key}.Nome`,
+      description: `DESORDEM.Lesoes.${lesion.key}.Descricao`,
+    },
+    lesionRolls,
+    hasLesionRolls: lesionRolls.length > 0,
+    nonLethal,
+    testNumber,
   };
 }

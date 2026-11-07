@@ -142,3 +142,17 @@ test('resolveTest com valores pré-rolados dá o mesmo resultado que o plano', (
     plano.rolledSides,
   );
 });
+test('modificador fixo soma ao total, mas não muda RA, RB nem críticos', () => {
+  const r = resolveTest({ attrDie: 6, skillDie: 8, modifier: -2, rng: fixedRng([4, 5]) });
+  assert.equal(r.total, 7);
+  assert.equal(r.modifier, -2);
+  assert.equal(r.highRoll, 5);
+  assert.equal(r.lowRoll, 4);
+  assert.equal(r.success, true);
+
+  const falha = resolveTest({ attrDie: 6, skillDie: 8, modifier: -3, rng: fixedRng([4, 5]) });
+  assert.equal(falha.success, false);
+
+  const critico = resolveTest({ attrDie: 8, skillDie: 8, modifier: -9, dt: 99, rng: fixedRng([6, 6]) });
+  assert.equal(critico.success, true);
+});

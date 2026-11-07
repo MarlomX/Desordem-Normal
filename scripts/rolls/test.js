@@ -56,6 +56,8 @@ export function planDice({ attrDie, skillDie, extraDice = [], stepMods = [] }) {
  * @param {number} [opts.dt=7]
  * @param {number[]} [opts.extraDice=[]] Dados adicionais (ex.: [6] para +1d6).
  * @param {StepMod[]} [opts.stepMods=[]] Aumentos/reduções de passo.
+ * @param {number} [opts.modifier=0] Modificador fixo somado ao total (ex.: penalidade de lesão).
+ *   Não altera RA, RB nem críticos, que dependem só dos dados.
  * @param {(sides: number) => number} [opts.rng]
  */
 export function resolveTest({
@@ -64,6 +66,7 @@ export function resolveTest({
   dt = DEFAULT_DT,
   extraDice = [],
   stepMods = [],
+  modifier = 0,
   rng = defaultRng,
 }) {
   // 1-2. Dados a rolar (passos aplicados, máximo de 4 rolados)
@@ -93,7 +96,7 @@ export function resolveTest({
 
   const counted = dice.filter((d) => d.counted);
   const countedValues = counted.map((d) => d.value).sort((a, b) => b - a);
-  const total = countedValues.reduce((sum, v) => sum + v, 0);
+  const total = countedValues.reduce((sum, v) => sum + v, 0) + modifier;
 
   // 4. RA e RB (só dados somados)
   const highRoll = countedValues[0];
@@ -113,6 +116,7 @@ export function resolveTest({
   return {
     dt,
     dice,
+    modifier,
     total,
     highRoll,
     lowRoll,

@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveTest } from '../scripts/rolls/test.js';
-import { buildChatContext, buildOpposedContext } from '../scripts/rolls/presenter.js';
+import {
+  buildChatContext,
+  buildOpposedContext,
+  buildInjuryContext,
+} from '../scripts/rolls/presenter.js';
 import { fixedRng } from './helpers.js';
 
 const run = (opts, values) => resolveTest({ ...opts, rng: fixedRng(values) });
@@ -87,4 +91,30 @@ test('resumo do teste oposto indica vencedor, margem e crítico', () => {
   const empate = buildOpposedContext({ winner: 'empate', margin: 0, decidedBy: 'empate' });
   assert.equal(empate.isTie, true);
   assert.equal(empate.hasMargin, false);
+});
+
+test('modificador fixo aparece com sinal', () => {
+  const r = run({ attrDie: 6, skillDie: 6, modifier: -2 }, [3, 4]);
+  assert.equal(buildChatContext(r).modifierLabel, '-2');
+  const mais = run({ attrDie: 6, skillDie: 6, modifier: 1 }, [3, 4]);
+  assert.equal(buildChatContext(mais).modifierLabel, '+1');
+  assert.equal(buildChatContext(run({ attrDie: 6, skillDie: 6 }, [3, 4])).modifier, 0);
+});
+
+test('resumo do teste de lesão monta as chaves de idioma', () => {
+  const ctx = buildInjuryContext({
+    outcome: 'failure',
+    effects: ['sofreLesao'],
+    lesion: { key: 'semOlho' },
+    lesionRolls: [11, 11, 14],
+    testNumber: 2,
+  });
+  assert.equal(ctx.outcomeText, 'DESORDEM.Lesao.Resultado.failure');
+  assert.deepEqual(ctx.effects, ['DESORDEM.Lesao.Efeito.sofreLesao']);
+  assert.equal(ctx.lesion.name, 'DESORDEM.Lesoes.semOlho.Nome');
+  assert.equal(ctx.hasLesionRolls, true);
+
+  const semLesao = buildInjuryContext({ outcome: 'criticalFailure', testNumber: 1 });
+  assert.equal(semLesao.lesion, null);
+  assert.equal(semLesao.outcomeClass, 'falha-critica');
 });

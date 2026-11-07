@@ -5,6 +5,7 @@ import {
   buildAttributeRows,
   buildSkillRows,
   buildAptitudeRows,
+  buildLesionRows,
 } from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
@@ -66,4 +67,14 @@ test('buildAptitudeRows lista as áreas na ordem e marca o dado de cada uma', ()
   );
   assert.equal(linhas[0].options.find((o) => o.selected).value, 8);
   assert.equal(linhas[1].options.find((o) => o.selected).value, 4);
+});
+test('buildLesionRows agrupa lesões repetidas e mantém a ordem', () => {
+  const linhas = buildLesionRows(['semOlho', 'lacearacaoProfunda', 'lacearacaoProfunda'], (k) =>
+    k.toUpperCase(),
+  );
+  assert.deepEqual(linhas, [
+    { key: 'semOlho', label: 'SEMOLHO', count: 1, repeated: false },
+    { key: 'lacearacaoProfunda', label: 'LACEARACAOPROFUNDA', count: 2, repeated: true },
+  ]);
+  assert.deepEqual(buildLesionRows([], (k) => k), []);
 });

@@ -57,3 +57,14 @@ export function buildSkillRows(skills, skillAttributes, { skillLabel, attrLabel 
 export function buildAptitudeRows(aptitudes, keys, label) {
   return buildAttributeRows(aptitudes, keys, label);
 }
+
+/**
+ * Lesões do personagem agrupadas por tipo (ex.: duas lacerações viram uma linha com ×2).
+ * @param {string[]} keys Chaves das lesões, na ordem em que foram recebidas.
+ * @param {(key: string) => string} label Devolve o nome traduzido.
+ */
+export function buildLesionRows(keys, label) {
+  const counts = new Map();
+  for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
+  return [...counts].map(([key, count]) => ({ key, label: label(key), count, repeated: count > 1 }));
+}

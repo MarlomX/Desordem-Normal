@@ -235,3 +235,73 @@
   margin: 0;
   font-weight: bold;
 }
+
+/* Dano e lesões */
+
+.desordem-dano__linha,
+.desordem-dano__pv {
+  margin: 0;
+}
+
+.desordem-lesao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.desordem-lesao__titulo {
+  margin: 0;
+  border: none;
+}
+
+.desordem-lesao__veredito {
+  margin: 0;
+  font-weight: bold;
+}
+
+.desordem-lesao__veredito--falha-critica {
+  color: #b3261e;
+}
+
+.desordem-lesao__efeitos {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.desordem-lesao__nome {
+  margin: 0;
+  font-weight: bold;
+}
+
+.desordem-lesao__descricao {
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.desordem-ficha__estado,
+.desordem-ficha__acoes-saude,
+.desordem-ficha__lesoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-bottom: 4px;
+}
+
+.desordem-ficha__acoes-saude input[type='number'] {
+  width: 4em;
+}
+
+.desordem-ficha__lesao {
+  padding: 0 6px;
+  border: 1px solid rgba(128, 128, 128, 0.7);
+  border-radius: 4px;
+}
+
+.desordem-ficha__remover {
+  width: auto;
+  height: auto;
+  margin: 0 0 0 4px;
+  padding: 0 4px;
+  line-height: 1.2;
+}

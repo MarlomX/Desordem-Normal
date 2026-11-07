@@ -39,7 +39,8 @@
       "RolagemBaixa": "Rolagem baixa",
       "Descartados": "Dados extras descartados",
       "NotaIgnorado": "Dado esmaecido: rolado, mas fora da soma.",
-      "NotaFalhaCritica": "Há uma penalidade adicional: o mestre escolhe ou sorteia (1d8)."
+      "NotaFalhaCritica": "Há uma penalidade adicional: o mestre escolhe ou sorteia (1d8).",
+      "Modificador": "Modificador"
     },
     "Ficha": {
       "Personagem": "Ficha de Personagem",
@@ -49,7 +50,23 @@
       "Atributos": "Atributos",
       "Pericias": "Perícias",
       "DicaRolagem": "Clique no nome de uma perícia para fazer o teste.",
-      "Aptidoes": "Aptidões"
+      "Aptidoes": "Aptidões",
+      "Saude": "Saúde",
+      "Dano": "Dano",
+      "NaoLetal": "Não letal",
+      "AplicarDano": "Aplicar dano",
+      "TesteLesao": "Teste de lesão",
+      "TestesLesaoCena": "Testes de lesão na cena",
+      "Lesoes": "Lesões",
+      "SemLesoes": "Nenhuma lesão",
+      "RemoverLesao": "Remover lesão",
+      "Estado": {
+        "inconsciente": "Inconsciente",
+        "moribundo": "Moribundo",
+        "morteLenta": "Morte lenta",
+        "contusao": "Contusão",
+        "morto": "Morto"
+      }
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -69,6 +86,83 @@
     "Ajuda": {
       "Recebida": "Ajuda de",
       "SemDado": "{nome} não pode ajudar com {pericia}: é preciso pelo menos d6."
+    },
+    "Dano": {
+      "Sofre": "sofre {valor} de dano",
+      "NaoLetal": "não letal"
+    },
+    "Lesao": {
+      "Titulo": "Teste de lesão",
+      "TesteTitulo": "Físico + Vigor",
+      "NotaNaoLetal": "Dano não letal: +1d6 no teste e 2d20 (o melhor) na tabela de lesões.",
+      "RolagensTabela": "d20 na tabela",
+      "Resultado": {
+        "criticalSuccess": "Sucesso crítico",
+        "success": "Sucesso",
+        "failure": "Falha",
+        "criticalFailure": "Falha crítica"
+      },
+      "Efeito": {
+        "recuperaPV": "Recupera 1 PV.",
+        "removeCondicoes": "Deixa de estar inconsciente e moribundo.",
+        "inconscienteMoribundo": "Fica inconsciente e moribundo.",
+        "sofreLesao": "Sofre uma lesão.",
+        "morre": "Morre."
+      }
+    },
+    "Lesoes": {
+      "morteSubita": {
+        "Nome": "Morte Súbita",
+        "Descricao": "O golpe é fatal de imediato. O personagem morre."
+      },
+      "morteLenta": {
+        "Nome": "Morte Lenta",
+        "Descricao": "O ferimento é mortal, mas a adrenalina permite uma última ação. Recupera 1 PV e, se estava inconsciente, acorda. Age na rodada seguinte e morre ao fim dela, sem como impedir."
+      },
+      "lacearacaoProfunda": {
+        "Nome": "Laceração Profunda",
+        "Descricao": "Um corte grave e permanente. O PV máximo diminui em 2 para sempre. Pode ocorrer várias vezes, e os efeitos se acumulam."
+      },
+      "semOlho": {
+        "Nome": "Sem Olho",
+        "Descricao": "Perde o uso de um olho: −1 em Percepção e em Pontaria."
+      },
+      "semMao": {
+        "Nome": "Sem Mão",
+        "Descricao": "Perde o uso de uma mão ou de um braço. Só consegue empunhar um item; em tarefas de duas mãos, sofre uma redução de passo ou falha automaticamente, a critério do mestre."
+      },
+      "semPe": {
+        "Nome": "Sem Pé",
+        "Descricao": "Perde o uso de um pé ou de uma perna. Sofre duas reduções de passo ao avançar em perseguições a pé e em ações de movimento."
+      },
+      "tendaoComprometido": {
+        "Nome": "Tendão Comprometido",
+        "Descricao": "Um tendão perde capacidade, tirando agilidade e flexibilidade: −2 em Acrobacia."
+      },
+      "musculoComprometido": {
+        "Nome": "Músculo Comprometido",
+        "Descricao": "Um músculo perde capacidade, tirando força e rapidez: −2 em Atletismo."
+      },
+      "orgaoInternoComprometido": {
+        "Nome": "Órgão Interno Comprometido",
+        "Descricao": "Um órgão interno (coração, pulmão, fígado...) perde capacidade: −2 em Vigor."
+      },
+      "orgaoSensorialComprometido": {
+        "Nome": "Órgão Sensorial Comprometido",
+        "Descricao": "Um órgão dos sentidos (olho, ouvido, nariz...) perde capacidade: −2 em Percepção."
+      },
+      "cicatrizAssustadora": {
+        "Nome": "Cicatriz Assustadora",
+        "Descricao": "Uma marca que afasta as pessoas: −2 em Persuasão e +1 em Intimidar."
+      },
+      "contusao": {
+        "Nome": "Contusão",
+        "Descricao": "Um golpe forte demais: o Físico diminui um passo até o fim da cena."
+      },
+      "surtoAdrenalina": {
+        "Nome": "Surto de Adrenalina",
+        "Descricao": "O ferimento não deixa sequelas e a adrenalina faz recuperar 1 PV."
+      }
     }
   }
 }

@@ -26,6 +26,47 @@
   </div>
 </header>
 
+<section class="desordem-ficha__secao desordem-ficha__saude">
+  <h3>{{localize "DESORDEM.Ficha.Saude"}}</h3>
+
+  <div class="desordem-ficha__estado">
+    <label><input type="checkbox" name="system.estado.inconsciente" {{#if system.estado.inconsciente}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.inconsciente"}}</label>
+    <label><input type="checkbox" name="system.estado.moribundo" {{#if system.estado.moribundo}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.moribundo"}}</label>
+    <label><input type="checkbox" name="system.estado.morteLenta" {{#if system.estado.morteLenta}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.morteLenta"}}</label>
+    <label><input type="checkbox" name="system.estado.contusao" {{#if system.estado.contusao}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.contusao"}}</label>
+    <label><input type="checkbox" name="system.estado.morto" {{#if system.estado.morto}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.morto"}}</label>
+  </div>
+
+  <div class="desordem-ficha__acoes-saude">
+    <label class="desordem-ficha__campo">
+      <span>{{localize "DESORDEM.Ficha.Dano"}}</span>
+      <input type="number" data-dano min="0" value="0" {{#unless editable}}disabled{{/unless}}>
+    </label>
+    <label class="desordem-ficha__campo">
+      <input type="checkbox" data-nao-letal {{#unless editable}}disabled{{/unless}}>
+      <span>{{localize "DESORDEM.Ficha.NaoLetal"}}</span>
+    </label>
+    <button type="button" data-action="applyDamage" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.AplicarDano"}}</button>
+    <button type="button" data-action="rollInjury" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.TesteLesao"}} ({{localize "DESORDEM.Teste.DT"}} {{nextInjuryDT}})</button>
+  </div>
+
+  <label class="desordem-ficha__campo">
+    <span>{{localize "DESORDEM.Ficha.TestesLesaoCena"}}</span>
+    <input type="number" name="system.cena.testesLesao" value="{{system.cena.testesLesao}}" min="0" {{#unless editable}}disabled{{/unless}}>
+  </label>
+
+  <div class="desordem-ficha__lesoes">
+    <strong>{{localize "DESORDEM.Ficha.Lesoes"}}:</strong>
+    {{#each lesions}}
+    <span class="desordem-ficha__lesao">{{label}}{{#if repeated}} ×{{count}}{{/if}}
+      {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeLesion" data-lesion="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverLesao"}}">×</button>{{/if}}
+    </span>
+    {{else}}
+    <span class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemLesoes"}}</span>
+    {{/each}}
+  </div>
+</section>
+
 <section class="desordem-ficha__secao">
   <h3>{{localize "DESORDEM.Ficha.Atributos"}}</h3>
   <div class="desordem-ficha__atributos">
