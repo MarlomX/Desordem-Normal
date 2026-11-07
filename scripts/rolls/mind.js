@@ -70,6 +70,7 @@ export async function rollTraumaTest(actor) {
   const previousTests = actor.system.cena.testesTrauma;
   const options = skillTestOptions(actor, 'disciplina', undefined, {
     dt: traumaDT(previousTests),
+    ignoreFear: true, // o teste de trauma não sofre o dado de pavor
     label: `${actor.name}: ${game.i18n.localize('DESORDEM.Trauma.TesteTitulo')}`,
   });
   const { result, rolls, card } = await runTest(actor, options);

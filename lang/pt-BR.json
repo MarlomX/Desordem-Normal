@@ -203,7 +203,7 @@
     "Traumas": {
       "colapsoTotal": {
         "Nome": "Colapso Total",
-        "Descricao": "A mente não suporta o horror. O corpo continua vivo, mas vazio: é hora de criar um personagem novo."
+        "Descricao": "A mente não suporta o horror. O corpo continua vivo, mas vazio."
       },
       "estressePosTraumatico": {
         "Nome": "Transtorno de Estresse Pós-Traumático",

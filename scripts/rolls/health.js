@@ -87,6 +87,7 @@ export async function rollInjuryTest(actor, { nonLethal = false } = {}) {
   const options = skillTestOptions(actor, 'vigor', undefined, {
     dt: rule.dt,
     extraDice: rule.extraDice,
+    ignoreFear: true, // o teste de lesão não sofre o dado de pavor
     label: `${actor.name}: ${game.i18n.localize('DESORDEM.Lesao.TesteTitulo')}`,
   });
   const { result, rolls, card } = await runTest(actor, options);
