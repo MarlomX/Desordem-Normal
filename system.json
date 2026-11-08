@@ -36,6 +36,11 @@
   "documentTypes": {
     "Actor": {
       "personagem": {}
+    },
+    "Item": {
+      "arma": {},
+      "armadura": {},
+      "item": {}
     }
   },
   "socket": true,

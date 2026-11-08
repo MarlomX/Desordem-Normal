@@ -372,3 +372,85 @@
   margin: 0 0 4px;
   padding-left: 1.2em;
 }
+
+/* Efeitos e equipamento */
+
+.desordem-efeito {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 6px;
+}
+
+.desordem-efeito__nome {
+  flex: 1 1 9em;
+}
+
+.desordem-efeito__descricao {
+  flex: 3 1 14em;
+}
+
+.desordem-ficha__equipamento h4 {
+  margin: 8px 0 4px;
+}
+
+.desordem-item-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+}
+
+.desordem-item-linha__nome {
+  flex: 1 1 12em;
+}
+
+.desordem-item-linha__marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-item-linha__numero {
+  width: 3.5em;
+}
+
+.desordem-ficha__alerta {
+  color: #c0392b;
+}
+
+.desordem-item {
+  padding: 8px;
+}
+
+.desordem-item__cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.desordem-item__imagem {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+}
+
+.desordem-item__identidade {
+  flex: 1;
+}
+
+.desordem-item__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10em, 1fr));
+  gap: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.desordem-item__descricao textarea {
+  width: 100%;
+}

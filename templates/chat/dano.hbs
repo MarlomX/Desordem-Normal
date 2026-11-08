@@ -3,5 +3,6 @@
     <strong>{{name}}</strong>
     {{#if emotional}}{{localize "DESORDEM.Dano.SofreEmocional" valor=amount}}{{#if extra}} ({{localize "DESORDEM.Dano.ExtraTrauma" extra=extra}}){{/if}}{{else}}{{localize "DESORDEM.Dano.Sofre" valor=amount}}{{/if}}{{#if nonLethal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}}
   </p>
+  {{#if armorUsed}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Armadura.Usada" bruto=rawAmount reducao=armorReduction}}</p>{{/if}}
   <p class="desordem-dano__pv">{{#if emotional}}{{localize "DESORDEM.Ficha.PD"}}{{else}}{{localize "DESORDEM.Ficha.PV"}}{{/if}}: {{before}} → {{after}}</p>
 </div>

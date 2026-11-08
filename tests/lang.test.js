@@ -26,7 +26,7 @@ test('os marcadores {nome} de cada texto são os mesmos nos dois idiomas', () =>
 
 test('as chaves fixas usadas nos templates existem no idioma', () => {
   const missing = [];
-  for (const dir of ['templates/actor', 'templates/chat']) {
+  for (const dir of ['templates/actor', 'templates/chat', 'templates/item']) {
     for (const file of readdirSync(new URL(`../${dir}`, import.meta.url))) {
       const text = readFileSync(new URL(`../${dir}/${file}`, import.meta.url), 'utf8');
       for (const [, key] of text.matchAll(/localize "(DESORDEM\.[^"]+)"/g)) {

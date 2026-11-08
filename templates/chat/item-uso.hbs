@@ -1,0 +1,5 @@
+<div class="desordem-relacao-chat">
+  <p class="desordem-relacao-chat__titulo"><strong>{{name}}</strong> {{localize "DESORDEM.Equipamento.Usa" item=item}}</p>
+  {{#if descricao}}<p class="desordem-relacao-chat__descricao">{{descricao}}</p>{{/if}}
+  {{#if byUses}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Equipamento.UsosRestantes" restantes=remaining max=max}}</p>{{/if}}
+</div>

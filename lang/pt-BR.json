@@ -93,7 +93,26 @@
       "RelacaoPessoa": "Pessoa",
       "RelacaoDescricao": "O que você sente por ela (só narrativa)",
       "Invocar": "Invocar",
-      "LacoUsado": "Usada nesta missão"
+      "LacoUsado": "Usada nesta missão",
+      "Efeitos": "Efeitos",
+      "DicaEfeitos": "Efeitos temporários (por exemplo, um preparado ou uma bênção). Se escolher um atributo e passos, o dado do atributo muda nos testes. Passe o mouse no nome para ver a descrição; remova à mão no fim.",
+      "EfeitoNome": "Nome do efeito",
+      "EfeitoDescricao": "Descrição",
+      "EfeitoPassos": "Passos no dado do atributo",
+      "EfeitoSemAtributo": "Sem atributo",
+      "SemEfeitos": "Nenhum efeito",
+      "AdicionarEfeito": "Adicionar efeito",
+      "RemoverEfeito": "Remover efeito",
+      "Equipamento": "Equipamento",
+      "ArmaduraResumo": "Pontos de armadura: {restantes} de {total}",
+      "MaosEmUso": "mãos em uso: {usadas}",
+      "MaosDemais": "(mais de duas mãos ocupadas!)",
+      "Armas": "Armas",
+      "Armaduras": "Armaduras",
+      "Itens": "Itens",
+      "Atacar": "Atacar",
+      "Usar": "Usar",
+      "PontosArmadura": "{restantes}/{pontos} pontos de armadura"
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -278,6 +297,59 @@
       "Recupera": "recupera {valor} {recurso}",
       "JaAplicada": "Já aplicado por {nome}.",
       "SemAlvo": "Selecione o token do seu personagem (ou tenha um personagem atribuído) para recuperar."
+    },
+    "Item": {
+      "Ficha": "Ficha de item",
+      "Tipo": {
+        "corpo": "corpo a corpo",
+        "distancia": "à distância"
+      },
+      "Maos": {
+        "Titulo": "Mãos",
+        "1": "uma mão",
+        "2": "duas mãos"
+      },
+      "TipoArma": "Tipo",
+      "BonusDano": "Modificador de dano (RA+)",
+      "Pericia": "Perícia do ataque",
+      "PericiaPadrao": "Padrão do tipo (Luta ou Pontaria)",
+      "NaoLetal": "Dano não letal",
+      "Empunhada": "Empunhada",
+      "Vestida": "Vestida",
+      "Pontos": "Pontos de armadura",
+      "Gastos": "Pontos gastos",
+      "Quantidade": "Quantidade",
+      "Consumivel": "Consumível (cada uso gasta uma unidade)",
+      "UsosMax": "Limite de usos (0 = sem limite)",
+      "Usos": "Usos restantes",
+      "DicaUso": "Com limite de usos, cada uso gasta um uso restante; sem limite, só os consumíveis são gastos pela quantidade.",
+      "Descricao": "Descrição",
+      "Editar": "Editar item",
+      "Remover": "Remover item",
+      "ConfirmarRemover": "Remover este item da ficha?",
+      "Novo": {
+        "arma": "Nova arma",
+        "armadura": "Nova armadura",
+        "item": "Novo item"
+      }
+    },
+    "Armadura": {
+      "Titulo": "Pontos de armadura",
+      "Pergunta": "Gastar 1 ponto de armadura para reduzir em {reducao} um dano de {dano}? (restam {restantes})",
+      "Usada": "Ponto de armadura gasto: dano {bruto} reduzido em {reducao}."
+    },
+    "Equipamento": {
+      "CausaDano": "acerta com {arma} e causa {valor} de dano",
+      "DanoFormula": "Dano: {formula}, com RA {ra}.",
+      "AplicarAlvos": "Aplicar dano aos alvos",
+      "SemAlvo": "Mire (target) pelo menos um token para aplicar o dano.",
+      "SoMestre": "Só quem controla {nome} pode aplicar o dano nele: peça ao mestre.",
+      "Usa": "usa {item}.",
+      "UsosRestantes": "Usos restantes: {restantes} de {max}.",
+      "SemUso": "{nome} não tem usos restantes nem é consumível."
     }
-  }
+  },
+  "TYPES.Item.arma": "Arma",
+  "TYPES.Item.armadura": "Armadura",
+  "TYPES.Item.item": "Item"
 }

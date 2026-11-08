@@ -9,6 +9,7 @@ import { resolveOpposed } from './opposed.js';
 import { buildChatContext, buildOpposedContext } from './presenter.js';
 import { lesionModifier, contusionStepMods } from './injury.js';
 import { traumaModifier } from './emotional.js';
+import { effectStepMods } from './effects.js';
 import { resolveFearOptions } from './fear.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
@@ -192,8 +193,12 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
 
   return {
     ...rest,
-    // Contusão (Físico -1 passo) e penalidades fixas de lesões e traumas
-    stepMods: [...(rest.stepMods ?? []), ...contusionStepMods(system.estado, attrKey)],
+    // Contusão (Físico -1 passo), efeitos temporários da ficha e penalidades fixas de lesões e traumas
+    stepMods: [
+      ...(rest.stepMods ?? []),
+      ...contusionStepMods(system.estado, attrKey),
+      ...effectStepMods(system.efeitos, attrKey),
+    ],
     extraDice: [...(rest.extraDice ?? []), ...(fear.bonusDie ? [fear.bonusDie] : [])],
     modifier:
       (rest.modifier ?? 0) +

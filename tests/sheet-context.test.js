@@ -8,6 +8,9 @@ import {
   buildLesionRows,
   buildFearChoices,
   buildRelationRows,
+  buildEffectRows,
+  buildEquipmentRows,
+  buildChoices,
 } from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
@@ -111,7 +114,10 @@ test('buildRelationRows monta bolinhas e libera os botões conforme o grau', () 
     rows.map((r) => r.dots.filter((d) => d.filled).length),
     [0, 2, 3],
   );
-  assert.deepEqual(rows[0].dots.map((d) => d.n), [1, 2, 3]);
+  assert.deepEqual(
+    rows[0].dots.map((d) => d.n),
+    [1, 2, 3],
+  );
   assert.equal(rows[1].grauLabel, 'g:vinculo');
   assert.deepEqual(
     rows.map((r) => [r.showInvoke, r.canInvoke]),
@@ -131,4 +137,141 @@ test('buildRelationRows trava tudo quando a ficha não é editável', () => {
   });
   assert.equal(row.locked, true);
   assert.equal(row.canInvoke, false);
+});
+
+test('buildLesionRows acrescenta a descrição só quando há uma função para isso', () => {
+  const [row] = buildLesionRows(
+    ['semOlho'],
+    (k) => k,
+    (k) => `desc:${k}`,
+  );
+  assert.equal(row.description, 'desc:semOlho');
+});
+
+test('buildEffectRows monta os seletores de atributo e de passos', () => {
+  const [row] = buildEffectRows(
+    [{ nome: 'Tônico', descricao: 'd', atributo: 'mente', passos: 2 }],
+    {
+      attrLabel: (k) => k.toUpperCase(),
+      noAttrLabel: '—',
+      attributes: ['fisico', 'mente', 'emocao'],
+    },
+  );
+  assert.deepEqual(
+    row.attrOptions.map((o) => [o.value, o.selected]),
+    [
+      ['', false],
+      ['fisico', false],
+      ['mente', true],
+      ['emocao', false],
+    ],
+  );
+  assert.deepEqual(
+    row.stepOptions.map((o) => o.label),
+    ['-3', '-2', '-1', '0', '+1', '+2', '+3'],
+  );
+  assert.equal(row.stepOptions.find((o) => o.selected).value, 2);
+  assert.equal(row.locked, false);
+});
+
+test('buildEquipmentRows separa armas, armaduras e itens e calcula mãos e armadura', () => {
+  const items = [
+    {
+      id: 'w1',
+      name: 'Machado',
+      type: 'arma',
+      system: {
+        descricao: '',
+        tipo: 'corpo',
+        maos: 2,
+        bonusDano: 3,
+        pericia: '',
+        naoLetal: false,
+        empunhada: true,
+      },
+    },
+    {
+      id: 'w2',
+      name: 'Arco',
+      type: 'arma',
+      system: {
+        descricao: '',
+        tipo: 'distancia',
+        maos: 2,
+        bonusDano: 1,
+        pericia: '',
+        naoLetal: false,
+        empunhada: true,
+      },
+    },
+    {
+      id: 'a1',
+      name: 'Tenaz',
+      type: 'armadura',
+      system: { descricao: '', pontos: 2, gastos: 1, vestida: true },
+    },
+    {
+      id: 'i1',
+      name: 'Bálsamo',
+      type: 'item',
+      system: { descricao: '', quantidade: 2, consumivel: true, usosMax: 0, usos: 0 },
+    },
+    {
+      id: 'i2',
+      name: 'Odre',
+      type: 'item',
+      system: { descricao: '', quantidade: 1, consumivel: false, usosMax: 3, usos: 0 },
+    },
+  ];
+  const rows = buildEquipmentRows(items, {
+    kindLabel: (k) => `tipo:${k}`,
+    handsLabel: (n) => `${n}m`,
+    skillLabel: (k) => `p:${k}`,
+  });
+  assert.deepEqual(
+    rows.weapons.map((w) => [w.name, w.kindLabel, w.handsLabel, w.damageLabel, w.skillLabel]),
+    [
+      ['Machado', 'tipo:corpo', '2m', 'RA+3', 'p:luta'],
+      ['Arco', 'tipo:distancia', '2m', 'RA+1', 'p:pontaria'],
+    ],
+  );
+  assert.deepEqual(rows.hands, { used: 4, over: true });
+  assert.deepEqual(
+    rows.armors.map((a) => [a.pontos, a.restantes, a.vestida]),
+    [[2, 1, true]],
+  );
+  assert.deepEqual(rows.armorTotals, { total: 2, available: 1 });
+  assert.deepEqual(
+    rows.others.map((o) => [o.name, o.showUse, o.canUse, o.hasUsos]),
+    [
+      ['Bálsamo', true, true, false],
+      ['Odre', true, false, true],
+    ],
+  );
+});
+
+test('buildEquipmentRows trava os botões quando a ficha não é editável', () => {
+  const rows = buildEquipmentRows(
+    [
+      {
+        id: 'i',
+        name: 'X',
+        type: 'item',
+        system: { descricao: '', quantidade: 1, consumivel: true, usosMax: 0, usos: 0 },
+      },
+    ],
+    { kindLabel: (k) => k, handsLabel: String, skillLabel: (k) => k, editable: false },
+  );
+  assert.equal(rows.others[0].canUse, false);
+  assert.equal(rows.others[0].locked, true);
+});
+
+test('buildChoices marca a opção atual', () => {
+  assert.deepEqual(
+    buildChoices(['a', 'b'], 'b', (v) => v.toUpperCase()),
+    [
+      { value: 'a', label: 'A', selected: false },
+      { value: 'b', label: 'B', selected: true },
+    ],
+  );
 });

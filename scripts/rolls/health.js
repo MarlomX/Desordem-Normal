@@ -4,6 +4,8 @@
 import { SYSTEM_ID } from '../config.js';
 import { render, postMessage, runTest, skillTestOptions } from './chat.js';
 import { applyDamage } from './damage.js';
+import { reduceDamageWithArmor, ARMOR_REDUCTION } from './equipment.js';
+import { armorAvailable, askSpendArmor, spendArmorPoint } from './armor-chat.js';
 import {
   LESION_DIE,
   LESIONS,
@@ -127,29 +129,44 @@ export async function rollInjuryTest(actor, { nonLethal = false } = {}) {
 }
 
 /**
- * Aplica dano físico a um personagem. Se o PV chegar a 0 (ou ele já estava em 0), faz o teste de
- * lesão em seguida.
+ * Aplica dano físico a um personagem. Se ele tiver pontos de armadura, pergunta se quer gastar um
+ * (reduz o dano em 10). Se o PV chegar a 0 (ou ele já estava em 0), faz o teste de lesão em seguida.
  * @param {Actor} actor
  * @param {number} amount Dano já calculado (ex.: RA + modificador da arma).
  * @param {Object} [options]
  * @param {boolean} [options.nonLethal=false] Dano não letal (veja `rollInjuryTest`).
+ * @param {boolean} [options.spendArmor] true gasta o ponto sem perguntar, false nunca gasta;
+ *   sem valor, pergunta ao jogador quando houver pontos.
  */
-export async function damageActor(actor, amount, { nonLethal = false } = {}) {
+export async function damageActor(actor, amount, { nonLethal = false, spendArmor } = {}) {
+  const rawAmount = Math.trunc(amount);
+  let finalAmount = rawAmount;
+  let armorUsed = false;
+  if (rawAmount > 0 && spendArmor !== false && armorAvailable(actor) > 0) {
+    const confirmed = spendArmor === true ? true : await askSpendArmor(actor, rawAmount);
+    if (confirmed && (await spendArmorPoint(actor))) {
+      finalAmount = reduceDamageWithArmor(rawAmount);
+      armorUsed = true;
+    }
+  }
   const { before, after, needsInjuryTest } = applyDamage({
     current: actor.system.pv.value,
-    amount: Math.trunc(amount),
+    amount: finalAmount,
   });
   await actor.update({ 'system.pv.value': after });
   await postMessage({
     actor,
     content: await render(TEMPLATE_DANO, {
       name: actor.name,
-      amount: Math.trunc(amount),
+      amount: finalAmount,
       before,
       after,
       nonLethal,
+      armorUsed,
+      armorReduction: ARMOR_REDUCTION,
+      rawAmount,
     }),
   });
   if (needsInjuryTest) await rollInjuryTest(actor, { nonLethal });
-  return { before, after, needsInjuryTest };
+  return { before, after, needsInjuryTest, armorUsed };
 }

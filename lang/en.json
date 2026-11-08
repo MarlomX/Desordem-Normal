@@ -93,7 +93,26 @@
       "RelacaoPessoa": "Person",
       "RelacaoDescricao": "How you feel about them (narrative only)",
       "Invocar": "Invoke",
-      "LacoUsado": "Used this mission"
+      "LacoUsado": "Used this mission",
+      "Efeitos": "Effects",
+      "DicaEfeitos": "Temporary effects (for example, a preparation or a blessing). If you pick an attribute and steps, that attribute's die changes on tests. Hover the name to see the description; remove them by hand later.",
+      "EfeitoNome": "Effect name",
+      "EfeitoDescricao": "Description",
+      "EfeitoPassos": "Steps on the attribute die",
+      "EfeitoSemAtributo": "No attribute",
+      "SemEfeitos": "No effects",
+      "AdicionarEfeito": "Add effect",
+      "RemoverEfeito": "Remove effect",
+      "Equipamento": "Equipment",
+      "ArmaduraResumo": "Armor points: {restantes} of {total}",
+      "MaosEmUso": "hands in use: {usadas}",
+      "MaosDemais": "(more than two hands occupied!)",
+      "Armas": "Weapons",
+      "Armaduras": "Armor",
+      "Itens": "Items",
+      "Atacar": "Attack",
+      "Usar": "Use",
+      "PontosArmadura": "{restantes}/{pontos} armor points"
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -278,6 +297,59 @@
       "Recupera": "recovers {valor} {recurso}",
       "JaAplicada": "Already applied by {nome}.",
       "SemAlvo": "Select your character's token (or have a character assigned) to recover."
+    },
+    "Item": {
+      "Ficha": "Item sheet",
+      "Tipo": {
+        "corpo": "melee",
+        "distancia": "ranged"
+      },
+      "Maos": {
+        "Titulo": "Hands",
+        "1": "one-handed",
+        "2": "two-handed"
+      },
+      "TipoArma": "Type",
+      "BonusDano": "Damage modifier (HR+)",
+      "Pericia": "Attack skill",
+      "PericiaPadrao": "Type default (Fighting or Marksmanship)",
+      "NaoLetal": "Non-lethal damage",
+      "Empunhada": "Wielded",
+      "Vestida": "Worn",
+      "Pontos": "Armor points",
+      "Gastos": "Points spent",
+      "Quantidade": "Quantity",
+      "Consumivel": "Consumable (each use spends one unit)",
+      "UsosMax": "Use limit (0 = no limit)",
+      "Usos": "Uses left",
+      "DicaUso": "With a use limit, each use spends one remaining use; with no limit, only consumables are spent from the quantity.",
+      "Descricao": "Description",
+      "Editar": "Edit item",
+      "Remover": "Remove item",
+      "ConfirmarRemover": "Remove this item from the sheet?",
+      "Novo": {
+        "arma": "New weapon",
+        "armadura": "New armor",
+        "item": "New item"
+      }
+    },
+    "Armadura": {
+      "Titulo": "Armor points",
+      "Pergunta": "Spend 1 armor point to reduce a {dano} damage hit by {reducao}? ({restantes} left)",
+      "Usada": "Armor point spent: {bruto} damage reduced by {reducao}."
+    },
+    "Equipamento": {
+      "CausaDano": "hits with {arma} and deals {valor} damage",
+      "DanoFormula": "Damage: {formula}, with HR {ra}.",
+      "AplicarAlvos": "Apply damage to targets",
+      "SemAlvo": "Target at least one token to apply the damage.",
+      "SoMestre": "Only whoever controls {nome} can apply damage to them: ask the GM.",
+      "Usa": "uses {item}.",
+      "UsosRestantes": "Uses left: {restantes} of {max}.",
+      "SemUso": "{nome} has no uses left and is not consumable."
     }
-  }
+  },
+  "TYPES.Item.arma": "Weapon",
+  "TYPES.Item.armadura": "Armor",
+  "TYPES.Item.item": "Item"
 }

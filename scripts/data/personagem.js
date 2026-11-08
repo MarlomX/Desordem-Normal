@@ -50,6 +50,15 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
           descricao: new f.StringField({ required: true, blank: true, initial: '' }),
           usada: new f.BooleanField({ initial: false })
         })
+      ),
+      // Efeitos temporários: descrição e, se quiser, passos no dado de um atributo
+      efeitos: new f.ArrayField(
+        new f.SchemaField({
+          nome: new f.StringField({ required: true, blank: true, initial: '' }),
+          descricao: new f.StringField({ required: true, blank: true, initial: '' }),
+          atributo: new f.StringField({ required: true, blank: true, initial: '' }),
+          passos: new f.NumberField({ required: true, integer: true, min: -3, max: 3, initial: 0 })
+        })
       )
     };
   }

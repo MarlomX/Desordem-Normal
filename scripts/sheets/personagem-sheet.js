@@ -5,6 +5,8 @@ import { injuryDT } from '../rolls/injury.js';
 import { emotionalDamage, rollTraumaTest } from '../rolls/mind.js';
 import { traumaDT } from '../rolls/emotional.js';
 import { invokeRelation } from '../rolls/relation-chat.js';
+import { attackWithWeapon, useItem } from '../rolls/equipment-chat.js';
+import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import {
   addRelation,
   removeRelation,
@@ -18,6 +20,8 @@ import {
   buildLesionRows,
   buildFearChoices,
   buildRelationRows,
+  buildEffectRows,
+  buildEquipmentRows,
 } from './context.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -59,7 +63,16 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       removeRelation: PersonagemSheet.#onRemoveRelation,
       setRelationDegree: PersonagemSheet.#onSetRelationDegree,
       invokeRelation: PersonagemSheet.#onInvokeRelation,
+      createItem: PersonagemSheet.#onCreateItem,
+      editItem: PersonagemSheet.#onEditItem,
+      deleteItem: PersonagemSheet.#onDeleteItem,
+      attackWeapon: PersonagemSheet.#onAttackWeapon,
+      useItem: PersonagemSheet.#onUseItem,
+      addEffect: PersonagemSheet.#onAddEffect,
+      removeEffect: PersonagemSheet.#onRemoveEffect,
     },
+    // Itens podem ser arrastados da barra lateral ou de outra ficha para esta
+    dragDrop: [{ dragSelector: '[data-item-id]', dropSelector: null }],
   };
 
   static PARTS = {
@@ -89,9 +102,37 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       aptitudeAttrLabel: t('DESORDEM.Atributos.mente'),
       nextInjuryDT: injuryDT(system.cena.testesLesao),
       nextTraumaDT: traumaDT(system.cena.testesTrauma),
-      traumas: buildLesionRows(system.traumas, (key) => t(`DESORDEM.Traumas.${key}.Nome`)),
+      traumas: buildLesionRows(
+        system.traumas,
+        (key) => t(`DESORDEM.Traumas.${key}.Nome`),
+        (key) => t(`DESORDEM.Traumas.${key}.Descricao`),
+      ),
       fearChoices: buildFearChoices(system.estado.pavor, t('DESORDEM.Ficha.SemPavor')),
-      lesions: buildLesionRows(system.lesoes, (key) => t(`DESORDEM.Lesoes.${key}.Nome`)),
+      lesions: buildLesionRows(
+        system.lesoes,
+        (key) => t(`DESORDEM.Lesoes.${key}.Nome`),
+        (key) => t(`DESORDEM.Lesoes.${key}.Descricao`),
+      ),
+      effects: buildEffectRows(system.efeitos, {
+        attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
+        noAttrLabel: t('DESORDEM.Ficha.EfeitoSemAtributo'),
+        attributes: ATRIBUTOS,
+        editable: this.isEditable,
+      }),
+      equipment: buildEquipmentRows(
+        this.document.items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          type: item.type,
+          system: item.system,
+        })),
+        {
+          kindLabel: (kind) => t(`DESORDEM.Item.Tipo.${kind}`),
+          handsLabel: (hands) => t(`DESORDEM.Item.Maos.${hands}`),
+          skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
+          editable: this.isEditable,
+        },
+      ),
       relations: buildRelationRows(system.relacoes, {
         degreeLabel: (key) => t(`DESORDEM.Relacao.Grau.${key}`),
         editable: this.isEditable,
@@ -105,6 +146,29 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     for (const field of this.element.querySelectorAll('[data-relacao-campo]')) {
       field.addEventListener('change', (event) => this.#onRelationField(event.currentTarget));
     }
+    for (const field of this.element.querySelectorAll('[data-efeito-campo]')) {
+      field.addEventListener('change', (event) => this.#onEffectField(event.currentTarget));
+    }
+    for (const field of this.element.querySelectorAll('[data-item-campo]')) {
+      field.addEventListener('change', (event) => this.#onItemField(event.currentTarget));
+    }
+  }
+
+  /** Edição de um campo de um efeito temporário (nome, descrição, atributo ou passos). */
+  async #onEffectField(field) {
+    const changes = { [field.dataset.efeitoCampo]: field.value };
+    const effects = this.document.toObject().system.efeitos;
+    await this.document.update({
+      'system.efeitos': updateEffect(effects, Number(field.dataset.index), changes),
+    });
+  }
+
+  /** Edição rápida de um campo do item na ficha (empunhada, vestida, quantidade, usos). */
+  async #onItemField(field) {
+    const item = this.document.items.get(field.dataset.itemId);
+    if (!item) return;
+    const value = field.type === 'checkbox' ? field.checked : Number(field.value);
+    await item.update({ [`system.${field.dataset.itemCampo}`]: value });
   }
 
   /** Lista de relações como dados simples, pronta para ser alterada e regravada. */
@@ -199,5 +263,58 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Invoca a relação: marca como usada e avisa a mesa no chat (o cartão traz o botão de motivar). */
   static async #onInvokeRelation(event, target) {
     await invokeRelation(this.document, Number(target.dataset.index));
+  }
+
+  /** Cria um item novo do tipo clicado e abre a ficha dele. */
+  static async #onCreateItem(event, target) {
+    const { type } = target.dataset;
+    const [item] = await this.document.createEmbeddedDocuments('Item', [
+      { name: game.i18n.localize(`DESORDEM.Item.Novo.${type}`), type },
+    ]);
+    item?.sheet.render(true);
+  }
+
+  /** Abre a ficha do item. */
+  static async #onEditItem(event, target) {
+    this.document.items.get(target.dataset.itemId)?.sheet.render(true);
+  }
+
+  /** Remove o item da ficha, depois de confirmar. */
+  static async #onDeleteItem(event, target) {
+    const item = this.document.items.get(target.dataset.itemId);
+    if (!item) return;
+    const confirmed = await foundry.applications.api.DialogV2.confirm({
+      window: { title: game.i18n.localize('DESORDEM.Item.Remover') },
+      content: `<p>${game.i18n.localize('DESORDEM.Item.ConfirmarRemover')}</p>`,
+      rejectClose: false,
+      modal: true,
+    });
+    if (confirmed === true) await item.delete();
+  }
+
+  /** Ataca com a arma: teste da perícia da arma e, se acertar, cartão com o dano. */
+  static async #onAttackWeapon(event, target) {
+    const weapon = this.document.items.get(target.dataset.itemId);
+    if (weapon) await attackWithWeapon(this.document, weapon, takeFearOptions(this.element));
+  }
+
+  /** Usa o item (gasta um uso ou uma unidade) e avisa no chat. */
+  static async #onUseItem(event, target) {
+    const item = this.document.items.get(target.dataset.itemId);
+    if (item) await useItem(this.document, item);
+  }
+
+  /** Acrescenta um efeito temporário vazio à ficha. */
+  static async #onAddEffect() {
+    const effects = this.document.toObject().system.efeitos;
+    await this.document.update({ 'system.efeitos': addEffect(effects) });
+  }
+
+  /** Remove o efeito temporário clicado. */
+  static async #onRemoveEffect(event, target) {
+    const effects = this.document.toObject().system.efeitos;
+    await this.document.update({
+      'system.efeitos': removeEffect(effects, Number(target.dataset.index)),
+    });
   }
 }

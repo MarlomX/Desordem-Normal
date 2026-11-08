@@ -1,0 +1,5 @@
+<div class="desordem-dano">
+  <p class="desordem-dano__linha"><strong>{{name}}</strong> {{localize "DESORDEM.Equipamento.CausaDano" valor=amount arma=weapon}}{{#if nonLethal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}}</p>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Equipamento.DanoFormula" formula=formula ra=high}}</p>
+  <button type="button" data-desordem-aplicar-dano>{{localize "DESORDEM.Equipamento.AplicarAlvos"}}</button>
+</div>
