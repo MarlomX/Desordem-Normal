@@ -6,13 +6,14 @@ import {
   pickArmorToSpend,
   reduceDamageWithArmor,
   handsInUse,
+  checkEquipment,
   weaponSkill,
   weaponDamageLabel,
   itemUse,
   itemUseChanges,
 } from '../scripts/rolls/equipment.js';
 
-const armor = (extra = {}) => ({ id: 'a', pontos: 1, gastos: 0, vestida: true, ...extra });
+const armor = (extra = {}) => ({ id: 'a', pontos: 1, restantes: 1, vestida: true, ...extra });
 
 test('cada ponto de armadura reduz o dano em 10, sem ficar negativo', () => {
   assert.equal(ARMOR_REDUCTION, 10);
@@ -21,49 +22,99 @@ test('cada ponto de armadura reduz o dano em 10, sem ficar negativo', () => {
   assert.equal(reduceDamageWithArmor(3), 0);
 });
 
-test('armorSummary conta só as armaduras vestidas e os pontos que restam', () => {
+test('armorSummary conta só a armadura vestida e os pontos que restam', () => {
   const list = [
-    armor({ pontos: 2, gastos: 1 }),
-    armor({ id: 'b', pontos: 3, vestida: false }),
-    armor({ id: 'c', pontos: 1, gastos: 1 }),
+    armor({ pontos: 2, restantes: 1 }),
+    armor({ id: 'b', pontos: 3, restantes: 3, vestida: false }),
   ];
-  assert.deepEqual(armorSummary(list), { total: 3, available: 1 });
+  assert.deepEqual(armorSummary(list), { total: 2, available: 1 });
   assert.deepEqual(armorSummary([]), { total: 0, available: 0 });
 });
 
-test('pickArmorToSpend escolhe a primeira vestida com pontos', () => {
+test('armorSummary nunca conta mais pontos restantes que o total da armadura', () => {
+  assert.deepEqual(armorSummary([armor({ pontos: 1, restantes: 5 })]), {
+    total: 1,
+    available: 1,
+  });
+  assert.equal(armorSummary([armor({ pontos: 2, restantes: -1 })]).available, 0);
+});
+
+test('pickArmorToSpend escolhe a armadura vestida que ainda tem pontos', () => {
   const list = [
-    armor({ id: 'x', gastos: 1 }),
+    armor({ id: 'x', restantes: 0 }),
     armor({ id: 'y', vestida: false }),
-    armor({ id: 'z', pontos: 2, gastos: 1 }),
+    armor({ id: 'z', pontos: 2, restantes: 1 }),
   ];
   assert.equal(pickArmorToSpend(list), 'z');
-  assert.equal(pickArmorToSpend([armor({ gastos: 1 })]), null);
+  assert.equal(pickArmorToSpend([armor({ restantes: 0 })]), null);
   assert.equal(pickArmorToSpend([]), null);
 });
 
-test('handsInUse soma as mãos das armas empunhadas e avisa quando passa de duas', () => {
+test('handsInUse soma as mãos de armas e itens empunhados e avisa quando passa de duas', () => {
   assert.deepEqual(
     handsInUse([
       { maos: 1, empunhada: true },
       { maos: 1, empunhada: true },
     ]),
-    {
-      used: 2,
-      over: false,
-    },
+    { used: 2, over: false },
   );
   assert.deepEqual(
     handsInUse([
       { maos: 2, empunhada: true },
       { maos: 1, empunhada: true },
     ]),
-    {
-      used: 3,
-      over: true,
-    },
+    { used: 3, over: true },
   );
   assert.deepEqual(handsInUse([{ maos: 2, empunhada: false }]), { used: 0, over: false });
+});
+
+const piece = (id, type, system) => ({ id, type, system });
+
+test('checkEquipment: duas mãos no máximo, somando armas e itens', () => {
+  const sword = piece('s', 'arma', { maos: 1, empunhada: true });
+  const torch = piece('t', 'item', { maos: 1, empunhada: true });
+  const bow = { type: 'arma', system: { maos: 2, empunhada: true } };
+  assert.deepEqual(
+    checkEquipment([sword], { type: 'item', system: { maos: 1, empunhada: true } }),
+    {
+      ok: true,
+      reason: null,
+    },
+  );
+  assert.deepEqual(
+    checkEquipment([sword, torch], { type: 'item', system: { maos: 1, empunhada: true } }),
+    {
+      ok: false,
+      reason: 'maos',
+    },
+  );
+  assert.deepEqual(checkEquipment([sword], bow), { ok: false, reason: 'maos' });
+  // desequipar nunca é bloqueado, e itens fora da mão não contam
+  assert.equal(
+    checkEquipment([sword, torch], { type: 'arma', system: { maos: 2, empunhada: false } }).ok,
+    true,
+  );
+  assert.equal(checkEquipment([piece('i', 'item', { maos: 2, empunhada: false })], bow).ok, true);
+});
+
+test('checkEquipment: só uma armadura vestida, e armaduras não ocupam as mãos', () => {
+  const worn = piece('a', 'armadura', { vestida: true });
+  assert.deepEqual(checkEquipment([worn], { type: 'armadura', system: { vestida: true } }), {
+    ok: false,
+    reason: 'armadura',
+  });
+  assert.equal(checkEquipment([worn], { type: 'armadura', system: { vestida: false } }).ok, true);
+  assert.equal(
+    checkEquipment([piece('b', 'armadura', { vestida: false })], {
+      type: 'armadura',
+      system: { vestida: true },
+    }).ok,
+    true,
+  );
+  assert.equal(
+    checkEquipment([worn], { type: 'arma', system: { maos: 2, empunhada: true } }).ok,
+    true,
+  );
 });
 
 test('weaponSkill usa a perícia da arma ou o padrão do tipo', () => {

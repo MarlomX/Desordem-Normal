@@ -13,7 +13,7 @@ export function armorList(actor) {
     .map((item) => ({
       id: item.id,
       pontos: item.system.pontos,
-      gastos: item.system.gastos,
+      restantes: item.system.restantes,
       vestida: item.system.vestida,
     }));
 }
@@ -49,6 +49,6 @@ export async function spendArmorPoint(actor) {
   const id = pickArmorToSpend(armorList(actor));
   if (!id) return false;
   const item = actor.items.get(id);
-  await item.update({ 'system.gastos': item.system.gastos + 1 });
+  await item.update({ 'system.restantes': Math.max(0, item.system.restantes - 1) });
   return true;
 }

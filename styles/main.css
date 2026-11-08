@@ -454,3 +454,20 @@
 .desordem-item__descricao textarea {
   width: 100%;
 }
+
+.desordem-efeito-ativo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.desordem-efeito-ativo__origem {
+  flex: 0 0 4.5em;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.desordem-efeito-ativo__texto {
+  flex: 1;
+}

@@ -95,7 +95,7 @@
       "Invocar": "Invocar",
       "LacoUsado": "Usada nesta missão",
       "Efeitos": "Efeitos",
-      "DicaEfeitos": "Efeitos temporários (por exemplo, um preparado ou uma bênção). Se escolher um atributo e passos, o dado do atributo muda nos testes. Passe o mouse no nome para ver a descrição; remova à mão no fim.",
+      "DicaEfeitos": "Aqui ficam juntos as lesões, os traumas e os efeitos temporários (um preparado, uma bênção...), cada um com a sua descrição. Nos efeitos temporários, se escolher um atributo e passos, o dado do atributo muda nos testes; remova-os à mão quando acabarem.",
       "EfeitoNome": "Nome do efeito",
       "EfeitoDescricao": "Descrição",
       "EfeitoPassos": "Passos no dado do atributo",
@@ -112,7 +112,13 @@
       "Itens": "Itens",
       "Atacar": "Atacar",
       "Usar": "Usar",
-      "PontosArmadura": "{restantes}/{pontos} pontos de armadura"
+      "PontosArmadura": "{restantes}/{pontos} pontos de armadura",
+      "EfeitoOrigem": {
+        "lesao": "Lesão",
+        "trauma": "Trauma",
+        "efeito": "Efeito"
+      },
+      "DicaItens": "Itens podem ser usados sem empunhar, o que poupa o tempo de equipar e guardar. Empunhar só é preciso para segurar o item, e ele ocupa as mãos."
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -317,7 +323,6 @@
       "Empunhada": "Empunhada",
       "Vestida": "Vestida",
       "Pontos": "Pontos de armadura",
-      "Gastos": "Pontos gastos",
       "Quantidade": "Quantidade",
       "Consumivel": "Consumível (cada uso gasta uma unidade)",
       "UsosMax": "Limite de usos (0 = sem limite)",
@@ -331,7 +336,10 @@
         "arma": "Nova arma",
         "armadura": "Nova armadura",
         "item": "Novo item"
-      }
+      },
+      "Restantes": "Pontos restantes",
+      "NaMao": "Na mão",
+      "DicaMao": "Muitos itens podem ser usados sem estar na mão. Marque \"Na mão\" só para segurar o item: ele ocupa uma ou duas mãos, e são duas no total."
     },
     "Armadura": {
       "Titulo": "Pontos de armadura",
@@ -346,7 +354,11 @@
       "SoMestre": "Só quem controla {nome} pode aplicar o dano nele: peça ao mestre.",
       "Usa": "usa {item}.",
       "UsosRestantes": "Usos restantes: {restantes} de {max}.",
-      "SemUso": "{nome} não tem usos restantes nem é consumível."
+      "SemUso": "{nome} não tem usos restantes nem é consumível.",
+      "Bloqueio": {
+        "maos": "Sem mãos livres: desequipe uma arma ou um item antes.",
+        "armadura": "Só uma armadura pode ser vestida por vez: tire a outra antes."
+      }
     }
   },
   "TYPES.Item.arma": "Arma",

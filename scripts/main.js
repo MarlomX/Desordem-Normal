@@ -6,6 +6,7 @@ import ItemSheet from './sheets/item-sheet.js';
 import { rollTest, rollSkill, rollAptitude, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
+import { registerEquipmentGuards } from './rolls/equipment-guard.js';
 import { computeDamage } from './rolls/damage.js';
 import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
 import {
@@ -20,6 +21,7 @@ Hooks.once('init', () => {
   CONFIG.DESORDEM = { ATRIBUTOS, PERICIAS, APTIDOES };
   CONFIG.Actor.dataModels.personagem = PersonagemModel;
   CONFIG.Item.dataModels = { arma: ArmaModel, armadura: ArmaduraModel, item: ItemModel };
+  registerEquipmentGuards();
 
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, PersonagemSheet, {
     types: ['personagem'],

@@ -33,25 +33,41 @@ export class ArmaModel extends foundry.abstract.TypeDataModel {
   }
 }
 
-/** Armadura: cada ponto gasto reduz em 10 o dano físico sofrido (não se recupera no playtest). */
+/**
+ * Armadura: cada ponto gasto reduz em 10 o dano físico sofrido (não se recupera no playtest).
+ * Só uma armadura pode ser vestida por vez.
+ */
 export class ArmaduraModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       descricao: texto(),
       pontos: contagem(1),
-      gastos: contagem(0),
+      restantes: contagem(1),
       vestida: new f.BooleanField({ initial: false }),
     };
   }
+
+  /** Itens da v0.10.0 guardavam os pontos gastos; agora guardamos os pontos restantes. */
+  static migrateData(source) {
+    if (source.restantes === undefined && source.gastos !== undefined) {
+      source.restantes = Math.max(0, (source.pontos ?? 1) - source.gastos);
+    }
+    return super.migrateData(source);
+  }
 }
 
-/** Item em geral, com quantidade e, se quiser, limite de usos ou consumo por uso. */
+/**
+ * Item em geral, com quantidade e, se quiser, limite de usos ou consumo por uso. Pode ser
+ * empunhado (ocupa uma ou duas mãos), mas muitos itens podem ser usados sem empunhar.
+ */
 export class ItemModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       descricao: texto(),
       quantidade: contagem(1),
       consumivel: new f.BooleanField({ initial: false }),
+      maos: new f.NumberField({ required: true, integer: true, min: 1, max: 2, initial: 1 }),
+      empunhada: new f.BooleanField({ initial: false }),
       // Limite de usos: 0 = sem limite; senão, máximo e restantes
       usosMax: contagem(0),
       usos: contagem(0),

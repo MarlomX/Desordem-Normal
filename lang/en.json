@@ -95,7 +95,7 @@
       "Invocar": "Invoke",
       "LacoUsado": "Used this mission",
       "Efeitos": "Effects",
-      "DicaEfeitos": "Temporary effects (for example, a preparation or a blessing). If you pick an attribute and steps, that attribute's die changes on tests. Hover the name to see the description; remove them by hand later.",
+      "DicaEfeitos": "Injuries, traumas and temporary effects (a preparation, a blessing...) are listed together here, each with its description. On temporary effects, if you pick an attribute and steps, that attribute's die changes on tests; remove them by hand when they end.",
       "EfeitoNome": "Effect name",
       "EfeitoDescricao": "Description",
       "EfeitoPassos": "Steps on the attribute die",
@@ -112,7 +112,13 @@
       "Itens": "Items",
       "Atacar": "Attack",
       "Usar": "Use",
-      "PontosArmadura": "{restantes}/{pontos} armor points"
+      "PontosArmadura": "{restantes}/{pontos} armor points",
+      "EfeitoOrigem": {
+        "lesao": "Injury",
+        "trauma": "Trauma",
+        "efeito": "Effect"
+      },
+      "DicaItens": "Items can be used without wielding them, which saves the time of equipping and stowing. You only need to wield an item to hold it, and it takes up your hands."
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -317,7 +323,6 @@
       "Empunhada": "Wielded",
       "Vestida": "Worn",
       "Pontos": "Armor points",
-      "Gastos": "Points spent",
       "Quantidade": "Quantity",
       "Consumivel": "Consumable (each use spends one unit)",
       "UsosMax": "Use limit (0 = no limit)",
@@ -331,7 +336,10 @@
         "arma": "New weapon",
         "armadura": "New armor",
         "item": "New item"
-      }
+      },
+      "Restantes": "Points left",
+      "NaMao": "In hand",
+      "DicaMao": "Many items can be used without being in hand. Tick \"In hand\" only to hold the item: it takes one or two hands, and you have two in total."
     },
     "Armadura": {
       "Titulo": "Armor points",
@@ -346,7 +354,11 @@
       "SoMestre": "Only whoever controls {nome} can apply damage to them: ask the GM.",
       "Usa": "uses {item}.",
       "UsosRestantes": "Uses left: {restantes} of {max}.",
-      "SemUso": "{nome} has no uses left and is not consumable."
+      "SemUso": "{nome} has no uses left and is not consumable.",
+      "Bloqueio": {
+        "maos": "No free hands: unequip a weapon or an item first.",
+        "armadura": "Only one armor can be worn at a time: take the other off first."
+      }
     }
   },
   "TYPES.Item.arma": "Weapon",

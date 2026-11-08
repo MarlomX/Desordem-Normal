@@ -4,6 +4,7 @@
 import { DIE_STEPS } from '../rolls/dice.js';
 import { RELATION_MAX_DEGREE, degreeKey, invokeCheck } from '../rolls/relation.js';
 import {
+  HANDS,
   armorSummary,
   handsInUse,
   itemUse,
@@ -156,6 +157,8 @@ export function buildEffectRows(effects, { attrLabel, noAttrLabel, attributes, e
 
 /**
  * Equipamento da ficha: armas, armaduras e outros itens, com mãos em uso e pontos de armadura.
+ * Itens que não podem ser equipados agora (sem mãos livres, ou já há uma armadura vestida) vêm
+ * com `blocked` verdadeiro, para a caixa de equipar ficar desativada.
  * @param {{id: string, name: string, type: string, system: Object}[]} items Itens do personagem.
  * @param {Object} options
  * @param {(kind: string) => string} options.kindLabel Nome traduzido do tipo de arma.
@@ -167,6 +170,11 @@ export function buildEquipmentRows(items, { kindLabel, handsLabel, skillLabel, e
   const of = (type) => items.filter((item) => item.type === type);
   const weapons = of('arma');
   const armors = of('armadura');
+  const others = of('item');
+  const hands = handsInUse([...weapons, ...others].map((i) => i.system));
+  const armorWorn = armors.some((a) => a.system.vestida);
+  // Equipar fica bloqueado se o item não está equipado e não cabe
+  const cannotHold = (system) => !system.empunhada && hands.used + system.maos > HANDS;
   return {
     weapons: weapons.map(({ id, name, system }) => ({
       id,
@@ -179,17 +187,19 @@ export function buildEquipmentRows(items, { kindLabel, handsLabel, skillLabel, e
       empunhada: system.empunhada,
       naoLetal: system.naoLetal,
       locked: !editable,
+      blocked: !editable || cannotHold(system),
     })),
     armors: armors.map(({ id, name, system }) => ({
       id,
       name,
       descricao: system.descricao,
       pontos: system.pontos,
-      restantes: Math.max(0, system.pontos - system.gastos),
+      restantes: Math.max(0, Math.min(system.restantes, system.pontos)),
       vestida: system.vestida,
       locked: !editable,
+      blocked: !editable || (!system.vestida && armorWorn),
     })),
-    others: of('item').map(({ id, name, system }) => {
+    others: others.map(({ id, name, system }) => {
       const use = itemUse(system);
       return {
         id,
@@ -199,12 +209,15 @@ export function buildEquipmentRows(items, { kindLabel, handsLabel, skillLabel, e
         usos: system.usos,
         usosMax: system.usosMax,
         hasUsos: system.usosMax > 0,
+        handsLabel: handsLabel(system.maos),
+        empunhada: system.empunhada,
         showUse: use.kind !== null,
         canUse: editable && use.canUse,
         locked: !editable,
+        blocked: !editable || cannotHold(system),
       };
     }),
-    hands: handsInUse(weapons.map((w) => w.system)),
+    hands,
     armorTotals: armorSummary(armors.map((a) => a.system)),
   };
 }

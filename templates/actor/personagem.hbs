@@ -55,16 +55,6 @@
     <input type="number" name="system.cena.testesLesao" value="{{system.cena.testesLesao}}" min="0" {{#unless editable}}disabled{{/unless}}>
   </label>
 
-  <div class="desordem-ficha__lesoes">
-    <strong>{{localize "DESORDEM.Ficha.Lesoes"}}:</strong>
-    {{#each lesions}}
-    <span class="desordem-ficha__lesao" title="{{description}}">{{label}}{{#if repeated}} ×{{count}}{{/if}}
-      {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeLesion" data-lesion="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverLesao"}}">×</button>{{/if}}
-    </span>
-    {{else}}
-    <span class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemLesoes"}}</span>
-    {{/each}}
-  </div>
 </section>
 
 <section class="desordem-ficha__secao desordem-ficha__medo">
@@ -101,16 +91,6 @@
     <input type="number" name="system.cena.testesTrauma" value="{{system.cena.testesTrauma}}" min="0" {{#unless editable}}disabled{{/unless}}>
   </label>
 
-  <div class="desordem-ficha__lesoes">
-    <strong>{{localize "DESORDEM.Ficha.Traumas"}}:</strong>
-    {{#each traumas}}
-    <span class="desordem-ficha__lesao" title="{{description}}">{{label}}{{#if repeated}} ×{{count}}{{/if}}
-      {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeTrauma" data-trauma="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverTrauma"}}">×</button>{{/if}}
-    </span>
-    {{else}}
-    <span class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemTraumas"}}</span>
-    {{/each}}
-  </div>
 </section>
 
 <section class="desordem-ficha__secao">
@@ -165,17 +145,33 @@
 <section class="desordem-ficha__secao desordem-ficha__efeitos">
   <h3>{{localize "DESORDEM.Ficha.Efeitos"}}</h3>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaEfeitos"}}</p>
+
+  {{#each lesions}}
+  <div class="desordem-efeito-ativo">
+    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.lesao"}}</span>
+    <span class="desordem-efeito-ativo__texto"><strong>{{label}}{{#if repeated}} ×{{count}}{{/if}}</strong> — {{description}}</span>
+    {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeLesion" data-lesion="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverLesao"}}">×</button>{{/if}}
+  </div>
+  {{/each}}
+  {{#each traumas}}
+  <div class="desordem-efeito-ativo">
+    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.trauma"}}</span>
+    <span class="desordem-efeito-ativo__texto"><strong>{{label}}{{#if repeated}} ×{{count}}{{/if}}</strong> — {{description}}</span>
+    {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeTrauma" data-trauma="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverTrauma"}}">×</button>{{/if}}
+  </div>
+  {{/each}}
+
   {{#each effects}}
   <div class="desordem-efeito">
+    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.efeito"}}</span>
     <input type="text" class="desordem-efeito__nome" data-efeito-campo="nome" data-index="{{index}}" value="{{nome}}" title="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.EfeitoNome"}}" {{#if locked}}disabled{{/if}}>
     <select data-efeito-campo="atributo" data-index="{{index}}" {{#if locked}}disabled{{/if}}>{{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     <select data-efeito-campo="passos" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.EfeitoPassos"}}" {{#if locked}}disabled{{/if}}>{{#each stepOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     <input type="text" class="desordem-efeito__descricao" data-efeito-campo="descricao" data-index="{{index}}" value="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.EfeitoDescricao"}}" {{#if locked}}disabled{{/if}}>
     {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="removeEffect" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.RemoverEfeito"}}">×</button>{{/unless}}
   </div>
-  {{else}}
-  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemEfeitos"}}</p>
   {{/each}}
+  {{#unless lesions.length}}{{#unless traumas.length}}{{#unless effects.length}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemEfeitos"}}</p>{{/unless}}{{/unless}}{{/unless}}
   {{#if editable}}<button type="button" data-action="addEffect">{{localize "DESORDEM.Ficha.AdicionarEfeito"}}</button>{{/if}}
 </section>
 
@@ -189,7 +185,7 @@
   <h4>{{localize "DESORDEM.Ficha.Armas"}}</h4>
   {{#each equipment.weapons}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
-    <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="empunhada" data-item-id="{{id}}" {{#if empunhada}}checked{{/if}} {{#if locked}}disabled{{/if}}> {{localize "DESORDEM.Item.Empunhada"}}</label>
+    <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="empunhada" data-item-id="{{id}}" {{#if empunhada}}checked{{/if}} {{#if blocked}}disabled title="{{localize "DESORDEM.Equipamento.Bloqueio.maos"}}"{{/if}}> {{localize "DESORDEM.Item.Empunhada"}}</label>
     <span class="desordem-item-linha__nome" title="{{descricao}}"><strong>{{name}}</strong> — {{kindLabel}}, {{handsLabel}}, {{localize "DESORDEM.Ficha.Dano"}} {{damageLabel}}{{#if naoLetal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}} · {{skillLabel}}</span>
     <button type="button" data-action="attackWeapon" data-item-id="{{id}}" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Ficha.Atacar"}}</button>
     <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
@@ -201,7 +197,7 @@
   <h4>{{localize "DESORDEM.Ficha.Armaduras"}}</h4>
   {{#each equipment.armors}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
-    <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="vestida" data-item-id="{{id}}" {{#if vestida}}checked{{/if}} {{#if locked}}disabled{{/if}}> {{localize "DESORDEM.Item.Vestida"}}</label>
+    <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="vestida" data-item-id="{{id}}" {{#if vestida}}checked{{/if}} {{#if blocked}}disabled title="{{localize "DESORDEM.Equipamento.Bloqueio.armadura"}}"{{/if}}> {{localize "DESORDEM.Item.Vestida"}}</label>
     <span class="desordem-item-linha__nome" title="{{descricao}}"><strong>{{name}}</strong> — {{localize "DESORDEM.Ficha.PontosArmadura" restantes=restantes pontos=pontos}}</span>
     <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
     {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="deleteItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Remover"}}">×</button>{{/unless}}
@@ -210,9 +206,11 @@
   {{#if editable}}<button type="button" data-action="createItem" data-type="armadura">{{localize "DESORDEM.Item.Novo.armadura"}}</button>{{/if}}
 
   <h4>{{localize "DESORDEM.Ficha.Itens"}}</h4>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaItens"}}</p>
   {{#each equipment.others}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
-    <span class="desordem-item-linha__nome" title="{{descricao}}"><strong>{{name}}</strong></span>
+    <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="empunhada" data-item-id="{{id}}" {{#if empunhada}}checked{{/if}} {{#if blocked}}disabled title="{{localize "DESORDEM.Equipamento.Bloqueio.maos"}}"{{/if}}> {{localize "DESORDEM.Item.NaMao"}}</label>
+    <span class="desordem-item-linha__nome" title="{{descricao}}"><strong>{{name}}</strong> — {{handsLabel}}</span>
     <label class="desordem-item-linha__marca">{{localize "DESORDEM.Item.Quantidade"}} <input type="number" class="desordem-item-linha__numero" data-item-campo="quantidade" data-item-id="{{id}}" value="{{quantidade}}" min="0" {{#if locked}}disabled{{/if}}></label>
     {{#if hasUsos}}<label class="desordem-item-linha__marca">{{localize "DESORDEM.Item.Usos"}} <input type="number" class="desordem-item-linha__numero" data-item-campo="usos" data-item-id="{{id}}" value="{{usos}}" min="0" max="{{usosMax}}" {{#if locked}}disabled{{/if}}> / {{usosMax}}</label>{{/if}}
     {{#if showUse}}<button type="button" data-action="useItem" data-item-id="{{id}}" {{#unless canUse}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.Usar"}}</button>{{/if}}

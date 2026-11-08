@@ -174,68 +174,58 @@ test('buildEffectRows monta os seletores de atributo e de passos', () => {
   assert.equal(row.locked, false);
 });
 
+const wpn = (id, maos, empunhada, tipo = 'corpo', bonusDano = 0) => ({
+  id,
+  name: id,
+  type: 'arma',
+  system: { descricao: '', tipo, maos, bonusDano, pericia: '', naoLetal: false, empunhada },
+});
+const armr = (id, pontos, restantes, vestida) => ({
+  id,
+  name: id,
+  type: 'armadura',
+  system: { descricao: '', pontos, restantes, vestida },
+});
+const itm = (id, extra = {}) => ({
+  id,
+  name: id,
+  type: 'item',
+  system: {
+    descricao: '',
+    quantidade: 1,
+    consumivel: false,
+    usosMax: 0,
+    usos: 0,
+    maos: 1,
+    empunhada: false,
+    ...extra,
+  },
+});
+const labels = {
+  kindLabel: (k) => `tipo:${k}`,
+  handsLabel: (n) => `${n}m`,
+  skillLabel: (k) => `p:${k}`,
+};
+
 test('buildEquipmentRows separa armas, armaduras e itens e calcula mãos e armadura', () => {
-  const items = [
-    {
-      id: 'w1',
-      name: 'Machado',
-      type: 'arma',
-      system: {
-        descricao: '',
-        tipo: 'corpo',
-        maos: 2,
-        bonusDano: 3,
-        pericia: '',
-        naoLetal: false,
-        empunhada: true,
-      },
-    },
-    {
-      id: 'w2',
-      name: 'Arco',
-      type: 'arma',
-      system: {
-        descricao: '',
-        tipo: 'distancia',
-        maos: 2,
-        bonusDano: 1,
-        pericia: '',
-        naoLetal: false,
-        empunhada: true,
-      },
-    },
-    {
-      id: 'a1',
-      name: 'Tenaz',
-      type: 'armadura',
-      system: { descricao: '', pontos: 2, gastos: 1, vestida: true },
-    },
-    {
-      id: 'i1',
-      name: 'Bálsamo',
-      type: 'item',
-      system: { descricao: '', quantidade: 2, consumivel: true, usosMax: 0, usos: 0 },
-    },
-    {
-      id: 'i2',
-      name: 'Odre',
-      type: 'item',
-      system: { descricao: '', quantidade: 1, consumivel: false, usosMax: 3, usos: 0 },
-    },
-  ];
-  const rows = buildEquipmentRows(items, {
-    kindLabel: (k) => `tipo:${k}`,
-    handsLabel: (n) => `${n}m`,
-    skillLabel: (k) => `p:${k}`,
-  });
+  const rows = buildEquipmentRows(
+    [
+      wpn('Machado', 1, true, 'corpo', 3),
+      wpn('Arco', 2, false, 'distancia', 1),
+      armr('Tenaz', 2, 1, true),
+      itm('Bálsamo', { quantidade: 2, consumivel: true }),
+      itm('Odre', { usosMax: 3, usos: 0 }),
+    ],
+    labels,
+  );
   assert.deepEqual(
     rows.weapons.map((w) => [w.name, w.kindLabel, w.handsLabel, w.damageLabel, w.skillLabel]),
     [
-      ['Machado', 'tipo:corpo', '2m', 'RA+3', 'p:luta'],
+      ['Machado', 'tipo:corpo', '1m', 'RA+3', 'p:luta'],
       ['Arco', 'tipo:distancia', '2m', 'RA+1', 'p:pontaria'],
     ],
   );
-  assert.deepEqual(rows.hands, { used: 4, over: true });
+  assert.deepEqual(rows.hands, { used: 1, over: false });
   assert.deepEqual(
     rows.armors.map((a) => [a.pontos, a.restantes, a.vestida]),
     [[2, 1, true]],
@@ -250,20 +240,65 @@ test('buildEquipmentRows separa armas, armaduras e itens e calcula mãos e armad
   );
 });
 
-test('buildEquipmentRows trava os botões quando a ficha não é editável', () => {
+test('buildEquipmentRows bloqueia equipar o que não cabe nas duas mãos (armas e itens juntos)', () => {
   const rows = buildEquipmentRows(
     [
-      {
-        id: 'i',
-        name: 'X',
-        type: 'item',
-        system: { descricao: '', quantidade: 1, consumivel: true, usosMax: 0, usos: 0 },
-      },
+      wpn('Espada', 1, true),
+      itm('Tocha', { empunhada: true }),
+      wpn('Arco', 2, false),
+      itm('Livro'),
     ],
-    { kindLabel: (k) => k, handsLabel: String, skillLabel: (k) => k, editable: false },
+    labels,
+  );
+  assert.deepEqual(rows.hands, { used: 2, over: false });
+  // quem já está equipado nunca é bloqueado (pode desequipar); os demais não cabem
+  assert.deepEqual(
+    rows.weapons.map((w) => [w.name, w.blocked]),
+    [
+      ['Espada', false],
+      ['Arco', true],
+    ],
+  );
+  assert.deepEqual(
+    rows.others.map((o) => [o.name, o.blocked]),
+    [
+      ['Tocha', false],
+      ['Livro', true],
+    ],
+  );
+});
+
+test('buildEquipmentRows libera equipar quando há mão livre', () => {
+  const rows = buildEquipmentRows([wpn('Espada', 1, true), itm('Tocha')], labels);
+  assert.equal(rows.others[0].blocked, false);
+});
+
+test('buildEquipmentRows permite uma só armadura vestida', () => {
+  const rows = buildEquipmentRows([armr('A', 1, 1, true), armr('B', 1, 1, false)], labels);
+  assert.deepEqual(
+    rows.armors.map((a) => [a.name, a.blocked]),
+    [
+      ['A', false],
+      ['B', true],
+    ],
+  );
+  const free = buildEquipmentRows([armr('A', 1, 1, false), armr('B', 1, 1, false)], labels);
+  assert.deepEqual(
+    free.armors.map((a) => a.blocked),
+    [false, false],
+  );
+});
+
+test('buildEquipmentRows trava os botões quando a ficha não é editável', () => {
+  const rows = buildEquipmentRows(
+    [itm('X', { consumivel: true }), armr('A', 1, 1, false), wpn('W', 1, false)],
+    { ...labels, editable: false },
   );
   assert.equal(rows.others[0].canUse, false);
   assert.equal(rows.others[0].locked, true);
+  assert.equal(rows.others[0].blocked, true);
+  assert.equal(rows.armors[0].blocked, true);
+  assert.equal(rows.weapons[0].blocked, true);
 });
 
 test('buildChoices marca a opção atual', () => {

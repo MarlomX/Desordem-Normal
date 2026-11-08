@@ -31,8 +31,8 @@
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Pontos"}}</span>
       <input type="number" name="system.pontos" value="{{system.pontos}}" min="0" {{#unless editable}}disabled{{/unless}}>
     </label>
-    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Gastos"}}</span>
-      <input type="number" name="system.gastos" value="{{system.gastos}}" min="0" {{#unless editable}}disabled{{/unless}}>
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Restantes"}}</span>
+      <input type="number" name="system.restantes" value="{{system.restantes}}" min="0" max="{{system.pontos}}" {{#unless editable}}disabled{{/unless}}>
     </label>
     <label class="desordem-ficha__campo"><input type="checkbox" name="system.vestida" {{#if system.vestida}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Vestida"}}</span></label>
   </div>
@@ -50,8 +50,13 @@
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Usos"}}</span>
       <input type="number" name="system.usos" value="{{system.usos}}" min="0" {{#unless editable}}disabled{{/unless}}>
     </label>
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Maos.Titulo"}}</span>
+      <select name="system.maos" {{#unless editable}}disabled{{/unless}}>{{#each handsChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
+    <label class="desordem-ficha__campo"><input type="checkbox" name="system.empunhada" {{#if system.empunhada}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.NaMao"}}</span></label>
   </div>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaUso"}}</p>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaMao"}}</p>
   {{/if}}
 
   <label class="desordem-ficha__campo desordem-item__descricao"><span>{{localize "DESORDEM.Item.Descricao"}}</span>
