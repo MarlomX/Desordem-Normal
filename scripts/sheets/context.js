@@ -138,6 +138,7 @@ export function buildEffectRows(effects, { attrLabel, noAttrLabel, attributes, e
     index,
     nome: effect.nome,
     descricao: effect.descricao,
+    fimDeCena: effect.fimDeCena,
     locked: !editable,
     attrOptions: [
       { value: '', label: noAttrLabel, selected: effect.atributo === '' },
@@ -226,3 +227,39 @@ export function buildEquipmentRows(items, { kindLabel, handsLabel, skillLabel, e
 export function buildChoices(values, current, label) {
   return values.map((value) => ({ value, label: label(value), selected: value === current }));
 }
+
+/**
+ * Linhas das habilidades da ficha: a de perfil primeiro, depois as outras por nome. Cada linha
+ * diz quais controles mostrar, conforme a automação da habilidade.
+ * @param {{id: string, name: string, system: Object}[]} items Habilidades do personagem.
+ * @param {Object} options
+ * @param {string[]} options.active Habilidades ativadas para o próximo teste.
+ * @param {{impeto: number, analise: number}} options.resources
+ * @param {boolean} options.hurtCompanion O animal está ferido nesta cena.
+ * @param {boolean} [options.editable=true]
+ */
+export function buildAbilityRows(items, { active, resources, hurtCompanion, editable = true }) {
+  const rows = items.map(({ id, name, system }) => ({
+    id,
+    name,
+    descricao: system.descricao,
+    perfil: system.perfil,
+    automacao: system.automacao,
+    locked: !editable,
+    showImpeto: system.automacao === 'impeto',
+    showAnalise: system.automacao === 'analise',
+    showDodge: system.automacao === 'esquiva',
+    showHeal: system.automacao === 'curandeiro',
+    showCompanion: system.automacao === 'companheiro',
+    showSneak: system.automacao === 'sorrateiro',
+    impeto: resources.impeto,
+    analise: resources.analise,
+    impetoDadoAtivo: active.includes('impetoDado'),
+    sorrateiroAtivo: active.includes('sorrateiro'),
+    animalFerido: hurtCompanion,
+  }));
+  return rows.sort(
+    (a, b) => Number(b.perfil) - Number(a.perfil) || a.name.localeCompare(b.name, 'pt-BR'),
+  );
+}
+

@@ -38,8 +38,18 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       }),
       cena: new f.SchemaField({
         testesLesao: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
-        testesTrauma: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 })
+        testesTrauma: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
+        // Quem já recebeu a cura nesta cena (ids dos aliados) e o animal ferido da cena
+        curados: new f.ArrayField(new f.StringField({ required: true, blank: false })),
+        animalFerido: new f.BooleanField({ initial: false })
       }),
+      // Recursos das habilidades: barra de ímpeto (0 a 5) e marcadores de análise (0 a 4)
+      recursos: new f.SchemaField({
+        impeto: new f.NumberField({ required: true, integer: true, min: 0, max: 5, initial: 0 }),
+        analise: new f.NumberField({ required: true, integer: true, min: 0, max: 4, initial: 0 })
+      }),
+      // Habilidades ativadas para o próximo teste (ex.: dado extra de ímpeto)
+      ativas: new f.ArrayField(new f.StringField({ required: true, blank: false })),
       lesoes: new f.ArrayField(new f.StringField({ required: true, blank: false })),
       traumas: new f.ArrayField(new f.StringField({ required: true, blank: false })),
       // Relações: grau 0 a 3 (as bolinhas), descrição narrativa e marcador "usada"
@@ -57,7 +67,8 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
           nome: new f.StringField({ required: true, blank: true, initial: '' }),
           descricao: new f.StringField({ required: true, blank: true, initial: '' }),
           atributo: new f.StringField({ required: true, blank: true, initial: '' }),
-          passos: new f.NumberField({ required: true, integer: true, min: -3, max: 3, initial: 0 })
+          passos: new f.NumberField({ required: true, integer: true, min: -3, max: 3, initial: 0 }),
+          fimDeCena: new f.BooleanField({ initial: false })
         })
       )
     };

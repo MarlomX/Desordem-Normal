@@ -59,6 +59,16 @@
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaMao"}}</p>
   {{/if}}
 
+  {{#if isAbility}}
+  <div class="desordem-item__campos">
+    <label class="desordem-ficha__campo"><input type="checkbox" name="system.perfil" {{#if system.perfil}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Perfil"}}</span></label>
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Automacao"}}</span>
+      <select name="system.automacao" {{#unless editable}}disabled{{/unless}}>{{#each automationChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
+  </div>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaAutomacao"}}</p>
+  {{/if}}
+
   <label class="desordem-ficha__campo desordem-item__descricao"><span>{{localize "DESORDEM.Item.Descricao"}}</span>
     <textarea name="system.descricao" rows="5" {{#unless editable}}disabled{{/unless}}>{{system.descricao}}</textarea>
   </label>

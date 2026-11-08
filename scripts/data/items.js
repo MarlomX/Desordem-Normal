@@ -1,6 +1,8 @@
 /**
  * Modelos de dados dos Items: armas, armaduras e itens em geral.
  */
+import { AUTOMATIONS } from '../rolls/abilities.js';
+
 const f = foundry.data.fields;
 
 const texto = () => new f.StringField({ required: true, blank: true, initial: '' });
@@ -72,5 +74,24 @@ export class ItemModel extends foundry.abstract.TypeDataModel {
       usosMax: contagem(0),
       usos: contagem(0),
     };
+  }
+}
+
+/**
+ * Habilidade. Não separamos as que vêm da origem das que vêm de nível: todas são iguais, e a de
+ * perfil (`perfil`) aparece sempre primeiro. `automacao` liga a habilidade a um comportamento do
+ * sistema; vazio = só descrição.
+ */
+export class HabilidadeModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    return {
+      descricao: texto(),
+      perfil: new f.BooleanField({ initial: false }),
+      automacao: new f.StringField({ required: true, blank: true, initial: '' }),
+    };
+  }
+
+  static get automations() {
+    return AUTOMATIONS;
   }
 }

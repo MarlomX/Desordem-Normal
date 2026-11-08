@@ -125,7 +125,8 @@ async function markRecovered(message, name) {
 async function applyRecoveryFromMessage(message) {
   const data = message.flags?.[SYSTEM_ID]?.recuperacao;
   if (!data || data.curado) return false;
-  const actor = recoveryTarget();
+  // Cartões de cura apontam para o aliado; os de motivar valem para quem clicar
+  const actor = data.alvoUuid ? await foundry.utils.fromUuid(data.alvoUuid) : recoveryTarget();
   if (!actor || !actor.isOwner) {
     ui.notifications.warn(t('DESORDEM.Recuperacao.SemAlvo'));
     return false;

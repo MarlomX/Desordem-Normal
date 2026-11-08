@@ -62,4 +62,8 @@
   {{#if criticalFailure}}
   <p class="desordem-teste__nota">{{localize "DESORDEM.Teste.NotaFalhaCritica"}}</p>
   {{/if}}
+
+  {{#each notes}}
+  <p class="desordem-teste__nota">{{this}}</p>
+  {{/each}}
 </div>

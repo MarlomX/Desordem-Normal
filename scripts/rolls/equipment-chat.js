@@ -6,6 +6,8 @@ import { render, postMessage, rollSkill } from './chat.js';
 import { computeDamage } from './damage.js';
 import { damageActor } from './health.js';
 import { weaponSkill, weaponDamageLabel, itemUse, itemUseChanges } from './equipment.js';
+import { hasAbility } from './abilities.js';
+import { abilityNote } from './abilities-chat.js';
 
 const TEMPLATE_ATAQUE = `systems/${SYSTEM_ID}/templates/chat/ataque.hbs`;
 const TEMPLATE_USO = `systems/${SYSTEM_ID}/templates/chat/item-uso.hbs`;
@@ -22,7 +24,19 @@ const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localiz
  */
 export async function attackWithWeapon(actor, weapon, options = {}) {
   const { system } = weapon;
-  const result = await rollSkill(actor, weaponSkill(system), { dt: 7, ...options });
+  // Companheiro animal: +d6 nos ataques corpo a corpo, até o animal se ferir (dado em 1)
+  const companion =
+    system.tipo === 'corpo' && hasAbility(actor, 'companheiro') && !actor.system.cena.animalFerido;
+  const result = await rollSkill(actor, weaponSkill(system), {
+    dt: 7,
+    ...options,
+    extraDice: [...(companion ? [6] : []), ...(options.extraDice ?? [])],
+  });
+  // O dado do companheiro é o primeiro dado extra do teste
+  if (companion && result.dice[2]?.source === 'extra' && result.dice[2].value === 1) {
+    await actor.update({ 'system.cena.animalFerido': true });
+    await abilityNote(actor, t('DESORDEM.Habilidade.AnimalFerido'));
+  }
   if (!result.success) return { result, amount: null };
   const amount = computeDamage(result, system.bonusDano);
   await postMessage({

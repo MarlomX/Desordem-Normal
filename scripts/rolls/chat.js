@@ -10,6 +10,14 @@ import { buildChatContext, buildOpposedContext } from './presenter.js';
 import { lesionModifier, contusionStepMods } from './injury.js';
 import { traumaModifier } from './emotional.js';
 import { effectStepMods } from './effects.js';
+import {
+  hasAbility,
+  addImpeto,
+  impetoFillsOnFailure,
+  opposedLoser,
+  activeBoosts,
+  resolveWithValues,
+} from './abilities.js';
 import { resolveFearOptions } from './fear.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
@@ -118,14 +126,36 @@ export async function executeTest({
     rng: sequenceRng(rolls.map((roll) => roll.total)),
   });
 
-  const context = buildChatContext(result, {
-    label,
-    attrLabel,
-    skillLabel,
-    showDt,
-    helpers: helped.notes,
-  });
-  return { result, rolls, card: await render(TEMPLATE, context) };
+  const display = { label, attrLabel, skillLabel, showDt, helpers: helped.notes };
+  const context = buildChatContext(result, display);
+  return {
+    result,
+    rolls,
+    card: await render(TEMPLATE, context),
+    // O necessário para refazer o teste com outros valores nos dados (análise, repetir dado)
+    plan: {
+      attrDie,
+      skillDie,
+      dt,
+      extraDice: helped.extraDice,
+      stepMods: helped.stepMods,
+      modifier,
+      fearDie,
+    },
+    display,
+    sides: rolledSides,
+    values: rolls.map((roll) => roll.total),
+  };
+}
+
+/**
+ * Refaz um teste já rolado com novos valores nos dados e devolve o resultado e o cartão HTML.
+ * @param {{plan: object, display: object, values: number[], notes?: string[]}} data
+ */
+export async function rebuildTest({ plan, display, values, notes = [] }) {
+  const result = resolveWithValues(plan, values);
+  const context = { ...buildChatContext(result, display), notes };
+  return { result, card: await render(TEMPLATE, context) };
 }
 
 /**
@@ -141,7 +171,26 @@ export async function runTest(actor, options) {
   if (actor && options.fearStored && outcome.result.fear?.ended) {
     await actor.update({ 'system.estado.pavor': 0 });
   }
+  if (actor) await settleAbilities(actor, options, outcome.result);
   return outcome;
+}
+
+/**
+ * Efeitos das habilidades depois de um teste: paga o ímpeto gasto, desativa o que foi usado e
+ * enche a barra de ímpeto se o teste com DT falhou.
+ */
+async function settleAbilities(actor, options, result) {
+  const updates = {};
+  const before = actor.system.recursos.impeto;
+  let impeto = before - (options.impetoCost ?? 0);
+  if (hasAbility(actor, 'impeto') && impetoFillsOnFailure(result, options.showDt)) {
+    impeto = addImpeto(impeto);
+  }
+  if (impeto !== before) updates['system.recursos.impeto'] = impeto;
+  if (options.activeUsed?.length) {
+    updates['system.ativas'] = actor.system.ativas.filter((k) => !options.activeUsed.includes(k));
+  }
+  if (Object.keys(updates).length) await actor.update(updates);
 }
 
 /**
@@ -164,8 +213,14 @@ export async function rollTest({
   actor,
   ...options
 }) {
-  const { result, rolls, card } = await runTest(actor, { ...options, attrLabel, skillLabel });
-  await postMessage({ actor, content: card, rolls });
+  const { result, rolls, card, plan, display, sides, values } = await runTest(actor, {
+    ...options,
+    attrLabel,
+    skillLabel,
+  });
+  // O cartão guarda o teste para as habilidades que mudam os dados depois da rolagem
+  const flags = actor ? { teste: { plan, display, sides, values, notes: [], used: {} } } : undefined;
+  await postMessage({ actor, content: card, rolls, flags });
   return result;
 }
 
@@ -191,22 +246,35 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     throw error;
   }
 
+  // Habilidades ativadas na ficha para o próximo teste (dado extra de ímpeto, dado furtivo)
+  const boosts = activeBoosts(system.ativas, {
+    skillKey,
+    impeto: system.recursos.impeto,
+    pd: system.pd.value - fear.pdCost,
+  });
+
   return {
     ...rest,
+    impetoCost: boosts.impetoCost,
+    activeUsed: boosts.used,
     // Contusão (Físico -1 passo), efeitos temporários da ficha e penalidades fixas de lesões e traumas
     stepMods: [
       ...(rest.stepMods ?? []),
       ...contusionStepMods(system.estado, attrKey),
       ...effectStepMods(system.efeitos, attrKey),
     ],
-    extraDice: [...(rest.extraDice ?? []), ...(fear.bonusDie ? [fear.bonusDie] : [])],
+    extraDice: [
+      ...(rest.extraDice ?? []),
+      ...boosts.extraDice,
+      ...(fear.bonusDie ? [fear.bonusDie] : []),
+    ],
     modifier:
       (rest.modifier ?? 0) +
       lesionModifier(system.lesoes, skillKey) +
       traumaModifier(system.traumas, { attrKey, skillKey }),
     fearDie: fear.fearDie,
     fearStored: fear.fearDie !== null, // o dado rolado é o pavor guardado na ficha
-    pdCost: fear.pdCost,
+    pdCost: fear.pdCost + boosts.pdCost,
     attrDie: actor.system.atributos[attrKey],
     skillDie: skillDieOf(actor, skillKey),
     attrLabel: game.i18n.localize(`DESORDEM.Atributos.${attrKey}`),
@@ -259,6 +327,15 @@ export async function rollOpposed(a, b) {
 
   const [sideA, sideB] = await Promise.all([prepare(a), prepare(b)]);
   const outcome = resolveOpposed(sideA.result, sideB.result);
+
+  // Quem perde a disputa enche a barra de ímpeto (se tiver a habilidade)
+  const loser = opposedLoser(outcome);
+  const loserActor = loser === 'a' ? a.actor : loser === 'b' ? b.actor : null;
+  if (loserActor && hasAbility(loserActor, 'impeto')) {
+    await loserActor.update({
+      'system.recursos.impeto': addImpeto(loserActor.system.recursos.impeto),
+    });
+  }
 
   const context = {
     ...buildOpposedContext(outcome),

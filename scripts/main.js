@@ -1,12 +1,19 @@
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES } from './config.js';
 import PersonagemModel from './data/personagem.js';
-import { ArmaModel, ArmaduraModel, ItemModel } from './data/items.js';
+import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel } from './data/items.js';
 import PersonagemSheet from './sheets/personagem-sheet.js';
 import ItemSheet from './sheets/item-sheet.js';
 import { rollTest, rollSkill, rollAptitude, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
 import { registerEquipmentGuards } from './rolls/equipment-guard.js';
+import {
+  registerAbilitySocket,
+  renderTestButtons,
+  endScene,
+  healAlly,
+  gainAnalysisMarkers,
+} from './rolls/abilities-chat.js';
 import { computeDamage } from './rolls/damage.js';
 import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
 import {
@@ -20,7 +27,12 @@ Hooks.once('init', () => {
 
   CONFIG.DESORDEM = { ATRIBUTOS, PERICIAS, APTIDOES };
   CONFIG.Actor.dataModels.personagem = PersonagemModel;
-  CONFIG.Item.dataModels = { arma: ArmaModel, armadura: ArmaduraModel, item: ItemModel };
+  CONFIG.Item.dataModels = {
+    arma: ArmaModel,
+    armadura: ArmaduraModel,
+    item: ItemModel,
+    habilidade: HabilidadeModel,
+  };
   registerEquipmentGuards();
 
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, PersonagemSheet, {
@@ -29,7 +41,7 @@ Hooks.once('init', () => {
     label: 'DESORDEM.Ficha.Personagem',
   });
   foundry.documents.collections.Items.registerSheet(SYSTEM_ID, ItemSheet, {
-    types: ['arma', 'armadura', 'item'],
+    types: ['arma', 'armadura', 'item', 'habilidade'],
     makeDefault: true,
     label: 'DESORDEM.Item.Ficha',
   });
@@ -48,15 +60,20 @@ Hooks.once('init', () => {
     invokeRelation,
     attackWithWeapon,
     useItem,
+    endScene,
+    healAlly,
+    gainAnalysisMarkers,
   };
 });
 
 Hooks.on('renderChatMessageHTML', (message, html) => {
   renderRelationCard(message, html);
   renderEquipmentCard(message, html);
+  renderTestButtons(message, html);
 });
 
 Hooks.once('ready', () => {
   registerRelationSocket();
+  registerAbilitySocket();
   console.log(`${SYSTEM_ID} | pronto`);
 });

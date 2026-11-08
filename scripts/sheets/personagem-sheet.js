@@ -8,6 +8,15 @@ import { invokeRelation } from '../rolls/relation-chat.js';
 import { attackWithWeapon, useItem } from '../rolls/equipment-chat.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import {
+  toggleActive,
+  impetoStep,
+  impetoAction,
+  gainAnalysisMarkers,
+  rollDodge,
+  healAlly,
+  endScene,
+} from '../rolls/abilities-chat.js';
+import {
   addRelation,
   removeRelation,
   updateRelation,
@@ -22,6 +31,7 @@ import {
   buildRelationRows,
   buildEffectRows,
   buildEquipmentRows,
+  buildAbilityRows,
 } from './context.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -70,6 +80,12 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       useItem: PersonagemSheet.#onUseItem,
       addEffect: PersonagemSheet.#onAddEffect,
       removeEffect: PersonagemSheet.#onRemoveEffect,
+      impetoStep: PersonagemSheet.#onImpetoStep,
+      impetoAction: PersonagemSheet.#onImpetoAction,
+      gainAnalysis: PersonagemSheet.#onGainAnalysis,
+      dodge: PersonagemSheet.#onDodge,
+      healAlly: PersonagemSheet.#onHealAlly,
+      newScene: PersonagemSheet.#onNewScene,
     },
     // Itens podem ser arrastados da barra lateral ou de outra ficha para esta
     dragDrop: [{ dragSelector: '[data-item-id]', dropSelector: null }],
@@ -119,6 +135,17 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         attributes: ATRIBUTOS,
         editable: this.isEditable,
       }),
+      abilities: buildAbilityRows(
+        this.document.items
+          .filter((item) => item.type === 'habilidade')
+          .map((item) => ({ id: item.id, name: item.name, system: item.system })),
+        {
+          active: system.ativas,
+          resources: system.recursos,
+          hurtCompanion: system.cena.animalFerido,
+          editable: this.isEditable,
+        },
+      ),
       equipment: buildEquipmentRows(
         this.document.items.map((item) => ({
           id: item.id,
@@ -149,6 +176,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     for (const field of this.element.querySelectorAll('[data-efeito-campo]')) {
       field.addEventListener('change', (event) => this.#onEffectField(event.currentTarget));
     }
+    for (const field of this.element.querySelectorAll('[data-ativa]')) {
+      field.addEventListener('change', (event) =>
+        toggleActive(this.document, event.currentTarget.dataset.ativa),
+      );
+    }
     for (const field of this.element.querySelectorAll('[data-item-campo]')) {
       field.addEventListener('change', (event) => this.#onItemField(event.currentTarget));
     }
@@ -156,7 +188,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /** Edição de um campo de um efeito temporário (nome, descrição, atributo ou passos). */
   async #onEffectField(field) {
-    const changes = { [field.dataset.efeitoCampo]: field.value };
+    const value = field.type === 'checkbox' ? field.checked : field.value;
+    const changes = { [field.dataset.efeitoCampo]: value };
     const effects = this.document.toObject().system.efeitos;
     await this.document.update({
       'system.efeitos': updateEffect(effects, Number(field.dataset.index), changes),
@@ -316,5 +349,41 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     await this.document.update({
       'system.efeitos': removeEffect(effects, Number(target.dataset.index)),
     });
+  }
+
+  /** Ímpeto: gasta 3 espaços para subir um atributo um passo até o fim da cena. */
+  static async #onImpetoStep() {
+    await impetoStep(this.document);
+  }
+
+  /** Ímpeto: gasta 3 espaços para uma ação extra (avisa o mestre no chat). */
+  static async #onImpetoAction() {
+    await impetoAction(this.document);
+  }
+
+  /** Análise: gasta uma ação para ganhar 2 marcadores. */
+  static async #onGainAnalysis() {
+    await gainAnalysisMarkers(this.document);
+  }
+
+  /** Esquiva livre: teste de Acrobacia oposto ao ataque. */
+  static async #onDodge() {
+    await rollDodge(this.document, takeFearOptions(this.element));
+  }
+
+  /** Cura o aliado mirado (Medicina DT 7, 2 PD). */
+  static async #onHealAlly() {
+    await healAlly(this.document);
+  }
+
+  /** Nova cena: reinicia contadores, recursos e efeitos de cena deste personagem. */
+  static async #onNewScene() {
+    const confirmed = await foundry.applications.api.DialogV2.confirm({
+      window: { title: game.i18n.localize('DESORDEM.Habilidade.NovaCena') },
+      content: `<p>${game.i18n.localize('DESORDEM.Habilidade.NovaCenaConfirmar')}</p>`,
+      rejectClose: false,
+      modal: true,
+    });
+    if (confirmed === true) await endScene(this.document);
   }
 }

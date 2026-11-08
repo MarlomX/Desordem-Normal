@@ -118,7 +118,11 @@
         "trauma": "Trauma",
         "efeito": "Effect"
       },
-      "DicaItens": "Items can be used without wielding them, which saves the time of equipping and stowing. You only need to wield an item to hold it, and it takes up your hands."
+      "DicaItens": "Items can be used without wielding them, which saves the time of equipping and stowing. You only need to wield an item to hold it, and it takes up your hands.",
+      "Habilidades": "Abilities",
+      "DicaHabilidades": "Profile abilities come first. Abilities with an automation show their controls here; the others are just a description.",
+      "SemHabilidades": "No abilities",
+      "EfeitoFimDeCena": "Until end of scene"
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -335,11 +339,27 @@
       "Novo": {
         "arma": "New weapon",
         "armadura": "New armor",
-        "item": "New item"
+        "item": "New item",
+        "habilidade": "New ability"
       },
       "Restantes": "Points left",
       "NaMao": "In hand",
-      "DicaMao": "Many items can be used without being in hand. Tick \"In hand\" only to hold the item: it takes one or two hands, and you have two in total."
+      "DicaMao": "Many items can be used without being in hand. Tick \"In hand\" only to hold the item: it takes one or two hands, and you have two in total.",
+      "Perfil": "Profile ability (always shown first)",
+      "PerfilEtiqueta": "profile",
+      "Automacao": "Automation",
+      "DicaAutomacao": "The automation ties the ability to a system behavior. With no automation, it is just a description.",
+      "Automacoes": {
+        "nenhuma": "None (description only)",
+        "impeto": "Drive bar (failures fill it; spend it for bonuses)",
+        "impetoInicial": "Starting drive (1 space every new scene)",
+        "analise": "Analysis markers (adjust the dice after the test)",
+        "prontidao": "Reroll a die (2 DP, once per test)",
+        "esquiva": "Free dodge (Acrobatics opposed to the attack)",
+        "companheiro": "Animal companion (+d6 in melee)",
+        "curandeiro": "Heal ally (Medicine, 2 DP)",
+        "sorrateiro": "Extra die on Crime or Stealth (3 DP)"
+      }
     },
     "Armadura": {
       "Titulo": "Armor points",
@@ -359,9 +379,54 @@
         "maos": "No free hands: unequip a weapon or an item first.",
         "armadura": "Only one armor can be worn at a time: take the other off first."
       }
+    },
+    "Habilidade": {
+      "Confirmar": "Confirm",
+      "ImpetoInsuficiente": "Not enough drive spaces.",
+      "ImpetoPassoTitulo": "Drive: raise an attribute",
+      "ImpetoPassoEscolha": "Attribute that goes up one step until the end of the scene:",
+      "EfeitoImpeto": "Drive",
+      "EfeitoImpetoDescricao": "The attribute die goes up one step until the end of the scene.",
+      "ImpetoPassoTexto": "spends 3 drive spaces: {atributo} goes up one step until the end of the scene.",
+      "ImpetoAcaoTexto": "spends 3 drive spaces to take an extra action.",
+      "ImpetoAcaoDetalhe": "Tell the GM: how the extra action plays out is up to the table.",
+      "AnaliseGanha": "spends an action and gains {valor} analysis marker(s).",
+      "EsquivaTitulo": "Dodge",
+      "CuraSemAlvo": "Target the token of the ally to be healed.",
+      "CuraEmSi": "The healing is for an ally, not for yourself.",
+      "CuraJaCurou": "{nome} has already received this healing this scene.",
+      "CuraSemPD": "Not enough DP to heal.",
+      "CuraTexto": "uses healing on {alvo}.",
+      "CuraValor": "Healing",
+      "NovaCena": "New scene",
+      "NovaCenaConfirmar": "Reset this character's scene? It clears the scene's injury and trauma tests, empties drive and analysis, removes until-end-of-scene effects and restores 1 HP if at 0.",
+      "NovaCenaFeita": "Scene reset for {n} character(s).",
+      "AnaliseTitulo": "Use analysis",
+      "AnaliseDica": "Each marker changes a die by 1 point (minimum 1, up to the die's maximum). Markers available: {pontos}. Type the new value of each die.",
+      "AnaliseInvalida": "Invalid values or not enough markers.",
+      "AnaliseNota": "{nome} uses {pontos} analysis marker(s) to adjust the dice.",
+      "AnaliseBotao": "Use analysis ({pontos})",
+      "ProntidaoJaUsada": "This ability has already been used on this test.",
+      "ProntidaoSemPD": "Not enough DP to reroll the die.",
+      "ProntidaoTitulo": "Reroll a die",
+      "ProntidaoEscolha": "Die to roll again:",
+      "ProntidaoNota": "{nome} spends DP to roll the d{dado} again: {de} → {para}.",
+      "ProntidaoBotao": "Reroll a die ({custo} DP)",
+      "AnimalFerido": "The companion got hurt and no longer helps this scene.",
+      "Impeto": "Drive",
+      "ImpetoDado": "+d4 on the next test (1 space)",
+      "ImpetoPasso": "Raise attribute (3)",
+      "ImpetoAcao": "Extra action (3)",
+      "Marcadores": "Markers",
+      "Analisar": "Analyze (+2)",
+      "Esquivar": "Dodge",
+      "Curar": "Heal ally",
+      "AnimalFeridoMarca": "Animal hurt",
+      "Sorrateiro": "+d8 on the next Crime or Stealth test (3 DP)"
     }
   },
   "TYPES.Item.arma": "Weapon",
   "TYPES.Item.armadura": "Armor",
-  "TYPES.Item.item": "Item"
+  "TYPES.Item.item": "Item",
+  "TYPES.Item.habilidade": "Ability"
 }

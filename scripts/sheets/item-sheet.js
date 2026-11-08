@@ -1,5 +1,6 @@
 import { SYSTEM_ID, PERICIAS } from '../config.js';
 import { WEAPON_KINDS } from '../rolls/equipment.js';
+import { AUTOMATIONS } from '../rolls/abilities.js';
 import { buildChoices } from './context.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -35,6 +36,19 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       isWeapon: item.type === 'arma',
       isArmor: item.type === 'armadura',
       isOther: item.type === 'item',
+      isAbility: item.type === 'habilidade',
+      automationChoices: [
+        {
+          value: '',
+          label: t('DESORDEM.Item.Automacoes.nenhuma'),
+          selected: item.system.automacao === '',
+        },
+        ...AUTOMATIONS.map((key) => ({
+          value: key,
+          label: t(`DESORDEM.Item.Automacoes.${key}`),
+          selected: item.system.automacao === key,
+        })),
+      ],
       kindChoices: buildChoices(WEAPON_KINDS, item.system.tipo, (kind) =>
         t(`DESORDEM.Item.Tipo.${kind}`),
       ),

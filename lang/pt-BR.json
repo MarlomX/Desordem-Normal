@@ -118,7 +118,11 @@
         "trauma": "Trauma",
         "efeito": "Efeito"
       },
-      "DicaItens": "Itens podem ser usados sem empunhar, o que poupa o tempo de equipar e guardar. Empunhar só é preciso para segurar o item, e ele ocupa as mãos."
+      "DicaItens": "Itens podem ser usados sem empunhar, o que poupa o tempo de equipar e guardar. Empunhar só é preciso para segurar o item, e ele ocupa as mãos.",
+      "Habilidades": "Habilidades",
+      "DicaHabilidades": "As habilidades de perfil aparecem primeiro. Habilidades com automação mostram aqui os seus controles; as outras servem de descrição.",
+      "SemHabilidades": "Nenhuma habilidade",
+      "EfeitoFimDeCena": "Até o fim da cena"
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -335,11 +339,27 @@
       "Novo": {
         "arma": "Nova arma",
         "armadura": "Nova armadura",
-        "item": "Novo item"
+        "item": "Novo item",
+        "habilidade": "Nova habilidade"
       },
       "Restantes": "Pontos restantes",
       "NaMao": "Na mão",
-      "DicaMao": "Muitos itens podem ser usados sem estar na mão. Marque \"Na mão\" só para segurar o item: ele ocupa uma ou duas mãos, e são duas no total."
+      "DicaMao": "Muitos itens podem ser usados sem estar na mão. Marque \"Na mão\" só para segurar o item: ele ocupa uma ou duas mãos, e são duas no total.",
+      "Perfil": "Habilidade de perfil (aparece sempre primeiro)",
+      "PerfilEtiqueta": "perfil",
+      "Automacao": "Automação",
+      "DicaAutomacao": "A automação liga a habilidade a um comportamento do sistema. Sem automação, ela serve só de descrição.",
+      "Automacoes": {
+        "nenhuma": "Nenhuma (só descrição)",
+        "impeto": "Barra de ímpeto (falhas enchem; gasta para bônus)",
+        "impetoInicial": "Ímpeto inicial (1 espaço a cada nova cena)",
+        "analise": "Marcadores de análise (ajustam os dados depois do teste)",
+        "prontidao": "Repetir dado (2 PD, uma vez por teste)",
+        "esquiva": "Esquiva livre (Acrobacia oposta ao ataque)",
+        "companheiro": "Companheiro animal (+d6 corpo a corpo)",
+        "curandeiro": "Curar aliado (Medicina, 2 PD)",
+        "sorrateiro": "Dado extra em Crime ou Furtividade (3 PD)"
+      }
     },
     "Armadura": {
       "Titulo": "Pontos de armadura",
@@ -359,9 +379,54 @@
         "maos": "Sem mãos livres: desequipe uma arma ou um item antes.",
         "armadura": "Só uma armadura pode ser vestida por vez: tire a outra antes."
       }
+    },
+    "Habilidade": {
+      "Confirmar": "Confirmar",
+      "ImpetoInsuficiente": "Não há espaços de ímpeto suficientes.",
+      "ImpetoPassoTitulo": "Ímpeto: subir um atributo",
+      "ImpetoPassoEscolha": "Atributo que sobe um passo até o fim da cena:",
+      "EfeitoImpeto": "Ímpeto",
+      "EfeitoImpetoDescricao": "O dado do atributo sobe um passo até o fim da cena.",
+      "ImpetoPassoTexto": "gasta 3 espaços de ímpeto: {atributo} sobe um passo até o fim da cena.",
+      "ImpetoAcaoTexto": "gasta 3 espaços de ímpeto para fazer uma ação extra.",
+      "ImpetoAcaoDetalhe": "Avise o mestre: a resolução da ação extra fica por conta da mesa.",
+      "AnaliseGanha": "gasta uma ação e ganha {valor} marcador(es) de análise.",
+      "EsquivaTitulo": "Esquiva",
+      "CuraSemAlvo": "Mire (target) o token do aliado que será curado.",
+      "CuraEmSi": "A cura é para um aliado, não para si mesmo.",
+      "CuraJaCurou": "{nome} já recebeu esta cura nesta cena.",
+      "CuraSemPD": "PD insuficientes para curar.",
+      "CuraTexto": "usa a cura em {alvo}.",
+      "CuraValor": "Cura",
+      "NovaCena": "Nova cena",
+      "NovaCenaConfirmar": "Reiniciar a cena deste personagem? Zera os testes de lesão e trauma da cena, esvazia ímpeto e análise, remove efeitos até o fim da cena e recupera 1 PV se estiver com 0.",
+      "NovaCenaFeita": "Cena reiniciada para {n} personagem(ns).",
+      "AnaliseTitulo": "Usar análise",
+      "AnaliseDica": "Cada marcador muda um dado em 1 ponto (mínimo 1, máximo do dado). Marcadores disponíveis: {pontos}. Escreva o novo valor de cada dado.",
+      "AnaliseInvalida": "Valores inválidos ou marcadores insuficientes.",
+      "AnaliseNota": "{nome} usa {pontos} marcador(es) de análise para ajustar os dados.",
+      "AnaliseBotao": "Usar análise ({pontos})",
+      "ProntidaoJaUsada": "Esta habilidade já foi usada neste teste.",
+      "ProntidaoSemPD": "PD insuficientes para repetir o dado.",
+      "ProntidaoTitulo": "Repetir um dado",
+      "ProntidaoEscolha": "Dado a rolar de novo:",
+      "ProntidaoNota": "{nome} gasta PD para rolar de novo o d{dado}: {de} → {para}.",
+      "ProntidaoBotao": "Repetir dado ({custo} PD)",
+      "AnimalFerido": "O companheiro se feriu e não ajuda mais nesta cena.",
+      "Impeto": "Ímpeto",
+      "ImpetoDado": "+d4 no próximo teste (1 espaço)",
+      "ImpetoPasso": "Subir atributo (3)",
+      "ImpetoAcao": "Ação extra (3)",
+      "Marcadores": "Marcadores",
+      "Analisar": "Analisar (+2)",
+      "Esquivar": "Esquivar",
+      "Curar": "Curar aliado",
+      "AnimalFeridoMarca": "Animal ferido",
+      "Sorrateiro": "+d8 no próximo teste de Crime ou Furtividade (3 PD)"
     }
   },
   "TYPES.Item.arma": "Arma",
   "TYPES.Item.armadura": "Armadura",
-  "TYPES.Item.item": "Item"
+  "TYPES.Item.item": "Item",
+  "TYPES.Item.habilidade": "Habilidade"
 }

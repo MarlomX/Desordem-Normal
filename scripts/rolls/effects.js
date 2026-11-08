@@ -1,15 +1,16 @@
 /**
  * Efeitos temporários da ficha (por exemplo, o bônus de um preparado até o fim da cena).
  * Cada efeito tem nome, descrição e, opcionalmente, um atributo cujo dado sobe ou desce passos.
+ * Os marcados "até o fim da cena" somem no reinício de cena.
  * Lógica pura, sem dependência do Foundry.
  */
 import { ATRIBUTOS } from '../config.js';
 
 export const EFFECT_MAX_STEPS = 3;
 
-/** @returns {{nome: string, descricao: string, atributo: string, passos: number}} */
+/** @returns {{nome: string, descricao: string, atributo: string, passos: number, fimDeCena: boolean}} */
 export function newEffect() {
-  return { nome: '', descricao: '', atributo: '', passos: 0 };
+  return { nome: '', descricao: '', atributo: '', passos: 0, fimDeCena: false };
 }
 
 /** Acrescenta um efeito novo ao fim da lista (devolve uma lista nova). */
@@ -32,6 +33,8 @@ export function updateEffect(effects, index, changes) {
     const next = { ...effect };
     if ('nome' in changes) next.nome = String(changes.nome ?? '');
     if ('descricao' in changes) next.descricao = String(changes.descricao ?? '');
+    if ('fimDeCena' in changes)
+      next.fimDeCena = changes.fimDeCena === true || changes.fimDeCena === 'true';
     if ('atributo' in changes) {
       const key = String(changes.atributo ?? '');
       next.atributo = ATRIBUTOS.includes(key) ? key : '';

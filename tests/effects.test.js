@@ -27,6 +27,9 @@ test('updateEffect limita passos, valida o atributo e ignora campos desconhecido
   assert.equal(updateEffect(list, 0, { passos: -8 })[0].passos, -3);
   assert.equal(updateEffect(list, 0, { passos: 'abc' })[0].passos, 0);
   assert.equal(updateEffect(list, 0, { atributo: 'forca' })[0].atributo, '');
+  assert.equal(updateEffect(list, 0, { fimDeCena: true })[0].fimDeCena, true);
+  assert.equal(updateEffect(list, 0, { fimDeCena: 'true' })[0].fimDeCena, true);
+  assert.equal(updateEffect(list, 0, { fimDeCena: false })[0].fimDeCena, false);
   assert.deepEqual(updateEffect(list, 3, { nome: 'Z' }), list);
 });
 

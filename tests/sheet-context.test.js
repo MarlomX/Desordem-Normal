@@ -11,6 +11,7 @@ import {
   buildEffectRows,
   buildEquipmentRows,
   buildChoices,
+  buildAbilityRows,
 } from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
@@ -309,4 +310,60 @@ test('buildChoices marca a opção atual', () => {
       { value: 'b', label: 'B', selected: true },
     ],
   );
+});
+
+const abl = (id, name, automacao, perfil = false) => ({
+  id,
+  name,
+  system: { descricao: '', perfil, automacao },
+});
+
+test('buildAbilityRows põe a de perfil primeiro e ordena as outras por nome', () => {
+  const rows = buildAbilityRows(
+    [abl('1', 'Zeta', 'esquiva'), abl('2', 'Alfa', ''), abl('3', 'Meio', 'impeto', true)],
+    { active: [], resources: { impeto: 2, analise: 0 }, hurtCompanion: false },
+  );
+  assert.deepEqual(
+    rows.map((r) => r.name),
+    ['Meio', 'Alfa', 'Zeta'],
+  );
+});
+
+test('buildAbilityRows mostra os controles de cada automação e o estado das ativações', () => {
+  const rows = buildAbilityRows(
+    [
+      abl('1', 'A', 'impeto'),
+      abl('2', 'B', 'analise'),
+      abl('3', 'C', 'esquiva'),
+      abl('4', 'D', 'curandeiro'),
+      abl('5', 'E', 'companheiro'),
+      abl('6', 'F', 'sorrateiro'),
+      abl('7', 'G', 'prontidao'),
+    ],
+    { active: ['impetoDado'], resources: { impeto: 3, analise: 1 }, hurtCompanion: true },
+  );
+  const by = Object.fromEntries(rows.map((r) => [r.name, r]));
+  assert.equal(by.A.showImpeto, true);
+  assert.equal(by.A.impeto, 3);
+  assert.equal(by.A.impetoDadoAtivo, true);
+  assert.equal(by.B.showAnalise, true);
+  assert.equal(by.B.analise, 1);
+  assert.equal(by.C.showDodge, true);
+  assert.equal(by.D.showHeal, true);
+  assert.equal(by.E.showCompanion, true);
+  assert.equal(by.E.animalFerido, true);
+  assert.equal(by.F.showSneak, true);
+  assert.equal(by.F.sorrateiroAtivo, false);
+  // a repetição de dado só aparece nos cartões de teste, não na ficha
+  assert.equal(by.G.showImpeto || by.G.showAnalise || by.G.showHeal, false);
+});
+
+test('buildAbilityRows trava os controles quando a ficha não é editável', () => {
+  const [row] = buildAbilityRows([abl('1', 'A', 'impeto')], {
+    active: [],
+    resources: { impeto: 0, analise: 0 },
+    hurtCompanion: false,
+    editable: false,
+  });
+  assert.equal(row.locked, true);
 });
