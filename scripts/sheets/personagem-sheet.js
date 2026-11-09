@@ -42,6 +42,7 @@ import {
   buildPips,
   togglePip,
   buildStatusTags,
+  isResourceLow,
 } from './context.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -146,6 +147,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       tabState: tabs.state,
       pvPercent: resourcePercent(system.pv.value, system.pv.max),
       pdPercent: resourcePercent(system.pd.value, system.pd.max),
+      pvLow: isResourceLow(system.pv.value, system.pv.max),
+      pdLow: isResourceLow(system.pd.value, system.pd.max),
       statusTags: buildStatusTags(system.estado, {
         stateLabel: (key) => t(`DESORDEM.Ficha.Estado.${key}`),
         fearLabel: (die) => game.i18n.format('DESORDEM.Ficha.Cab.PavorEtiqueta', { dado: die }),
@@ -163,11 +166,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       skills: buildSkillRows(system.pericias, PERICIAS, {
         skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
         attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
+        attributeDice: system.atributos,
       }),
       aptitudes: buildAptitudeRows(system.aptidoes, APTIDOES, (key) =>
         t(`DESORDEM.Aptidoes.${key}`),
       ),
       aptitudeAttrLabel: t('DESORDEM.Atributos.mente'),
+      aptitudeAttrDie: Number(system.atributos.mente),
       nextInjuryDT: injuryDT(system.cena.testesLesao),
       nextTraumaDT: traumaDT(system.cena.testesTrauma),
       traumas: buildLesionRows(

@@ -15,7 +15,7 @@
     <div class="desordem-recurso desordem-recurso--pv">
       <div class="desordem-recurso__linha">
         <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-resource="pv" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}" {{#unless editable}}disabled{{/unless}}>−</button>
-        <div class="desordem-barra" style="--pct: {{pvPercent}}%">
+        <div class="desordem-barra{{#if pvLow}} is-baixo{{/if}}" style="--pct: {{pvPercent}}%">
           <span class="desordem-barra__nome"><i class="fa-solid fa-heart" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.PV"}}</span>
           <span class="desordem-barra__valores">
             <input type="number" name="system.pv.value" value="{{system.pv.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
@@ -35,7 +35,7 @@
     <div class="desordem-recurso desordem-recurso--pd">
       <div class="desordem-recurso__linha">
         <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-resource="pd" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}" {{#unless editable}}disabled{{/unless}}>−</button>
-        <div class="desordem-barra" style="--pct: {{pdPercent}}%">
+        <div class="desordem-barra{{#if pdLow}} is-baixo{{/if}}" style="--pct: {{pdPercent}}%">
           <span class="desordem-barra__nome"><i class="fa-solid fa-brain" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.PD"}}</span>
           <span class="desordem-barra__valores">
             <input type="number" name="system.pd.value" value="{{system.pd.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
@@ -57,13 +57,13 @@
     {{#each statusTags}}<span class="desordem-etiqueta desordem-etiqueta--{{tone}}">{{label}}</span>{{/each}}
     {{#if equipment.armorTotals.total}}<span class="desordem-etiqueta desordem-etiqueta--armadura"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{equipment.armorTotals.available}}/{{equipment.armorTotals.total}}</span>{{/if}}
     {{#if showImpeto}}
-    <span class="desordem-pips" title="{{localize "DESORDEM.Habilidade.Impeto"}}">
+    <span class="desordem-pips desordem-pips--impeto" title="{{localize "DESORDEM.Habilidade.Impeto"}}">
       <span class="desordem-pips__nome">{{localize "DESORDEM.Habilidade.Impeto"}}</span>
       {{#each impetoPips}}<button type="button" class="desordem-pip{{#if filled}} is-filled{{/if}}" data-action="setPip" data-resource="impeto" data-n="{{n}}" {{#unless ../editable}}disabled{{/unless}}></button>{{/each}}
     </span>
     {{/if}}
     {{#if showAnalise}}
-    <span class="desordem-pips" title="{{localize "DESORDEM.Habilidade.Marcadores"}}">
+    <span class="desordem-pips desordem-pips--analise" title="{{localize "DESORDEM.Habilidade.Marcadores"}}">
       <span class="desordem-pips__nome">{{localize "DESORDEM.Habilidade.Marcadores"}}</span>
       {{#each analisePips}}<button type="button" class="desordem-pip{{#if filled}} is-filled{{/if}}" data-action="setPip" data-resource="analise" data-n="{{n}}" {{#unless ../editable}}disabled{{/unless}}></button>{{/each}}
     </span>

@@ -1,6 +1,6 @@
 <section class="desordem-aba{{#if tabState.equipamento}} is-active{{/if}}" data-tab-panel="equipamento">
 <section class="desordem-ficha__secao desordem-ficha__equipamento">
-  <h3>{{localize "DESORDEM.Ficha.Equipamento"}}</h3>
+  <h3><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Equipamento"}}</h3>
   <p class="desordem-ficha__dica">
     {{localize "DESORDEM.Ficha.ArmaduraResumo" restantes=equipment.armorTotals.available total=equipment.armorTotals.total}}
     · {{localize "DESORDEM.Ficha.MaosEmUso" usadas=equipment.hands.used}}{{#if equipment.hands.over}} <strong class="desordem-ficha__alerta">{{localize "DESORDEM.Ficha.MaosDemais"}}</strong>{{/if}}

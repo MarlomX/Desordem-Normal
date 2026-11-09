@@ -1,6 +1,6 @@
 <section class="desordem-aba{{#if tabState.condicao}} is-active{{/if}}" data-tab-panel="condicao">
 <section class="desordem-ficha__secao desordem-ficha__saude">
-  <h3>{{localize "DESORDEM.Ficha.Saude"}}</h3>
+  <h3><i class="fa-solid fa-heart-pulse" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Saude"}}</h3>
 
   <div class="desordem-ficha__estado">
     <label><input type="checkbox" name="system.estado.inconsciente" {{#if system.estado.inconsciente}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.inconsciente"}}</label>
@@ -30,7 +30,7 @@
 
 </section>
 <section class="desordem-ficha__secao desordem-ficha__medo">
-  <h3>{{localize "DESORDEM.Ficha.Medo"}}</h3>
+  <h3><i class="fa-solid fa-ghost" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Medo"}}</h3>
 
   <div class="desordem-ficha__estado">
     <label class="desordem-ficha__campo">
@@ -65,7 +65,7 @@
 
 </section>
 <section class="desordem-ficha__secao desordem-ficha__efeitos">
-  <h3>{{localize "DESORDEM.Ficha.Efeitos"}}</h3>
+  <h3><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Efeitos"}}</h3>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaEfeitos"}}</p>
 
   {{#each lesions}}

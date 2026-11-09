@@ -35,6 +35,8 @@ export function buildAttributeRows(attributes, keys, label) {
   return keys.map((key) => ({
     key,
     label: label(key),
+    die: Number(attributes[key]),
+    trained: Number(attributes[key]) >= 6,
     options: dieOptions(attributes[key]),
   }));
 }
@@ -46,13 +48,18 @@ export function buildAttributeRows(attributes, keys, label) {
  * @param {Object} labels
  * @param {(key: string) => string} labels.skillLabel
  * @param {(key: string) => string} labels.attrLabel
+ * @param {Record<string, number>} [labels.attributeDice] Dados dos atributos (para mostrar o
+ *   dado do atributo-base ao lado do dado da perícia).
  */
-export function buildSkillRows(skills, skillAttributes, { skillLabel, attrLabel }) {
+export function buildSkillRows(skills, skillAttributes, { skillLabel, attrLabel, attributeDice }) {
   return Object.entries(skillAttributes)
     .map(([key, attrKey]) => ({
       key,
       label: skillLabel(key),
       attrLabel: attrLabel(attrKey),
+      attrDie: attributeDice ? Number(attributeDice[attrKey]) : undefined,
+      die: Number(skills[key]),
+      trained: Number(skills[key]) >= 6,
       options: dieOptions(skills[key]),
     }))
     .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
@@ -367,4 +374,9 @@ export function buildStatusTags(estado, { stateLabel, fearLabel }) {
     tags.push({ key: 'pavor', label: fearLabel(estado.pavor), tone: 'mental' });
   }
   return tags;
+}
+
+/** PV ou PD "baixo" (um quarto do máximo ou menos): a barra do cabeçalho muda de aparência. */
+export function isResourceLow(value, max) {
+  return max > 0 && value / max <= 0.25;
 }

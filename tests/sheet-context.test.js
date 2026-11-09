@@ -23,6 +23,7 @@ import {
   buildPips,
   togglePip,
   buildStatusTags,
+  isResourceLow,
 } from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
@@ -482,4 +483,50 @@ test('buildStatusTags lista condições ativas e o pavor, com a cor de cada grup
     { stateLabel: (k) => k, fearLabel: (d) => `d${d}` },
   );
   assert.equal(morto[0].tone, 'grave');
+});
+
+// --- Visual (v0.12.1) ---
+
+test('buildSkillRows traz o dado da perícia, o do atributo-base e se é treinada', () => {
+  const linhas = buildSkillRows(
+    { luta: 8, furtividade: 4 },
+    { luta: 'fisico', furtividade: 'fisico' },
+    {
+      skillLabel: (k) => k,
+      attrLabel: (k) => k,
+      attributeDice: { fisico: 10 },
+    },
+  );
+  const luta = linhas.find((l) => l.key === 'luta');
+  assert.deepEqual([luta.die, luta.attrDie, luta.trained], [8, 10, true]);
+  const furtividade = linhas.find((l) => l.key === 'furtividade');
+  assert.deepEqual([furtividade.die, furtividade.trained], [4, false]);
+});
+
+test('buildSkillRows sem attributeDice deixa o dado do atributo indefinido', () => {
+  const [linha] = buildSkillRows(
+    { luta: 6 },
+    { luta: 'fisico' },
+    {
+      skillLabel: (k) => k,
+      attrLabel: (k) => k,
+    },
+  );
+  assert.equal(linha.attrDie, undefined);
+  assert.equal(linha.trained, true);
+});
+
+test('buildAttributeRows e buildAptitudeRows trazem o dado atual (die)', () => {
+  const [linha] = buildAttributeRows({ fisico: 12 }, ['fisico'], (k) => k);
+  assert.equal(linha.die, 12);
+  const [apt] = buildAptitudeRows({ artes: 8 }, ['artes'], (k) => k);
+  assert.equal(apt.die, 8);
+  assert.equal(apt.trained, true);
+});
+
+test('isResourceLow vale para um quarto do máximo ou menos e ignora máximo zero', () => {
+  assert.equal(isResourceLow(5, 20), true);
+  assert.equal(isResourceLow(6, 20), false);
+  assert.equal(isResourceLow(0, 20), true);
+  assert.equal(isResourceLow(0, 0), false);
 });
