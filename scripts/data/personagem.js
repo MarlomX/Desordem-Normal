@@ -19,6 +19,9 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
 
     return {
       nivel: new f.NumberField({ required: true, integer: true, min: 1, max: 10, initial: 1 }),
+      // Textos livres do cabeçalho da ficha
+      perfil: new f.StringField({ required: true, blank: true, initial: '' }),
+      vocacao: new f.StringField({ required: true, blank: true, initial: '' }),
       atributos: new f.SchemaField(mapear(ATRIBUTOS, () => dado(6))),
       pericias: new f.SchemaField(mapear(Object.keys(PERICIAS), () => dado(4))),
       aptidoes: new f.SchemaField(mapear(APTIDOES, () => dado(4))),

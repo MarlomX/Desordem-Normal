@@ -32,6 +32,16 @@ import {
   buildEffectRows,
   buildEquipmentRows,
   buildAbilityRows,
+  buildTabs,
+  resolveActiveTab,
+  tabForItemType,
+  resourcePercent,
+  stepResource,
+  stepCounter,
+  PIP_MAX,
+  buildPips,
+  togglePip,
+  buildStatusTags,
 } from './context.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -40,21 +50,24 @@ const { ActorSheetV2 } = foundry.applications.sheets;
 /** Ficha do personagem (ApplicationV2). */
 /**
  * Lê as caixas "controlar" e "abraçar" o pavor (valem só para o próximo teste) e as desmarca.
+ * Há um par na aba Testes (só com pavor) e outro na aba Condição; vale se qualquer uma estiver marcada.
  * @param {HTMLElement} element Raiz da ficha.
  */
 function takeFearOptions(element) {
-  const control = element.querySelector('[data-controlar-pavor]');
-  const embrace = element.querySelector('[data-abracar-pavor]');
+  const control = [...element.querySelectorAll('[data-controlar-pavor]')];
+  const embrace = [...element.querySelectorAll('[data-abracar-pavor]')];
   const options = {
-    controlFear: Boolean(control?.checked),
-    embraceFear: Boolean(embrace?.checked),
+    controlFear: control.some((box) => box.checked),
+    embraceFear: embrace.some((box) => box.checked),
   };
-  if (control) control.checked = false;
-  if (embrace) embrace.checked = false;
+  for (const box of [...control, ...embrace]) box.checked = false;
   return options;
 }
 
 export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
+  /** Aba aberta de cada personagem (id do ator -> id da aba); vale até recarregar a página. */
+  static #activeTabs = new Map();
+
   static DEFAULT_OPTIONS = {
     classes: ['desordem-normal', 'personagem'],
     position: { width: 680, height: 760 },
@@ -86,22 +99,61 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       dodge: PersonagemSheet.#onDodge,
       healAlly: PersonagemSheet.#onHealAlly,
       newScene: PersonagemSheet.#onNewScene,
+      setTab: PersonagemSheet.#onSetTab,
+      adjustResource: PersonagemSheet.#onAdjustResource,
+      adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
+      setPip: PersonagemSheet.#onSetPip,
     },
     // Itens podem ser arrastados da barra lateral ou de outra ficha para esta
     dragDrop: [{ dragSelector: '[data-item-id]', dropSelector: null }],
   };
 
+  /** Cabeçalho e navegação ficam fixos; cada aba é uma parte que rola sozinha. */
   static PARTS = {
-    body: { template: `systems/${SYSTEM_ID}/templates/actor/personagem.hbs` },
+    cabecalho: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-cabecalho.hbs` },
+    abas: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-abas.hbs` },
+    testes: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-testes.hbs`, scrollable: [''] },
+    habilidades: {
+      template: `systems/${SYSTEM_ID}/templates/actor/ficha-habilidades.hbs`,
+      scrollable: [''],
+    },
+    equipamento: {
+      template: `systems/${SYSTEM_ID}/templates/actor/ficha-equipamento.hbs`,
+      scrollable: [''],
+    },
+    condicao: {
+      template: `systems/${SYSTEM_ID}/templates/actor/ficha-condicao.hbs`,
+      scrollable: [''],
+    },
+    relacoes: {
+      template: `systems/${SYSTEM_ID}/templates/actor/ficha-relacoes.hbs`,
+      scrollable: [''],
+    },
   };
 
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const { system } = this.document;
     const t = (key) => game.i18n.localize(key);
+    const activeTab = resolveActiveTab(PersonagemSheet.#activeTabs.get(this.document.id));
+    const tabs = buildTabs(activeTab, (id) => t(`DESORDEM.Ficha.Abas.${id}`));
+    const abilityItems = this.document.items.filter((item) => item.type === 'habilidade');
+    const hasAutomation = (key) => abilityItems.some((item) => item.system.automacao === key);
 
     return {
       ...context,
+      sheetTabs: tabs.list,
+      tabState: tabs.state,
+      pvPercent: resourcePercent(system.pv.value, system.pv.max),
+      pdPercent: resourcePercent(system.pd.value, system.pd.max),
+      statusTags: buildStatusTags(system.estado, {
+        stateLabel: (key) => t(`DESORDEM.Ficha.Estado.${key}`),
+        fearLabel: (die) => game.i18n.format('DESORDEM.Ficha.Cab.PavorEtiqueta', { dado: die }),
+      }),
+      showImpeto: hasAutomation('impeto'),
+      showAnalise: hasAutomation('analise'),
+      impetoPips: buildPips(system.recursos.impeto, PIP_MAX.impeto),
+      analisePips: buildPips(system.recursos.analise, PIP_MAX.analise),
       actor: this.document,
       system,
       editable: this.isEditable,
@@ -184,6 +236,40 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     for (const field of this.element.querySelectorAll('[data-item-campo]')) {
       field.addEventListener('change', (event) => this.#onItemField(event.currentTarget));
     }
+    // As caixas de pavor aparecem em duas abas: marcar uma marca a outra
+    for (const attr of ['data-controlar-pavor', 'data-abracar-pavor']) {
+      const boxes = [...this.element.querySelectorAll(`[${attr}]`)];
+      for (const box of boxes) {
+        box.addEventListener('change', () => {
+          for (const other of boxes) other.checked = box.checked;
+        });
+      }
+    }
+  }
+
+  /**
+   * Depois de arrastar um item para a ficha, abre a aba onde ele aparece.
+   * (Se a versão do Foundry não tiver este método, o comportamento padrão continua valendo.)
+   */
+  async _onDropItem(event, item) {
+    const result = await super._onDropItem?.(event, item);
+    const tab = tabForItemType(item?.type);
+    if (tab) this.#setTab(tab);
+    return result;
+  }
+
+  /** Mostra a aba pedida e a lembra; troca só as classes, sem renderizar a ficha de novo. */
+  #setTab(requested) {
+    const tab = resolveActiveTab(requested);
+    PersonagemSheet.#activeTabs.set(this.document.id, tab);
+    for (const panel of this.element.querySelectorAll('[data-tab-panel]')) {
+      panel.classList.toggle('is-active', panel.dataset.tabPanel === tab);
+    }
+    for (const button of this.element.querySelectorAll('[data-action="setTab"]')) {
+      const active = button.dataset.tab === tab;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-selected', String(active));
+    }
   }
 
   /** Edição de um campo de um efeito temporário (nome, descrição, atributo ou passos). */
@@ -220,6 +306,34 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const changes = { [field.dataset.relacaoCampo]: value };
     const index = Number(field.dataset.index);
     await this.#saveRelations(updateRelation(this.#relations(), index, changes));
+  }
+
+  /** Clique em uma aba. */
+  static #onSetTab(event, target) {
+    this.#setTab(target.dataset.tab);
+  }
+
+  /** Botões −/+ do PV e do PD: edição crua, sem teste de lesão ou de trauma. */
+  static async #onAdjustResource(event, target) {
+    const key = target.dataset.resource;
+    if (key !== 'pv' && key !== 'pd') return;
+    const value = stepResource(this.document.system[key], Number(target.dataset.delta));
+    await this.document.update({ [`system.${key}.value`]: value });
+  }
+
+  /** Botões −/+ do contador de testes de lesão ou de trauma da cena (muda a DT do próximo). */
+  static async #onAdjustSceneTests(event, target) {
+    const field = target.dataset.kind === 'trauma' ? 'testesTrauma' : 'testesLesao';
+    const value = stepCounter(this.document.system.cena[field], Number(target.dataset.delta));
+    await this.document.update({ [`system.cena.${field}`]: value });
+  }
+
+  /** Clique em um marcador de ímpeto ou de análise do cabeçalho. */
+  static async #onSetPip(event, target) {
+    const key = target.dataset.resource;
+    if (!(key in PIP_MAX)) return;
+    const value = togglePip(this.document.system.recursos[key], Number(target.dataset.n));
+    await this.document.update({ [`system.recursos.${key}`]: value });
   }
 
   /** Clique no nome de uma perícia: faz o teste e publica no chat. */

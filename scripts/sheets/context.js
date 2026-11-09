@@ -263,3 +263,108 @@ export function buildAbilityRows(items, { active, resources, hurtCompanion, edit
   );
 }
 
+
+/** Abas da ficha, na ordem de exibição (`icon` é uma classe do Font Awesome). */
+export const SHEET_TABS = [
+  { id: 'testes', icon: 'fa-dice-d20' },
+  { id: 'habilidades', icon: 'fa-bolt' },
+  { id: 'equipamento', icon: 'fa-shield-halved' },
+  { id: 'condicao', icon: 'fa-heart-pulse' },
+  { id: 'relacoes', icon: 'fa-people-arrows' },
+];
+
+/**
+ * Escolhe a aba a mostrar: a pedida, se existir; senão, a primeira.
+ * @param {string|undefined} requested Id da aba pedida ou lembrada.
+ * @param {{id: string}[]} [tabs]
+ */
+export function resolveActiveTab(requested, tabs = SHEET_TABS) {
+  return tabs.some((tab) => tab.id === requested) ? requested : tabs[0].id;
+}
+
+/**
+ * Dados da navegação por abas.
+ * @param {string} active Id da aba ativa (já validada por resolveActiveTab).
+ * @param {(id: string) => string} label Devolve o nome traduzido da aba.
+ * @returns {{list: {id: string, icon: string, label: string, active: boolean}[], state: Record<string, boolean>}}
+ *   `list` alimenta os botões; `state` diz, por id, qual painel começa visível.
+ */
+export function buildTabs(active, label, tabs = SHEET_TABS) {
+  return {
+    list: tabs.map(({ id, icon }) => ({ id, icon, label: label(id), active: id === active })),
+    state: Object.fromEntries(tabs.map(({ id }) => [id, id === active])),
+  };
+}
+
+/** Aba que mostra um item recém-arrastado para a ficha (undefined se não houver). */
+export function tabForItemType(type) {
+  return {
+    habilidade: 'habilidades',
+    arma: 'equipamento',
+    armadura: 'equipamento',
+    item: 'equipamento',
+  }[type];
+}
+
+/** Largura (0 a 100) do preenchimento de uma barra de recurso. */
+export function resourcePercent(value, max) {
+  if (!(max > 0)) return 0;
+  return Math.round(Math.min(100, Math.max(0, (value / max) * 100)));
+}
+
+/**
+ * Novo valor de PV/PD após os botões −/+ da ficha (edição crua, sem teste de lesão ou trauma).
+ * Fica entre 0 e o máximo.
+ * @param {{value: number, max: number}} resource
+ * @param {number} delta
+ */
+export function stepResource(resource, delta) {
+  return Math.min(resource.max, Math.max(0, resource.value + delta));
+}
+
+/** Contador de testes da cena (lesão ou trauma) após −/+; nunca abaixo de 0. */
+export function stepCounter(current, delta) {
+  return Math.max(0, current + delta);
+}
+
+/** Máximo de marcadores clicáveis de cada recurso de habilidade. */
+export const PIP_MAX = { impeto: 5, analise: 4 };
+
+/** Marcadores (bolinhas) de um recurso: `filled` para os que já estão preenchidos. */
+export function buildPips(value, max) {
+  return Array.from({ length: max }, (_, i) => ({ n: i + 1, filled: i + 1 <= value }));
+}
+
+/**
+ * Valor do recurso depois de clicar no marcador `n`: clicar no último marcador preenchido
+ * apaga-o; clicar em qualquer outro leva o recurso até ele.
+ */
+export function togglePip(current, n) {
+  return n === current ? n - 1 : n;
+}
+
+const HEALTH_STATES = ['inconsciente', 'moribundo', 'morteLenta', 'contusao', 'morto'];
+const MENTAL_STATES = ['estupor', 'colapso'];
+
+/**
+ * Etiquetas de estado do cabeçalho: condições ativas e o dado de pavor, se houver.
+ * `tone` serve só para a cor (saude, mental, grave).
+ * @param {Object} estado `system.estado` do personagem.
+ * @param {Object} labels
+ * @param {(key: string) => string} labels.stateLabel Nome traduzido do estado.
+ * @param {(die: number) => string} labels.fearLabel Texto do pavor (ex.: "Pavor d6").
+ */
+export function buildStatusTags(estado, { stateLabel, fearLabel }) {
+  const tags = [];
+  for (const key of HEALTH_STATES) {
+    if (estado[key])
+      tags.push({ key, label: stateLabel(key), tone: key === 'morto' ? 'grave' : 'saude' });
+  }
+  for (const key of MENTAL_STATES) {
+    if (estado[key]) tags.push({ key, label: stateLabel(key), tone: 'mental' });
+  }
+  if (estado.pavor > 0) {
+    tags.push({ key: 'pavor', label: fearLabel(estado.pavor), tone: 'mental' });
+  }
+  return tags;
+}

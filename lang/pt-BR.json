@@ -122,7 +122,25 @@
       "Habilidades": "Habilidades",
       "DicaHabilidades": "As habilidades de perfil aparecem primeiro. Habilidades com automação mostram aqui os seus controles; as outras servem de descrição.",
       "SemHabilidades": "Nenhuma habilidade",
-      "EfeitoFimDeCena": "Até o fim da cena"
+      "EfeitoFimDeCena": "Até o fim da cena",
+      "Abas": {
+        "testes": "Testes",
+        "habilidades": "Habilidades",
+        "equipamento": "Equipamento",
+        "condicao": "Condição",
+        "relacoes": "Relações"
+      },
+      "Cab": {
+        "Perfil": "Perfil",
+        "Vocacao": "Vocação",
+        "Diminuir": "Diminuir",
+        "Aumentar": "Aumentar",
+        "DiminuirTestes": "Um teste a menos na cena",
+        "AumentarTestes": "Um teste a mais na cena",
+        "TesteLesaoDT": "Teste de lesão · DT {dt}",
+        "TesteTraumaDT": "Teste de trauma · DT {dt}",
+        "PavorEtiqueta": "Pavor d{dado}"
+      }
     },
     "Aptidoes": {
       "artes": "Artes",

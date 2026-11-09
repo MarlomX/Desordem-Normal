@@ -1,0 +1,72 @@
+<header class="desordem-cab">
+  <div class="desordem-cab__topo">
+    <img class="desordem-ficha__retrato" src="{{actor.img}}" alt="{{actor.name}}" data-edit="img" data-action="editImage">
+    <div class="desordem-cab__identidade">
+      <input class="desordem-ficha__nome" type="text" name="name" value="{{actor.name}}" {{#unless editable}}disabled{{/unless}}>
+      <div class="desordem-cab__linha">
+        <label class="desordem-cab__campo"><span>{{localize "DESORDEM.Ficha.Cab.Perfil"}}</span><input type="text" name="system.perfil" value="{{system.perfil}}" {{#unless editable}}disabled{{/unless}}></label>
+        <label class="desordem-cab__campo"><span>{{localize "DESORDEM.Ficha.Cab.Vocacao"}}</span><input type="text" name="system.vocacao" value="{{system.vocacao}}" {{#unless editable}}disabled{{/unless}}></label>
+        <label class="desordem-cab__campo desordem-cab__campo--nivel"><span>{{localize "DESORDEM.Ficha.Nivel"}}</span><input type="number" name="system.nivel" value="{{system.nivel}}" min="1" max="10" {{#unless editable}}disabled{{/unless}}></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="desordem-cab__recursos">
+    <div class="desordem-recurso desordem-recurso--pv">
+      <div class="desordem-recurso__linha">
+        <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-resource="pv" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}" {{#unless editable}}disabled{{/unless}}>−</button>
+        <div class="desordem-barra" style="--pct: {{pvPercent}}%">
+          <span class="desordem-barra__nome"><i class="fa-solid fa-heart" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.PV"}}</span>
+          <span class="desordem-barra__valores">
+            <input type="number" name="system.pv.value" value="{{system.pv.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
+            <span>/</span>
+            <input type="number" name="system.pv.max" value="{{system.pv.max}}" min="0" {{#unless editable}}disabled{{/unless}}>
+          </span>
+        </div>
+        <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-resource="pv" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}" {{#unless editable}}disabled{{/unless}}>+</button>
+      </div>
+      <div class="desordem-recurso__teste">
+        <button type="button" class="desordem-dt" data-action="rollInjury" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.Cab.TesteLesaoDT" dt=nextInjuryDT}}</button>
+        <button type="button" class="desordem-recurso__passo desordem-recurso__passo--mini" data-action="adjustSceneTests" data-kind="lesao" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.DiminuirTestes"}}" {{#unless editable}}disabled{{/unless}}>−</button>
+        <button type="button" class="desordem-recurso__passo desordem-recurso__passo--mini" data-action="adjustSceneTests" data-kind="lesao" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.AumentarTestes"}}" {{#unless editable}}disabled{{/unless}}>+</button>
+      </div>
+    </div>
+
+    <div class="desordem-recurso desordem-recurso--pd">
+      <div class="desordem-recurso__linha">
+        <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-resource="pd" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}" {{#unless editable}}disabled{{/unless}}>−</button>
+        <div class="desordem-barra" style="--pct: {{pdPercent}}%">
+          <span class="desordem-barra__nome"><i class="fa-solid fa-brain" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.PD"}}</span>
+          <span class="desordem-barra__valores">
+            <input type="number" name="system.pd.value" value="{{system.pd.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
+            <span>/</span>
+            <input type="number" name="system.pd.max" value="{{system.pd.max}}" min="0" {{#unless editable}}disabled{{/unless}}>
+          </span>
+        </div>
+        <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-resource="pd" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}" {{#unless editable}}disabled{{/unless}}>+</button>
+      </div>
+      <div class="desordem-recurso__teste">
+        <button type="button" class="desordem-dt" data-action="rollTrauma" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.Cab.TesteTraumaDT" dt=nextTraumaDT}}</button>
+        <button type="button" class="desordem-recurso__passo desordem-recurso__passo--mini" data-action="adjustSceneTests" data-kind="trauma" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.DiminuirTestes"}}" {{#unless editable}}disabled{{/unless}}>−</button>
+        <button type="button" class="desordem-recurso__passo desordem-recurso__passo--mini" data-action="adjustSceneTests" data-kind="trauma" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.AumentarTestes"}}" {{#unless editable}}disabled{{/unless}}>+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="desordem-cab__rodape">
+    {{#each statusTags}}<span class="desordem-etiqueta desordem-etiqueta--{{tone}}">{{label}}</span>{{/each}}
+    {{#if equipment.armorTotals.total}}<span class="desordem-etiqueta desordem-etiqueta--armadura"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{equipment.armorTotals.available}}/{{equipment.armorTotals.total}}</span>{{/if}}
+    {{#if showImpeto}}
+    <span class="desordem-pips" title="{{localize "DESORDEM.Habilidade.Impeto"}}">
+      <span class="desordem-pips__nome">{{localize "DESORDEM.Habilidade.Impeto"}}</span>
+      {{#each impetoPips}}<button type="button" class="desordem-pip{{#if filled}} is-filled{{/if}}" data-action="setPip" data-resource="impeto" data-n="{{n}}" {{#unless ../editable}}disabled{{/unless}}></button>{{/each}}
+    </span>
+    {{/if}}
+    {{#if showAnalise}}
+    <span class="desordem-pips" title="{{localize "DESORDEM.Habilidade.Marcadores"}}">
+      <span class="desordem-pips__nome">{{localize "DESORDEM.Habilidade.Marcadores"}}</span>
+      {{#each analisePips}}<button type="button" class="desordem-pip{{#if filled}} is-filled{{/if}}" data-action="setPip" data-resource="analise" data-n="{{n}}" {{#unless ../editable}}disabled{{/unless}}></button>{{/each}}
+    </span>
+    {{/if}}
+  </div>
+</header>

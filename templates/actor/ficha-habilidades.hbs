@@ -1,0 +1,38 @@
+<section class="desordem-aba{{#if tabState.habilidades}} is-active{{/if}}" data-tab-panel="habilidades">
+<section class="desordem-ficha__secao desordem-ficha__habilidades">
+  <h3>{{localize "DESORDEM.Ficha.Habilidades"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaHabilidades"}}</p>
+  {{#each abilities}}
+  <div class="desordem-habilidade" data-item-id="{{id}}" draggable="true">
+    <div class="desordem-habilidade__titulo">
+      <strong>{{name}}</strong>{{#if perfil}} <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Item.PerfilEtiqueta"}}</span>{{/if}}
+      <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
+      {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="deleteItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Remover"}}">×</button>{{/unless}}
+    </div>
+    {{#if descricao}}<p class="desordem-ficha__dica">{{descricao}}</p>{{/if}}
+    <div class="desordem-habilidade__controles">
+      {{#if showImpeto}}
+      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Impeto"}}</span> <strong>{{impeto}} / 5</strong></label>
+      <label class="desordem-ficha__campo"><input type="checkbox" data-ativa="impetoDado" {{#if impetoDadoAtivo}}checked{{/if}} {{#if locked}}disabled{{/if}}> <span>{{localize "DESORDEM.Habilidade.ImpetoDado"}}</span></label>
+      <button type="button" data-action="impetoStep" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.ImpetoPasso"}}</button>
+      <button type="button" data-action="impetoAction" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.ImpetoAcao"}}</button>
+      {{/if}}
+      {{#if showAnalise}}
+      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Marcadores"}}</span> <strong>{{analise}} / 4</strong></label>
+      <button type="button" data-action="gainAnalysis" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.Analisar"}}</button>
+      {{/if}}
+      {{#if showDodge}}<button type="button" data-action="dodge" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.Esquivar"}}</button>{{/if}}
+      {{#if showHeal}}<button type="button" data-action="healAlly" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.Curar"}}</button>{{/if}}
+      {{#if showCompanion}}<label class="desordem-ficha__campo"><input type="checkbox" name="system.cena.animalFerido" {{#if animalFerido}}checked{{/if}} {{#if locked}}disabled{{/if}}> <span>{{localize "DESORDEM.Habilidade.AnimalFeridoMarca"}}</span></label>{{/if}}
+      {{#if showSneak}}<label class="desordem-ficha__campo"><input type="checkbox" data-ativa="sorrateiro" {{#if sorrateiroAtivo}}checked{{/if}} {{#if locked}}disabled{{/if}}> <span>{{localize "DESORDEM.Habilidade.Sorrateiro"}}</span></label>{{/if}}
+    </div>
+  </div>
+  {{else}}
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemHabilidades"}}</p>
+  {{/each}}
+  {{#if editable}}
+  <button type="button" data-action="createItem" data-type="habilidade">{{localize "DESORDEM.Item.Novo.habilidade"}}</button>
+  <button type="button" data-action="newScene">{{localize "DESORDEM.Habilidade.NovaCena"}}</button>
+  {{/if}}
+</section>
+</section>

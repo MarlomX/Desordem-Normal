@@ -1,0 +1,55 @@
+<section class="desordem-aba{{#if tabState.testes}} is-active{{/if}}" data-tab-panel="testes">
+{{#if system.estado.pavor}}
+<div class="desordem-ficha__secao desordem-ficha__pavor-rapido">
+  <label><input type="checkbox" data-controlar-pavor {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.ControlarPavor"}}</label>
+  <label><input type="checkbox" data-abracar-pavor {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.AbracarPavor"}}</label>
+  <span class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaPavor"}}</span>
+</div>
+{{/if}}
+<section class="desordem-ficha__secao">
+  <h3>{{localize "DESORDEM.Ficha.Atributos"}}</h3>
+  <div class="desordem-ficha__atributos">
+    {{#each attributes}}
+    <label class="desordem-ficha__campo">
+      <span>{{label}}</span>
+      <select name="system.atributos.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+    </label>
+    {{/each}}
+  </div>
+</section>
+<section class="desordem-ficha__secao">
+  <h3>{{localize "DESORDEM.Ficha.Pericias"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaRolagem"}}</p>
+  <div class="desordem-ficha__pericias">
+    {{#each skills}}
+    <div class="desordem-ficha__pericia">
+      <button type="button" class="desordem-ficha__rolar" data-action="rollSkill" data-skill="{{key}}">
+        <span class="desordem-ficha__pericia-nome">{{label}}</span>
+        <span class="desordem-ficha__pericia-attr">{{attrLabel}}</span>
+      </button>
+      <select name="system.pericias.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+    </div>
+    {{/each}}
+  </div>
+</section>
+<section class="desordem-ficha__secao">
+  <h3>{{localize "DESORDEM.Ficha.Aptidoes"}}</h3>
+  <div class="desordem-ficha__pericias">
+    {{#each aptitudes}}
+    <div class="desordem-ficha__pericia">
+      <button type="button" class="desordem-ficha__rolar" data-action="rollAptitude" data-aptitude="{{key}}">
+        <span class="desordem-ficha__pericia-nome">{{label}}</span>
+        <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
+      </button>
+      <select name="system.aptidoes.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+    </div>
+    {{/each}}
+  </div>
+</section>
+</section>

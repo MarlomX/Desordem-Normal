@@ -1,0 +1,21 @@
+<section class="desordem-aba{{#if tabState.relacoes}} is-active{{/if}}" data-tab-panel="relacoes">
+<section class="desordem-ficha__secao desordem-ficha__relacoes">
+  <h3>{{localize "DESORDEM.Ficha.Relacoes"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaRelacoes"}}</p>
+  {{#each relations}}
+  <div class="desordem-relacao {{#if usada}}desordem-relacao--usada{{/if}}">
+    <span class="desordem-relacao__grau" title="{{grauLabel}}">
+      {{#each dots}}<button type="button" class="desordem-relacao__bolinha {{#if filled}}desordem-relacao__bolinha--cheia{{/if}}" data-action="setRelationDegree" data-index="{{../index}}" data-degree="{{n}}" {{#if ../locked}}disabled{{/if}}>{{#if filled}}●{{else}}○{{/if}}</button>{{/each}}
+    </span>
+    <input type="text" class="desordem-relacao__pessoa" data-relacao-campo="pessoa" data-index="{{index}}" value="{{pessoa}}" placeholder="{{localize "DESORDEM.Ficha.RelacaoPessoa"}}" {{#if locked}}disabled{{/if}}>
+    <input type="text" class="desordem-relacao__descricao" data-relacao-campo="descricao" data-index="{{index}}" value="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.RelacaoDescricao"}}" {{#if locked}}disabled{{/if}}>
+    <label class="desordem-relacao__usada"><input type="checkbox" data-relacao-campo="usada" data-index="{{index}}" {{#if usada}}checked{{/if}} {{#if locked}}disabled{{/if}}> {{localize "DESORDEM.Ficha.LacoUsado"}}</label>
+    {{#if showInvoke}}<button type="button" data-action="invokeRelation" data-index="{{index}}" {{#unless canInvoke}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.Invocar"}}</button>{{/if}}
+    {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="removeRelation" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.RemoverRelacao"}}">×</button>{{/unless}}
+  </div>
+  {{else}}
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemRelacoes"}}</p>
+  {{/each}}
+  {{#if editable}}<button type="button" data-action="addRelation">{{localize "DESORDEM.Ficha.AdicionarRelacao"}}</button>{{/if}}
+</section>
+</section>

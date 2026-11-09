@@ -1,0 +1,7 @@
+<nav class="desordem-abas" role="tablist">
+  {{#each sheetTabs}}
+  <button type="button" role="tab" class="desordem-abas__aba{{#if active}} is-active{{/if}}" aria-selected="{{active}}" data-action="setTab" data-tab="{{id}}" title="{{label}}">
+    <i class="fa-solid {{icon}}" aria-hidden="true"></i><span class="desordem-abas__nome">{{label}}</span>
+  </button>
+  {{/each}}
+</nav>

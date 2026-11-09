@@ -12,6 +12,17 @@ import {
   buildEquipmentRows,
   buildChoices,
   buildAbilityRows,
+  SHEET_TABS,
+  resolveActiveTab,
+  buildTabs,
+  tabForItemType,
+  resourcePercent,
+  stepResource,
+  stepCounter,
+  PIP_MAX,
+  buildPips,
+  togglePip,
+  buildStatusTags,
 } from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
@@ -366,4 +377,109 @@ test('buildAbilityRows trava os controles quando a ficha não é editável', () 
     editable: false,
   });
   assert.equal(row.locked, true);
+});
+
+// --- Abas e cabeçalho (v0.12.0) ---
+test('as 5 abas estão na ordem combinada e têm ícone', () => {
+  assert.deepEqual(
+    SHEET_TABS.map((t) => t.id),
+    ['testes', 'habilidades', 'equipamento', 'condicao', 'relacoes'],
+  );
+  assert.ok(SHEET_TABS.every((t) => t.icon.startsWith('fa-')));
+});
+
+test('resolveActiveTab aceita aba válida e cai na primeira se for inválida ou ausente', () => {
+  assert.equal(resolveActiveTab('condicao'), 'condicao');
+  assert.equal(resolveActiveTab('nao-existe'), 'testes');
+  assert.equal(resolveActiveTab(undefined), 'testes');
+});
+
+test('buildTabs marca só a aba ativa, na lista e no estado dos painéis', () => {
+  const { list, state } = buildTabs('equipamento', (id) => `T-${id}`);
+  assert.deepEqual(
+    list.filter((t) => t.active).map((t) => t.id),
+    ['equipamento'],
+  );
+  assert.equal(list[0].label, 'T-testes');
+  assert.deepEqual(state, {
+    testes: false,
+    habilidades: false,
+    equipamento: true,
+    condicao: false,
+    relacoes: false,
+  });
+});
+
+test('tabForItemType leva cada tipo de item para a aba certa', () => {
+  assert.equal(tabForItemType('habilidade'), 'habilidades');
+  for (const type of ['arma', 'armadura', 'item'])
+    assert.equal(tabForItemType(type), 'equipamento');
+  assert.equal(tabForItemType('outro'), undefined);
+});
+
+test('resourcePercent limita entre 0 e 100 e trata máximo zero', () => {
+  assert.equal(resourcePercent(11, 22), 50);
+  assert.equal(resourcePercent(30, 22), 100);
+  assert.equal(resourcePercent(-3, 22), 0);
+  assert.equal(resourcePercent(5, 0), 0);
+});
+
+test('stepResource sobe e desce sem passar de 0 nem do máximo', () => {
+  assert.equal(stepResource({ value: 10, max: 12 }, 1), 11);
+  assert.equal(stepResource({ value: 12, max: 12 }, 1), 12);
+  assert.equal(stepResource({ value: 0, max: 12 }, -1), 0);
+  assert.equal(stepResource({ value: 7, max: 12 }, -1), 6);
+});
+
+test('stepCounter nunca fica abaixo de 0', () => {
+  assert.equal(stepCounter(0, -1), 0);
+  assert.equal(stepCounter(2, 1), 3);
+});
+
+test('buildPips preenche até o valor e togglePip apaga o último ao clicar nele', () => {
+  assert.deepEqual(
+    buildPips(2, PIP_MAX.analise).map((p) => p.filled),
+    [true, true, false, false],
+  );
+  assert.equal(buildPips(0, PIP_MAX.impeto).length, 5);
+  assert.equal(togglePip(2, 4), 4);
+  assert.equal(togglePip(2, 2), 1);
+  assert.equal(togglePip(1, 1), 0);
+  assert.equal(togglePip(3, 1), 1);
+});
+
+test('buildStatusTags lista condições ativas e o pavor, com a cor de cada grupo', () => {
+  const estado = {
+    inconsciente: false,
+    moribundo: true,
+    morteLenta: false,
+    contusao: true,
+    morto: false,
+    estupor: true,
+    colapso: false,
+    pavor: 6,
+  };
+  const tags = buildStatusTags(estado, {
+    stateLabel: (k) => `E-${k}`,
+    fearLabel: (d) => `Pavor d${d}`,
+  });
+  assert.deepEqual(
+    tags.map((t) => [t.label, t.tone]),
+    [
+      ['E-moribundo', 'saude'],
+      ['E-contusao', 'saude'],
+      ['E-estupor', 'mental'],
+      ['Pavor d6', 'mental'],
+    ],
+  );
+  const vazio = buildStatusTags(
+    { ...estado, moribundo: false, contusao: false, estupor: false, pavor: 0 },
+    { stateLabel: (k) => k, fearLabel: (d) => `d${d}` },
+  );
+  assert.deepEqual(vazio, []);
+  const morto = buildStatusTags(
+    { ...estado, moribundo: false, contusao: false, estupor: false, pavor: 0, morto: true },
+    { stateLabel: (k) => k, fearLabel: (d) => `d${d}` },
+  );
+  assert.equal(morto[0].tone, 'grave');
 });

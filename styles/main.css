@@ -98,38 +98,6 @@
 }
 /* Ficha de personagem */
 
-.desordem-normal.personagem .window-content {
-  overflow-y: auto;
-}
-
-.desordem-ficha {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.desordem-ficha__cabecalho {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.desordem-ficha__retrato {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border: 1px solid rgba(128, 128, 128, 0.7);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.desordem-ficha__identidade {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .desordem-ficha__nome {
   font-size: 1.4em;
   font-weight: bold;
@@ -139,24 +107,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.desordem-ficha__recursos {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.desordem-ficha__recurso {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: bold;
-}
-
-.desordem-ficha__recurso input {
-  width: 3.5em;
-  text-align: center;
 }
 
 .desordem-ficha__secao h3 {
@@ -498,4 +448,289 @@
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 6px;
+}
+
+/* ===== Ficha em abas (v0.12.0) ===== */
+
+/* A janela vira uma coluna: cabeçalho e abas fixos, cada aba rola sozinha. */
+.desordem-normal.personagem .window-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+  container: desordem / inline-size;
+}
+
+.desordem-aba {
+  display: none;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 10px;
+}
+
+.desordem-aba.is-active {
+  display: flex;
+}
+
+/* Cabeçalho */
+.desordem-cab {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.4);
+}
+
+.desordem-cab__topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.desordem-ficha__retrato {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid rgba(128, 128, 128, 0.7);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.desordem-cab__identidade {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.desordem-cab__linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.desordem-cab__campo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+}
+
+.desordem-cab__campo input[type='text'] {
+  width: 9em;
+}
+
+.desordem-cab__campo--nivel input {
+  width: 3.5em;
+  text-align: center;
+}
+
+.desordem-cab__recursos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
+.desordem-recurso {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.desordem-recurso__linha,
+.desordem-recurso__teste {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-recurso__teste {
+  justify-content: flex-end;
+}
+
+.desordem-recurso--pv {
+  --desordem-recurso-cor: rgba(200, 60, 60, 0.85);
+}
+
+.desordem-recurso--pd {
+  --desordem-recurso-cor: rgba(70, 120, 200, 0.85);
+}
+
+.desordem-barra {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 8px;
+  border: 1px solid rgba(128, 128, 128, 0.6);
+  border-radius: 4px;
+  background: linear-gradient(
+      to right,
+      var(--desordem-recurso-cor) var(--pct),
+      transparent var(--pct)
+    ),
+    rgba(128, 128, 128, 0.15);
+  font-weight: bold;
+}
+
+.desordem-barra__valores {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.desordem-barra input[type='number'] {
+  width: 2.8em;
+  height: 1.6em;
+  padding: 0;
+  text-align: center;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  border: none;
+}
+
+.desordem-recurso__passo {
+  flex: 0 0 auto;
+  width: 1.8em;
+  height: 1.8em;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-recurso__passo--mini {
+  width: 1.5em;
+  height: 1.5em;
+  font-size: 0.85em;
+}
+
+.desordem-dt {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 1px 8px;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+.desordem-cab__rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-height: 0;
+}
+
+.desordem-cab__rodape:empty {
+  display: none;
+}
+
+.desordem-etiqueta {
+  padding: 1px 8px;
+  border: 1px solid rgba(128, 128, 128, 0.7);
+  border-radius: 10px;
+  font-size: 0.8em;
+  background: rgba(128, 128, 128, 0.2);
+}
+
+.desordem-etiqueta--saude {
+  border-color: rgba(200, 60, 60, 0.9);
+  background: rgba(200, 60, 60, 0.25);
+}
+
+.desordem-etiqueta--mental {
+  border-color: rgba(120, 90, 200, 0.9);
+  background: rgba(120, 90, 200, 0.25);
+}
+
+.desordem-etiqueta--grave {
+  border-color: rgba(140, 30, 30, 1);
+  background: rgba(140, 30, 30, 0.5);
+  font-weight: bold;
+}
+
+.desordem-pips {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.desordem-pips__nome {
+  margin-right: 2px;
+  font-size: 0.8em;
+}
+
+.desordem-pip {
+  width: 14px;
+  height: 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(128, 128, 128, 0.9);
+  border-radius: 3px;
+  background: rgba(128, 128, 128, 0.15);
+}
+
+.desordem-pip.is-filled {
+  background: rgba(212, 160, 23, 0.95);
+  border-color: rgba(212, 160, 23, 1);
+}
+
+/* Navegação por abas */
+.desordem-abas {
+  flex: 0 0 auto;
+  display: flex;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.4);
+}
+
+.desordem-abas__aba {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 4px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+.desordem-abas__aba.is-active {
+  border-bottom-color: rgba(70, 150, 160, 1);
+  background: rgba(70, 150, 160, 0.2);
+  font-weight: bold;
+}
+
+/* Janela estreita: abas só com ícone e cabeçalho mais compacto */
+@container desordem (max-width: 540px) {
+  .desordem-abas__nome {
+    display: none;
+  }
+
+  .desordem-cab__recursos {
+    grid-template-columns: 1fr;
+  }
+
+  .desordem-cab__campo input[type='text'] {
+    width: 7em;
+  }
+
+  .desordem-ficha__pericias {
+    grid-template-columns: 1fr;
+  }
 }
