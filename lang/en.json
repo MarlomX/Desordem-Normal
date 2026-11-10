@@ -122,7 +122,34 @@
       "Habilidades": "Abilities",
       "DicaHabilidades": "Profile abilities come first. Abilities with an automation show their controls here; the others are just a description.",
       "SemHabilidades": "No abilities",
-      "EfeitoFimDeCena": "Until end of scene"
+      "EfeitoFimDeCena": "Until end of scene",
+      "Abas": {
+        "testes": "Tests",
+        "habilidades": "Abilities",
+        "equipamento": "Equipment",
+        "condicao": "Condition",
+        "relacoes": "Relationships"
+      },
+      "Cab": {
+        "Perfil": "Profile",
+        "Vocacao": "Vocation",
+        "Diminuir": "Decrease",
+        "Aumentar": "Increase",
+        "DiminuirTestes": "One fewer test this scene",
+        "AumentarTestes": "One more test this scene",
+        "TesteLesaoDT": "Injury test · DC {dt}",
+        "TesteTraumaDT": "Trauma test · DC {dt}",
+        "PavorEtiqueta": "Dread d{dado}"
+      },
+      "Hab": {
+        "AlternarTodas": "Expand/collapse all",
+        "SemDescricao": "No description."
+      },
+      "Filtro": {
+        "Placeholder": "Search skill or attribute",
+        "Treinadas": "Trained only (d6 or higher)",
+        "SemResultados": "No skills match this filter."
+      }
     },
     "Aptidoes": {
       "artes": "Arts",
