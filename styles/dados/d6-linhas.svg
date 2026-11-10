@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="32,4 56.2,18 56.2,46 32,60 7.8,46 7.8,18" stroke-width="1.9"/>
+    <path d="M32 32L7.8 18M32 32L56.2 18M32 32L32 60" stroke-width="1.3" stroke-dasharray="3.7 2.8" stroke-opacity="0.6"/>
+    <path d="M32 32L32 4M32 32L7.8 46M32 32L56.2 46" stroke-width="1.9"/>
+  </g>
+</svg>

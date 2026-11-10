@@ -496,6 +496,9 @@
   --dn-pv: #c8453f;
   --dn-pd: #4a7fd0;
   --dn-mental: #8a67d6;
+  --dn-pavor-fundo: #0c0d0f;
+  --dn-pavor-linha: #d5d8dc;
+  --dn-pavor-brilho: #9fd6ee;
   --dn-gold: #d4a017;
   --dn-die: #8a8f98;
 }
@@ -510,46 +513,175 @@
 }
 
 /* Cor de cada dado (o texto "dN" sempre aparece: a cor só reforça) */
-.desordem-d-4 {
+/* Dados: cada tamanho tem a sua silhueta (SVG em styles/dados/) e a sua cor. O número
+   aparece dentro; o tipo de dado é dado pela forma. */
+.desordem-d-0 {
   --dn-die: #8a8f98;
+  --dn-miolo: #2c3136;
+  --dn-forma: url('dados/d0.svg');
+  --dn-linhas: url('dados/d0-linhas.svg');
+  --dn-linhas-grande: url('dados/d0-linhas-grande.svg');
+  --dn-linhas-pavor: url('dados/d0-linhas.svg');
+  --dn-linhas-pavor-grande: url('dados/d0-linhas-grande.svg');
+}
+.desordem-d-4 {
+  --dn-die: #9aa0a8;
+  --dn-miolo: #2c3136;
+  --dn-forma: url('dados/d4.svg');
+  --dn-linhas: url('dados/d4-linhas.svg');
+  --dn-linhas-grande: url('dados/d4-linhas-grande.svg');
+  --dn-linhas-pavor: url('dados/d4-pavor-linhas.svg');
+  --dn-linhas-pavor-grande: url('dados/d4-pavor-linhas-grande.svg');
 }
 .desordem-d-6 {
-  --dn-die: #4f9a6a;
+  --dn-die: #4f9d69;
+  --dn-miolo: #1e3a2b;
+  --dn-forma: url('dados/d6.svg');
+  --dn-linhas: url('dados/d6-linhas.svg');
+  --dn-linhas-grande: url('dados/d6-linhas-grande.svg');
+  --dn-linhas-pavor: url('dados/d6-pavor-linhas.svg');
+  --dn-linhas-pavor-grande: url('dados/d6-pavor-linhas-grande.svg');
 }
 .desordem-d-8 {
-  --dn-die: #3d86c6;
+  --dn-die: #3b82c4;
+  --dn-miolo: #16324a;
+  --dn-forma: url('dados/d8.svg');
+  --dn-linhas: url('dados/d8-linhas.svg');
+  --dn-linhas-grande: url('dados/d8-linhas-grande.svg');
+  --dn-linhas-pavor: url('dados/d8-pavor-linhas.svg');
+  --dn-linhas-pavor-grande: url('dados/d8-pavor-linhas-grande.svg');
 }
 .desordem-d-10 {
-  --dn-die: #8a5cc8;
+  --dn-die: #8b5cc7;
+  --dn-miolo: #2e2548;
+  --dn-forma: url('dados/d10.svg');
+  --dn-linhas: url('dados/d10-linhas.svg');
+  --dn-linhas-grande: url('dados/d10-linhas-grande.svg');
+  --dn-linhas-pavor: url('dados/d10-pavor-linhas.svg');
+  --dn-linhas-pavor-grande: url('dados/d10-pavor-linhas-grande.svg');
 }
 .desordem-d-12 {
   --dn-die: #d4a017;
+  --dn-miolo: #453516;
+  --dn-forma: url('dados/d12.svg');
+  --dn-linhas: url('dados/d12-linhas.svg');
+  --dn-linhas-grande: url('dados/d12-linhas-grande.svg');
+  --dn-linhas-pavor: url('dados/d12-pavor-linhas.svg');
+  --dn-linhas-pavor-grande: url('dados/d12-pavor-linhas-grande.svg');
 }
 .desordem-d-20 {
-  --dn-die: #d4552b;
+  --dn-die: #d9542b;
+  --dn-miolo: #48261c;
+  --dn-forma: url('dados/d20.svg');
+  --dn-linhas: url('dados/d20-linhas.svg');
+  --dn-linhas-grande: url('dados/d20-linhas-grande.svg');
+  --dn-linhas-pavor: url('dados/d20-pavor-linhas.svg');
+  --dn-linhas-pavor-grande: url('dados/d20-pavor-linhas-grande.svg');
 }
 
-.desordem-dado-mini {
+.desordem-forma {
+  --dn-forma-cor: var(--dn-die);
+  --dn-forma-tam: 1.9em;
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
   flex: 0 0 auto;
-  min-width: 2.4em;
-  padding: 0 4px;
-  border: 1px solid var(--dn-die);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--dn-die) 22%, transparent);
-  font-size: 0.8em;
-  font-weight: 700;
-  text-align: center;
+  place-items: center;
+  width: var(--dn-forma-tam);
+  height: var(--dn-forma-tam);
+  color: #fff;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.desordem-dado-select {
-  flex: 0 0 auto;
-  width: 4.2em;
-  height: 1.8em;
-  border: 1px solid var(--dn-die);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--dn-die) 22%, transparent);
-  font-weight: 700;
-  text-align: center;
+/* Duas camadas com máscara: o miolo escuro (::after) e, por cima, o contorno colorido com as
+   linhas das facetas (::before). Ambas usam os SVG de styles/dados/. */
+.desordem-forma::before,
+.desordem-forma::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.desordem-forma::before {
+  z-index: 1;
+  background: var(--dn-forma-cor);
+  -webkit-mask: var(--dn-linhas) center / 100% 100% no-repeat;
+  mask: var(--dn-linhas) center / 100% 100% no-repeat;
+}
+
+.desordem-forma::after {
+  z-index: 0;
+  background: var(--dn-miolo);
+  -webkit-mask: var(--dn-forma) center / 100% 100% no-repeat;
+  mask: var(--dn-forma) center / 100% 100% no-repeat;
+}
+
+.desordem-forma__valor {
+  position: relative;
+  z-index: 2;
+  font-size: calc(var(--dn-forma-tam) * 0.38);
+  line-height: 1;
+  text-shadow:
+    0 0 0.12em var(--dn-miolo),
+    0 0 0.12em var(--dn-miolo),
+    0 0 0.12em var(--dn-miolo);
+  pointer-events: none;
+}
+
+/* O seletor de verdade fica invisível por cima da forma: clicar nela abre a lista */
+.desordem-forma__select {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.desordem-forma:has(.desordem-forma__select:disabled) .desordem-forma__select {
+  cursor: default;
+}
+
+.desordem-forma:focus-within {
+  filter: drop-shadow(0 0 4px var(--dn-accent));
+}
+
+.desordem-forma--grande {
+  --dn-forma-tam: 3.8em;
+  --dn-linhas: var(--dn-linhas-grande);
+}
+
+.desordem-forma--grande .desordem-forma__valor {
+  font-size: calc(var(--dn-forma-tam) * 0.3);
+}
+
+.desordem-forma--mini {
+  --dn-forma-tam: 1.5em;
+}
+
+/* Dado de pavor: mesma silhueta do dado, mas com fundo escuro, linhas claras, rachaduras
+   (arquivos dN-pavor-linhas*.svg) e um brilho azul pálido. */
+.desordem-forma--pavor {
+  --dn-forma-cor: var(--dn-pavor-linha);
+  --dn-miolo: var(--dn-pavor-fundo);
+  --dn-linhas: var(--dn-linhas-pavor);
+  color: var(--dn-pavor-linha);
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--dn-pavor-brilho) 55%, transparent))
+    drop-shadow(0 0 6px color-mix(in srgb, var(--dn-pavor-brilho) 25%, transparent));
+}
+
+.desordem-forma--pavor.desordem-forma--grande {
+  --dn-linhas: var(--dn-linhas-pavor-grande);
+}
+
+.desordem-forma--pavor:focus-within {
+  filter: drop-shadow(0 0 4px var(--dn-accent));
 }
 
 .desordem-ficha__soma {
@@ -578,12 +710,6 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-}
-
-.desordem-atributo .desordem-dado-select {
-  width: 5em;
-  height: 2.2em;
-  font-size: 1.3em;
 }
 
 /* A janela vira uma coluna: cabeçalho e abas fixos, cada aba rola sozinha. */
