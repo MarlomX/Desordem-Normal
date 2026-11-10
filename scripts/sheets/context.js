@@ -371,7 +371,7 @@ export function buildStatusTags(estado, { stateLabel, fearLabel }) {
     if (estado[key]) tags.push({ key, label: stateLabel(key), tone: 'mental' });
   }
   if (estado.pavor > 0) {
-    tags.push({ key: 'pavor', label: fearLabel(estado.pavor), tone: 'mental' });
+    tags.push({ key: 'pavor', label: fearLabel(estado.pavor), tone: 'mental', die: estado.pavor });
   }
   return tags;
 }

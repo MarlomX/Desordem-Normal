@@ -54,7 +54,7 @@
   </div>
 
   <div class="desordem-cab__rodape">
-    {{#each statusTags}}<span class="desordem-etiqueta desordem-etiqueta--{{tone}}">{{label}}</span>{{/each}}
+    {{#each statusTags}}<span class="desordem-etiqueta desordem-etiqueta--{{tone}}">{{#if die}}<span class="desordem-forma desordem-forma--mini desordem-forma--pavor desordem-d-{{die}}"><span class="desordem-forma__valor">{{die}}</span></span> {{/if}}{{label}}</span>{{/each}}
     {{#if equipment.armorTotals.total}}<span class="desordem-etiqueta desordem-etiqueta--armadura"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{equipment.armorTotals.available}}/{{equipment.armorTotals.total}}</span>{{/if}}
     {{#if showImpeto}}
     <span class="desordem-pips desordem-pips--impeto" title="{{localize "DESORDEM.Habilidade.Impeto"}}">

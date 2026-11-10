@@ -473,6 +473,7 @@ test('buildStatusTags lista condições ativas e o pavor, com a cor de cada grup
       ['Pavor d6', 'mental'],
     ],
   );
+  assert.equal(tags.find((t) => t.key === 'pavor').die, 6);
   const vazio = buildStatusTags(
     { ...estado, moribundo: false, contusao: false, estupor: false, pavor: 0 },
     { stateLabel: (k) => k, fearLabel: (d) => `d${d}` },

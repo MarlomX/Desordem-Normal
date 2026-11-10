@@ -10,11 +10,14 @@
   <h3><i class="fa-solid fa-user" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Atributos"}}</h3>
   <div class="desordem-ficha__atributos">
     {{#each attributes}}
-    <label class="desordem-atributo desordem-d-{{die}}">
+    <label class="desordem-atributo">
       <span class="desordem-atributo__nome">{{label}}</span>
-      <select class="desordem-dado-select" name="system.atributos.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
-        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
-      </select>
+      <span class="desordem-forma desordem-forma--grande desordem-d-{{die}}">
+        <span class="desordem-forma__valor">{{die}}</span>
+        <select class="desordem-forma__select" name="system.atributos.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+          {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
     </label>
     {{/each}}
   </div>
@@ -29,11 +32,14 @@
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
         <span class="desordem-ficha__pericia-attr">{{attrLabel}}</span>
       </button>
-      <span class="desordem-dado-mini desordem-d-{{attrDie}}" title="{{attrLabel}}">d{{attrDie}}</span>
+      <span class="desordem-forma desordem-d-{{attrDie}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
-      <select class="desordem-dado-select desordem-d-{{die}}" name="system.pericias.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+      <span class="desordem-forma desordem-d-{{die}}">
+        <span class="desordem-forma__valor">{{die}}</span>
+        <select class="desordem-forma__select" name="system.pericias.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
         {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
-      </select>
+        </select>
+      </span>
     </div>
     {{/each}}
   </div>
@@ -47,11 +53,14 @@
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
         <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
       </button>
-      <span class="desordem-dado-mini desordem-d-{{../aptitudeAttrDie}}" title="{{../aptitudeAttrLabel}}">d{{../aptitudeAttrDie}}</span>
+      <span class="desordem-forma desordem-d-{{../aptitudeAttrDie}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
-      <select class="desordem-dado-select desordem-d-{{die}}" name="system.aptidoes.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+      <span class="desordem-forma desordem-d-{{die}}">
+        <span class="desordem-forma__valor">{{die}}</span>
+        <select class="desordem-forma__select" name="system.aptidoes.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
         {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
-      </select>
+        </select>
+      </span>
     </div>
     {{/each}}
   </div>
