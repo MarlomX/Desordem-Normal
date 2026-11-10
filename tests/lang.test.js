@@ -15,7 +15,12 @@ const en = new Map(flatten(load('lang/en.json')));
 
 // Chaves novas ainda sem tradução para o inglês (a tradução vem em uma versão final, a 0.12.3).
 // Ao traduzir, esvazie esta lista: os testes abaixo voltam a exigir paridade total.
-const EN_PENDING_PREFIXES = ['DESORDEM.Ficha.Abas.', 'DESORDEM.Ficha.Cab.'];
+const EN_PENDING_PREFIXES = [
+  'DESORDEM.Ficha.Abas.',
+  'DESORDEM.Ficha.Cab.',
+  'DESORDEM.Ficha.Hab.',
+  'DESORDEM.Ficha.Filtro.',
+];
 const isPending = (key) => EN_PENDING_PREFIXES.some((prefix) => key.startsWith(prefix));
 
 test('português e inglês têm exatamente as mesmas chaves', () => {

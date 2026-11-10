@@ -140,6 +140,15 @@
         "TesteLesaoDT": "Teste de lesão · DT {dt}",
         "TesteTraumaDT": "Teste de trauma · DT {dt}",
         "PavorEtiqueta": "Pavor d{dado}"
+      },
+      "Hab": {
+        "AlternarTodas": "Expandir/recolher todas",
+        "SemDescricao": "Sem descrição."
+      },
+      "Filtro": {
+        "Placeholder": "Buscar perícia ou atributo",
+        "Treinadas": "Só treinadas (d6 ou mais)",
+        "SemResultados": "Nenhuma perícia encontrada com esse filtro."
       }
     },
     "Aptidoes": {

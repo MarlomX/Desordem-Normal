@@ -2,14 +2,19 @@
 <section class="desordem-ficha__secao desordem-ficha__habilidades">
   <h3><i class="fa-solid fa-bolt" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Habilidades"}}</h3>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaHabilidades"}}</p>
+  {{#if abilities.length}}<button type="button" class="desordem-habilidade__todas" data-action="toggleAbilities">{{localize "DESORDEM.Ficha.Hab.AlternarTodas"}}</button>{{/if}}
   {{#each abilities}}
   <div class="desordem-habilidade" data-item-id="{{id}}" draggable="true">
-    <div class="desordem-habilidade__titulo">
-      <strong>{{name}}</strong>{{#if perfil}} <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Item.PerfilEtiqueta"}}</span>{{/if}}
-      <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
-      {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="deleteItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Remover"}}">×</button>{{/unless}}
-    </div>
-    {{#if descricao}}<p class="desordem-ficha__dica">{{descricao}}</p>{{/if}}
+    <details class="desordem-habilidade__detalhes" data-habilidade="{{id}}" {{#if open}}open{{/if}}>
+      <summary class="desordem-habilidade__titulo">
+        <strong>{{name}}</strong>{{#if perfil}} <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Item.PerfilEtiqueta"}}</span>{{/if}}
+        <span class="desordem-habilidade__acoes">
+          <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
+          {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="deleteItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Remover"}}">×</button>{{/unless}}
+        </span>
+      </summary>
+      <p class="desordem-ficha__dica">{{#if descricao}}{{descricao}}{{else}}{{localize "DESORDEM.Ficha.Hab.SemDescricao"}}{{/if}}</p>
+    </details>
     <div class="desordem-habilidade__controles">
       {{#if showImpeto}}
       <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Impeto"}}</span> <strong>{{impeto}} / 5</strong></label>

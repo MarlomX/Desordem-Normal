@@ -6,7 +6,7 @@ import { stepShift } from './dice.js';
 
 export const FEAR_START_DIE = 6; // dado recebido ao ganhar pavor pela primeira vez
 export const FEAR_MIN_DIE = 4;
-export const FEAR_MAX_DIE = 12; // o pavor nunca passa de d12
+export const FEAR_MAX_DIE = 20; // o pavor nunca passa de d20
 export const CONTROL_FEAR_COST = 1;
 export const EMBRACE_FEAR_COST = 5;
 

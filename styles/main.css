@@ -468,6 +468,86 @@
   gap: 8px;
 }
 
+/* Habilidades recolhíveis: o cabeçalho (summary) sempre aparece; a descrição abre e fecha */
+.desordem-habilidade__detalhes {
+  margin-bottom: 4px;
+}
+
+.desordem-habilidade__detalhes > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.desordem-habilidade__detalhes > summary::-webkit-details-marker {
+  display: none;
+}
+
+.desordem-habilidade__detalhes > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1em;
+  color: var(--dn-accent);
+  transition: transform 0.15s;
+}
+
+.desordem-habilidade__detalhes[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.desordem-habilidade__acoes {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.desordem-habilidade__todas {
+  align-self: flex-start;
+  width: auto;
+  margin: 0 0 6px;
+  padding: 1px 10px;
+  font-size: 0.85em;
+}
+
+/* Filtro de perícias */
+.desordem-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-bottom: 6px;
+}
+
+.desordem-filtro__busca {
+  display: flex;
+  flex: 1 1 12em;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 6px;
+  background: var(--dn-surface);
+}
+
+.desordem-filtro__busca input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.desordem-filtro__treinadas {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.desordem-ficha__pericia.is-oculta,
+[data-filtro-vazio][hidden] {
+  display: none;
+}
+
 .desordem-habilidade__controles {
   display: flex;
   flex-wrap: wrap;

@@ -43,6 +43,8 @@ import {
   togglePip,
   buildStatusTags,
   isResourceLow,
+  rowMatches,
+  nextOpenIds,
 } from './context.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -68,6 +70,12 @@ function takeFearOptions(element) {
 export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   /** Aba aberta de cada personagem (id do ator -> id da aba); vale até recarregar a página. */
   static #activeTabs = new Map();
+
+  /** Filtro de perícias de cada personagem (id do ator -> {text, trained}); vale até recarregar. */
+  static #skillFilters = new Map();
+
+  /** Habilidades abertas de cada personagem (id do ator -> ids dos itens). */
+  static #openAbilities = new Map();
 
   static DEFAULT_OPTIONS = {
     classes: ['desordem-normal', 'personagem'],
@@ -104,6 +112,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
       setPip: PersonagemSheet.#onSetPip,
+      toggleAbilities: PersonagemSheet.#onToggleAbilities,
     },
     // Itens podem ser arrastados da barra lateral ou de outra ficha para esta
     dragDrop: [{ dragSelector: '[data-item-id]', dropSelector: null }],
@@ -201,6 +210,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
           resources: system.recursos,
           hurtCompanion: system.cena.animalFerido,
           editable: this.isEditable,
+          openIds: PersonagemSheet.#openAbilities.get(this.document.id) ?? [],
         },
       ),
       equipment: buildEquipmentRows(
@@ -241,6 +251,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     for (const field of this.element.querySelectorAll('[data-item-campo]')) {
       field.addEventListener('change', (event) => this.#onItemField(event.currentTarget));
     }
+    this.#bindSkillFilter();
+    for (const details of this.element.querySelectorAll('details[data-habilidade]')) {
+      details.addEventListener('toggle', () => this.#rememberAbility(details));
+    }
     // As caixas de pavor aparecem em duas abas: marcar uma marca a outra
     for (const attr of ['data-controlar-pavor', 'data-abracar-pavor']) {
       const boxes = [...this.element.querySelectorAll(`[${attr}]`)];
@@ -261,6 +275,51 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const tab = tabForItemType(item?.type);
     if (tab) this.#setTab(tab);
     return result;
+  }
+
+  /** Filtro de perícias atual (lembrado por personagem). */
+  #skillFilter() {
+    return PersonagemSheet.#skillFilters.get(this.document.id) ?? { text: '', trained: false };
+  }
+
+  /** Liga a barra de filtro, devolve a ela o que estava digitado e aplica o filtro às linhas. */
+  #bindSkillFilter() {
+    const text = this.element.querySelector('[data-filtro-texto]');
+    const trained = this.element.querySelector('[data-filtro-treinadas]');
+    if (!text || !trained) return;
+    const filter = this.#skillFilter();
+    text.value = filter.text;
+    trained.checked = filter.trained;
+    const update = () => {
+      PersonagemSheet.#skillFilters.set(this.document.id, {
+        text: text.value,
+        trained: trained.checked,
+      });
+      this.#applySkillFilter();
+    };
+    text.addEventListener('input', update);
+    trained.addEventListener('change', update);
+    this.#applySkillFilter();
+  }
+
+  /** Esconde as perícias e aptidões que não passam no filtro (só mexe na tela, sem renderizar). */
+  #applySkillFilter() {
+    const filter = this.#skillFilter();
+    let visible = 0;
+    for (const row of this.element.querySelectorAll('[data-busca]')) {
+      const show = rowMatches({ search: row.dataset.busca, die: Number(row.dataset.dado) }, filter);
+      row.classList.toggle('is-oculta', !show);
+      if (show) visible += 1;
+    }
+    const empty = this.element.querySelector('[data-filtro-vazio]');
+    if (empty) empty.hidden = visible > 0;
+  }
+
+  /** Guarda se uma habilidade está aberta, para ela continuar assim depois de renderizar. */
+  #rememberAbility(details) {
+    const id = details.dataset.habilidade;
+    const current = PersonagemSheet.#openAbilities.get(this.document.id) ?? [];
+    PersonagemSheet.#openAbilities.set(this.document.id, nextOpenIds(current, id, details.open));
   }
 
   /** Mostra a aba pedida e a lembra; troca só as classes, sem renderizar a ficha de novo. */
@@ -316,6 +375,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Clique em uma aba. */
   static #onSetTab(event, target) {
     this.#setTab(target.dataset.tab);
+  }
+
+  /** Abre todas as habilidades ou, se todas já estiverem abertas, recolhe todas. */
+  static #onToggleAbilities() {
+    const all = [...this.element.querySelectorAll('details[data-habilidade]')];
+    const open = all.some((details) => !details.open);
+    for (const details of all) details.open = open;
   }
 
   /** Botões −/+ do PV e do PD: edição crua, sem teste de lesão ou de trauma. */

@@ -24,6 +24,10 @@ import {
   togglePip,
   buildStatusTags,
   isResourceLow,
+  normalizeSearch,
+  rowMatches,
+  filterSkillRows,
+  nextOpenIds,
 } from '../scripts/sheets/context.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
@@ -530,4 +534,88 @@ test('isResourceLow vale para um quarto do máximo ou menos e ignora máximo zer
   assert.equal(isResourceLow(6, 20), false);
   assert.equal(isResourceLow(0, 20), true);
   assert.equal(isResourceLow(0, 0), false);
+});
+
+// --- Habilidades recolhíveis e filtro de perícias (v0.12.9) ---
+
+test('normalizeSearch tira acentos, caixa e espaços das pontas', () => {
+  assert.equal(normalizeSearch('  Enganação '), 'enganacao');
+  assert.equal(normalizeSearch('FÍSICO'), 'fisico');
+  assert.equal(normalizeSearch(undefined), '');
+});
+
+test('buildSkillRows traz o texto de busca com nome e atributo, sem acentos', () => {
+  const [linha] = buildSkillRows(
+    { luta: 8 },
+    { luta: 'fisico' },
+    { skillLabel: () => 'Luta', attrLabel: () => 'Físico' },
+  );
+  assert.equal(linha.search, 'luta fisico');
+});
+
+test('buildAttributeRows e buildAptitudeRows trazem o texto de busca', () => {
+  const [apt] = buildAptitudeRows({ erudicao: 8 }, ['erudicao'], () => 'Erudição');
+  assert.equal(apt.search, 'erudicao');
+});
+
+const exemplo = [
+  { search: 'luta fisico', die: 8 },
+  { search: 'enganacao emocao', die: 4 },
+  { search: 'furtividade fisico', die: 4 },
+  { search: 'medicina mente', die: 6 },
+];
+
+test('rowMatches sem filtro mostra tudo', () => {
+  assert.equal(filterSkillRows(exemplo, { text: '', trained: false }).length, 4);
+  assert.equal(filterSkillRows(exemplo, {}).length, 4);
+});
+
+test('rowMatches busca por nome ou por atributo, sem acentos e ignorando caixa', () => {
+  const nomes = (f) => filterSkillRows(exemplo, f).map((r) => r.search.split(' ')[0]);
+  assert.deepEqual(nomes({ text: 'ENGANAÇÃO' }), ['enganacao']);
+  assert.deepEqual(nomes({ text: 'físico' }), ['luta', 'furtividade']);
+  assert.deepEqual(nomes({ text: 'zzz' }), []);
+});
+
+test('rowMatches exige todas as palavras digitadas', () => {
+  assert.equal(filterSkillRows(exemplo, { text: 'fisico luta' }).length, 1);
+  assert.equal(filterSkillRows(exemplo, { text: 'fisico mente' }).length, 0);
+});
+
+test('rowMatches com "só treinadas" esconde os d4 e combina com a busca', () => {
+  assert.deepEqual(
+    filterSkillRows(exemplo, { trained: true }).map((r) => r.die),
+    [8, 6],
+  );
+  assert.deepEqual(
+    filterSkillRows(exemplo, { text: 'fisico', trained: true }).map((r) => r.search),
+    ['luta fisico'],
+  );
+});
+
+test('nextOpenIds abre e recolhe sem repetir ids', () => {
+  assert.deepEqual(nextOpenIds([], 'a', true), ['a']);
+  assert.deepEqual(nextOpenIds(['a'], 'a', true), ['a']);
+  assert.deepEqual(nextOpenIds(['a', 'b'], 'a', false), ['b']);
+  assert.deepEqual(nextOpenIds(new Set(['a']), 'x', false), ['a']);
+});
+
+test('buildAbilityRows marca as habilidades abertas (openIds)', () => {
+  const itens = [
+    { id: 'h1', name: 'Análise', system: { automacao: 'analise', perfil: false, descricao: '' } },
+    { id: 'h2', name: 'Esquiva', system: { automacao: 'esquiva', perfil: false, descricao: '' } },
+  ];
+  const opcoes = { active: [], resources: { impeto: 0, analise: 0 }, hurtCompanion: false };
+  const linhas = buildAbilityRows(itens, { ...opcoes, openIds: ['h2'] });
+  assert.deepEqual(
+    linhas.map((l) => [l.id, l.open]),
+    [
+      ['h1', false],
+      ['h2', true],
+    ],
+  );
+  assert.equal(
+    buildAbilityRows(itens, opcoes).every((l) => l.open === false),
+    true,
+  );
 });

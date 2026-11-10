@@ -37,6 +37,7 @@ export function buildAttributeRows(attributes, keys, label) {
     label: label(key),
     die: Number(attributes[key]),
     trained: Number(attributes[key]) >= 6,
+    search: normalizeSearch(label(key)),
     options: dieOptions(attributes[key]),
   }));
 }
@@ -60,6 +61,7 @@ export function buildSkillRows(skills, skillAttributes, { skillLabel, attrLabel,
       attrDie: attributeDice ? Number(attributeDice[attrKey]) : undefined,
       die: Number(skills[key]),
       trained: Number(skills[key]) >= 6,
+      search: normalizeSearch(`${skillLabel(key)} ${attrLabel(attrKey)}`),
       options: dieOptions(skills[key]),
     }))
     .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
@@ -245,7 +247,10 @@ export function buildChoices(values, current, label) {
  * @param {boolean} options.hurtCompanion O animal está ferido nesta cena.
  * @param {boolean} [options.editable=true]
  */
-export function buildAbilityRows(items, { active, resources, hurtCompanion, editable = true }) {
+export function buildAbilityRows(
+  items,
+  { active, resources, hurtCompanion, editable = true, openIds = [] },
+) {
   const rows = items.map(({ id, name, system }) => ({
     id,
     name,
@@ -253,6 +258,7 @@ export function buildAbilityRows(items, { active, resources, hurtCompanion, edit
     perfil: system.perfil,
     automacao: system.automacao,
     locked: !editable,
+    open: openIds.includes(id),
     showImpeto: system.automacao === 'impeto',
     showAnalise: system.automacao === 'analise',
     showDodge: system.automacao === 'esquiva',
@@ -379,4 +385,44 @@ export function buildStatusTags(estado, { stateLabel, fearLabel }) {
 /** PV ou PD "baixo" (um quarto do máximo ou menos): a barra do cabeçalho muda de aparência. */
 export function isResourceLow(value, max) {
   return max > 0 && value / max <= 0.25;
+}
+
+/** Texto sem acentos, em minúsculas e sem espaços nas pontas (para buscar sem depender da grafia). */
+export function normalizeSearch(text) {
+  return String(text ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * Diz se uma linha de perícia (ou aptidão) aparece com o filtro atual.
+ * Todas as palavras digitadas precisam estar no texto da linha (nome e atributo).
+ * @param {{search: string, die: number}} row `search` já normalizado por normalizeSearch.
+ * @param {{text?: string, trained?: boolean}} filter `trained` esconde as destreinadas (d4).
+ */
+export function rowMatches(row, filter) {
+  const words = normalizeSearch(filter.text).split(/\s+/).filter(Boolean);
+  if (!words.every((word) => row.search.includes(word))) return false;
+  if (filter.trained && !(row.die >= 6)) return false;
+  return true;
+}
+
+/** Aplica rowMatches a uma lista de linhas. */
+export function filterSkillRows(rows, filter) {
+  return rows.filter((row) => rowMatches(row, filter));
+}
+
+/**
+ * Lista de habilidades abertas depois de abrir ou recolher uma delas (sem repetir ids).
+ * @param {Iterable<string>} current
+ * @param {string} id
+ * @param {boolean} open
+ */
+export function nextOpenIds(current, id, open) {
+  const ids = new Set(current);
+  if (open) ids.add(id);
+  else ids.delete(id);
+  return [...ids];
 }

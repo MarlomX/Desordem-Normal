@@ -24,10 +24,15 @@
 </section>
 <section class="desordem-ficha__secao">
   <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Pericias"}}</h3>
+  <div class="desordem-filtro">
+    <label class="desordem-filtro__busca"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" data-filtro-texto placeholder="{{localize "DESORDEM.Ficha.Filtro.Placeholder"}}" autocomplete="off"></label>
+    <label class="desordem-filtro__treinadas"><input type="checkbox" data-filtro-treinadas> <span>{{localize "DESORDEM.Ficha.Filtro.Treinadas"}}</span></label>
+  </div>
+  <p class="desordem-ficha__dica" data-filtro-vazio hidden>{{localize "DESORDEM.Ficha.Filtro.SemResultados"}}</p>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaRolagem"}}</p>
   <div class="desordem-ficha__pericias">
     {{#each skills}}
-    <div class="desordem-ficha__pericia{{#unless trained}} is-destreinada{{/unless}}">
+    <div class="desordem-ficha__pericia{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-dado="{{die}}">
       <button type="button" class="desordem-ficha__rolar" data-action="rollSkill" data-skill="{{key}}">
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
         <span class="desordem-ficha__pericia-attr">{{attrLabel}}</span>
@@ -48,7 +53,7 @@
   <h3><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Aptidoes"}}</h3>
   <div class="desordem-ficha__pericias">
     {{#each aptitudes}}
-    <div class="desordem-ficha__pericia{{#unless trained}} is-destreinada{{/unless}}">
+    <div class="desordem-ficha__pericia{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-dado="{{die}}">
       <button type="button" class="desordem-ficha__rolar" data-action="rollAptitude" data-aptitude="{{key}}">
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
         <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
