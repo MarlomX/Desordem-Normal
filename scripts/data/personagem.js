@@ -64,6 +64,14 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
           usada: new f.BooleanField({ initial: false })
         })
       ),
+      // Passos temporários ajustados à mão (por exemplo, ajuda de um aliado): um por atributo e um
+      // geral para o dado das perícias. Zeram no reinício de cena.
+      passos: new f.SchemaField({
+        fisico: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
+        mente: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
+        emocao: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
+        pericias: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 })
+      }),
       // Efeitos temporários: descrição e, se quiser, passos no dado de um atributo
       efeitos: new f.ArrayField(
         new f.SchemaField({

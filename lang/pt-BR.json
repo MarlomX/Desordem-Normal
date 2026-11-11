@@ -149,6 +149,14 @@
         "Placeholder": "Buscar perícia ou atributo",
         "Treinadas": "Só treinadas (d6 ou mais)",
         "SemResultados": "Nenhuma perícia encontrada com esse filtro."
+      },
+      "Passos": {
+        "Atributo": "Passo temporário (−/+)",
+        "Pericias": "Passos das Perícias",
+        "Mais": "Aumentar passo",
+        "Menos": "Reduzir passo",
+        "Zerar": "Clique para zerar",
+        "Efeito": "Passo temporário: d{base} → d{atual}"
       }
     },
     "Aptidoes": {

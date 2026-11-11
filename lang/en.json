@@ -149,6 +149,14 @@
         "Placeholder": "Search skill or attribute",
         "Treinadas": "Trained only (d6 or higher)",
         "SemResultados": "No skills match this filter."
+      },
+      "Passos": {
+        "Atributo": "Temporary step (−/+)",
+        "Pericias": "Skill Steps",
+        "Mais": "Raise step",
+        "Menos": "Lower step",
+        "Zerar": "Click to reset",
+        "Efeito": "Temporary step: d{base} → d{atual}"
       }
     },
     "Aptidoes": {

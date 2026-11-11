@@ -619,3 +619,63 @@ test('buildAbilityRows marca as habilidades abertas (openIds)', () => {
     true,
   );
 });
+
+test('buildAttributeRows mostra o dado com passos temporários e o sentido da seta', () => {
+  const stepOf = (key) =>
+    key === 'fisico'
+      ? { net: 2, manual: 2, effects: 0, direction: 'up' }
+      : { net: -1, manual: -1, effects: 0, direction: 'down' };
+  const [fisico, mente] = buildAttributeRows(
+    { fisico: 6, mente: 4 },
+    ['fisico', 'mente'],
+    (k) => k,
+    stepOf,
+  );
+  assert.equal(fisico.die, 6);
+  assert.equal(fisico.shownDie, 10);
+  assert.equal(fisico.shifted, true);
+  assert.equal(fisico.stepUp, true);
+  assert.equal(fisico.stepBig, true);
+  assert.equal(fisico.stepAbs, 2);
+  assert.equal(mente.shownDie, 4); // d4 não desce mais, sem transbordo
+  assert.equal(mente.shifted, false);
+  assert.equal(mente.stepDirection, 'down');
+});
+
+test('buildAttributeRows sem passos mostra o dado base', () => {
+  const [linha] = buildAttributeRows({ fisico: 8 }, ['fisico'], (k) => k);
+  assert.equal(linha.shownDie, 8);
+  assert.equal(linha.shifted, false);
+  assert.equal(linha.stepNet, 0);
+  assert.equal(linha.stepDirection, 'none');
+});
+
+test('buildSkillRows aplica os passos do atributo e o geral das perícias', () => {
+  const [linha] = buildSkillRows(
+    { luta: 8 },
+    { luta: 'fisico' },
+    {
+      skillLabel: (k) => k,
+      attrLabel: (k) => k,
+      attributeDice: { fisico: 6 },
+      attrStepOf: () => ({ net: 1, manual: 1, effects: 0, direction: 'up' }),
+      skillStep: { net: 2, manual: 2, effects: 0, direction: 'up' },
+    },
+  );
+  assert.equal(linha.attrDie, 6);
+  assert.equal(linha.attrShownDie, 8);
+  assert.equal(linha.attrShifted, true);
+  assert.equal(linha.die, 8);
+  assert.equal(linha.shownDie, 12);
+  assert.equal(linha.shifted, true);
+});
+
+test('buildAptitudeRows usa o passo geral das perícias', () => {
+  const [apt] = buildAptitudeRows({ artes: 6 }, ['artes'], (k) => k, {
+    net: -1,
+    manual: -1,
+    effects: 0,
+    direction: 'down',
+  });
+  assert.equal(apt.shownDie, 4);
+});

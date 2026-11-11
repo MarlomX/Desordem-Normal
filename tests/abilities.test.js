@@ -145,6 +145,9 @@ test('sceneReset zera a cena, esvazia recursos e dá 1 PV a quem está com 0', (
   assert.deepEqual(changes['system.cena.curados'], []);
   assert.equal(changes['system.recursos.impeto'], 0);
   assert.equal(changes['system.recursos.analise'], 0);
+  for (const key of ['fisico', 'mente', 'emocao', 'pericias']) {
+    assert.equal(changes[`system.passos.${key}`], 0);
+  }
   assert.deepEqual(changes['system.efeitos'], [{ nome: 'B', fimDeCena: false }]);
 });
 

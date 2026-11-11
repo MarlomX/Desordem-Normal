@@ -163,6 +163,10 @@ export function sceneReset(state) {
     'system.recursos.impeto': state.impetoInicial ? 1 : 0,
     'system.recursos.analise': 0,
     'system.ativas': [],
+    'system.passos.fisico': 0,
+    'system.passos.mente': 0,
+    'system.passos.emocao': 0,
+    'system.passos.pericias': 0,
     'system.efeitos': state.efeitos.filter((effect) => !effect.fimDeCena),
   };
 }

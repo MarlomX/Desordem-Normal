@@ -792,6 +792,94 @@
   text-transform: uppercase;
 }
 
+/* Passos temporários: o dado sob efeito brilha (verde ao subir, vermelho ao descer) e pulsa de leve */
+.desordem-forma.is-passo {
+  --dn-passo-cor: #4cc3d9;
+  filter: drop-shadow(0 0 2px var(--dn-passo-cor)) drop-shadow(0 0 6px var(--dn-passo-cor));
+  animation: desordem-passo-pulso 2.4s ease-in-out infinite;
+}
+
+.desordem-forma.is-passo--up {
+  --dn-passo-cor: #5ec27a;
+}
+
+.desordem-forma.is-passo--down {
+  --dn-passo-cor: #e0675a;
+}
+
+@keyframes desordem-passo-pulso {
+  50% {
+    filter: drop-shadow(0 0 1px var(--dn-passo-cor)) drop-shadow(0 0 3px var(--dn-passo-cor));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desordem-forma.is-passo {
+    animation: none;
+  }
+}
+
+.desordem-passo {
+  margin-left: 0.25em;
+  font-size: 0.9em;
+}
+
+.desordem-passo--up {
+  color: #5ec27a;
+}
+
+.desordem-passo--down {
+  color: #e0675a;
+}
+
+.desordem-passo sub {
+  font-size: 0.7em;
+}
+
+/* Botões −/+ de passo (atributos e dado geral das perícias) */
+.desordem-passos-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-passos-ctl button {
+  min-width: 1.9em;
+  height: 1.6em;
+  margin: 0;
+  padding: 0 0.4em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.desordem-passos-ctl__valor {
+  min-width: 2.6em;
+  font-weight: 700;
+}
+
+.desordem-passos-geral {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-passos-geral.is-passo {
+  border-color: #4cc3d9;
+}
+
+.desordem-passos-geral__nome {
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* A janela vira uma coluna: cabeçalho e abas fixos, cada aba rola sozinha. */
 .desordem-normal.personagem .window-content {
   display: flex;

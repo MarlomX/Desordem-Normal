@@ -12,6 +12,7 @@ import {
   weaponDamageLabel,
 } from '../rolls/equipment.js';
 import { EFFECT_MAX_STEPS } from '../rolls/effects.js';
+import { shownDie } from '../rolls/steps.js';
 
 /**
  * Opções de um seletor de dado (d4 a d12). Se o valor atual estiver fora da escada
@@ -30,16 +31,29 @@ export function dieOptions(current) {
  * @param {Record<string, number>} attributes Ex.: { fisico: 6, ... }
  * @param {string[]} keys Chaves dos atributos, na ordem de exibição.
  * @param {(key: string) => string} label Devolve o nome traduzido.
+ * @param {(key: string) => object} [stepOf] Devolve o `stepIndicator` do atributo (passos
+ *   temporários); sem ele, o dado mostrado é o dado base.
  */
-export function buildAttributeRows(attributes, keys, label) {
-  return keys.map((key) => ({
-    key,
-    label: label(key),
-    die: Number(attributes[key]),
-    trained: Number(attributes[key]) >= 6,
-    search: normalizeSearch(label(key)),
-    options: dieOptions(attributes[key]),
-  }));
+export function buildAttributeRows(attributes, keys, label, stepOf) {
+  return keys.map((key) => {
+    const indicator = stepOf?.(key);
+    return {
+      key,
+      label: label(key),
+      die: Number(attributes[key]),
+      shownDie: shownDie(attributes[key], indicator),
+      shifted: shownDie(attributes[key], indicator) !== Number(attributes[key]),
+      stepNet: indicator?.net ?? 0,
+      stepUp: (indicator?.net ?? 0) > 0,
+      stepAbs: Math.abs(indicator?.net ?? 0),
+      stepBig: Math.abs(indicator?.net ?? 0) > 1,
+      stepDirection: indicator?.direction ?? 'none',
+      stepManual: indicator?.manual ?? 0,
+      trained: Number(attributes[key]) >= 6,
+      search: normalizeSearch(label(key)),
+      options: dieOptions(attributes[key]),
+    };
+  });
 }
 
 /**
@@ -51,19 +65,33 @@ export function buildAttributeRows(attributes, keys, label) {
  * @param {(key: string) => string} labels.attrLabel
  * @param {Record<string, number>} [labels.attributeDice] Dados dos atributos (para mostrar o
  *   dado do atributo-base ao lado do dado da perícia).
+ * @param {(key: string) => object} [labels.attrStepOf] `stepIndicator` de cada atributo.
+ * @param {object} [labels.skillStep] `stepIndicator` do dado geral das perícias.
  */
-export function buildSkillRows(skills, skillAttributes, { skillLabel, attrLabel, attributeDice }) {
+export function buildSkillRows(
+  skills,
+  skillAttributes,
+  { skillLabel, attrLabel, attributeDice, attrStepOf, skillStep },
+) {
   return Object.entries(skillAttributes)
-    .map(([key, attrKey]) => ({
-      key,
-      label: skillLabel(key),
-      attrLabel: attrLabel(attrKey),
-      attrDie: attributeDice ? Number(attributeDice[attrKey]) : undefined,
-      die: Number(skills[key]),
-      trained: Number(skills[key]) >= 6,
-      search: normalizeSearch(`${skillLabel(key)} ${attrLabel(attrKey)}`),
-      options: dieOptions(skills[key]),
-    }))
+    .map(([key, attrKey]) => {
+      const attrBase = attributeDice ? Number(attributeDice[attrKey]) : undefined;
+      return {
+        key,
+        label: skillLabel(key),
+        attrLabel: attrLabel(attrKey),
+        attrDie: attrBase,
+        attrShownDie: attrBase === undefined ? undefined : shownDie(attrBase, attrStepOf?.(attrKey)),
+        attrShifted:
+          attrBase !== undefined && shownDie(attrBase, attrStepOf?.(attrKey)) !== attrBase,
+        die: Number(skills[key]),
+        shownDie: shownDie(skills[key], skillStep),
+        shifted: shownDie(skills[key], skillStep) !== Number(skills[key]),
+        trained: Number(skills[key]) >= 6,
+        search: normalizeSearch(`${skillLabel(key)} ${attrLabel(attrKey)}`),
+        options: dieOptions(skills[key]),
+      };
+    })
     .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
 }
 
@@ -73,8 +101,8 @@ export function buildSkillRows(skills, skillAttributes, { skillLabel, attrLabel,
  * @param {string[]} keys Chaves das áreas, na ordem de exibição.
  * @param {(key: string) => string} label Devolve o nome traduzido.
  */
-export function buildAptitudeRows(aptitudes, keys, label) {
-  return buildAttributeRows(aptitudes, keys, label);
+export function buildAptitudeRows(aptitudes, keys, label, skillStep) {
+  return buildAttributeRows(aptitudes, keys, label, skillStep ? () => skillStep : undefined);
 }
 
 /**

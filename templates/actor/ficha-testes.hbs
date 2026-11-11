@@ -10,20 +10,36 @@
   <h3><i class="fa-solid fa-user" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Atributos"}}</h3>
   <div class="desordem-ficha__atributos">
     {{#each attributes}}
-    <label class="desordem-atributo">
-      <span class="desordem-atributo__nome">{{label}}</span>
-      <span class="desordem-forma desordem-forma--grande desordem-d-{{die}}">
-        <span class="desordem-forma__valor">{{die}}</span>
+    <div class="desordem-atributo">
+      <span class="desordem-atributo__nome">{{label}}
+        {{#if stepNet}}<span class="desordem-passo desordem-passo--{{stepDirection}}" title="{{localize "DESORDEM.Ficha.Passos.Efeito" base=die atual=shownDie}}"><i class="fa-solid {{#if stepUp}}fa-arrow-up{{else}}fa-arrow-down{{/if}}" aria-hidden="true"></i>{{#if stepBig}}<sub>{{stepAbs}}</sub>{{/if}}</span>{{/if}}
+      </span>
+      <span class="desordem-forma desordem-forma--grande desordem-d-{{shownDie}}{{#if stepNet}} is-passo is-passo--{{stepDirection}}{{/if}}">
+        <span class="desordem-forma__valor">{{shownDie}}</span>
         <select class="desordem-forma__select" name="system.atributos.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
           {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
         </select>
       </span>
-    </label>
+      {{#if ../editable}}
+      <span class="desordem-passos-ctl" title="{{localize "DESORDEM.Ficha.Passos.Atributo"}}">
+        <button type="button" data-action="stepSteps" data-key="{{key}}" data-delta="-1" aria-label="{{localize "DESORDEM.Ficha.Passos.Menos"}}">−</button>
+        <button type="button" data-action="stepSteps" data-key="{{key}}" data-delta="1" aria-label="{{localize "DESORDEM.Ficha.Passos.Mais"}}">+</button>
+      </span>
+      {{/if}}
+    </div>
     {{/each}}
   </div>
 </section>
 <section class="desordem-ficha__secao">
   <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Pericias"}}</h3>
+  <div class="desordem-passos-geral{{#if skillStep.net}} is-passo{{/if}}">
+    <span class="desordem-passos-geral__nome">{{localize "DESORDEM.Ficha.Passos.Pericias"}}</span>
+    <span class="desordem-passos-ctl">
+      <button type="button" data-action="stepSteps" data-key="pericias" data-delta="-1" {{#unless editable}}disabled{{/unless}} aria-label="{{localize "DESORDEM.Ficha.Passos.Menos"}}">−</button>
+      <button type="button" class="desordem-passos-ctl__valor" data-action="stepSteps" data-key="pericias" data-reset="true" {{#unless editable}}disabled{{/unless}} title="{{localize "DESORDEM.Ficha.Passos.Zerar"}}">{{skillStep.net}}</button>
+      <button type="button" data-action="stepSteps" data-key="pericias" data-delta="1" {{#unless editable}}disabled{{/unless}} aria-label="{{localize "DESORDEM.Ficha.Passos.Mais"}}">+</button>
+    </span>
+  </div>
   <div class="desordem-filtro">
     <label class="desordem-filtro__busca"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" data-filtro-texto placeholder="{{localize "DESORDEM.Ficha.Filtro.Placeholder"}}" autocomplete="off"></label>
     <label class="desordem-filtro__treinadas"><input type="checkbox" data-filtro-treinadas> <span>{{localize "DESORDEM.Ficha.Filtro.Treinadas"}}</span></label>
@@ -37,10 +53,10 @@
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
         <span class="desordem-ficha__pericia-attr">{{attrLabel}}</span>
       </button>
-      <span class="desordem-forma desordem-d-{{attrDie}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrDie}}</span></span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
-      <span class="desordem-forma desordem-d-{{die}}">
-        <span class="desordem-forma__valor">{{die}}</span>
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo{{/if}}">
+        <span class="desordem-forma__valor">{{shownDie}}</span>
         <select class="desordem-forma__select" name="system.pericias.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
         {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
         </select>
@@ -58,10 +74,10 @@
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
         <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
       </button>
-      <span class="desordem-forma desordem-d-{{../aptitudeAttrDie}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrDie}}</span></span>
+      <span class="desordem-forma desordem-d-{{../aptitudeAttrShownDie}}{{#if ../aptitudeAttrShifted}} is-passo{{/if}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
-      <span class="desordem-forma desordem-d-{{die}}">
-        <span class="desordem-forma__valor">{{die}}</span>
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo{{/if}}">
+        <span class="desordem-forma__valor">{{shownDie}}</span>
         <select class="desordem-forma__select" name="system.aptidoes.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
         {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
         </select>

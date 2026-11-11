@@ -9,7 +9,7 @@ import { resolveOpposed } from './opposed.js';
 import { buildChatContext, buildOpposedContext } from './presenter.js';
 import { lesionModifier, contusionStepMods } from './injury.js';
 import { traumaModifier } from './emotional.js';
-import { effectStepMods } from './effects.js';
+import { collectStepMods } from './steps.js';
 import {
   hasAbility,
   addImpeto,
@@ -257,11 +257,11 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     ...rest,
     impetoCost: boosts.impetoCost,
     activeUsed: boosts.used,
-    // Contusão (Físico -1 passo), efeitos temporários da ficha e penalidades fixas de lesões e traumas
+    // Contusão (Físico -1 passo), passos temporários e efeitos da ficha e penalidades fixas de lesões e traumas
     stepMods: [
       ...(rest.stepMods ?? []),
       ...contusionStepMods(system.estado, attrKey),
-      ...effectStepMods(system.efeitos, attrKey),
+      ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
     ],
     extraDice: [
       ...(rest.extraDice ?? []),

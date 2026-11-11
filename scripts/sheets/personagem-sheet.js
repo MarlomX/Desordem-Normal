@@ -7,6 +7,7 @@ import { traumaDT } from '../rolls/emotional.js';
 import { invokeRelation } from '../rolls/relation-chat.js';
 import { attackWithWeapon, useItem } from '../rolls/equipment-chat.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
+import { setSteps, shownDie, stepBy, stepIndicator } from '../rolls/steps.js';
 import {
   toggleActive,
   impetoStep,
@@ -112,6 +113,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
       setPip: PersonagemSheet.#onSetPip,
+      stepSteps: PersonagemSheet.#onStepSteps,
       toggleAbilities: PersonagemSheet.#onToggleAbilities,
     },
     // Itens podem ser arrastados da barra lateral ou de outra ficha para esta
@@ -149,6 +151,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const tabs = buildTabs(activeTab, (id) => t(`DESORDEM.Ficha.Abas.${id}`));
     const abilityItems = this.document.items.filter((item) => item.type === 'habilidade');
     const hasAutomation = (key) => abilityItems.some((item) => item.system.automacao === key);
+    // Passos temporários (manuais + efeitos) de cada atributo e do dado geral das perícias
+    const stepsData = this.document.toObject().system;
+    const attrStepOf = (key) =>
+      stepIndicator({ steps: stepsData.passos, effects: stepsData.efeitos, key });
+    const skillStep = stepIndicator({ steps: stepsData.passos, effects: [], key: 'pericias' });
 
     return {
       ...context,
@@ -169,19 +176,31 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       actor: this.document,
       system,
       editable: this.isEditable,
-      attributes: buildAttributeRows(system.atributos, ATRIBUTOS, (key) =>
-        t(`DESORDEM.Atributos.${key}`),
+      attributes: buildAttributeRows(
+        system.atributos,
+        ATRIBUTOS,
+        (key) => t(`DESORDEM.Atributos.${key}`),
+        attrStepOf,
       ),
+      skillStep,
       skills: buildSkillRows(system.pericias, PERICIAS, {
         skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
         attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
         attributeDice: system.atributos,
+        attrStepOf,
+        skillStep,
       }),
-      aptitudes: buildAptitudeRows(system.aptidoes, APTIDOES, (key) =>
-        t(`DESORDEM.Aptidoes.${key}`),
+      aptitudes: buildAptitudeRows(
+        system.aptidoes,
+        APTIDOES,
+        (key) => t(`DESORDEM.Aptidoes.${key}`),
+        skillStep,
       ),
       aptitudeAttrLabel: t('DESORDEM.Atributos.mente'),
       aptitudeAttrDie: Number(system.atributos.mente),
+      aptitudeAttrShownDie: shownDie(system.atributos.mente, attrStepOf('mente')),
+      aptitudeAttrShifted:
+        shownDie(system.atributos.mente, attrStepOf('mente')) !== Number(system.atributos.mente),
       nextInjuryDT: injuryDT(system.cena.testesLesao),
       nextTraumaDT: traumaDT(system.cena.testesTrauma),
       traumas: buildLesionRows(
@@ -400,6 +419,16 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /** Clique em um marcador de ímpeto ou de análise do cabeçalho. */
+  /** Botões −/+ de passo temporário de um atributo ou do dado geral das perícias. */
+  static async #onStepSteps(event, target) {
+    const key = target.dataset.key;
+    const current = this.document.toObject().system.passos;
+    const next = target.dataset.reset
+      ? setSteps(current, key, 0)
+      : stepBy(current, key, Number(target.dataset.delta));
+    await this.document.update({ [`system.passos.${key}`]: next[key] });
+  }
+
   static async #onSetPip(event, target) {
     const key = target.dataset.resource;
     if (!(key in PIP_MAX)) return;
