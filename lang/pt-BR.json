@@ -44,7 +44,36 @@
       "PavorLinha": "Dado de pavor d{lados}: {valor}",
       "PavorDevorou": "devorou {n} dado(s)",
       "PavorFim": "o efeito de pavor terminou",
-      "NotaDesastre": "Todos os dados foram devorados pelo pavor: desastre (falha crítica)."
+      "NotaDesastre": "Todos os dados foram devorados pelo pavor: desastre (falha crítica).",
+      "Pre": {
+        "Titulo": "Preparar teste",
+        "Rolar": "Rolar",
+        "Cancelar": "Cancelar",
+        "Habilidades": "Habilidades",
+        "SemHabilidades": "Nenhuma habilidade se aplica a este teste.",
+        "Hab": {
+          "impetoDado": "Dado de ímpeto (+d{die})",
+          "sorrateiro": "Dado furtivo (+d{die})"
+        },
+        "Indisponivel": {
+          "impeto": "sem ímpeto suficiente",
+          "pd": "sem PD suficiente"
+        },
+        "CustoPD": "{n} PD",
+        "CustoImpeto": "{n} de ímpeto",
+        "Pavor": "Dado de pavor: d{die}",
+        "ControlarEfeito": "{custo} PD · o dado vira d{die}",
+        "ControlarNaoDesce": "já está no menor dado",
+        "AbracarEfeito": "{custo} PD · o dado vira um dado bônus",
+        "Descartados": "Dados além do limite de 4 são descartados: {dados}.",
+        "SomamTres": "Só os 3 maiores somam.",
+        "Resumo": "Custo: {custos}. Sobram {pd} PD e {impeto} de ímpeto.",
+        "SemCusto": "Sem custo.",
+        "Erro": {
+          "pd": "PD insuficientes para estas escolhas.",
+          "impeto": "Ímpeto insuficiente para estas escolhas."
+        }
+      }
     },
     "Ficha": {
       "Personagem": "Ficha de Personagem",
@@ -53,7 +82,7 @@
       "PD": "PD",
       "Atributos": "Atributos",
       "Pericias": "Perícias",
-      "DicaRolagem": "Clique no nome de uma perícia para fazer o teste.",
+      "DicaRolagem": "Clique no nome de uma perícia para abrir a janela do teste (Shift+clique rola direto).",
       "Aptidoes": "Aptidões",
       "Saude": "Saúde",
       "Dano": "Dano",
@@ -161,7 +190,7 @@
       "Bonus": {
         "Titulo": "Dados Bônus",
         "Vazio": "Sem dado",
-        "Dica": "Até 2 dados extras. Valem no próximo teste e depois são desmarcados."
+        "Dica": "Até 2 dados extras, só para este teste."
       }
     },
     "Aptidoes": {

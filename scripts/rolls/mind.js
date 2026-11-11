@@ -66,11 +66,12 @@ async function rollTrauma(owned) {
  * chat. Em falha, rola na tabela de traumas.
  * @param {Actor} actor
  */
-export async function rollTraumaTest(actor, { extraDice = [] } = {}) {
+export async function rollTraumaTest(actor, { extraDice = [], active = [] } = {}) {
   const previousTests = actor.system.cena.testesTrauma;
   const options = skillTestOptions(actor, 'disciplina', undefined, {
     dt: traumaDT(previousTests),
     extraDice,
+    active,
     ignoreFear: true, // o teste de trauma não sofre o dado de pavor
     label: `${actor.name}: ${game.i18n.localize('DESORDEM.Trauma.TesteTitulo')}`,
   });

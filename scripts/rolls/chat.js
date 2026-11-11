@@ -176,7 +176,7 @@ export async function runTest(actor, options) {
 }
 
 /**
- * Efeitos das habilidades depois de um teste: paga o ímpeto gasto, desativa o que foi usado e
+ * Efeitos das habilidades depois de um teste: paga o ímpeto gasto e
  * enche a barra de ímpeto se o teste com DT falhou.
  */
 async function settleAbilities(actor, options, result) {
@@ -187,9 +187,6 @@ async function settleAbilities(actor, options, result) {
     impeto = addImpeto(impeto);
   }
   if (impeto !== before) updates['system.recursos.impeto'] = impeto;
-  if (options.activeUsed?.length) {
-    updates['system.ativas'] = actor.system.ativas.filter((k) => !options.activeUsed.includes(k));
-  }
   if (Object.keys(updates).length) await actor.update(updates);
 }
 
@@ -224,6 +221,30 @@ export async function rollTest({
   return result;
 }
 
+/**
+ * Dados finais de um teste (atributo e perícia já com contusão, passos e efeitos), sem rolar.
+ * Serve para a prévia da janela pré-teste.
+ * @returns {{attrDie: number, skillDie: number, attrLabel: string, skillLabel: string}}
+ */
+export function testDicePreview(actor, skillKey, attribute) {
+  const attrKey = attribute ?? (PERICIAS[skillKey] ? PERICIAS[skillKey] : 'mente');
+  const { system } = actor;
+  const plan = planDice({
+    attrDie: system.atributos[attrKey],
+    skillDie: skillDieOf(actor, skillKey),
+    stepMods: [
+      ...contusionStepMods(system.estado, attrKey),
+      ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
+    ],
+  });
+  return {
+    attrDie: plan.attrFinal,
+    skillDie: plan.skillFinal,
+    attrLabel: game.i18n.localize(`DESORDEM.Atributos.${attrKey}`),
+    skillLabel: skillName(skillKey),
+  };
+}
+
 /** Opções de teste de um ator para uma perícia ou aptidão (atributo-base ou o informado). */
 export function skillTestOptions(actor, skillKey, attribute, options) {
   const isAptitude = !PERICIAS[skillKey];
@@ -231,7 +252,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   const { system } = actor;
 
   // Dado de pavor (ignoreFear: testes que não sofrem pavor), com controlar/abraçar só neste teste
-  const { ignoreFear, controlFear, embraceFear, ...rest } = options;
+  const { ignoreFear, controlFear, embraceFear, active = [], ...rest } = options;
   let fear;
   try {
     fear = resolveFearOptions({
@@ -246,8 +267,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     throw error;
   }
 
-  // Habilidades ativadas na ficha para o próximo teste (dado extra de ímpeto, dado furtivo)
-  const boosts = activeBoosts(system.ativas, {
+  // Habilidades escolhidas na janela pré-teste (dado extra de ímpeto, dado furtivo)
+  const boosts = activeBoosts(active, {
     skillKey,
     impeto: system.recursos.impeto,
     pd: system.pd.value - fear.pdCost,
@@ -256,7 +277,6 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   return {
     ...rest,
     impetoCost: boosts.impetoCost,
-    activeUsed: boosts.used,
     // Contusão (Físico -1 passo), passos temporários e efeitos da ficha e penalidades fixas de lesões e traumas
     stepMods: [
       ...(rest.stepMods ?? []),

@@ -46,12 +46,6 @@
     <label><input type="checkbox" name="system.estado.colapso" {{#if system.estado.colapso}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.colapso"}}</label>
   </div>
 
-  <div class="desordem-ficha__estado">
-    <label><input type="checkbox" data-controlar-pavor {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.ControlarPavor"}}</label>
-    <label><input type="checkbox" data-abracar-pavor {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.AbracarPavor"}}</label>
-    <span class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaPavor"}}</span>
-  </div>
-
   <div class="desordem-ficha__acoes-saude">
     <label class="desordem-ficha__campo">
       <span>{{localize "DESORDEM.Ficha.DanoEmocional"}}</span>

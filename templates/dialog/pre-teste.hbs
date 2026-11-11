@@ -1,0 +1,54 @@
+<div class="desordem-pre">
+  <p class="desordem-pre__titulo">{{titulo}}</p>
+
+  <div class="desordem-pre__previa" data-previa aria-live="polite"></div>
+  <p class="desordem-pre__aviso" data-aviso></p>
+
+  <fieldset class="desordem-pre__grupo">
+    <legend><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Bonus.Titulo"}}</legend>
+    <div class="desordem-bonus__slots">
+      {{#each bonusSlots}}
+      {{#unless @first}}<span class="desordem-ficha__soma">+</span>{{/unless}}
+      <span class="desordem-forma desordem-forma--grande desordem-d-{{sides}}{{#unless sides}} is-vazio{{/unless}}" data-bonus-slot="{{index}}">
+        <span class="desordem-forma__valor">{{#if sides}}{{sides}}{{else}}✕{{/if}}</span>
+        <select class="desordem-forma__select" name="bonus{{index}}">
+          {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      {{/each}}
+    </div>
+    <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.Bonus.Dica"}}</p>
+  </fieldset>
+
+  <fieldset class="desordem-pre__grupo">
+    <legend><i class="fa-solid fa-bolt" aria-hidden="true"></i> {{localize "DESORDEM.Teste.Pre.Habilidades"}}</legend>
+    {{#each abilities}}
+    <label class="desordem-pre__opcao{{#unless available}} is-indisponivel{{/unless}}">
+      <input type="checkbox" name="active" value="{{key}}" {{#unless available}}disabled{{/unless}}>
+      <span class="desordem-pre__nome">{{label}}</span>
+      <span class="desordem-pre__custo">{{costText}}</span>
+      {{#if reasonText}}<span class="desordem-pre__motivo">{{reasonText}}</span>{{/if}}
+    </label>
+    {{else}}
+    <p class="desordem-ficha__dica">{{localize "DESORDEM.Teste.Pre.SemHabilidades"}}</p>
+    {{/each}}
+  </fieldset>
+
+  {{#if fear}}
+  <fieldset class="desordem-pre__grupo">
+    <legend><i class="fa-solid fa-ghost" aria-hidden="true"></i> {{fear.title}}</legend>
+    <label class="desordem-pre__opcao{{#unless fear.controlPossible}} is-indisponivel{{/unless}}">
+      <input type="checkbox" name="controlFear" {{#unless fear.controlPossible}}disabled{{/unless}}>
+      <span class="desordem-pre__nome">{{localize "DESORDEM.Ficha.ControlarPavor"}}</span>
+      <span class="desordem-pre__custo">{{fear.controlText}}</span>
+    </label>
+    <label class="desordem-pre__opcao">
+      <input type="checkbox" name="embraceFear">
+      <span class="desordem-pre__nome">{{localize "DESORDEM.Ficha.AbracarPavor"}}</span>
+      <span class="desordem-pre__custo">{{fear.embraceText}}</span>
+    </label>
+  </fieldset>
+  {{/if}}
+
+  <p class="desordem-pre__resumo" data-resumo></p>
+</div>

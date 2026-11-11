@@ -1,16 +1,16 @@
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES } from '../config.js';
 import { rollSkill, rollAptitude } from '../rolls/chat.js';
 import { damageActor, rollInjuryTest } from '../rolls/health.js';
-import { injuryDT } from '../rolls/injury.js';
+import { injuryDT, injuryTestOptions } from '../rolls/injury.js';
 import { emotionalDamage, rollTraumaTest } from '../rolls/mind.js';
 import { traumaDT } from '../rolls/emotional.js';
 import { invokeRelation } from '../rolls/relation-chat.js';
-import { attackWithWeapon, useItem } from '../rolls/equipment-chat.js';
+import { attackWithWeapon, useItem, weaponCompanionDice } from '../rolls/equipment-chat.js';
+import { weaponSkill } from '../rolls/equipment.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, shownDie, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
-import { bonusDice, buildBonusSlots, normalizeBonus, setBonusSlot } from '../rolls/bonus.js';
+import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import {
-  toggleActive,
   impetoStep,
   impetoAction,
   gainAnalysisMarkers,
@@ -53,28 +53,9 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
 /** Ficha do personagem (ApplicationV2). */
-/**
- * Lê as caixas "controlar" e "abraçar" o pavor (valem só para o próximo teste) e as desmarca.
- * Há um par na aba Testes (só com pavor) e outro na aba Condição; vale se qualquer uma estiver marcada.
- * @param {HTMLElement} element Raiz da ficha.
- */
-function takeFearOptions(element) {
-  const control = [...element.querySelectorAll('[data-controlar-pavor]')];
-  const embrace = [...element.querySelectorAll('[data-abracar-pavor]')];
-  const options = {
-    controlFear: control.some((box) => box.checked),
-    embraceFear: embrace.some((box) => box.checked),
-  };
-  for (const box of [...control, ...embrace]) box.checked = false;
-  return options;
-}
-
 export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   /** Aba aberta de cada personagem (id do ator -> id da aba); vale até recarregar a página. */
   static #activeTabs = new Map();
-
-  /** Dados bônus escolhidos de cada personagem (id do ator -> lados); valem até o próximo teste. */
-  static #bonus = new Map();
 
   /** Filtro de perícias de cada personagem (id do ator -> {text, trained}); vale até recarregar. */
   static #skillFilters = new Map();
@@ -187,10 +168,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         attrStepOf,
       ),
       skillStep,
-      bonusSlots: buildBonusSlots(
-        PersonagemSheet.#bonus.get(this.document.id),
-        t('DESORDEM.Ficha.Bonus.Vazio'),
-      ),
       skills: buildSkillRows(system.pericias, PERICIAS, {
         skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
         attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
@@ -270,67 +247,25 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     for (const field of this.element.querySelectorAll('[data-efeito-campo]')) {
       field.addEventListener('change', (event) => this.#onEffectField(event.currentTarget));
     }
-    for (const field of this.element.querySelectorAll('[data-ativa]')) {
-      field.addEventListener('change', (event) =>
-        toggleActive(this.document, event.currentTarget.dataset.ativa),
-      );
-    }
     for (const field of this.element.querySelectorAll('[data-item-campo]')) {
       field.addEventListener('change', (event) => this.#onItemField(event.currentTarget));
     }
     this.#bindSkillFilter();
-    for (const select of this.element.querySelectorAll('[data-bonus-select]')) {
-      select.addEventListener('change', (event) => {
-        const id = this.document.id;
-        const { bonusSelect } = event.currentTarget.dataset;
-        const next = setBonusSlot(
-          PersonagemSheet.#bonus.get(id),
-          Number(bonusSelect),
-          Number(event.currentTarget.value),
-        );
-        PersonagemSheet.#bonus.set(id, next);
-        this.#paintBonus();
-      });
-    }
     for (const details of this.element.querySelectorAll('details[data-habilidade]')) {
       details.addEventListener('toggle', () => this.#rememberAbility(details));
-    }
-    // As caixas de pavor aparecem em duas abas: marcar uma marca a outra
-    for (const attr of ['data-controlar-pavor', 'data-abracar-pavor']) {
-      const boxes = [...this.element.querySelectorAll(`[${attr}]`)];
-      for (const box of boxes) {
-        box.addEventListener('change', () => {
-          for (const other of boxes) other.checked = box.checked;
-        });
-      }
     }
   }
 
   /**
-   * Faz uma rolagem com os dados bônus escolhidos e, se ela terminar, desmarca todos.
-   * Se a rolagem falhar antes do chat (por exemplo, PD insuficiente para o pavor), mantém a escolha.
-   * @param {(extraDice: number[]) => Promise<*>} run
+   * Abre a janela pré-teste (dados bônus, habilidades e pavor) e faz a rolagem com a escolha.
+   * Shift+clique rola direto, sem a janela. Se o jogador cancelar, não rola.
+   * @param {MouseEvent} event
+   * @param {Object} config Veja `askRollChoices`.
+   * @param {(options: object) => Promise<*>} run Faz a rolagem com as opções escolhidas.
    */
-  async #withBonus(run) {
-    const extraDice = bonusDice(PersonagemSheet.#bonus.get(this.document.id));
-    const result = await run(extraDice);
-    PersonagemSheet.#bonus.delete(this.document.id);
-    this.#paintBonus();
-    return result;
-  }
-
-  /** Atualiza os espaços de dado bônus no DOM, sem renderizar a ficha de novo. */
-  #paintBonus() {
-    const bonus = normalizeBonus(PersonagemSheet.#bonus.get(this.document.id));
-    for (const slot of this.element.querySelectorAll('[data-bonus-slot]')) {
-      const sides = bonus[Number(slot.dataset.bonusSlot)] ?? 0;
-      slot.className = slot.className.replace(/desordem-d-\d+/, `desordem-d-${sides}`);
-      slot.classList.toggle('is-vazio', sides === 0);
-      const value = slot.querySelector('.desordem-forma__valor');
-      if (value) value.textContent = sides === 0 ? '✕' : String(sides);
-      const select = slot.querySelector('select');
-      if (select) select.value = String(sides);
-    }
+  async #rollWithChoices(event, config, run) {
+    const options = await askRollChoices(this.document, { ...config, shift: event?.shiftKey });
+    if (options) await run(options);
   }
 
   /**
@@ -495,21 +430,17 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /** Clique no nome de uma perícia: faz o teste e publica no chat. */
   static async #onRollSkill(event, target) {
-    await this.#withBonus((extraDice) =>
-      rollSkill(this.document, target.dataset.skill, {
-        ...takeFearOptions(this.element),
-        extraDice,
-      }),
+    const skillKey = target.dataset.skill;
+    await this.#rollWithChoices(event, { skillKey }, (options) =>
+      rollSkill(this.document, skillKey, options),
     );
   }
 
   /** Clique no nome de uma área de Aptidão: faz o teste (Mente + área) e publica no chat. */
   static async #onRollAptitude(event, target) {
-    await this.#withBonus((extraDice) =>
-      rollAptitude(this.document, target.dataset.aptitude, {
-        ...takeFearOptions(this.element),
-        extraDice,
-      }),
+    const skillKey = target.dataset.aptitude;
+    await this.#rollWithChoices(event, { skillKey }, (options) =>
+      rollAptitude(this.document, skillKey, options),
     );
   }
 
@@ -522,9 +453,17 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /** Teste de lesão manual (por exemplo, o do moribundo no fim da rodada). */
-  static async #onRollInjury() {
+  static async #onRollInjury(event) {
     const nonLethal = this.element.querySelector('[data-nao-letal]').checked;
-    await this.#withBonus((extraDice) => rollInjuryTest(this.document, { nonLethal, extraDice }));
+    const rule = injuryTestOptions({
+      previousTests: this.document.system.cena.testesLesao,
+      nonLethal,
+    });
+    await this.#rollWithChoices(
+      event,
+      { skillKey: 'vigor', baseExtraDice: rule.extraDice, ignoreFear: true },
+      (options) => rollInjuryTest(this.document, { nonLethal, ...options }),
+    );
   }
 
   /** Remove uma lesão da lista (uma ocorrência, se ela se repete). */
@@ -544,8 +483,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /** Teste de trauma manual. */
-  static async #onRollTrauma() {
-    await this.#withBonus((extraDice) => rollTraumaTest(this.document, { extraDice }));
+  static async #onRollTrauma(event) {
+    await this.#rollWithChoices(event, { skillKey: 'disciplina', ignoreFear: true }, (options) =>
+      rollTraumaTest(this.document, options),
+    );
   }
 
   /** Remove um trauma da lista (cura manual; uma ocorrência, se ele se repete). */
@@ -609,11 +550,15 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Ataca com a arma: teste da perícia da arma e, se acertar, cartão com o dano. */
   static async #onAttackWeapon(event, target) {
     const weapon = this.document.items.get(target.dataset.itemId);
-    if (weapon) {
-      await this.#withBonus((extraDice) =>
-        attackWithWeapon(this.document, weapon, { ...takeFearOptions(this.element), extraDice }),
-      );
-    }
+    if (!weapon) return;
+    await this.#rollWithChoices(
+      event,
+      {
+        skillKey: weaponSkill(weapon.system),
+        baseExtraDice: weaponCompanionDice(this.document, weapon),
+      },
+      (options) => attackWithWeapon(this.document, weapon, options),
+    );
   }
 
   /** Usa o item (gasta um uso ou uma unidade) e avisa no chat. */
@@ -652,9 +597,9 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /** Esquiva livre: teste de Acrobacia oposto ao ataque. */
-  static async #onDodge() {
-    await this.#withBonus((extraDice) =>
-      rollDodge(this.document, { ...takeFearOptions(this.element), extraDice }),
+  static async #onDodge(event) {
+    await this.#rollWithChoices(event, { skillKey: 'acrobacia' }, (options) =>
+      rollDodge(this.document, options),
     );
   }
 

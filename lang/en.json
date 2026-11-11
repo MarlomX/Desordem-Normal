@@ -44,7 +44,36 @@
       "PavorLinha": "Dread die d{lados}: {valor}",
       "PavorDevorou": "wiped out {n} die/dice",
       "PavorFim": "the dread effect has ended",
-      "NotaDesastre": "Every die was wiped out by dread: disaster (critical failure)."
+      "NotaDesastre": "Every die was wiped out by dread: disaster (critical failure).",
+      "Pre": {
+        "Titulo": "Prepare test",
+        "Rolar": "Roll",
+        "Cancelar": "Cancel",
+        "Habilidades": "Abilities",
+        "SemHabilidades": "No ability applies to this test.",
+        "Hab": {
+          "impetoDado": "Drive die (+d{die})",
+          "sorrateiro": "Sneak die (+d{die})"
+        },
+        "Indisponivel": {
+          "impeto": "not enough drive",
+          "pd": "not enough DP"
+        },
+        "CustoPD": "{n} DP",
+        "CustoImpeto": "{n} drive",
+        "Pavor": "Fear die: d{die}",
+        "ControlarEfeito": "{custo} DP · the die becomes d{die}",
+        "ControlarNaoDesce": "already at the lowest die",
+        "AbracarEfeito": "{custo} DP · the die becomes a bonus die",
+        "Descartados": "Dice beyond the limit of 4 are discarded: {dados}.",
+        "SomamTres": "Only the 3 highest are added.",
+        "Resumo": "Cost: {custos}. {pd} DP and {impeto} drive left.",
+        "SemCusto": "No cost.",
+        "Erro": {
+          "pd": "Not enough DP for these choices.",
+          "impeto": "Not enough drive for these choices."
+        }
+      }
     },
     "Ficha": {
       "Personagem": "Character Sheet",
@@ -53,7 +82,7 @@
       "PD": "DP",
       "Atributos": "Attributes",
       "Pericias": "Skills",
-      "DicaRolagem": "Click a skill name to make the test.",
+      "DicaRolagem": "Click a skill name to open the test window (Shift+click rolls right away).",
       "Aptidoes": "Aptitudes",
       "Saude": "Health",
       "Dano": "Damage",
@@ -161,7 +190,7 @@
       "Bonus": {
         "Titulo": "Bonus Dice",
         "Vazio": "No die",
-        "Dica": "Up to 2 extra dice. They apply to the next test and are then cleared."
+        "Dica": "Up to 2 extra dice, for this test only."
       }
     },
     "Aptidoes": {

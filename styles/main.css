@@ -1244,3 +1244,86 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Janela pré-teste: prévia dos dados, grupos de escolhas e resumo de custos */
+.desordem-pre {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 320px;
+}
+
+.desordem-pre__titulo {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.desordem-pre__previa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 2.2em;
+}
+
+.desordem-pre__previa .is-descartado {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.desordem-pre__aviso {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.desordem-pre__grupo {
+  margin: 0;
+  padding: 6px 10px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+}
+
+.desordem-pre__grupo legend {
+  padding: 0 6px;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.desordem-pre__opcao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.desordem-pre__opcao.is-indisponivel {
+  opacity: 0.55;
+}
+
+.desordem-pre__nome {
+  font-weight: 600;
+}
+
+.desordem-pre__custo,
+.desordem-pre__motivo {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.desordem-pre__resumo {
+  margin: 0;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+.desordem-pre.tem-erro .desordem-pre__resumo {
+  color: #e0675a;
+}

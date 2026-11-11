@@ -22,11 +22,20 @@ const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localiz
  * @param {Object} [options] Opções do teste de perícia (dt, extraDice, stepMods, helpers...).
  * @returns {Promise<{result: object, amount: (number|null)}>}
  */
-export async function attackWithWeapon(actor, weapon, options = {}) {
+/**
+ * Companheiro animal: +d6 nos ataques corpo a corpo, até o animal se ferir (dado em 1).
+ * @returns {number[]} [6] se o companheiro ajuda neste ataque, senão [].
+ */
+export function weaponCompanionDice(actor, weapon) {
   const { system } = weapon;
-  // Companheiro animal: +d6 nos ataques corpo a corpo, até o animal se ferir (dado em 1)
   const companion =
     system.tipo === 'corpo' && hasAbility(actor, 'companheiro') && !actor.system.cena.animalFerido;
+  return companion ? [6] : [];
+}
+
+export async function attackWithWeapon(actor, weapon, options = {}) {
+  const { system } = weapon;
+  const companion = weaponCompanionDice(actor, weapon).length > 0;
   const result = await rollSkill(actor, weaponSkill(system), {
     dt: 7,
     ...options,
