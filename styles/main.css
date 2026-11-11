@@ -836,6 +836,23 @@
   font-size: 0.7em;
 }
 
+/* Dados bônus: dois espaços escolhidos antes do teste */
+.desordem-bonus__slots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.desordem-forma.is-vazio {
+  opacity: 0.5;
+}
+
+.desordem-passos-ctl button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* Botões −/+ de passo (atributos e dado geral das perícias) */
 .desordem-passos-ctl {
   display: inline-flex;

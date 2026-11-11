@@ -12,6 +12,8 @@ import {
   collectStepMods,
   stepIndicator,
   shownDie,
+  stepLimits,
+  stepWithin,
 } from '../scripts/rolls/steps.js';
 import { planDice } from '../scripts/rolls/test.js';
 
@@ -113,4 +115,30 @@ test('shownDie aplica o saldo líquido sem passar de d4 nem de d12', () => {
   assert.equal(shownDie(6, { net: -3 }), 4);
   assert.equal(shownDie(8, undefined), 8);
   assert.equal(shownDie(20, { net: 1 }), 20);
+});
+
+test('stepLimits leva o dado a d12 e a d4 e desconta os efeitos', () => {
+  assert.deepEqual(stepLimits(10, 0), { min: -3, max: 1 });
+  assert.deepEqual(stepLimits(4, 0), { min: 0, max: 4 });
+  assert.deepEqual(stepLimits(12, 0), { min: -4, max: 0 });
+  assert.deepEqual(stepLimits(10, 1), { min: -4, max: 0 });
+  assert.deepEqual(stepLimits(20, 0), { min: -4, max: 4 });
+});
+
+test('stepBy com limites não acumula passo além do dado máximo ou mínimo', () => {
+  const limits = stepLimits(10, 0);
+  let steps = stepBy(newSteps(), 'mente', 1, limits);
+  assert.equal(steps.mente, 1);
+  steps = stepBy(steps, 'mente', 1, limits);
+  assert.equal(steps.mente, 1);
+  assert.equal(stepBy(newSteps(), 'mente', -9, limits).mente, -3);
+});
+
+test('stepWithin nunca afasta um valor que já passou do limite', () => {
+  const limits = { min: -1, max: 1 };
+  assert.equal(stepWithin(3, 1, limits), 3);
+  assert.equal(stepWithin(3, -1, limits), 2);
+  assert.equal(stepWithin(-3, -1, limits), -3);
+  assert.equal(stepWithin(-3, 1, limits), -2);
+  assert.equal(stepWithin(0, 0, limits), 0);
 });

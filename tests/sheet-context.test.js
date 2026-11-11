@@ -679,3 +679,22 @@ test('buildAptitudeRows usa o passo geral das perícias', () => {
   });
   assert.equal(apt.shownDie, 4);
 });
+
+test('buildAttributeRows desliga + no dado máximo e − no dado mínimo', () => {
+  const stepOf = (key) => ({
+    net: key === 'mente' ? 1 : 0,
+    manual: key === 'mente' ? 1 : 0,
+    effects: 0,
+  });
+  const [mente, fisico, emocao] = buildAttributeRows(
+    { mente: 10, fisico: 4, emocao: 12 },
+    ['mente', 'fisico', 'emocao'],
+    (k) => k,
+    stepOf,
+  );
+  assert.equal(mente.canStepUp, false); // d10 com +1 já mostra d12
+  assert.equal(mente.canStepDown, true);
+  assert.equal(fisico.canStepDown, false); // d4 não desce
+  assert.equal(fisico.canStepUp, true);
+  assert.equal(emocao.canStepUp, false);
+});

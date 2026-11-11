@@ -7,7 +7,8 @@ import { traumaDT } from '../rolls/emotional.js';
 import { invokeRelation } from '../rolls/relation-chat.js';
 import { attackWithWeapon, useItem } from '../rolls/equipment-chat.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
-import { setSteps, shownDie, stepBy, stepIndicator } from '../rolls/steps.js';
+import { setSteps, shownDie, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
+import { bonusDice, buildBonusSlots, normalizeBonus, setBonusSlot } from '../rolls/bonus.js';
 import {
   toggleActive,
   impetoStep,
@@ -71,6 +72,9 @@ function takeFearOptions(element) {
 export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   /** Aba aberta de cada personagem (id do ator -> id da aba); vale até recarregar a página. */
   static #activeTabs = new Map();
+
+  /** Dados bônus escolhidos de cada personagem (id do ator -> lados); valem até o próximo teste. */
+  static #bonus = new Map();
 
   /** Filtro de perícias de cada personagem (id do ator -> {text, trained}); vale até recarregar. */
   static #skillFilters = new Map();
@@ -183,6 +187,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         attrStepOf,
       ),
       skillStep,
+      bonusSlots: buildBonusSlots(
+        PersonagemSheet.#bonus.get(this.document.id),
+        t('DESORDEM.Ficha.Bonus.Vazio'),
+      ),
       skills: buildSkillRows(system.pericias, PERICIAS, {
         skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
         attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
@@ -271,6 +279,19 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       field.addEventListener('change', (event) => this.#onItemField(event.currentTarget));
     }
     this.#bindSkillFilter();
+    for (const select of this.element.querySelectorAll('[data-bonus-select]')) {
+      select.addEventListener('change', (event) => {
+        const id = this.document.id;
+        const { bonusSelect } = event.currentTarget.dataset;
+        const next = setBonusSlot(
+          PersonagemSheet.#bonus.get(id),
+          Number(bonusSelect),
+          Number(event.currentTarget.value),
+        );
+        PersonagemSheet.#bonus.set(id, next);
+        this.#paintBonus();
+      });
+    }
     for (const details of this.element.querySelectorAll('details[data-habilidade]')) {
       details.addEventListener('toggle', () => this.#rememberAbility(details));
     }
@@ -282,6 +303,33 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
           for (const other of boxes) other.checked = box.checked;
         });
       }
+    }
+  }
+
+  /**
+   * Faz uma rolagem com os dados bônus escolhidos e, se ela terminar, desmarca todos.
+   * Se a rolagem falhar antes do chat (por exemplo, PD insuficiente para o pavor), mantém a escolha.
+   * @param {(extraDice: number[]) => Promise<*>} run
+   */
+  async #withBonus(run) {
+    const extraDice = bonusDice(PersonagemSheet.#bonus.get(this.document.id));
+    const result = await run(extraDice);
+    PersonagemSheet.#bonus.delete(this.document.id);
+    this.#paintBonus();
+    return result;
+  }
+
+  /** Atualiza os espaços de dado bônus no DOM, sem renderizar a ficha de novo. */
+  #paintBonus() {
+    const bonus = normalizeBonus(PersonagemSheet.#bonus.get(this.document.id));
+    for (const slot of this.element.querySelectorAll('[data-bonus-slot]')) {
+      const sides = bonus[Number(slot.dataset.bonusSlot)] ?? 0;
+      slot.className = slot.className.replace(/desordem-d-\d+/, `desordem-d-${sides}`);
+      slot.classList.toggle('is-vazio', sides === 0);
+      const value = slot.querySelector('.desordem-forma__valor');
+      if (value) value.textContent = sides === 0 ? '✕' : String(sides);
+      const select = slot.querySelector('select');
+      if (select) select.value = String(sides);
     }
   }
 
@@ -422,10 +470,19 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Botões −/+ de passo temporário de um atributo ou do dado geral das perícias. */
   static async #onStepSteps(event, target) {
     const key = target.dataset.key;
-    const current = this.document.toObject().system.passos;
+    const data = this.document.toObject().system;
+    const current = data.passos;
+    // O passo manual de um atributo não passa do que leva o dado a d12 (ou d4); o geral não tem limite
+    const limits =
+      key === 'pericias'
+        ? undefined
+        : stepLimits(
+            data.atributos[key],
+            stepIndicator({ steps: current, effects: data.efeitos, key }).effects,
+          );
     const next = target.dataset.reset
       ? setSteps(current, key, 0)
-      : stepBy(current, key, Number(target.dataset.delta));
+      : stepBy(current, key, Number(target.dataset.delta), limits);
     await this.document.update({ [`system.passos.${key}`]: next[key] });
   }
 
@@ -438,12 +495,22 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /** Clique no nome de uma perícia: faz o teste e publica no chat. */
   static async #onRollSkill(event, target) {
-    await rollSkill(this.document, target.dataset.skill, takeFearOptions(this.element));
+    await this.#withBonus((extraDice) =>
+      rollSkill(this.document, target.dataset.skill, {
+        ...takeFearOptions(this.element),
+        extraDice,
+      }),
+    );
   }
 
   /** Clique no nome de uma área de Aptidão: faz o teste (Mente + área) e publica no chat. */
   static async #onRollAptitude(event, target) {
-    await rollAptitude(this.document, target.dataset.aptitude, takeFearOptions(this.element));
+    await this.#withBonus((extraDice) =>
+      rollAptitude(this.document, target.dataset.aptitude, {
+        ...takeFearOptions(this.element),
+        extraDice,
+      }),
+    );
   }
 
   /** Aplica o dano digitado (e o teste de lesão, se o PV chegar a 0). */
@@ -457,7 +524,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Teste de lesão manual (por exemplo, o do moribundo no fim da rodada). */
   static async #onRollInjury() {
     const nonLethal = this.element.querySelector('[data-nao-letal]').checked;
-    await rollInjuryTest(this.document, { nonLethal });
+    await this.#withBonus((extraDice) => rollInjuryTest(this.document, { nonLethal, extraDice }));
   }
 
   /** Remove uma lesão da lista (uma ocorrência, se ela se repete). */
@@ -478,7 +545,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /** Teste de trauma manual. */
   static async #onRollTrauma() {
-    await rollTraumaTest(this.document);
+    await this.#withBonus((extraDice) => rollTraumaTest(this.document, { extraDice }));
   }
 
   /** Remove um trauma da lista (cura manual; uma ocorrência, se ele se repete). */
@@ -542,7 +609,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Ataca com a arma: teste da perícia da arma e, se acertar, cartão com o dano. */
   static async #onAttackWeapon(event, target) {
     const weapon = this.document.items.get(target.dataset.itemId);
-    if (weapon) await attackWithWeapon(this.document, weapon, takeFearOptions(this.element));
+    if (weapon) {
+      await this.#withBonus((extraDice) =>
+        attackWithWeapon(this.document, weapon, { ...takeFearOptions(this.element), extraDice }),
+      );
+    }
   }
 
   /** Usa o item (gasta um uso ou uma unidade) e avisa no chat. */
@@ -582,7 +653,9 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /** Esquiva livre: teste de Acrobacia oposto ao ataque. */
   static async #onDodge() {
-    await rollDodge(this.document, takeFearOptions(this.element));
+    await this.#withBonus((extraDice) =>
+      rollDodge(this.document, { ...takeFearOptions(this.element), extraDice }),
+    );
   }
 
   /** Cura o aliado mirado (Medicina DT 7, 2 PD). */

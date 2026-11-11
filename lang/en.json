@@ -157,6 +157,11 @@
         "Menos": "Lower step",
         "Zerar": "Click to reset",
         "Efeito": "Temporary step: d{base} → d{atual}"
+      },
+      "Bonus": {
+        "Titulo": "Bonus Dice",
+        "Vazio": "No die",
+        "Dica": "Up to 2 extra dice. They apply to the next test and are then cleared."
       }
     },
     "Aptidoes": {

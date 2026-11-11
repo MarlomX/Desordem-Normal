@@ -157,6 +157,11 @@
         "Menos": "Reduzir passo",
         "Zerar": "Clique para zerar",
         "Efeito": "Passo temporário: d{base} → d{atual}"
+      },
+      "Bonus": {
+        "Titulo": "Dados Bônus",
+        "Vazio": "Sem dado",
+        "Dica": "Até 2 dados extras. Valem no próximo teste e depois são desmarcados."
       }
     },
     "Aptidoes": {

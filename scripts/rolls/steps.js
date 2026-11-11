@@ -8,7 +8,7 @@
  */
 import { ATRIBUTOS } from '../config.js';
 import { effectStepMods } from './effects.js';
-import { stepShift } from './dice.js';
+import { DIE_STEPS, stepShift } from './dice.js';
 
 export const STEP_LIMIT = 4;
 
@@ -33,10 +33,39 @@ export function clampSteps(value) {
  * @param {string} key
  * @param {number} delta
  */
-export function stepBy(steps, key, delta) {
+export function stepBy(steps, key, delta, limits) {
   const base = { ...newSteps(), ...steps };
   if (!STEP_KEYS.includes(key)) return base;
-  return { ...base, [key]: clampSteps(base[key] + Math.trunc(Number(delta) || 0)) };
+  const change = Math.trunc(Number(delta) || 0);
+  const next = limits ? stepWithin(base[key], change, limits) : base[key] + change;
+  return { ...base, [key]: clampSteps(next) };
+}
+
+/**
+ * Limites do passo manual de um atributo: o dado final (base + manual + efeitos) não deve passar de
+ * d12 nem de d4. Dados fora da escada (d20) usam só o limite geral de ±4.
+ * @param {number} baseDie Dado base do atributo.
+ * @param {number} [effectNet=0] Passos que os efeitos já dão a esse atributo.
+ * @returns {{min: number, max: number}}
+ */
+export function stepLimits(baseDie, effectNet = 0) {
+  const index = DIE_STEPS.indexOf(Number(baseDie));
+  if (index === -1) return { min: -STEP_LIMIT, max: STEP_LIMIT };
+  const effects = Number(effectNet) || 0;
+  return {
+    min: Math.max(-STEP_LIMIT, 0 - index - effects),
+    max: Math.min(STEP_LIMIT, DIE_STEPS.length - 1 - index - effects),
+  };
+}
+
+/**
+ * Aplica `delta` a um passo atual sem sair de [min, max]. Se o valor atual já está além do limite
+ * (por exemplo, o dado base mudou), o clique nunca o afasta mais: só o aproxima ou o mantém.
+ */
+export function stepWithin(current, delta, { min, max }) {
+  if (delta > 0) return Math.max(current, Math.min(current + delta, max));
+  if (delta < 0) return Math.min(current, Math.max(current + delta, min));
+  return current;
 }
 
 /** Define os passos de uma chave (devolve um objeto novo). */

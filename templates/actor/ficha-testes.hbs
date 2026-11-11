@@ -6,6 +6,21 @@
   <span class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaPavor"}}</span>
 </div>
 {{/if}}
+<section class="desordem-ficha__secao desordem-bonus">
+  <h3><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Bonus.Titulo"}}</h3>
+  <div class="desordem-bonus__slots">
+    {{#each bonusSlots}}
+    {{#unless @first}}<span class="desordem-ficha__soma">+</span>{{/unless}}
+    <span class="desordem-forma desordem-forma--grande desordem-d-{{sides}}{{#unless sides}} is-vazio{{/unless}}" data-bonus-slot="{{index}}">
+      <span class="desordem-forma__valor">{{#if sides}}{{sides}}{{else}}✕{{/if}}</span>
+      <select class="desordem-forma__select" data-bonus-select="{{index}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+    </span>
+    {{/each}}
+  </div>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.Bonus.Dica"}}</p>
+</section>
 <section class="desordem-ficha__secao">
   <h3><i class="fa-solid fa-user" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Atributos"}}</h3>
   <div class="desordem-ficha__atributos">
@@ -22,8 +37,8 @@
       </span>
       {{#if ../editable}}
       <span class="desordem-passos-ctl" title="{{localize "DESORDEM.Ficha.Passos.Atributo"}}">
-        <button type="button" data-action="stepSteps" data-key="{{key}}" data-delta="-1" aria-label="{{localize "DESORDEM.Ficha.Passos.Menos"}}">−</button>
-        <button type="button" data-action="stepSteps" data-key="{{key}}" data-delta="1" aria-label="{{localize "DESORDEM.Ficha.Passos.Mais"}}">+</button>
+        <button type="button" data-action="stepSteps" data-key="{{key}}" data-delta="-1" {{#unless canStepDown}}disabled{{/unless}} aria-label="{{localize "DESORDEM.Ficha.Passos.Menos"}}">−</button>
+        <button type="button" data-action="stepSteps" data-key="{{key}}" data-delta="1" {{#unless canStepUp}}disabled{{/unless}} aria-label="{{localize "DESORDEM.Ficha.Passos.Mais"}}">+</button>
       </span>
       {{/if}}
     </div>

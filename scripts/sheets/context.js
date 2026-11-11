@@ -12,7 +12,7 @@ import {
   weaponDamageLabel,
 } from '../rolls/equipment.js';
 import { EFFECT_MAX_STEPS } from '../rolls/effects.js';
-import { shownDie } from '../rolls/steps.js';
+import { shownDie, stepLimits } from '../rolls/steps.js';
 
 /**
  * Opções de um seletor de dado (d4 a d12). Se o valor atual estiver fora da escada
@@ -37,6 +37,8 @@ export function dieOptions(current) {
 export function buildAttributeRows(attributes, keys, label, stepOf) {
   return keys.map((key) => {
     const indicator = stepOf?.(key);
+    const limits = stepLimits(attributes[key], indicator?.effects ?? 0);
+    const manual = indicator?.manual ?? 0;
     return {
       key,
       label: label(key),
@@ -48,7 +50,9 @@ export function buildAttributeRows(attributes, keys, label, stepOf) {
       stepAbs: Math.abs(indicator?.net ?? 0),
       stepBig: Math.abs(indicator?.net ?? 0) > 1,
       stepDirection: indicator?.direction ?? 'none',
-      stepManual: indicator?.manual ?? 0,
+      stepManual: manual,
+      canStepUp: manual < limits.max,
+      canStepDown: manual > limits.min,
       trained: Number(attributes[key]) >= 6,
       search: normalizeSearch(label(key)),
       options: dieOptions(attributes[key]),
