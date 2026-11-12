@@ -1250,14 +1250,18 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 320px;
+  /* Largura fixa: a janela não muda de tamanho (nem desloca a DT) quando aparecem custos e erros */
+  width: 400px;
+  max-width: 100%;
 }
 
 .desordem-pre__titulo {
   margin: 0;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: 1.35em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-align: center;
+  text-transform: uppercase;
 }
 
 .desordem-pre__previa {
@@ -1265,8 +1269,18 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 2.2em;
+  gap: 10px;
+  min-height: 3.8em;
+}
+
+/* Dados da prévia: bem maiores que antes, com número grande e em negrito */
+.desordem-pre__previa .desordem-forma {
+  --dn-forma-tam: 3.4em;
+}
+
+.desordem-pre__previa .desordem-forma__valor {
+  font-size: calc(var(--dn-forma-tam) * 0.36);
+  font-weight: 800;
 }
 
 .desordem-pre__grupo {
@@ -1310,9 +1324,17 @@
 /* Janela pré-teste: DT, espaços de dado extra e custos em destaque */
 .desordem-pre__dt {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 4px;
+  width: 100%;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.desordem-pre__dt .desordem-passos-ctl {
+  justify-content: center;
 }
 
 .desordem-pre__dt-nome {

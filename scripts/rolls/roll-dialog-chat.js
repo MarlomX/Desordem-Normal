@@ -32,7 +32,7 @@ function readSelection(form) {
 /** Cria o desenho de um dado para a prévia. */
 function previewDie(sides, { fear = false } = {}) {
   const el = document.createElement('span');
-  el.className = `desordem-forma desordem-forma--mini desordem-d-${sides}`;
+  el.className = `desordem-forma desordem-forma--grande desordem-d-${sides}`;
   if (fear) el.classList.add('desordem-forma--pavor');
   const value = document.createElement('span');
   value.className = 'desordem-forma__valor';
