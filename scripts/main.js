@@ -2,6 +2,7 @@ import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES } from './config.js';
 import PersonagemModel from './data/personagem.js';
 import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel } from './data/items.js';
 import PersonagemSheet from './sheets/personagem-sheet.js';
+import { fearDieHelper } from './sheets/dado-pavor.js';
 import ItemSheet from './sheets/item-sheet.js';
 import { rollTest, rollSkill, rollAptitude, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
@@ -24,6 +25,14 @@ import {
 
 Hooks.once('init', () => {
   console.log(`${SYSTEM_ID} | inicializando o sistema`);
+
+  // Helper de template: {{dadoPavor lados valor tamanho}} desenha o dado de pavor em SVG (neon).
+  // SafeString diz ao Handlebars que o texto devolvido é HTML pronto e não deve ser escapado
+  // (o gerador só deixa passar dígitos no número, então não há risco de injeção).
+  Handlebars.registerHelper(
+    'dadoPavor',
+    (sides, value, size) => new Handlebars.SafeString(fearDieHelper(sides, value, size)),
+  );
 
   CONFIG.DESORDEM = { ATRIBUTOS, PERICIAS, APTIDOES };
   CONFIG.Actor.dataModels.personagem = PersonagemModel;

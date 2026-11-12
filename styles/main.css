@@ -1480,3 +1480,60 @@
   font-size: 1.3em;
   font-weight: 700;
 }
+
+/* Dado de pavor em SVG (neon): dois tamanhos, o mesmo em qualquer lugar da ficha e da janela */
+.desordem-dado-pavor {
+  display: inline-block;
+  flex: none;
+  width: var(--dn-dado-tam);
+  height: var(--dn-dado-tam);
+  overflow: visible;
+  vertical-align: middle;
+}
+
+.desordem-dado-pavor--grande {
+  --dn-dado-tam: 4.6em;
+}
+
+.desordem-dado-pavor--pequeno {
+  --dn-dado-tam: 2em;
+  /* não deixa o dado pequeno esticar a linha de texto onde ele aparece */
+  margin-block: -0.4em;
+}
+
+/* Número do dado de pavor: mesma fonte legível dos outros números (o SVG herda o @font-face) */
+.desordem-dado-pavor text {
+  font-family: var(--dn-fonte-numeros);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Campo do dado de pavor na ficha: o seletor invisível fica por cima do desenho */
+.desordem-dado-campo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desordem-dado-campo:focus-within .desordem-dado-pavor {
+  filter: drop-shadow(0 0 4px var(--dn-accent));
+}
+
+.desordem-dado-campo:has(.desordem-forma__select:disabled) .desordem-forma__select {
+  cursor: default;
+}
+
+.desordem-dado-campo__vazio {
+  display: grid;
+  place-items: center;
+  width: 3.8em;
+  height: 3.8em;
+  border: 1px dashed var(--dn-border);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.desordem-previa-pavor {
+  display: inline-flex;
+}

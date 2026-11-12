@@ -35,8 +35,8 @@
   <div class="desordem-ficha__estado">
     <label class="desordem-ficha__campo">
       <span>{{localize "DESORDEM.Ficha.DadoPavor"}}</span>
-      <span class="desordem-forma desordem-forma--pavor desordem-d-{{system.estado.pavor}}">
-        <span class="desordem-forma__valor">{{#if system.estado.pavor}}{{system.estado.pavor}}{{else}}—{{/if}}</span>
+      <span class="desordem-dado-campo">
+        {{#if system.estado.pavor}}{{dadoPavor system.estado.pavor}}{{else}}<span class="desordem-dado-campo__vazio">—</span>{{/if}}
         <select class="desordem-forma__select" name="system.estado.pavor" {{#unless editable}}disabled{{/unless}}>
           {{#each fearChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
         </select>

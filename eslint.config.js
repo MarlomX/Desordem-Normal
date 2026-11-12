@@ -6,18 +6,19 @@ export default [
       sourceType: 'module',
       globals: {
         game: 'readonly',
+        Handlebars: 'readonly',
         Hooks: 'readonly',
         CONFIG: 'readonly',
         foundry: 'readonly',
         ui: 'readonly',
         Roll: 'readonly',
         ChatMessage: 'readonly',
-        console: 'readonly'
-      }
+        console: 'readonly',
+      },
     },
     rules: {
       'no-unused-vars': 'warn',
-      'no-undef': 'error'
-    }
-  }
+      'no-undef': 'error',
+    },
+  },
 ];

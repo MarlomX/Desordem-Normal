@@ -6,6 +6,7 @@
 import { SYSTEM_ID } from '../config.js';
 import { hasAbility } from './abilities.js';
 import { render, testDicePreview } from './chat.js';
+import { buildFearDie } from '../sheets/dado-pavor.js';
 import {
   buildRollModel,
   emptySelection,
@@ -29,11 +30,16 @@ function readSelection(form) {
   };
 }
 
-/** Cria o desenho de um dado para a prévia. */
+/** Cria o desenho de um dado para a prévia (o dado de pavor usa o desenho neon em SVG). */
 function previewDie(sides, { fear = false } = {}) {
   const el = document.createElement('span');
+  if (fear) {
+    // buildFearDie só deixa dígitos no SVG, então é seguro usar como HTML
+    el.className = 'desordem-previa-pavor';
+    el.innerHTML = buildFearDie({ sides });
+    return el;
+  }
   el.className = `desordem-forma desordem-forma--grande desordem-d-${sides}`;
-  if (fear) el.classList.add('desordem-forma--pavor');
   const value = document.createElement('span');
   value.className = 'desordem-forma__valor';
   value.textContent = String(sides);
