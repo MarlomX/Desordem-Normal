@@ -4,7 +4,7 @@ import {
   dieOptions,
   buildAttributeRows,
   buildSkillRows,
-  buildAptitudeRows,
+  buildAreaRows,
   buildLesionRows,
   buildFearChoices,
   buildRelationRows,
@@ -79,8 +79,8 @@ test('buildSkillRows ordena por nome traduzido (com acentos) e traz o atributo-b
   assert.equal(linhas[0].options.find((o) => o.selected).value, 8);
 });
 
-test('buildAptitudeRows lista as áreas na ordem e marca o dado de cada uma', () => {
-  const linhas = buildAptitudeRows({ artes: 4, erudicao: 8 }, ['erudicao', 'artes'], (k) =>
+test('buildAreaRows lista as áreas na ordem e marca o dado de cada uma', () => {
+  const linhas = buildAreaRows({ artes: 4, erudicao: 8 }, ['erudicao', 'artes'], (k) =>
     k.toUpperCase(),
   );
   assert.deepEqual(
@@ -521,10 +521,10 @@ test('buildSkillRows sem attributeDice deixa o dado do atributo indefinido', () 
   assert.equal(linha.trained, true);
 });
 
-test('buildAttributeRows e buildAptitudeRows trazem o dado atual (die)', () => {
+test('buildAttributeRows e buildAreaRows trazem o dado atual (die)', () => {
   const [linha] = buildAttributeRows({ fisico: 12 }, ['fisico'], (k) => k);
   assert.equal(linha.die, 12);
-  const [apt] = buildAptitudeRows({ artes: 8 }, ['artes'], (k) => k);
+  const [apt] = buildAreaRows({ artes: 8 }, ['artes'], (k) => k);
   assert.equal(apt.die, 8);
   assert.equal(apt.trained, true);
 });
@@ -553,8 +553,8 @@ test('buildSkillRows traz o texto de busca com nome e atributo, sem acentos', ()
   assert.equal(linha.search, 'luta fisico');
 });
 
-test('buildAttributeRows e buildAptitudeRows trazem o texto de busca', () => {
-  const [apt] = buildAptitudeRows({ erudicao: 8 }, ['erudicao'], () => 'Erudição');
+test('buildAttributeRows e buildAreaRows trazem o texto de busca', () => {
+  const [apt] = buildAreaRows({ erudicao: 8 }, ['erudicao'], () => 'Erudição');
   assert.equal(apt.search, 'erudicao');
 });
 
@@ -582,14 +582,10 @@ test('rowMatches exige todas as palavras digitadas', () => {
   assert.equal(filterSkillRows(exemplo, { text: 'fisico mente' }).length, 0);
 });
 
-test('rowMatches com "só treinadas" esconde os d4 e combina com a busca', () => {
+test('rowMatches ignora o dado: só a busca decide (não há mais filtro de treinadas)', () => {
   assert.deepEqual(
     filterSkillRows(exemplo, { trained: true }).map((r) => r.die),
-    [8, 6],
-  );
-  assert.deepEqual(
-    filterSkillRows(exemplo, { text: 'fisico', trained: true }).map((r) => r.search),
-    ['luta fisico'],
+    [8, 4, 4, 6],
   );
 });
 
@@ -670,8 +666,8 @@ test('buildSkillRows aplica os passos do atributo e o geral das perícias', () =
   assert.equal(linha.shifted, true);
 });
 
-test('buildAptitudeRows usa o passo geral das perícias', () => {
-  const [apt] = buildAptitudeRows({ artes: 6 }, ['artes'], (k) => k, {
+test('buildAreaRows usa o passo geral das perícias', () => {
+  const [apt] = buildAreaRows({ artes: 6 }, ['artes'], (k) => k, {
     net: -1,
     manual: -1,
     effects: 0,

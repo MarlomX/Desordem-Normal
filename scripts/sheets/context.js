@@ -101,12 +101,12 @@ export function buildSkillRows(
 }
 
 /**
- * Linhas das áreas de Aptidão (mesmo formato dos atributos: um dado por área).
+ * Linhas das áreas de Aptidão ou de Ofício (mesmo formato dos atributos: um dado por área).
  * @param {Record<string, number>} aptitudes Ex.: { erudicao: 6, ... }
  * @param {string[]} keys Chaves das áreas, na ordem de exibição.
  * @param {(key: string) => string} label Devolve o nome traduzido.
  */
-export function buildAptitudeRows(aptitudes, keys, label, skillStep) {
+export function buildAreaRows(aptitudes, keys, label, skillStep) {
   return buildAttributeRows(aptitudes, keys, label, skillStep ? () => skillStep : undefined);
 }
 
@@ -460,21 +460,61 @@ export function normalizeSearch(text) {
 }
 
 /**
- * Diz se uma linha de perícia (ou aptidão) aparece com o filtro atual.
+ * Diz se uma linha de perícia (ou aptidão ou ofício) aparece com o filtro atual.
  * Todas as palavras digitadas precisam estar no texto da linha (nome e atributo).
- * @param {{search: string, die: number}} row `search` já normalizado por normalizeSearch.
- * @param {{text?: string, trained?: boolean}} filter `trained` esconde as destreinadas (d4).
+ * @param {{search: string}} row `search` já normalizado por normalizeSearch.
+ * @param {{text?: string}} filter
  */
 export function rowMatches(row, filter) {
   const words = normalizeSearch(filter.text).split(/\s+/).filter(Boolean);
-  if (!words.every((word) => row.search.includes(word))) return false;
-  if (filter.trained && !(row.die >= 6)) return false;
-  return true;
+  return words.every((word) => row.search.includes(word));
 }
 
 /** Aplica rowMatches a uma lista de linhas. */
 export function filterSkillRows(rows, filter) {
   return rows.filter((row) => rowMatches(row, filter));
+}
+
+/** Modos de ordenação das perícias: pelo nome (A→Z) ou pelo dado (do maior para o menor). */
+export const SKILL_SORT_MODES = Object.freeze(['nome', 'dado']);
+export const DEFAULT_SKILL_SORT = 'nome';
+
+/** Devolve o modo se for válido; qualquer outra coisa vira o padrão (nome). */
+export function normalizeSkillSort(mode) {
+  return SKILL_SORT_MODES.includes(mode) ? mode : DEFAULT_SKILL_SORT;
+}
+
+// Compara textos em português, ignorando maiúsculas e acentos ("Ofício" fica junto de "Oficio").
+const nameCollator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
+
+/**
+ * Posição de cada linha de uma lista depois de ordenada (sem mexer na lista).
+ * - Modo `nome`: nome de A a Z.
+ * - Modo `dado`: dado final do maior para o menor; empate: dado do atributo-base (maior
+ *   primeiro); se continuar empatado, o nome de A a Z.
+ * Em empate total vale a posição original, então o resultado é sempre estável.
+ * @param {{label: string, die?: number, attrDie?: number}[]} rows `die` e `attrDie` são os
+ *   dados finais mostrados na ficha (com passos e efeitos). Dado ausente conta como 0.
+ * @param {string} mode `nome` ou `dado` (outro valor usa `nome`).
+ * @returns {number[]} `order[i]` é a posição (0, 1, 2…) da linha `rows[i]`.
+ */
+export function skillRowOrder(rows, mode) {
+  const number = (value) => Number(value) || 0;
+  const byName = (a, b) => nameCollator.compare(a.row.label, b.row.label);
+  const byDie = (a, b) =>
+    number(b.row.die) - number(a.row.die) ||
+    number(b.row.attrDie) - number(a.row.attrDie) ||
+    byName(a, b);
+  const compare = normalizeSkillSort(mode) === 'dado' ? byDie : byName;
+
+  const sorted = rows
+    .map((row, index) => ({ row, index }))
+    .sort((a, b) => compare(a, b) || a.index - b.index);
+  const order = new Array(rows.length);
+  sorted.forEach(({ index }, position) => {
+    order[index] = position;
+  });
+  return order;
 }
 
 /**

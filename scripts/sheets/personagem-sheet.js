@@ -35,7 +35,7 @@ import {
 import {
   buildAttributeRows,
   buildSkillRows,
-  buildAptitudeRows,
+  buildAreaRows,
   buildExtraRows,
   buildLesionRows,
   buildFearChoices,
@@ -55,6 +55,8 @@ import {
   buildStatusTags,
   isResourceLow,
   rowMatches,
+  normalizeSkillSort,
+  skillRowOrder,
   nextOpenIds,
 } from './context.js';
 
@@ -66,8 +68,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Aba aberta de cada personagem (id do ator -> id da aba); vale até recarregar a página. */
   static #activeTabs = new Map();
 
-  /** Filtro de perícias de cada personagem (id do ator -> {text, trained}); vale até recarregar. */
+  /** Filtro de perícias de cada personagem (id do ator -> {text}); vale até recarregar. */
   static #skillFilters = new Map();
+
+  /** Ordenação das perícias de cada personagem (id do ator -> `nome` ou `dado`); vale até recarregar. */
+  static #skillSorts = new Map();
 
   /** Habilidades abertas de cada personagem (id do ator -> ids dos itens). */
   static #openAbilities = new Map();
@@ -187,13 +192,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         attrStepOf,
         skillStep,
       }),
-      aptitudes: buildAptitudeRows(
+      aptitudes: buildAreaRows(
         system.aptidoes,
         APTIDOES,
         (key) => t(`DESORDEM.Aptidoes.${key}`),
         skillStep,
       ),
-      crafts: buildAptitudeRows(
+      crafts: buildAreaRows(
         system.oficios,
         OFICIOS,
         (key) => t(`DESORDEM.Oficios.${key}`),
@@ -313,27 +318,31 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /** Filtro de perícias atual (lembrado por personagem). */
   #skillFilter() {
-    return PersonagemSheet.#skillFilters.get(this.document.id) ?? { text: '', trained: false };
+    return PersonagemSheet.#skillFilters.get(this.document.id) ?? { text: '' };
   }
 
-  /** Liga a barra de filtro, devolve a ela o que estava digitado e aplica o filtro às linhas. */
+  /** Modo de ordenação das perícias atual (lembrado por personagem; padrão: nome). */
+  #skillSort() {
+    return normalizeSkillSort(PersonagemSheet.#skillSorts.get(this.document.id));
+  }
+
+  /** Liga a busca e o seletor de ordem, devolve a eles o que estava escolhido e aplica os dois. */
   #bindSkillFilter() {
     const text = this.element.querySelector('[data-filtro-texto]');
-    const trained = this.element.querySelector('[data-filtro-treinadas]');
-    if (!text || !trained) return;
-    const filter = this.#skillFilter();
-    text.value = filter.text;
-    trained.checked = filter.trained;
-    const update = () => {
-      PersonagemSheet.#skillFilters.set(this.document.id, {
-        text: text.value,
-        trained: trained.checked,
-      });
+    const sort = this.element.querySelector('[data-ordenar]');
+    if (!text || !sort) return;
+    text.value = this.#skillFilter().text;
+    sort.value = this.#skillSort();
+    text.addEventListener('input', () => {
+      PersonagemSheet.#skillFilters.set(this.document.id, { text: text.value });
       this.#applySkillFilter();
-    };
-    text.addEventListener('input', update);
-    trained.addEventListener('change', update);
+    });
+    sort.addEventListener('change', () => {
+      PersonagemSheet.#skillSorts.set(this.document.id, normalizeSkillSort(sort.value));
+      this.#applySkillSort();
+    });
     this.#applySkillFilter();
+    this.#applySkillSort();
   }
 
   /** Esconde as perícias e aptidões que não passam no filtro (só mexe na tela, sem renderizar). */
@@ -341,12 +350,35 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const filter = this.#skillFilter();
     let visible = 0;
     for (const row of this.element.querySelectorAll('[data-busca]')) {
-      const show = rowMatches({ search: row.dataset.busca, die: Number(row.dataset.dado) }, filter);
+      const show = rowMatches({ search: row.dataset.busca }, filter);
       row.classList.toggle('is-oculta', !show);
       if (show) visible += 1;
     }
     const empty = this.element.querySelector('[data-filtro-vazio]');
     if (empty) empty.hidden = visible > 0;
+  }
+
+  /**
+   * Ordena as linhas dentro de cada grupo (perícias, aptidões, ofícios), que ficam no lugar.
+   * Só muda a propriedade CSS `order` de cada linha: a grade mostra as linhas na ordem dela,
+   * sem renderizar a ficha de novo. A ordem no HTML não muda (só a ordem visual).
+   */
+  #applySkillSort() {
+    const mode = this.#skillSort();
+    for (const group of this.element.querySelectorAll('.desordem-ficha__pericias')) {
+      const rows = [...group.querySelectorAll(':scope > [data-busca]')];
+      const order = skillRowOrder(
+        rows.map((row) => ({
+          label: row.dataset.nome,
+          die: Number(row.dataset.dadoFinal),
+          attrDie: Number(row.dataset.dadoAttr),
+        })),
+        mode,
+      );
+      rows.forEach((row, i) => {
+        row.style.order = String(order[i]);
+      });
+    }
   }
 
   /** Guarda se uma habilidade está aberta, para ela continuar assim depois de renderizar. */

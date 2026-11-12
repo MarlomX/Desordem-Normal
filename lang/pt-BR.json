@@ -205,9 +205,13 @@
         "AlternarTodas": "Expandir/recolher todas",
         "SemDescricao": "Sem descrição."
       },
+      "Ordenar": {
+        "Titulo": "Ordenar",
+        "Nome": "Nome (A→Z)",
+        "Dado": "Dado (d12→d4)"
+      },
       "Filtro": {
         "Placeholder": "Buscar perícia ou atributo",
-        "Treinadas": "Só treinadas (d6 ou mais)",
         "SemResultados": "Nenhuma perícia encontrada com esse filtro."
       },
       "Passos": {

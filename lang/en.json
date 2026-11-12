@@ -205,9 +205,13 @@
         "AlternarTodas": "Expand/collapse all",
         "SemDescricao": "No description."
       },
+      "Ordenar": {
+        "Titulo": "Sort",
+        "Nome": "Name (A→Z)",
+        "Dado": "Die (d12→d4)"
+      },
       "Filtro": {
         "Placeholder": "Search skill or attribute",
-        "Treinadas": "Trained only (d6 or higher)",
         "SemResultados": "No skills match this filter."
       },
       "Passos": {

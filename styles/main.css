@@ -551,12 +551,17 @@
   box-shadow: none;
 }
 
-.desordem-filtro__treinadas {
+.desordem-filtro__ordenar {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 0.85em;
   white-space: nowrap;
+}
+
+.desordem-filtro__ordenar select {
+  width: auto;
+  height: auto;
 }
 
 .desordem-ficha__pericia.is-oculta,
