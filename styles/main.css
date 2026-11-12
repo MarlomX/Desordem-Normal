@@ -1,3 +1,19 @@
+/* Fonte dos números (dados, DT, custos): Atkinson Hyperlegible Mono, licença OFL (styles/fontes/OFL.txt).
+   Só dígitos e sinais, para não afetar o resto do texto. */
+@font-face {
+  font-family: 'Desordem Numeros';
+  src: url('fontes/numeros-600.woff2') format('woff2');
+  font-weight: 600;
+  unicode-range: U+0030-0039, U+002B, U+002D, U+002E, U+2212;
+}
+
+@font-face {
+  font-family: 'Desordem Numeros';
+  src: url('fontes/numeros-700.woff2') format('woff2');
+  font-weight: 700 900;
+  unicode-range: U+0030-0039, U+002B, U+002D, U+002E, U+2212;
+}
+
 /* Estilos do sistema Desordem-Normal */
 
 .desordem-teste {
@@ -567,6 +583,8 @@
 /* Cores e superfícies da ficha. Funcionam nos temas claro e escuro: as superfícies são
    camadas translúcidas da própria cor do texto. */
 .desordem-normal {
+  --dn-contorno-numero: rgb(0 0 0 / 0.9);
+  --dn-fonte-numeros: 'Desordem Numeros', var(--font-primary), sans-serif;
   --dn-accent: #3fa7b5;
   --dn-accent-line: color-mix(in srgb, var(--dn-accent) 55%, transparent);
   --dn-accent-soft: color-mix(in srgb, var(--dn-accent) 20%, transparent);
@@ -701,12 +719,23 @@
 .desordem-forma__valor {
   position: relative;
   z-index: 2;
-  font-size: calc(var(--dn-forma-tam) * 0.38);
+  font-family: var(--dn-fonte-numeros);
+  font-size: calc(var(--dn-forma-tam) * 0.46);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
+  color: #fff;
+  /* Contorno escuro em volta do número (text-shadow, pois paint-order não é confiável em HTML) */
   text-shadow:
-    0 0 0.12em var(--dn-miolo),
-    0 0 0.12em var(--dn-miolo),
-    0 0 0.12em var(--dn-miolo);
+    -1px -1px 0 var(--dn-contorno-numero),
+    1px -1px 0 var(--dn-contorno-numero),
+    -1px 1px 0 var(--dn-contorno-numero),
+    1px 1px 0 var(--dn-contorno-numero),
+    0 -1px 0 var(--dn-contorno-numero),
+    0 1px 0 var(--dn-contorno-numero),
+    -1px 0 0 var(--dn-contorno-numero),
+    1px 0 0 var(--dn-contorno-numero),
+    0 0 0.25em var(--dn-contorno-numero);
   pointer-events: none;
 }
 
@@ -738,11 +767,15 @@
 }
 
 .desordem-forma--grande .desordem-forma__valor {
-  font-size: calc(var(--dn-forma-tam) * 0.3);
+  font-size: calc(var(--dn-forma-tam) * 0.36);
 }
 
 .desordem-forma--mini {
   --dn-forma-tam: 1.5em;
+}
+
+.desordem-forma--mini .desordem-forma__valor {
+  font-size: calc(var(--dn-forma-tam) * 0.56);
 }
 
 /* Dado de pavor: mesma silhueta do dado, mas com fundo escuro, linhas claras, rachaduras
@@ -1279,8 +1312,7 @@
 }
 
 .desordem-pre__previa .desordem-forma__valor {
-  font-size: calc(var(--dn-forma-tam) * 0.36);
-  font-weight: 800;
+  font-size: calc(var(--dn-forma-tam) * 0.4);
 }
 
 .desordem-pre__grupo {
@@ -1320,7 +1352,6 @@
   opacity: 0.8;
 }
 
-.desordem-pre.tem-erro 
 /* Janela pré-teste: DT, espaços de dado extra e custos em destaque */
 .desordem-pre__dt {
   display: flex;
@@ -1434,4 +1465,18 @@
   font-weight: 600;
   text-align: center;
   color: #e0675a;
+}
+
+/* Números com a fonte legível (DT, custos, controle geral de passos) */
+.desordem-pre__dt input,
+.desordem-custo strong,
+.desordem-passos-ctl__valor,
+.desordem-passos-ctl button {
+  font-family: var(--dn-fonte-numeros);
+  font-variant-numeric: tabular-nums;
+}
+
+.desordem-pre__dt input {
+  font-size: 1.3em;
+  font-weight: 700;
 }
