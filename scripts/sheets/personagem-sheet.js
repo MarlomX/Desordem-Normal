@@ -11,6 +11,14 @@ import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, shownDie, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import {
+  EXTRA_GROUPS,
+  MAX_EXTRAS,
+  addExtra,
+  canAddExtra,
+  removeExtra,
+  updateExtra,
+} from '../rolls/extras.js';
+import {
   impetoStep,
   impetoAction,
   gainAnalysisMarkers,
@@ -28,6 +36,7 @@ import {
   buildAttributeRows,
   buildSkillRows,
   buildAptitudeRows,
+  buildExtraRows,
   buildLesionRows,
   buildFearChoices,
   buildRelationRows,
@@ -72,6 +81,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       rollSkill: PersonagemSheet.#onRollSkill,
       rollAptitude: PersonagemSheet.#onRollAptitude,
       rollCraft: PersonagemSheet.#onRollCraft,
+      addExtra: PersonagemSheet.#onAddExtra,
+      removeExtra: PersonagemSheet.#onRemoveExtra,
       applyDamage: PersonagemSheet.#onApplyDamage,
       rollInjury: PersonagemSheet.#onRollInjury,
       removeLesion: PersonagemSheet.#onRemoveLesion,
@@ -188,6 +199,17 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         (key) => t(`DESORDEM.Oficios.${key}`),
         skillStep,
       ),
+      aptitudeExtras: buildExtraRows(system.aptidoesExtras, 'aptidao', {
+        emptyLabel: t('DESORDEM.Ficha.ExtraSemNome.aptidao'),
+        skillStep,
+      }),
+      craftExtras: buildExtraRows(system.oficiosExtras, 'oficio', {
+        emptyLabel: t('DESORDEM.Ficha.ExtraSemNome.oficio'),
+        skillStep,
+      }),
+      canAddAptitude: canAddExtra(system.aptidoesExtras),
+      canAddCraft: canAddExtra(system.oficiosExtras),
+      maxExtras: MAX_EXTRAS,
       aptitudeAttrLabel: t('DESORDEM.Atributos.mente'),
       aptitudeAttrDie: Number(system.atributos.mente),
       aptitudeAttrShownDie: shownDie(system.atributos.mente, attrStepOf('mente')),
@@ -250,6 +272,9 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     await super._onRender(context, options);
     for (const field of this.element.querySelectorAll('[data-relacao-campo]')) {
       field.addEventListener('change', (event) => this.#onRelationField(event.currentTarget));
+    }
+    for (const field of this.element.querySelectorAll('[data-extra-campo]')) {
+      field.addEventListener('change', (event) => this.#onExtraField(event.currentTarget));
     }
     for (const field of this.element.querySelectorAll('[data-efeito-campo]')) {
       field.addEventListener('change', (event) => this.#onEffectField(event.currentTarget));
@@ -379,6 +404,47 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const changes = { [field.dataset.relacaoCampo]: value };
     const index = Number(field.dataset.index);
     await this.#saveRelations(updateRelation(this.#relations(), index, changes));
+  }
+
+  /** Lista de áreas extras de um grupo (`aptidao` ou `oficio`) como dados simples. */
+  #extras(group) {
+    return this.document.toObject().system[EXTRA_GROUPS[group]];
+  }
+
+  /** Grava a nova lista de áreas extras de um grupo. */
+  async #saveExtras(group, list) {
+    await this.document.update({ [`system.${EXTRA_GROUPS[group]}`]: list });
+  }
+
+  /** Edição do nome ou do dado de uma área extra (campos sem `name`, fora do formulário). */
+  async #onExtraField(field) {
+    const { group, id, extraCampo } = field.dataset;
+    if (!(group in EXTRA_GROUPS)) return;
+    const value = extraCampo === 'dado' ? Number(field.value) : field.value;
+    await this.#saveExtras(group, updateExtra(this.#extras(group), id, { [extraCampo]: value }));
+  }
+
+  /** Clique em "Adicionar": cria uma área extra nova (d4) no grupo, se ainda couber. */
+  static async #onAddExtra(event, target) {
+    const group = target.dataset.group;
+    if (!(group in EXTRA_GROUPS)) return;
+    const list = this.#extras(group);
+    if (!canAddExtra(list)) return;
+    const id = foundry.utils.randomID();
+    await this.#saveExtras(group, addExtra(list, { id }));
+  }
+
+  /** Clique em × de uma área extra: remove depois de confirmar (o dado dela se perde). */
+  static async #onRemoveExtra(event, target) {
+    const { group, id } = target.dataset;
+    if (!(group in EXTRA_GROUPS)) return;
+    const confirmed = await foundry.applications.api.DialogV2.confirm({
+      window: { title: game.i18n.localize(`DESORDEM.Ficha.RemoverExtra.${group}`) },
+      content: `<p>${game.i18n.localize('DESORDEM.Ficha.ConfirmarRemoverExtra')}</p>`,
+      rejectClose: false,
+      modal: true,
+    });
+    if (confirmed === true) await this.#saveExtras(group, removeExtra(this.#extras(group), id));
   }
 
   /** Clique em uma aba. */

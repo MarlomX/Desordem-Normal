@@ -2,6 +2,7 @@
  * Preparação de dados para a ficha. Funções puras (sem Foundry), testadas em Node.
  */
 import { DIE_STEPS } from '../rolls/dice.js';
+import { extraKey } from '../rolls/extras.js';
 import { RELATION_MAX_DEGREE, degreeKey, invokeCheck } from '../rolls/relation.js';
 import {
   HANDS,
@@ -107,6 +108,36 @@ export function buildSkillRows(
  */
 export function buildAptitudeRows(aptitudes, keys, label, skillStep) {
   return buildAttributeRows(aptitudes, keys, label, skillStep ? () => skillStep : undefined);
+}
+
+/**
+ * Linhas das áreas extras de Aptidão ou de Ofício (criadas pelo jogador).
+ * Mesmo formato das áreas do livro, mais `id`, `index`, `nome` (o texto digitado) e `group`.
+ * A `key` é a chave de teste (`aptidao:<id>` ou `oficio:<id>`). Se o nome estiver vazio, o
+ * `label` mostra `emptyLabel`, mas `nome` continua vazio (é o que vai no campo de texto).
+ * @param {{id: string, nome: string, dado: number}[]} extras
+ * @param {string} group `aptidao` ou `oficio`.
+ * @param {Object} opts
+ * @param {string} opts.emptyLabel Texto para áreas sem nome.
+ * @param {object} [opts.skillStep] `stepIndicator` do dado geral das perícias.
+ */
+export function buildExtraRows(extras, group, { emptyLabel, skillStep }) {
+  const dice = Object.fromEntries(extras.map((extra) => [extra.id, extra.dado]));
+  const names = Object.fromEntries(extras.map((extra) => [extra.id, extra.nome || emptyLabel]));
+  const rows = buildAttributeRows(
+    dice,
+    extras.map((extra) => extra.id),
+    (id) => names[id],
+    skillStep ? () => skillStep : undefined,
+  );
+  return rows.map((row, index) => ({
+    ...row,
+    id: row.key,
+    key: extraKey(group, row.key),
+    group,
+    index,
+    nome: extras[index].nome,
+  }));
 }
 
 /**

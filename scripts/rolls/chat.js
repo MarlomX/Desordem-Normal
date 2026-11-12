@@ -2,6 +2,7 @@
  * Ligação entre a lógica pura dos testes e o Foundry (rolagem de dados e mensagem no chat).
  */
 import { SYSTEM_ID, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
+import { findExtra } from './extras.js';
 import { sequenceRng } from './dice.js';
 import { planDice, resolveTest } from './test.js';
 import { canHelp, applyHelp } from './help.js';
@@ -49,8 +50,15 @@ export async function postMessage({ actor, content, rolls = [], flags }) {
   return ChatMessage.create(messageData);
 }
 
-/** Nome traduzido de uma perícia ou área de Aptidão ou de Ofício. */
-function skillName(key) {
+/**
+ * Nome de uma perícia ou área de Aptidão ou de Ofício. Em áreas extras, é o nome digitado na
+ * ficha do `actor` (ou um texto padrão, se estiver vazio).
+ */
+function skillName(key, actor) {
+  const found = actor ? findExtra(actor.system, key) : null;
+  if (found) {
+    return found.extra.nome || game.i18n.localize(`DESORDEM.Ficha.ExtraSemNome.${found.group}`);
+  }
   const group = PERICIAS[key] ? 'Pericias' : OFICIOS.includes(key) ? 'Oficios' : 'Aptidoes';
   return game.i18n.localize(`DESORDEM.${group}.${key}`);
 }
@@ -60,6 +68,8 @@ function skillDieOf(actor, key) {
   if (PERICIAS[key]) return actor.system.pericias[key];
   if (APTIDOES.includes(key)) return actor.system.aptidoes[key];
   if (OFICIOS.includes(key)) return actor.system.oficios[key];
+  const found = findExtra(actor.system, key);
+  if (found) return found.extra.dado;
   throw new Error(`${SYSTEM_ID} | perícia, aptidão ou ofício desconhecido: ${key}`);
 }
 
@@ -76,13 +86,13 @@ function applyHelpers(opts, helpers) {
     if (!canHelp(die)) {
       const message = game.i18n.format('DESORDEM.Ajuda.SemDado', {
         nome: actor.name,
-        pericia: skillName(skill),
+        pericia: skillName(skill, actor),
       });
       ui.notifications.warn(message);
       throw new Error(message);
     }
     current = applyHelp(current, die, bonusDice);
-    notes.push({ name: actor.name, skillLabel: skillName(skill), die });
+    notes.push({ name: actor.name, skillLabel: skillName(skill, actor), die });
   }
   return { ...current, notes };
 }
@@ -242,7 +252,7 @@ export function testDicePreview(actor, skillKey, attribute) {
     attrDie: plan.attrFinal,
     skillDie: plan.skillFinal,
     attrLabel: game.i18n.localize(`DESORDEM.Atributos.${attrKey}`),
-    skillLabel: skillName(skillKey),
+    skillLabel: skillName(skillKey, actor),
   };
 }
 
@@ -299,7 +309,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     attrDie: actor.system.atributos[attrKey],
     skillDie: skillDieOf(actor, skillKey),
     attrLabel: game.i18n.localize(`DESORDEM.Atributos.${attrKey}`),
-    skillLabel: skillName(skillKey),
+    skillLabel: skillName(skillKey, actor),
   };
 }
 
@@ -321,7 +331,7 @@ export function rollSkill(actor, skillKey, { attribute, ...options } = {}) {
  * @param {Object} [options] Aceita dt, extraDice, stepMods, helpers e attribute (chave do atributo).
  */
 export function rollAptitude(actor, areaKey, { attribute, ...options } = {}) {
-  if (!APTIDOES.includes(areaKey)) {
+  if (!APTIDOES.includes(areaKey) && findExtra(actor.system, areaKey)?.group !== 'aptidao') {
     throw new Error(`${SYSTEM_ID} | área de aptidão desconhecida: ${areaKey}`);
   }
   return rollTest({ ...skillTestOptions(actor, areaKey, attribute, options), actor });
@@ -334,7 +344,7 @@ export function rollAptitude(actor, areaKey, { attribute, ...options } = {}) {
  * @param {Object} [options] Aceita dt, extraDice, stepMods, helpers e attribute (chave do atributo).
  */
 export function rollCraft(actor, areaKey, { attribute, ...options } = {}) {
-  if (!OFICIOS.includes(areaKey)) {
+  if (!OFICIOS.includes(areaKey) && findExtra(actor.system, areaKey)?.group !== 'oficio') {
     throw new Error(`${SYSTEM_ID} | área de ofício desconhecida: ${areaKey}`);
   }
   return rollTest({ ...skillTestOptions(actor, areaKey, attribute, options), actor });

@@ -131,6 +131,22 @@
       "RemoverTrauma": "Remove trauma",
       "Relacoes": "Relationships",
       "DicaRelacoes": "The dots are the bond's degree (click to change). Benefits are applied by hand; invoking marks the bond as used this mission and tells the table (at degrees 2 and 3, the chat card has a motivate button).",
+      "AdicionarAptidao": "Add aptitude",
+      "AdicionarOficio": "Add craft",
+      "ExtraNome": {
+        "aptidao": "Aptitude name",
+        "oficio": "Craft name"
+      },
+      "ExtraSemNome": {
+        "aptidao": "Unnamed aptitude",
+        "oficio": "Unnamed craft"
+      },
+      "RemoverExtra": {
+        "aptidao": "Remove aptitude",
+        "oficio": "Remove craft"
+      },
+      "ConfirmarRemoverExtra": "Remove this area? Its die will be lost.",
+      "LimiteExtras": "Limit of {max} extra areas reached.",
       "AdicionarRelacao": "Add relationship",
       "RemoverRelacao": "Remove relationship",
       "SemRelacoes": "No relationships",

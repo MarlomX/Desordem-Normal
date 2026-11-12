@@ -15,6 +15,16 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         max: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 })
       });
 
+    // Áreas extras de Aptidão e Ofício criadas pelo jogador (além das do livro)
+    const extras = () =>
+      new f.ArrayField(
+        new f.SchemaField({
+          id: new f.StringField({ required: true, blank: false }),
+          nome: new f.StringField({ required: true, blank: true, initial: '' }),
+          dado: dado(4)
+        })
+      );
+
     const mapear = (chaves, fabrica) =>
       Object.fromEntries(chaves.map((chave) => [chave, fabrica(chave)]));
 
@@ -27,6 +37,8 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       pericias: new f.SchemaField(mapear(Object.keys(PERICIAS), () => dado(4))),
       aptidoes: new f.SchemaField(mapear(APTIDOES, () => dado(4))),
       oficios: new f.SchemaField(mapear(OFICIOS, () => dado(4))),
+      aptidoesExtras: extras(),
+      oficiosExtras: extras(),
       pv: recurso(),
       pd: recurso(),
       // Estado de saúde: condições, lesões permanentes e contador de testes de lesão da cena

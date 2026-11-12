@@ -77,7 +77,26 @@
       </span>
     </div>
     {{/each}}
+    {{#each aptitudeExtras}}
+    <div class="desordem-ficha__pericia desordem-ficha__pericia--extra{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-dado="{{die}}">
+      <input type="text" class="desordem-extra__nome" data-extra-campo="nome" data-group="aptidao" data-id="{{id}}" value="{{nome}}" maxlength="40" placeholder="{{localize "DESORDEM.Ficha.ExtraNome.aptidao"}}" {{#unless ../editable}}disabled{{/unless}}>
+      <button type="button" class="desordem-ficha__rolar desordem-ficha__rolar--extra" data-action="rollAptitude" data-aptitude="{{key}}" title="{{label}}">
+        <i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
+        <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
+      </button>
+      <span class="desordem-forma desordem-d-{{../aptitudeAttrShownDie}}{{#if ../aptitudeAttrShifted}} is-passo{{/if}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrShownDie}}</span></span>
+      <span class="desordem-ficha__soma">+</span>
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo{{/if}}">
+        <span class="desordem-forma__valor">{{shownDie}}</span>
+        <select class="desordem-forma__select" data-extra-campo="dado" data-group="aptidao" data-id="{{id}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeExtra" data-group="aptidao" data-id="{{id}}" title="{{localize "DESORDEM.Ficha.RemoverExtra.aptidao"}}">×</button>{{/if}}
+    </div>
+    {{/each}}
   </div>
+  {{#if editable}}<button type="button" class="desordem-extra__adicionar" data-action="addExtra" data-group="aptidao" {{#unless canAddAptitude}}disabled title="{{localize "DESORDEM.Ficha.LimiteExtras" max=maxExtras}}"{{/unless}}><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.AdicionarAptidao"}}</button>{{/if}}
 </section>
 <section class="desordem-ficha__secao">
   <h3><i class="fa-solid fa-hammer" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Oficios"}}</h3>
@@ -98,6 +117,25 @@
       </span>
     </div>
     {{/each}}
+    {{#each craftExtras}}
+    <div class="desordem-ficha__pericia desordem-ficha__pericia--extra{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-dado="{{die}}">
+      <input type="text" class="desordem-extra__nome" data-extra-campo="nome" data-group="oficio" data-id="{{id}}" value="{{nome}}" maxlength="40" placeholder="{{localize "DESORDEM.Ficha.ExtraNome.oficio"}}" {{#unless ../editable}}disabled{{/unless}}>
+      <button type="button" class="desordem-ficha__rolar desordem-ficha__rolar--extra" data-action="rollCraft" data-craft="{{key}}" title="{{label}}">
+        <i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
+        <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
+      </button>
+      <span class="desordem-forma desordem-d-{{../aptitudeAttrShownDie}}{{#if ../aptitudeAttrShifted}} is-passo{{/if}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrShownDie}}</span></span>
+      <span class="desordem-ficha__soma">+</span>
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo{{/if}}">
+        <span class="desordem-forma__valor">{{shownDie}}</span>
+        <select class="desordem-forma__select" data-extra-campo="dado" data-group="oficio" data-id="{{id}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeExtra" data-group="oficio" data-id="{{id}}" title="{{localize "DESORDEM.Ficha.RemoverExtra.oficio"}}">×</button>{{/if}}
+    </div>
+    {{/each}}
   </div>
+  {{#if editable}}<button type="button" class="desordem-extra__adicionar" data-action="addExtra" data-group="oficio" {{#unless canAddCraft}}disabled title="{{localize "DESORDEM.Ficha.LimiteExtras" max=maxExtras}}"{{/unless}}><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.AdicionarOficio"}}</button>{{/if}}
 </section>
 </section>

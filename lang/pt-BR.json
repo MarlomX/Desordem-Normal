@@ -131,6 +131,22 @@
       "RemoverTrauma": "Remover trauma",
       "Relacoes": "Relações",
       "DicaRelacoes": "As bolinhas são o grau do laço (clique para mudar). Os benefícios são aplicados à mão; invocar marca o laço como usado nesta missão e avisa a mesa (nos graus 2 e 3, o cartão tem o botão de motivar).",
+      "AdicionarAptidao": "Adicionar aptidão",
+      "AdicionarOficio": "Adicionar ofício",
+      "ExtraNome": {
+        "aptidao": "Nome da aptidão",
+        "oficio": "Nome do ofício"
+      },
+      "ExtraSemNome": {
+        "aptidao": "Aptidão sem nome",
+        "oficio": "Ofício sem nome"
+      },
+      "RemoverExtra": {
+        "aptidao": "Remover aptidão",
+        "oficio": "Remover ofício"
+      },
+      "ConfirmarRemoverExtra": "Remover esta área? O dado dela será perdido.",
+      "LimiteExtras": "Limite de {max} áreas extras atingido.",
       "AdicionarRelacao": "Adicionar relação",
       "RemoverRelacao": "Remover relação",
       "SemRelacoes": "Nenhuma relação",

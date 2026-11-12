@@ -1537,3 +1537,31 @@
 .desordem-previa-pavor {
   display: inline-flex;
 }
+
+/* Áreas extras de Aptidão e Ofício: nome editável, botão de rolar, dado e remover */
+.desordem-extra__nome {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 3px 8px;
+  border: none;
+  border-bottom: 1px dashed rgba(128, 128, 128, 0.5);
+  background: transparent;
+  box-shadow: none;
+}
+
+.desordem-ficha__rolar--extra {
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-extra__adicionar {
+  width: auto;
+  margin: 6px 0 0;
+  padding: 2px 10px;
+}
+
+.desordem-extra__adicionar:disabled {
+  opacity: 0.5;
+}
