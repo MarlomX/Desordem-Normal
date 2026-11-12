@@ -20,7 +20,6 @@
       "inspecionar": "Inspect",
       "luta": "Fighting",
       "medicina": "Medicine",
-      "metalurgia": "Metalwork",
       "percepcao": "Perception",
       "persuasao": "Persuasion",
       "pontaria": "Marksmanship",
@@ -99,6 +98,7 @@
       "Pericias": "Skills",
       "DicaRolagem": "Click a skill name to open the test window (Shift+click rolls right away).",
       "Aptidoes": "Aptitudes",
+      "Oficios": "Crafts",
       "Saude": "Health",
       "Dano": "Damage",
       "NaoLetal": "Non-lethal",
@@ -215,6 +215,11 @@
       "guerra": "War",
       "nobreza": "Nobility",
       "religiao": "Religion"
+    },
+    "Oficios": {
+      "alquimia": "Alchemy",
+      "carpintaria": "Carpentry",
+      "metalurgia": "Metalwork"
     },
     "Oposto": {
       "Titulo": "Opposed test",

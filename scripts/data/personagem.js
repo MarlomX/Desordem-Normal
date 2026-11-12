@@ -1,4 +1,5 @@
-import { ATRIBUTOS, PERICIAS, APTIDOES } from '../config.js';
+import { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
+import { migrateCraftSkill } from './migrations.js';
 
 export default class PersonagemModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
@@ -25,6 +26,7 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       atributos: new f.SchemaField(mapear(ATRIBUTOS, () => dado(6))),
       pericias: new f.SchemaField(mapear(Object.keys(PERICIAS), () => dado(4))),
       aptidoes: new f.SchemaField(mapear(APTIDOES, () => dado(4))),
+      oficios: new f.SchemaField(mapear(OFICIOS, () => dado(4))),
       pv: recurso(),
       pd: recurso(),
       // Estado de saúde: condições, lesões permanentes e contador de testes de lesão da cena
@@ -83,5 +85,14 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         })
       )
     };
+  }
+
+  /**
+   * Adapta dados salvos por versões anteriores antes de o Foundry validá-los.
+   * Até a v0.14.4 existia a perícia `metalurgia`; hoje ela é uma área do Ofício.
+   */
+  static migrateData(source) {
+    migrateCraftSkill(source);
+    return super.migrateData(source);
   }
 }

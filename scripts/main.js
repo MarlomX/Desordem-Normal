@@ -1,10 +1,10 @@
-import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES } from './config.js';
+import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from './config.js';
 import PersonagemModel from './data/personagem.js';
 import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel } from './data/items.js';
 import PersonagemSheet from './sheets/personagem-sheet.js';
 import { fearDieHelper } from './sheets/dado-pavor.js';
 import ItemSheet from './sheets/item-sheet.js';
-import { rollTest, rollSkill, rollAptitude, rollOpposed } from './rolls/chat.js';
+import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
 import { registerEquipmentGuards } from './rolls/equipment-guard.js';
@@ -34,7 +34,7 @@ Hooks.once('init', () => {
     (sides, value, size) => new Handlebars.SafeString(fearDieHelper(sides, value, size)),
   );
 
-  CONFIG.DESORDEM = { ATRIBUTOS, PERICIAS, APTIDOES };
+  CONFIG.DESORDEM = { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS };
   CONFIG.Actor.dataModels.personagem = PersonagemModel;
   CONFIG.Item.dataModels = {
     arma: ArmaModel,
@@ -60,6 +60,7 @@ Hooks.once('init', () => {
     rollTest,
     rollSkill,
     rollAptitude,
+    rollCraft,
     rollOpposed,
     damageActor,
     rollInjuryTest,

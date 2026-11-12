@@ -1,5 +1,5 @@
-import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES } from '../config.js';
-import { rollSkill, rollAptitude } from '../rolls/chat.js';
+import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
+import { rollSkill, rollAptitude, rollCraft } from '../rolls/chat.js';
 import { damageActor, rollInjuryTest } from '../rolls/health.js';
 import { injuryDT, injuryTestOptions } from '../rolls/injury.js';
 import { emotionalDamage, rollTraumaTest } from '../rolls/mind.js';
@@ -71,6 +71,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     actions: {
       rollSkill: PersonagemSheet.#onRollSkill,
       rollAptitude: PersonagemSheet.#onRollAptitude,
+      rollCraft: PersonagemSheet.#onRollCraft,
       applyDamage: PersonagemSheet.#onApplyDamage,
       rollInjury: PersonagemSheet.#onRollInjury,
       removeLesion: PersonagemSheet.#onRemoveLesion,
@@ -179,6 +180,12 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         system.aptidoes,
         APTIDOES,
         (key) => t(`DESORDEM.Aptidoes.${key}`),
+        skillStep,
+      ),
+      crafts: buildAptitudeRows(
+        system.oficios,
+        OFICIOS,
+        (key) => t(`DESORDEM.Oficios.${key}`),
         skillStep,
       ),
       aptitudeAttrLabel: t('DESORDEM.Atributos.mente'),
@@ -441,6 +448,14 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const skillKey = target.dataset.aptitude;
     await this.#rollWithChoices(event, { skillKey }, (options) =>
       rollAptitude(this.document, skillKey, options),
+    );
+  }
+
+  /** Clique no nome de uma área de Ofício: faz o teste (Mente + área) e publica no chat. */
+  static async #onRollCraft(event, target) {
+    const skillKey = target.dataset.craft;
+    await this.#rollWithChoices(event, { skillKey }, (options) =>
+      rollCraft(this.document, skillKey, options),
     );
   }
 

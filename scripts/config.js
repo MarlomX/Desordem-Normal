@@ -17,7 +17,6 @@ export const PERICIAS = {
   inspecionar: 'mente',
   luta: 'fisico',
   medicina: 'mente',
-  metalurgia: 'mente',
   percepcao: 'mente',
   persuasao: 'emocao',
   pontaria: 'fisico',
@@ -27,3 +26,6 @@ export const PERICIAS = {
 
 // Aptidão (atributo-base: mente) possui áreas próprias
 export const APTIDOES = ['artes', 'erudicao', 'folclore', 'guerra', 'nobreza', 'religiao'];
+
+// Ofício (atributo-base: mente) também possui áreas próprias; cada uma tem seu dado
+export const OFICIOS = ['alquimia', 'carpintaria', 'metalurgia'];

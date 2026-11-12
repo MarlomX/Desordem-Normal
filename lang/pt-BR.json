@@ -20,7 +20,6 @@
       "inspecionar": "Inspecionar",
       "luta": "Luta",
       "medicina": "Medicina",
-      "metalurgia": "Metalurgia",
       "percepcao": "Percepção",
       "persuasao": "Persuasão",
       "pontaria": "Pontaria",
@@ -99,6 +98,7 @@
       "Pericias": "Perícias",
       "DicaRolagem": "Clique no nome de uma perícia para abrir a janela do teste (Shift+clique rola direto).",
       "Aptidoes": "Aptidões",
+      "Oficios": "Ofícios",
       "Saude": "Saúde",
       "Dano": "Dano",
       "NaoLetal": "Não letal",
@@ -215,6 +215,11 @@
       "guerra": "Guerra",
       "nobreza": "Nobreza",
       "religiao": "Religião"
+    },
+    "Oficios": {
+      "alquimia": "Alquimia",
+      "carpintaria": "Carpintaria",
+      "metalurgia": "Metalurgia"
     },
     "Oposto": {
       "Titulo": "Teste oposto",

@@ -1,7 +1,7 @@
 /**
  * Ligação entre a lógica pura dos testes e o Foundry (rolagem de dados e mensagem no chat).
  */
-import { SYSTEM_ID, PERICIAS, APTIDOES } from '../config.js';
+import { SYSTEM_ID, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import { sequenceRng } from './dice.js';
 import { planDice, resolveTest } from './test.js';
 import { canHelp, applyHelp } from './help.js';
@@ -49,17 +49,18 @@ export async function postMessage({ actor, content, rolls = [], flags }) {
   return ChatMessage.create(messageData);
 }
 
-/** Nome traduzido de uma perícia ou área de Aptidão. */
+/** Nome traduzido de uma perícia ou área de Aptidão ou de Ofício. */
 function skillName(key) {
-  const group = PERICIAS[key] ? 'Pericias' : 'Aptidoes';
+  const group = PERICIAS[key] ? 'Pericias' : OFICIOS.includes(key) ? 'Oficios' : 'Aptidoes';
   return game.i18n.localize(`DESORDEM.${group}.${key}`);
 }
 
-/** Dado de uma perícia ou área de Aptidão de um ator. */
+/** Dado de uma perícia ou área de Aptidão ou de Ofício de um ator. */
 function skillDieOf(actor, key) {
   if (PERICIAS[key]) return actor.system.pericias[key];
   if (APTIDOES.includes(key)) return actor.system.aptidoes[key];
-  throw new Error(`${SYSTEM_ID} | perícia ou aptidão desconhecida: ${key}`);
+  if (OFICIOS.includes(key)) return actor.system.oficios[key];
+  throw new Error(`${SYSTEM_ID} | perícia, aptidão ou ofício desconhecido: ${key}`);
 }
 
 /**
@@ -322,6 +323,19 @@ export function rollSkill(actor, skillKey, { attribute, ...options } = {}) {
 export function rollAptitude(actor, areaKey, { attribute, ...options } = {}) {
   if (!APTIDOES.includes(areaKey)) {
     throw new Error(`${SYSTEM_ID} | área de aptidão desconhecida: ${areaKey}`);
+  }
+  return rollTest({ ...skillTestOptions(actor, areaKey, attribute, options), actor });
+}
+
+/**
+ * Teste de uma área de Ofício (usa Mente como atributo-base, salvo se outro for informado).
+ * @param {Actor} actor
+ * @param {string} areaKey Chave da área (ex.: 'metalurgia').
+ * @param {Object} [options] Aceita dt, extraDice, stepMods, helpers e attribute (chave do atributo).
+ */
+export function rollCraft(actor, areaKey, { attribute, ...options } = {}) {
+  if (!OFICIOS.includes(areaKey)) {
+    throw new Error(`${SYSTEM_ID} | área de ofício desconhecida: ${areaKey}`);
   }
   return rollTest({ ...skillTestOptions(actor, areaKey, attribute, options), actor });
 }
