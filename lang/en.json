@@ -65,14 +65,29 @@
         "ControlarEfeito": "{custo} DP · the die becomes d{die}",
         "ControlarNaoDesce": "already at the lowest die",
         "AbracarEfeito": "{custo} DP · the die becomes a bonus die",
-        "Descartados": "Dice beyond the limit of 4 are discarded: {dados}.",
-        "SomamTres": "Only the 3 highest are added.",
-        "Resumo": "Cost: {custos}. {pd} DP and {impeto} drive left.",
         "SemCusto": "No cost.",
         "Erro": {
           "pd": "Not enough DP for these choices.",
           "impeto": "Not enough drive for these choices."
-        }
+        },
+        "DT": "DC",
+        "DTMenos": "Lower DC",
+        "DTMais": "Raise DC",
+        "DicaEspacos": "Extra dice take these 2 slots (limit of 4 dice per test).",
+        "Origem": {
+          "base": "Fixed",
+          "impetoDado": "Drive",
+          "sorrateiro": "Sneak",
+          "pavor": "Fear",
+          "manual": "Bonus",
+          "vazio": "Free"
+        },
+        "SemEspaco": "no die slot left",
+        "Unidade": {
+          "pd": "DP",
+          "impeto": "drive"
+        },
+        "Restam": "{n} left"
       }
     },
     "Ficha": {

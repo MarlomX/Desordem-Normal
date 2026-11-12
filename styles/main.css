@@ -1269,18 +1269,6 @@
   min-height: 2.2em;
 }
 
-.desordem-pre__previa .is-descartado {
-  opacity: 0.35;
-  filter: grayscale(1);
-}
-
-.desordem-pre__aviso {
-  min-height: 1.2em;
-  margin: 0;
-  font-size: 0.85em;
-  text-align: center;
-}
-
 .desordem-pre__grupo {
   margin: 0;
   padding: 6px 10px 8px;
@@ -1318,12 +1306,110 @@
   opacity: 0.8;
 }
 
-.desordem-pre__resumo {
-  margin: 0;
-  font-size: 0.9em;
-  text-align: center;
+.desordem-pre.tem-erro 
+/* Janela pré-teste: DT, espaços de dado extra e custos em destaque */
+.desordem-pre__dt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
-.desordem-pre.tem-erro .desordem-pre__resumo {
+.desordem-pre__dt-nome {
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.desordem-pre__dt input {
+  width: 3.6em;
+  height: 1.8em;
+  text-align: center;
+  font-weight: 700;
+}
+
+.desordem-pre__slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.desordem-pre__slot.is-travado .desordem-forma {
+  filter: drop-shadow(0 0 4px var(--dn-accent));
+}
+
+.desordem-pre__origem {
+  font-size: 0.7em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.desordem-pre__custos {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  min-height: 3.2em;
+}
+
+.desordem-custo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.5em;
+  padding: 4px 14px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+  line-height: 1.1;
+}
+
+.desordem-custo strong {
+  font-size: 1.9em;
+  font-weight: 800;
+}
+
+.desordem-custo__unidade {
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.desordem-custo small {
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+
+.desordem-custo--pd {
+  border-color: var(--dn-pd);
+  color: var(--dn-pd);
+}
+
+.desordem-custo--impeto {
+  border-color: var(--dn-accent);
+  color: var(--dn-accent);
+}
+
+.desordem-custo.is-negativo {
+  border-color: #e0675a;
+  color: #e0675a;
+}
+
+.desordem-custo__nenhum {
+  align-self: center;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.desordem-pre__erro {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-align: center;
   color: #e0675a;
 }

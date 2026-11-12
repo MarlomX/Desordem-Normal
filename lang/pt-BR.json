@@ -65,14 +65,29 @@
         "ControlarEfeito": "{custo} PD · o dado vira d{die}",
         "ControlarNaoDesce": "já está no menor dado",
         "AbracarEfeito": "{custo} PD · o dado vira um dado bônus",
-        "Descartados": "Dados além do limite de 4 são descartados: {dados}.",
-        "SomamTres": "Só os 3 maiores somam.",
-        "Resumo": "Custo: {custos}. Sobram {pd} PD e {impeto} de ímpeto.",
         "SemCusto": "Sem custo.",
         "Erro": {
           "pd": "PD insuficientes para estas escolhas.",
           "impeto": "Ímpeto insuficiente para estas escolhas."
-        }
+        },
+        "DT": "DT",
+        "DTMenos": "Reduzir DT",
+        "DTMais": "Aumentar DT",
+        "DicaEspacos": "Dados extras ocupam estes 2 espaços (limite de 4 dados no teste).",
+        "Origem": {
+          "base": "Fixo",
+          "impetoDado": "Ímpeto",
+          "sorrateiro": "Furtivo",
+          "pavor": "Pavor",
+          "manual": "Bônus",
+          "vazio": "Livre"
+        },
+        "SemEspaco": "sem espaço de dado",
+        "Unidade": {
+          "pd": "PD",
+          "impeto": "ímpeto"
+        },
+        "Restam": "restam {n}"
       }
     },
     "Ficha": {

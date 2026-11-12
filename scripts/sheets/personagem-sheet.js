@@ -461,7 +461,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     });
     await this.#rollWithChoices(
       event,
-      { skillKey: 'vigor', baseExtraDice: rule.extraDice, ignoreFear: true },
+      { skillKey: 'vigor', baseExtraDice: rule.extraDice, ignoreFear: true, dt: rule.dt },
       (options) => rollInjuryTest(this.document, { nonLethal, ...options }),
     );
   }
@@ -484,8 +484,14 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /** Teste de trauma manual. */
   static async #onRollTrauma(event) {
-    await this.#rollWithChoices(event, { skillKey: 'disciplina', ignoreFear: true }, (options) =>
-      rollTraumaTest(this.document, options),
+    await this.#rollWithChoices(
+      event,
+      {
+        skillKey: 'disciplina',
+        ignoreFear: true,
+        dt: traumaDT(this.document.system.cena.testesTrauma),
+      },
+      (options) => rollTraumaTest(this.document, options),
     );
   }
 
@@ -598,7 +604,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /** Esquiva livre: teste de Acrobacia oposto ao ataque. */
   static async #onDodge(event) {
-    await this.#rollWithChoices(event, { skillKey: 'acrobacia' }, (options) =>
+    await this.#rollWithChoices(event, { skillKey: 'acrobacia', showDt: false }, (options) =>
       rollDodge(this.document, options),
     );
   }

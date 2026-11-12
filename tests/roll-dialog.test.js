@@ -4,6 +4,7 @@ import {
   buildRollModel,
   emptySelection,
   evaluateSelection,
+  normalizeDt,
   selectionToOptions,
 } from '../scripts/rolls/roll-dialog.js';
 
@@ -126,19 +127,6 @@ test('PD insuficiente marca erro', () => {
   assert.equal(result.valid, false);
 });
 
-test('mais de 4 dados: os extras finais são descartados e só 3 somam', () => {
-  const model = base({ baseExtraDice: [6] });
-  const result = evaluateSelection(model, {
-    bonus: [10, 12],
-    active: ['impetoDado'],
-    controlFear: false,
-    embraceFear: false,
-  });
-  assert.deepEqual(result.rolledSides, [8, 6, 6, 10]);
-  assert.deepEqual(result.discardedExtras, [12, 4]);
-  assert.equal(result.summedDice, 3);
-});
-
 test('selectionToOptions entrega só o que as rolagens aceitam', () => {
   const model = base({ fearDie: 6, skillKey: 'furtividade' });
   const options = selectionToOptions(model, {
@@ -152,5 +140,110 @@ test('selectionToOptions entrega só o que as rolagens aceitam', () => {
     active: ['sorrateiro'],
     controlFear: true,
     embraceFear: false,
+    dt: 7,
   });
+});
+
+const kinds = (result) => result.slots.map((slot) => slot.kind);
+
+test('dado de ímpeto e sorrateira ocupam os dois espaços, travados', () => {
+  const model = base({ skillKey: 'crime' });
+  const result = evaluateSelection(model, {
+    ...emptySelection(),
+    active: ['impetoDado', 'sorrateiro'],
+  });
+  assert.deepEqual(kinds(result), ['impetoDado', 'sorrateiro']);
+  assert.equal(
+    result.slots.every((slot) => slot.locked),
+    true,
+  );
+  assert.deepEqual(result.rolledSides, [8, 6, 4, 8]);
+});
+
+test('o dado fixo do companheiro ocupa um espaço e sobra um para bônus', () => {
+  const model = base({ baseExtraDice: [6] });
+  const result = evaluateSelection(model, { ...emptySelection(), bonus: [10, 12] });
+  assert.deepEqual(kinds(result), ['base', 'manual']);
+  assert.deepEqual(result.selection.bonus, [10, 0]); // o segundo bônus não cabe
+  assert.deepEqual(result.rolledSides, [8, 6, 6, 10]);
+});
+
+test('bônus manuais cheios bloqueiam habilidades e abraçar o pavor', () => {
+  const model = base({ skillKey: 'crime', fearDie: 8 });
+  const result = evaluateSelection(model, { ...emptySelection(), bonus: [8, 10] });
+  assert.deepEqual(kinds(result), ['manual', 'manual']);
+  assert.deepEqual(result.blocked.abilities, ['impetoDado', 'sorrateiro']);
+  assert.equal(result.blocked.embrace, true);
+});
+
+test('com um espaço livre nada fica bloqueado; controlar o pavor nunca ocupa espaço', () => {
+  const model = base({ fearDie: 8 });
+  const result = evaluateSelection(model, {
+    ...emptySelection(),
+    bonus: [8, 0],
+    controlFear: true,
+  });
+  assert.deepEqual(result.blocked, { abilities: [], embrace: false });
+  assert.deepEqual(kinds(result), ['manual', 'vazio']);
+});
+
+test('habilidade marcada continua desbloqueada para poder ser desmarcada', () => {
+  const model = base({ skillKey: 'crime' });
+  const result = evaluateSelection(model, {
+    ...emptySelection(),
+    active: ['impetoDado', 'sorrateiro'],
+  });
+  assert.deepEqual(result.blocked.abilities, []);
+});
+
+test('pavor abraçado ocupa um espaço travado; o pavor normal não ocupa', () => {
+  const model = base({ fearDie: 8 });
+  const embraced = evaluateSelection(model, { ...emptySelection(), embraceFear: true });
+  assert.deepEqual(kinds(embraced), ['pavor', 'vazio']);
+  const normal = evaluateSelection(model, emptySelection());
+  assert.deepEqual(kinds(normal), ['vazio', 'vazio']);
+  assert.deepEqual(normal.rolledSides, [8, 6]);
+});
+
+test('pedido além dos espaços é ignorado: companheiro + ímpeto + abraçar', () => {
+  const model = base({ baseExtraDice: [6], fearDie: 8 });
+  const result = evaluateSelection(model, {
+    ...emptySelection(),
+    active: ['impetoDado'],
+    embraceFear: true,
+  });
+  assert.deepEqual(kinds(result), ['base', 'impetoDado']);
+  assert.equal(result.selection.embraceFear, false);
+  assert.equal(result.pdCost, 0); // o pavor abraçado que não coube não custa
+  assert.equal(result.rolledSides.length, 4);
+});
+
+test('nunca passa de 4 dados rolados', () => {
+  const model = base({ skillKey: 'crime', baseExtraDice: [6], fearDie: 8 });
+  const result = evaluateSelection(model, {
+    bonus: [12, 12],
+    active: ['impetoDado', 'sorrateiro'],
+    controlFear: false,
+    embraceFear: true,
+    dt: 7,
+  });
+  assert.equal(result.rolledSides.length, 4);
+  assert.equal(result.slots.length, 2);
+});
+
+test('DT: padrão 7, editável e validada', () => {
+  assert.equal(evaluateSelection(base()).dt, 7);
+  assert.equal(evaluateSelection(base({ dt: 10 })).dt, 10);
+  assert.equal(evaluateSelection(base(), { ...emptySelection(), dt: 13 }).dt, 13);
+  assert.equal(evaluateSelection(base(), { ...emptySelection(), dt: 'abc' }).dt, 7);
+  assert.equal(normalizeDt(0), 7);
+  assert.equal(normalizeDt(-3, 10), 10);
+  assert.equal(normalizeDt(250), 99);
+  assert.equal(normalizeDt('12'), 12);
+});
+
+test('teste sem DT (esquiva) não devolve dt', () => {
+  const model = base({ showDt: false });
+  assert.equal(evaluateSelection(model).dt, null);
+  assert.equal('dt' in selectionToOptions(model, emptySelection()), false);
 });

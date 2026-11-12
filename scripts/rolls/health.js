@@ -83,11 +83,11 @@ async function rollLesion(owned, nonLethal) {
  * @param {boolean} [options.nonLethal=false] O dano não letal ajudou a zerar o PV: +1d6 no teste
  *   e 2d20 (o melhor) na tabela de lesões.
  */
-export async function rollInjuryTest(actor, { nonLethal = false, extraDice = [], active = [] } = {}) {
+export async function rollInjuryTest(actor, { nonLethal = false, extraDice = [], active = [], dt } = {}) {
   const previousTests = actor.system.cena.testesLesao;
   const rule = injuryTestOptions({ previousTests, nonLethal });
   const options = skillTestOptions(actor, 'vigor', undefined, {
-    dt: rule.dt,
+    dt: dt ?? rule.dt,
     extraDice: [...rule.extraDice, ...extraDice],
     active,
     ignoreFear: true, // o teste de lesão não sofre o dado de pavor
