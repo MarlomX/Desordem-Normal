@@ -1,5 +1,6 @@
 import { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import { migrateCraftSkill } from './migrations.js';
+import { OVERRIDABLE_KEYS } from '../rolls/attribute.js';
 
 export default class PersonagemModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
@@ -21,7 +22,9 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         new f.SchemaField({
           id: new f.StringField({ required: true, blank: false }),
           nome: new f.StringField({ required: true, blank: true, initial: '' }),
-          dado: dado(4)
+          dado: dado(4),
+          // Atributo-base escolhido na ficha ('' = padrão, Mente)
+          atributo: new f.StringField({ required: true, blank: true, initial: '' })
         })
       );
 
@@ -37,6 +40,10 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       pericias: new f.SchemaField(mapear(Object.keys(PERICIAS), () => dado(4))),
       aptidoes: new f.SchemaField(mapear(APTIDOES, () => dado(4))),
       oficios: new f.SchemaField(mapear(OFICIOS, () => dado(4))),
+      // Atributo-base escolhido na ficha para cada perícia, aptidão e ofício do livro ('' = padrão)
+      atributosPericias: new f.SchemaField(
+        mapear(OVERRIDABLE_KEYS, () => new f.StringField({ required: true, blank: true, initial: '' }))
+      ),
       aptidoesExtras: extras(),
       oficiosExtras: extras(),
       pv: recurso(),

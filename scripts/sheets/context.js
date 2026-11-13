@@ -1,6 +1,7 @@
 /**
  * Preparação de dados para a ficha. Funções puras (sem Foundry), testadas em Node.
  */
+import { ATRIBUTOS } from '../config.js';
 import { DIE_STEPS } from '../rolls/dice.js';
 import { extraKey } from '../rolls/extras.js';
 import { RELATION_MAX_DEGREE, degreeKey, invokeCheck } from '../rolls/relation.js';
@@ -77,47 +78,129 @@ export function buildAttributeRows(attributes, keys, label, stepOf) {
 }
 
 /**
+ * Campos do atributo-base de uma linha (perícia, aptidão ou ofício): qual atributo, o dado dele
+ * (com passos), se foi alterado na ficha e as opções da lista de troca.
+ * @param {Object} opts
+ * @param {string} opts.attrKey Atributo usado (já resolvido: escolha da ficha ou padrão).
+ * @param {string} opts.defaultKey Atributo padrão da perícia.
+ * @param {(key: string) => string} opts.attrLabel Nome traduzido de um atributo.
+ * @param {(defaultKey: string) => string} [opts.defaultLabel] Texto da opção "padrão".
+ * @param {Record<string, number>} [opts.attributeDice] Dados dos atributos.
+ * @param {(key: string) => object} [opts.attrStepOf] `stepIndicator` de cada atributo.
+ */
+export function buildAttributeFields({
+  attrKey,
+  defaultKey,
+  attrLabel,
+  defaultLabel,
+  attributeDice,
+  attrStepOf,
+}) {
+  const base = attributeDice ? Number(attributeDice[attrKey]) : undefined;
+  const shown = base === undefined ? undefined : shownDie(base, attrStepOf?.(attrKey));
+  const overridden = attrKey !== defaultKey;
+  return {
+    attrKey,
+    attrLabel: attrLabel(attrKey),
+    attrDie: base,
+    attrShownDie: shown,
+    attrShifted: base !== undefined && shown !== base,
+    attrShiftDir: base === undefined ? '' : shiftDirection(base, shown),
+    attrOverridden: overridden,
+    attrDefaultLabel: attrLabel(defaultKey),
+    attrOptions: [
+      {
+        value: '',
+        label: defaultLabel ? defaultLabel(defaultKey) : attrLabel(defaultKey),
+        selected: !overridden,
+      },
+      ...ATRIBUTOS.map((key) => ({
+        value: key,
+        label: attrLabel(key),
+        selected: overridden && key === attrKey,
+      })),
+    ],
+  };
+}
+
+/** Atributo escolhido na ficha se for válido; senão, o padrão. */
+function chosenOrDefault(chosen, defaultKey) {
+  return ATRIBUTOS.includes(chosen) ? chosen : defaultKey;
+}
+
+/**
  * Linhas da lista de perícias, em ordem alfabética pelo nome traduzido.
  * @param {Record<string, number>} skills Dados das perícias do personagem.
- * @param {Record<string, string>} skillAttributes Perícia -> atributo-base.
+ * @param {Record<string, string>} skillAttributes Perícia -> atributo-base padrão.
  * @param {Object} labels
  * @param {(key: string) => string} labels.skillLabel
  * @param {(key: string) => string} labels.attrLabel
+ * @param {(defaultKey: string) => string} [labels.defaultLabel] Texto da opção "padrão".
  * @param {Record<string, number>} [labels.attributeDice] Dados dos atributos (para mostrar o
  *   dado do atributo-base ao lado do dado da perícia).
  * @param {(key: string) => object} [labels.attrStepOf] `stepIndicator` de cada atributo.
  * @param {object} [labels.skillStep] `stepIndicator` do dado geral das perícias.
+ * @param {Record<string, string>} [labels.attrChoices] Perícia -> atributo escolhido na ficha
+ *   (vazio ou ausente = padrão).
  */
 export function buildSkillRows(
   skills,
   skillAttributes,
-  { skillLabel, attrLabel, attributeDice, attrStepOf, skillStep },
+  { skillLabel, attrLabel, defaultLabel, attributeDice, attrStepOf, skillStep, attrChoices },
 ) {
   return Object.entries(skillAttributes)
-    .map(([key, attrKey]) => {
-      const attrBase = attributeDice ? Number(attributeDice[attrKey]) : undefined;
+    .map(([key, defaultKey]) => {
+      const attrKey = chosenOrDefault(attrChoices?.[key], defaultKey);
+      const attr = buildAttributeFields({
+        attrKey,
+        defaultKey,
+        attrLabel,
+        defaultLabel,
+        attributeDice,
+        attrStepOf,
+      });
       return {
         key,
         label: skillLabel(key),
-        attrLabel: attrLabel(attrKey),
-        attrDie: attrBase,
-        attrShownDie: attrBase === undefined ? undefined : shownDie(attrBase, attrStepOf?.(attrKey)),
-        attrShifted:
-          attrBase !== undefined && shownDie(attrBase, attrStepOf?.(attrKey)) !== attrBase,
-        attrShiftDir:
-          attrBase === undefined
-            ? ''
-            : shiftDirection(attrBase, shownDie(attrBase, attrStepOf?.(attrKey))),
+        ...attr,
         die: Number(skills[key]),
         shownDie: shownDie(skills[key], skillStep),
         shifted: shownDie(skills[key], skillStep) !== Number(skills[key]),
         shiftDir: shiftDirection(skills[key], shownDie(skills[key], skillStep)),
         trained: Number(skills[key]) >= 6,
-        search: normalizeSearch(`${skillLabel(key)} ${attrLabel(attrKey)}`),
+        search: normalizeSearch(`${skillLabel(key)} ${attr.attrLabel}`),
         options: dieOptions(skills[key]),
       };
     })
     .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+}
+
+/**
+ * Acrescenta o atributo-base a linhas de aptidão ou de ofício (do livro ou extras).
+ * @param {object[]} rows Linhas de buildAreaRows ou buildExtraRows.
+ * @param {Object} opts
+ * @param {(row: object) => string} opts.chosenOf Atributo escolhido na ficha para a linha.
+ * @param {string} [opts.defaultKey='mente'] Atributo padrão (aptidões e ofícios usam Mente).
+ * @param {(key: string) => string} opts.attrLabel
+ * @param {(defaultKey: string) => string} [opts.defaultLabel]
+ * @param {Record<string, number>} [opts.attributeDice]
+ * @param {(key: string) => object} [opts.attrStepOf]
+ */
+export function addRowAttributes(
+  rows,
+  { chosenOf, defaultKey = 'mente', attrLabel, defaultLabel, attributeDice, attrStepOf },
+) {
+  return rows.map((row) => ({
+    ...row,
+    ...buildAttributeFields({
+      attrKey: chosenOrDefault(chosenOf(row), defaultKey),
+      defaultKey,
+      attrLabel,
+      defaultLabel,
+      attributeDice,
+      attrStepOf,
+    }),
+  }));
 }
 
 /**
@@ -157,6 +240,7 @@ export function buildExtraRows(extras, group, { emptyLabel, skillStep }) {
     group,
     index,
     nome: extras[index].nome,
+    atributo: extras[index].atributo ?? '',
   }));
 }
 

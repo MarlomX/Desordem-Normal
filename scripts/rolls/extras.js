@@ -1,8 +1,9 @@
 /**
  * Áreas extras de Aptidão e de Ofício: lista de áreas criadas pelo jogador, além das do livro.
- * Lógica pura, sem dependência do Foundry. Cada área tem `id` (fixo), `nome` (livre) e `dado`.
+ * Lógica pura, sem dependência do Foundry. Cada área tem `id` (fixo), `nome` (livre), `dado` e `atributo` ('' = padrão, Mente).
  * As funções devolvem listas novas e nunca alteram a lista recebida.
  */
+import { ATRIBUTOS } from '../config.js';
 import { DIE_STEPS } from './dice.js';
 
 export const MAX_EXTRAS = 12; // limite de áreas extras por grupo
@@ -57,7 +58,10 @@ export function addExtra(list, { id, nome = '' }) {
   if (!id || typeof id !== 'string') throw new RangeError('Área extra sem id');
   if (list.some((item) => item.id === id)) throw new RangeError(`Id repetido: ${id}`);
   if (!canAddExtra(list)) throw new RangeError(`Limite de ${MAX_EXTRAS} áreas extras atingido`);
-  return [...list.map((item) => ({ ...item })), { id, nome: cleanName(nome), dado: 4 }];
+  return [
+    ...list.map((item) => ({ ...item })),
+    { id, nome: cleanName(nome), dado: 4, atributo: '' },
+  ];
 }
 
 /** Remove a área extra com o id indicado (id inexistente não altera nada). */
@@ -66,8 +70,8 @@ export function removeExtra(list, id) {
 }
 
 /**
- * Altera o nome e/ou o dado de uma área extra. Campos desconhecidos são ignorados e um dado fora
- * de d4 a d12 não é aplicado.
+ * Altera o nome, o dado e/ou o atributo de uma área extra. Campos desconhecidos são ignorados;
+ * um dado fora de d4 a d12 e um atributo que não seja '', fisico, mente ou emocao não são aplicados.
  */
 export function updateExtra(list, id, changes) {
   return list.map((item) => {
@@ -77,6 +81,12 @@ export function updateExtra(list, id, changes) {
     if ('dado' in changes) {
       const die = Number(changes.dado);
       if (DIE_STEPS.includes(die)) next.dado = die;
+    }
+    if (
+      'atributo' in changes &&
+      (changes.atributo === '' || ATRIBUTOS.includes(changes.atributo))
+    ) {
+      next.atributo = changes.atributo;
     }
     return next;
   });

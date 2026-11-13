@@ -46,8 +46,8 @@ test('addExtra acrescenta ao fim em d4, limpa o nome e não altera a lista origi
   const original = lista();
   const nova = addExtra(original, { id: 'c3', nome: '  Cervejaria  ' });
   assert.equal(original.length, 2);
-  assert.deepEqual(nova[2], { id: 'c3', nome: 'Cervejaria', dado: 4 });
-  assert.deepEqual(addExtra([], { id: 'z' }), [{ id: 'z', nome: '', dado: 4 }]);
+  assert.deepEqual(nova[2], { id: 'c3', nome: 'Cervejaria', dado: 4, atributo: '' });
+  assert.deepEqual(addExtra([], { id: 'z' }), [{ id: 'z', nome: '', dado: 4, atributo: '' }]);
   assert.notEqual(nova[0], original[0]);
 });
 
@@ -100,4 +100,13 @@ test('buildExtraRows monta linhas com chave de teste, nome digitado e texto padr
   assert.equal(linhas[0].options.find((o) => o.selected).value, 8);
   assert.equal(linhas[0].search, 'coura\u00e7aria'.normalize('NFD').replace(/\p{M}/gu, ''));
   assert.deepEqual(buildExtraRows([], 'aptidao', { emptyLabel: 'x' }), []);
+});
+
+test('updateExtra aceita atributo válido ou vazio e ignora o resto', () => {
+  const original = lista();
+  assert.equal(updateExtra(original, 'a1', { atributo: 'fisico' })[0].atributo, 'fisico');
+  const com = updateExtra(original, 'a1', { atributo: 'emocao' });
+  assert.equal(updateExtra(com, 'a1', { atributo: '' })[0].atributo, '');
+  assert.equal(updateExtra(com, 'a1', { atributo: 'forca' })[0].atributo, 'emocao');
+  assert.equal(updateExtra(com, 'a1', { atributo: null })[0].atributo, 'emocao');
 });

@@ -8,8 +8,9 @@ import { invokeRelation } from '../rolls/relation-chat.js';
 import { attackWithWeapon, useItem, weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { weaponSkill } from '../rolls/equipment.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
-import { setSteps, shownDie, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
+import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
+import { attributeChoiceUpdate } from '../rolls/attribute.js';
 import {
   EXTRA_GROUPS,
   MAX_EXTRAS,
@@ -37,7 +38,7 @@ import {
   buildSkillRows,
   buildAreaRows,
   buildExtraRows,
-  shiftDirection,
+  addRowAttributes,
   buildLesionRows,
   buildFearChoices,
   buildRelationRows,
@@ -159,6 +160,16 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const attrStepOf = (key) =>
       stepIndicator({ steps: stepsData.passos, effects: stepsData.efeitos, key });
     const skillStep = stepIndicator({ steps: stepsData.passos, effects: [], key: 'pericias' });
+    // Opções comuns da coluna do atributo-base nas linhas de perícia, aptidão e ofício
+    const attrFieldOptions = {
+      attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
+      defaultLabel: (key) =>
+        game.i18n.format('DESORDEM.Ficha.AtributoPadrao', {
+          atributo: t(`DESORDEM.Atributos.${key}`),
+        }),
+      attributeDice: system.atributos,
+      attrStepOf,
+    };
 
     return {
       ...context,
@@ -187,44 +198,36 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       ),
       skillStep,
       skills: buildSkillRows(system.pericias, PERICIAS, {
+        ...attrFieldOptions,
         skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
-        attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
-        attributeDice: system.atributos,
-        attrStepOf,
         skillStep,
+        attrChoices: system.atributosPericias,
       }),
-      aptitudes: buildAreaRows(
-        system.aptidoes,
-        APTIDOES,
-        (key) => t(`DESORDEM.Aptidoes.${key}`),
-        skillStep,
+      aptitudes: addRowAttributes(
+        buildAreaRows(system.aptidoes, APTIDOES, (key) => t(`DESORDEM.Aptidoes.${key}`), skillStep),
+        { ...attrFieldOptions, chosenOf: (row) => system.atributosPericias[row.key] },
       ),
-      crafts: buildAreaRows(
-        system.oficios,
-        OFICIOS,
-        (key) => t(`DESORDEM.Oficios.${key}`),
-        skillStep,
+      crafts: addRowAttributes(
+        buildAreaRows(system.oficios, OFICIOS, (key) => t(`DESORDEM.Oficios.${key}`), skillStep),
+        { ...attrFieldOptions, chosenOf: (row) => system.atributosPericias[row.key] },
       ),
-      aptitudeExtras: buildExtraRows(system.aptidoesExtras, 'aptidao', {
-        emptyLabel: t('DESORDEM.Ficha.ExtraSemNome.aptidao'),
-        skillStep,
-      }),
-      craftExtras: buildExtraRows(system.oficiosExtras, 'oficio', {
-        emptyLabel: t('DESORDEM.Ficha.ExtraSemNome.oficio'),
-        skillStep,
-      }),
+      aptitudeExtras: addRowAttributes(
+        buildExtraRows(system.aptidoesExtras, 'aptidao', {
+          emptyLabel: t('DESORDEM.Ficha.ExtraSemNome.aptidao'),
+          skillStep,
+        }),
+        { ...attrFieldOptions, chosenOf: (row) => row.atributo },
+      ),
+      craftExtras: addRowAttributes(
+        buildExtraRows(system.oficiosExtras, 'oficio', {
+          emptyLabel: t('DESORDEM.Ficha.ExtraSemNome.oficio'),
+          skillStep,
+        }),
+        { ...attrFieldOptions, chosenOf: (row) => row.atributo },
+      ),
       canAddAptitude: canAddExtra(system.aptidoesExtras),
       canAddCraft: canAddExtra(system.oficiosExtras),
       maxExtras: MAX_EXTRAS,
-      aptitudeAttrLabel: t('DESORDEM.Atributos.mente'),
-      aptitudeAttrDie: Number(system.atributos.mente),
-      aptitudeAttrShownDie: shownDie(system.atributos.mente, attrStepOf('mente')),
-      aptitudeAttrShifted:
-        shownDie(system.atributos.mente, attrStepOf('mente')) !== Number(system.atributos.mente),
-      aptitudeAttrShiftDir: shiftDirection(
-        system.atributos.mente,
-        shownDie(system.atributos.mente, attrStepOf('mente')),
-      ),
       nextInjuryDT: injuryDT(system.cena.testesLesao),
       nextTraumaDT: traumaDT(system.cena.testesTrauma),
       traumas: buildLesionRows(
@@ -282,6 +285,9 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     await super._onRender(context, options);
     for (const field of this.element.querySelectorAll('[data-relacao-campo]')) {
       field.addEventListener('change', (event) => this.#onRelationField(event.currentTarget));
+    }
+    for (const field of this.element.querySelectorAll('[data-attr-campo]')) {
+      field.addEventListener('change', (event) => this.#onAttributeField(event.currentTarget));
     }
     for (const field of this.element.querySelectorAll('[data-extra-campo]')) {
       field.addEventListener('change', (event) => this.#onExtraField(event.currentTarget));
@@ -441,6 +447,21 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const changes = { [field.dataset.relacaoCampo]: value };
     const index = Number(field.dataset.index);
     await this.#saveRelations(updateRelation(this.#relations(), index, changes));
+  }
+
+  /**
+   * Troca do atributo-base de uma perícia, aptidão ou ofício pela etiqueta do atributo.
+   * A escolha fica guardada na ficha (campo sem `name`, fora do formulário); escolher o padrão
+   * volta ao atributo original.
+   */
+  async #onAttributeField(field) {
+    const change = attributeChoiceUpdate(
+      this.document.toObject().system,
+      field.dataset.key,
+      field.value,
+    );
+    if (!change) return;
+    await this.document.update({ [`system.${change.path}`]: change.value });
   }
 
   /** Lista de áreas extras de um grupo (`aptidao` ou `oficio`) como dados simples. */

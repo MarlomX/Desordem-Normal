@@ -205,6 +205,9 @@
         "AlternarTodas": "Expand/collapse all",
         "SemDescricao": "No description."
       },
+      "AtributoPadrao": "Default ({atributo})",
+      "AtributoTrocar": "Change the base attribute",
+      "AtributoAlterado": "Attribute changed (default: {padrao})",
       "Ordenar": {
         "Titulo": "Sort",
         "Nome": "Name (A→Z)",

@@ -3,6 +3,7 @@
  */
 import { SYSTEM_ID, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import { findExtra } from './extras.js';
+import { resolveSkillAttribute } from './attribute.js';
 import { sequenceRng } from './dice.js';
 import { planDice, resolveTest } from './test.js';
 import { canHelp, applyHelp } from './help.js';
@@ -238,7 +239,7 @@ export async function rollTest({
  * @returns {{attrDie: number, skillDie: number, attrLabel: string, skillLabel: string}}
  */
 export function testDicePreview(actor, skillKey, attribute) {
-  const attrKey = attribute ?? (PERICIAS[skillKey] ? PERICIAS[skillKey] : 'mente');
+  const attrKey = resolveSkillAttribute(actor.system, skillKey, attribute);
   const { system } = actor;
   const plan = planDice({
     attrDie: system.atributos[attrKey],
@@ -258,8 +259,7 @@ export function testDicePreview(actor, skillKey, attribute) {
 
 /** Opções de teste de um ator para uma perícia ou aptidão (atributo-base ou o informado). */
 export function skillTestOptions(actor, skillKey, attribute, options) {
-  const isAptitude = !PERICIAS[skillKey];
-  const attrKey = attribute ?? (isAptitude ? 'mente' : PERICIAS[skillKey]);
+  const attrKey = resolveSkillAttribute(actor.system, skillKey, attribute);
   const { system } = actor;
 
   // Dado de pavor (ignoreFear: testes que não sofrem pavor), com controlar/abraçar só neste teste

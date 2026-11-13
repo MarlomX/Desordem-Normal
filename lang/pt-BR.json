@@ -205,6 +205,9 @@
         "AlternarTodas": "Expandir/recolher todas",
         "SemDescricao": "Sem descrição."
       },
+      "AtributoPadrao": "Padrão ({atributo})",
+      "AtributoTrocar": "Trocar o atributo-base",
+      "AtributoAlterado": "Atributo alterado (padrão: {padrao})",
       "Ordenar": {
         "Titulo": "Ordenar",
         "Nome": "Nome (A→Z)",

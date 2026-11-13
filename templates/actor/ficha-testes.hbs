@@ -49,8 +49,13 @@
     <div class="desordem-ficha__pericia desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{attrShownDie}}">
       <button type="button" class="desordem-ficha__rolar" data-action="rollSkill" data-skill="{{key}}">
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
-        <span class="desordem-ficha__pericia-attr">{{attrLabel}}</span>
       </button>
+      <span class="desordem-attr-etiqueta{{#if attrOverridden}} is-alterado{{/if}}" title="{{#if attrOverridden}}{{localize "DESORDEM.Ficha.AtributoAlterado" padrao=attrDefaultLabel}}{{else}}{{localize "DESORDEM.Ficha.AtributoTrocar"}}{{/if}}">
+        <span class="desordem-attr-etiqueta__texto">{{attrLabel}}</span>
+        <select class="desordem-attr-etiqueta__select" data-attr-campo data-key="{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
       <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
       <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
@@ -67,12 +72,17 @@
   <h3><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Aptidoes"}}</h3>
   <div class="desordem-ficha__pericias">
     {{#each aptitudes}}
-    <div class="desordem-ficha__pericia desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{../aptitudeAttrShownDie}}">
+    <div class="desordem-ficha__pericia desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{attrShownDie}}">
       <button type="button" class="desordem-ficha__rolar" data-action="rollAptitude" data-aptitude="{{key}}">
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
-        <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
       </button>
-      <span class="desordem-forma desordem-d-{{../aptitudeAttrShownDie}}{{#if ../aptitudeAttrShifted}} is-passo is-passo--{{../aptitudeAttrShiftDir}}{{/if}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrShownDie}}</span></span>
+      <span class="desordem-attr-etiqueta{{#if attrOverridden}} is-alterado{{/if}}" title="{{#if attrOverridden}}{{localize "DESORDEM.Ficha.AtributoAlterado" padrao=attrDefaultLabel}}{{else}}{{localize "DESORDEM.Ficha.AtributoTrocar"}}{{/if}}">
+        <span class="desordem-attr-etiqueta__texto">{{attrLabel}}</span>
+        <select class="desordem-attr-etiqueta__select" data-attr-campo data-key="{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
       <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
         <span class="desordem-forma__valor">{{shownDie}}</span>
@@ -83,13 +93,18 @@
     </div>
     {{/each}}
     {{#each aptitudeExtras}}
-    <div class="desordem-ficha__pericia desordem-ficha__pericia--extra desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{../aptitudeAttrShownDie}}">
+    <div class="desordem-ficha__pericia desordem-ficha__pericia--extra desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{attrShownDie}}">
       <input type="text" class="desordem-extra__nome" data-extra-campo="nome" data-group="aptidao" data-id="{{id}}" value="{{nome}}" maxlength="40" placeholder="{{localize "DESORDEM.Ficha.ExtraNome.aptidao"}}" {{#unless ../editable}}disabled{{/unless}}>
       <button type="button" class="desordem-ficha__rolar desordem-ficha__rolar--extra" data-action="rollAptitude" data-aptitude="{{key}}" title="{{label}}">
         <i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
-        <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
       </button>
-      <span class="desordem-forma desordem-d-{{../aptitudeAttrShownDie}}{{#if ../aptitudeAttrShifted}} is-passo is-passo--{{../aptitudeAttrShiftDir}}{{/if}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrShownDie}}</span></span>
+      <span class="desordem-attr-etiqueta{{#if attrOverridden}} is-alterado{{/if}}" title="{{#if attrOverridden}}{{localize "DESORDEM.Ficha.AtributoAlterado" padrao=attrDefaultLabel}}{{else}}{{localize "DESORDEM.Ficha.AtributoTrocar"}}{{/if}}">
+        <span class="desordem-attr-etiqueta__texto">{{attrLabel}}</span>
+        <select class="desordem-attr-etiqueta__select" data-attr-campo data-key="{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
       <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
         <span class="desordem-forma__valor">{{shownDie}}</span>
@@ -107,12 +122,17 @@
   <h3><i class="fa-solid fa-hammer" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Oficios"}}</h3>
   <div class="desordem-ficha__pericias">
     {{#each crafts}}
-    <div class="desordem-ficha__pericia desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{../aptitudeAttrShownDie}}">
+    <div class="desordem-ficha__pericia desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{attrShownDie}}">
       <button type="button" class="desordem-ficha__rolar" data-action="rollCraft" data-craft="{{key}}">
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
-        <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
       </button>
-      <span class="desordem-forma desordem-d-{{../aptitudeAttrShownDie}}{{#if ../aptitudeAttrShifted}} is-passo is-passo--{{../aptitudeAttrShiftDir}}{{/if}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrShownDie}}</span></span>
+      <span class="desordem-attr-etiqueta{{#if attrOverridden}} is-alterado{{/if}}" title="{{#if attrOverridden}}{{localize "DESORDEM.Ficha.AtributoAlterado" padrao=attrDefaultLabel}}{{else}}{{localize "DESORDEM.Ficha.AtributoTrocar"}}{{/if}}">
+        <span class="desordem-attr-etiqueta__texto">{{attrLabel}}</span>
+        <select class="desordem-attr-etiqueta__select" data-attr-campo data-key="{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
       <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
         <span class="desordem-forma__valor">{{shownDie}}</span>
@@ -123,13 +143,18 @@
     </div>
     {{/each}}
     {{#each craftExtras}}
-    <div class="desordem-ficha__pericia desordem-ficha__pericia--extra desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{../aptitudeAttrShownDie}}">
+    <div class="desordem-ficha__pericia desordem-ficha__pericia--extra desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{attrShownDie}}">
       <input type="text" class="desordem-extra__nome" data-extra-campo="nome" data-group="oficio" data-id="{{id}}" value="{{nome}}" maxlength="40" placeholder="{{localize "DESORDEM.Ficha.ExtraNome.oficio"}}" {{#unless ../editable}}disabled{{/unless}}>
       <button type="button" class="desordem-ficha__rolar desordem-ficha__rolar--extra" data-action="rollCraft" data-craft="{{key}}" title="{{label}}">
         <i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
-        <span class="desordem-ficha__pericia-attr">{{../aptitudeAttrLabel}}</span>
       </button>
-      <span class="desordem-forma desordem-d-{{../aptitudeAttrShownDie}}{{#if ../aptitudeAttrShifted}} is-passo is-passo--{{../aptitudeAttrShiftDir}}{{/if}}" title="{{../aptitudeAttrLabel}}"><span class="desordem-forma__valor">{{../aptitudeAttrShownDie}}</span></span>
+      <span class="desordem-attr-etiqueta{{#if attrOverridden}} is-alterado{{/if}}" title="{{#if attrOverridden}}{{localize "DESORDEM.Ficha.AtributoAlterado" padrao=attrDefaultLabel}}{{else}}{{localize "DESORDEM.Ficha.AtributoTrocar"}}{{/if}}">
+        <span class="desordem-attr-etiqueta__texto">{{attrLabel}}</span>
+        <select class="desordem-attr-etiqueta__select" data-attr-campo data-key="{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
       <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
         <span class="desordem-forma__valor">{{shownDie}}</span>
