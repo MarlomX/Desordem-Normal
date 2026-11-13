@@ -4,8 +4,7 @@
  */
 import { COSTS, SNEAK_SKILLS } from './abilities.js';
 import { BONUS_SLOTS, bonusDice, normalizeBonus } from './bonus.js';
-import { stepShift } from './dice.js';
-import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE } from './fear.js';
+import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } from './fear.js';
 import { DEFAULT_DT, MAX_COUNTED, planDice } from './test.js';
 
 /** Espaços de dado extra de um teste: o limite de 4 dados rolados menos atributo e perícia. */
@@ -72,7 +71,7 @@ export function buildRollModel({
       ? {
           die: fearDie,
           controlPossible: fearDie > FEAR_MIN_DIE,
-          controlledDie: fearDie > FEAR_MIN_DIE ? stepShift(fearDie, -1) : fearDie,
+          controlledDie: fearDie > FEAR_MIN_DIE ? fearStepShift(fearDie, -1) : fearDie,
           controlCost: CONTROL_FEAR_COST,
           embraceCost: EMBRACE_FEAR_COST,
         }

@@ -108,7 +108,7 @@ test('buildFearChoices marca o dado atual e rotula a opção sem pavor', () => {
   const opcoes = buildFearChoices(8, 'Sem pavor');
   assert.deepEqual(
     opcoes.map((o) => o.value),
-    [0, 4, 6, 8, 10, 12],
+    [0, 4, 6, 8, 10, 12, 20],
   );
   assert.equal(opcoes[0].label, 'Sem pavor');
   assert.equal(opcoes[3].label, 'd8');

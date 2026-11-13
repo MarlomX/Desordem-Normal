@@ -158,12 +158,12 @@ export function buildLesionRows(keys, label, describe) {
 }
 
 /**
- * Opções do seletor do dado de pavor (0 = sem pavor, d4 a d12).
+ * Opções do seletor do dado de pavor (0 = sem pavor, d4 a d12 e d20).
  * @param {number} current Dado de pavor atual.
  * @param {string} noneLabel Texto de "sem pavor".
  */
 export function buildFearChoices(current, noneLabel) {
-  return [0, 4, 6, 8, 10, 12].map((value) => ({
+  return [0, 4, 6, 8, 10, 12, 20].map((value) => ({
     value,
     label: value === 0 ? noneLabel : `d${value}`,
     selected: value === current,

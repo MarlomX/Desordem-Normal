@@ -58,10 +58,11 @@ export function planDice({ attrDie, skillDie, extraDice = [], stepMods = [] }) {
  * @param {StepMod[]} [opts.stepMods=[]] Aumentos/reduções de passo.
  * @param {number} [opts.modifier=0] Modificador fixo somado ao total (ex.: penalidade de lesão).
  *   Não altera RA, RB nem críticos, que dependem só dos dados.
- * @param {number|null} [opts.fearDie=null] Lados do dado de pavor (4 a 12), rolado junto ao teste
+ * @param {number|null} [opts.fearDie=null] Lados do dado de pavor (4 a 20), rolado junto ao teste
  *   e depois dos demais dados. Ele não soma: anula os dados do teste menores que ele (os iguais
- *   ficam). Dados anulados não somam, não entram em RA/RB nem em sucesso crítico; se todos forem
- *   anulados, o teste é falha crítica. Fica fora dos limites de 4 rolados e 3 somados.
+ *   ficam). Dados anulados não somam e não formam sucesso crítico, mas continuam valendo para RA
+ *   e RB (o pavor só muda a soma); se todos forem anulados, o teste é falha crítica. Fica fora
+ *   dos limites de 4 rolados e 3 somados.
  * @param {(sides: number) => number} [opts.rng]
  */
 export function resolveTest({
@@ -98,7 +99,7 @@ export function resolveTest({
   }
   const devouredAll = dice.length > 0 && dice.every((d) => d.annulled);
 
-  // 3. Soma só os 3 maiores (empate: o dado mais à esquerda é mantido)
+  // 3. Soma só os 3 maiores dos dados não anulados (empate: o dado mais à esquerda é mantido)
   dice
     .map((die, index) => ({ die, index }))
     .filter(({ die }) => !die.annulled)
@@ -112,11 +113,16 @@ export function resolveTest({
   const countedValues = counted.map((d) => d.value).sort((a, b) => b - a);
   const total = countedValues.reduce((sum, v) => sum + v, 0) + modifier;
 
-  // 4. RA e RB (só dados somados)
-  const highRoll = countedValues[0] ?? 0;
-  const lowRoll = countedValues[countedValues.length - 1] ?? 0;
+  // 4. RA e RB: os 3 maiores dados rolados, anulados ou não (o pavor não os altera, só a soma).
+  //    Sem pavor, são os mesmos dados da soma.
+  const topValues = dice
+    .map((d) => d.value)
+    .sort((a, b) => b - a)
+    .slice(0, MAX_COUNTED);
+  const highRoll = topValues[0] ?? 0;
+  const lowRoll = topValues[topValues.length - 1] ?? 0;
 
-  // 5. Críticos (consideram todos os dados rolados)
+  // 5. Críticos (consideram todos os dados rolados que não foram anulados pelo pavor)
   const occurrences = new Map();
   for (const { value, annulled } of dice) {
     if (!annulled) occurrences.set(value, (occurrences.get(value) ?? 0) + 1);

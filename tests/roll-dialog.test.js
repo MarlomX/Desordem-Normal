@@ -56,6 +56,9 @@ test('modelo de pavor: controlar reduz um passo e d4 não reduz', () => {
   const six = base({ fearDie: 6 }).fear;
   assert.equal(six.controlPossible, true);
   assert.equal(six.controlledDie, 4);
+  const vinte = base({ fearDie: 20 }).fear;
+  assert.equal(vinte.controlPossible, true);
+  assert.equal(vinte.controlledDie, 12);
   const four = base({ fearDie: 4 }).fear;
   assert.equal(four.controlPossible, false);
   assert.equal(four.controlledDie, 4);

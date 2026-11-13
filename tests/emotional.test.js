@@ -103,7 +103,8 @@ test('colapso total, estupor e pânico', () => {
   assert.equal(applyTrauma(base(), lookupTrauma(18)).estupor, true);
   assert.equal(applyTrauma(base(), lookupTrauma(16)).pavor, 6);
   assert.equal(applyTrauma(base({ pavor: 6 }), lookupTrauma(16)).pavor, 8);
-  assert.equal(applyTrauma(base({ pavor: 12 }), lookupTrauma(16)).pavor, 12);
+  assert.equal(applyTrauma(base({ pavor: 12 }), lookupTrauma(16)).pavor, 20);
+  assert.equal(applyTrauma(base({ pavor: 20 }), lookupTrauma(16)).pavor, 20);
 });
 
 test('chaga da alma reduz o PD máximo em 2 e acumula', () => {

@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { increaseFear, resolveFearOptions } from '../scripts/rolls/fear.js';
+import {
+  FEAR_STEPS,
+  fearStepShift,
+  increaseFear,
+  resolveFearOptions,
+} from '../scripts/rolls/fear.js';
 import { resolveTest } from '../scripts/rolls/test.js';
 import { fixedRng } from './helpers.js';
 
@@ -25,11 +30,11 @@ test('exemplos do livro: pavor anula dados menores', () => {
   assert.equal(tres.criticalFailure, false);
 });
 
-test('pavor 5 com 4, 3 e 5: devora o 4 e o 3; só o 5 conta como RA e RB', () => {
+test('pavor 5 com 4, 3 e 5: devora o 4 e o 3; só o 5 soma, mas RA e RB veem os três', () => {
   const r = run({ attrDie: 8, skillDie: 8, extraDice: [6], fearDie: 8 }, [4, 3, 5, 5]);
   assert.equal(r.total, 5);
   assert.equal(r.highRoll, 5);
-  assert.equal(r.lowRoll, 5);
+  assert.equal(r.lowRoll, 3);
   assert.equal(r.fear.devoured, 2);
 });
 
@@ -55,11 +60,48 @@ test('dados anulados não contam para sucesso crítico', () => {
   assert.equal(com.criticalSuccess, true);
 });
 
-test('dados anulados não somam nem entram em RA e RB', () => {
+test('dados anulados não somam, mas continuam valendo para RA e RB', () => {
   const r = run({ attrDie: 8, skillDie: 8, extraDice: [8], fearDie: 8 }, [8, 2, 3, 5]);
   assert.equal(r.total, 8);
   assert.equal(r.highRoll, 8);
-  assert.equal(r.lowRoll, 8);
+  assert.equal(r.lowRoll, 2);
+});
+
+test('o pavor só muda a soma: RA e RB são os mesmos com e sem pavor', () => {
+  const rolls = [9, 3, 5];
+  const sem = run({ attrDie: 10, skillDie: 10, extraDice: [8] }, rolls);
+  const com = run({ attrDie: 10, skillDie: 10, extraDice: [8], fearDie: 6 }, [...rolls, 6]);
+  assert.equal(sem.total, 17);
+  assert.equal(com.total, 9); // 3 e 5 foram anulados
+  assert.equal(com.highRoll, sem.highRoll);
+  assert.equal(com.lowRoll, sem.lowRoll);
+  assert.deepEqual([com.highRoll, com.lowRoll], [9, 3]);
+});
+
+test('devora tudo com 4 dados: falha crítica, RA = maior e RB = 2º menor (3 maiores dados)', () => {
+  const r = run({ attrDie: 10, skillDie: 10, extraDice: [8, 8], fearDie: 12 }, [2, 3, 4, 6, 9]);
+  assert.equal(r.devouredAll, true);
+  assert.equal(r.criticalFailure, true);
+  assert.equal(r.success, false);
+  assert.equal(r.total, 0);
+  assert.equal(r.highRoll, 6);
+  assert.equal(r.lowRoll, 3);
+});
+
+test('pares anulados não formam crítico, mesmo com RA e RB contando-os', () => {
+  const r = run({ attrDie: 10, skillDie: 10, extraDice: [10], fearDie: 8 }, [7, 7, 9, 8]);
+  assert.equal(r.criticalSuccess, false);
+  assert.equal(r.highRoll, 9);
+  assert.equal(r.lowRoll, 7);
+  assert.equal(r.total, 9);
+});
+
+test('pavor d20 anula tudo o que for menor que o valor rolado', () => {
+  const r = run({ attrDie: 8, skillDie: 8, fearDie: 20 }, [8, 8, 15]);
+  assert.equal(r.fear.sides, 20);
+  assert.equal(r.devouredAll, true);
+  assert.equal(r.criticalFailure, true);
+  assert.equal(run({ attrDie: 8, skillDie: 8, fearDie: 20 }, [8, 8, 1]).total, 16);
 });
 
 test('1 no dado de pavor encerra o efeito e não anula nada', () => {
@@ -75,8 +117,8 @@ test('sem pavor, o teste não muda', () => {
   assert.equal(r.devouredAll, false);
 });
 
-test('aumentar o pavor: começa em d6, sobe um passo e para em d12', () => {
-  assert.deepEqual([0, 4, 6, 8, 10, 12].map(increaseFear), [6, 6, 8, 10, 12, 12]);
+test('aumentar o pavor: começa em d6, sobe um passo e para em d20', () => {
+  assert.deepEqual([0, 4, 6, 8, 10, 12, 20].map(increaseFear), [6, 6, 8, 10, 12, 20, 20]);
 });
 
 test('resolveFearOptions: sem pavor ou ignorando, nada muda', () => {
@@ -114,4 +156,23 @@ test('resolveFearOptions: abraçar converte o dado em bônus por 5 PD', () => {
 test('resolveFearOptions: PD insuficientes lançam erro', () => {
   assert.throws(() => resolveFearOptions({ fearDie: 6, embrace: true, pd: 4 }), RangeError);
   assert.doesNotThrow(() => resolveFearOptions({ fearDie: 6, embrace: true, pd: 5 }));
+});
+
+test('escada do pavor: d4 a d12 e d20, sem sair das pontas', () => {
+  assert.deepEqual([...FEAR_STEPS], [4, 6, 8, 10, 12, 20]);
+  assert.equal(fearStepShift(12, 1), 20);
+  assert.equal(fearStepShift(20, 1), 20);
+  assert.equal(fearStepShift(20, -1), 12);
+  assert.equal(fearStepShift(4, -1), 4);
+  assert.equal(fearStepShift(6, 2), 10);
+  assert.throws(() => fearStepShift(7, 1), RangeError);
+});
+
+test('controlar o pavor d20 reduz para d12', () => {
+  assert.equal(resolveFearOptions({ fearDie: 20, control: true }).fearDie, 12);
+  assert.deepEqual(resolveFearOptions({ fearDie: 20, embrace: true }), {
+    fearDie: null,
+    bonusDie: 20,
+    pdCost: 5,
+  });
 });

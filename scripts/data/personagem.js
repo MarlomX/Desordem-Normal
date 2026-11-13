@@ -48,8 +48,8 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         morto: new f.BooleanField({ initial: false }),
         morteLenta: new f.BooleanField({ initial: false }),
         contusao: new f.BooleanField({ initial: false }),
-        // Estado mental: dado de pavor (0 = sem pavor, ou 4 a 12), estupor e colapso total
-        pavor: new f.NumberField({ required: true, integer: true, min: 0, max: 12, initial: 0 }),
+        // Estado mental: dado de pavor (0 = sem pavor, ou 4 a 20), estupor e colapso total
+        pavor: new f.NumberField({ required: true, integer: true, min: 0, max: 20, initial: 0 }),
         estupor: new f.BooleanField({ initial: false }),
         colapso: new f.BooleanField({ initial: false })
       }),

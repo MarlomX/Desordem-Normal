@@ -2,18 +2,33 @@
  * Dado de pavor: escolha de qual dado rolar em um teste e custos em PD.
  * Lógica pura, sem dependência do Foundry. A mecânica de anular dados está em `resolveTest`.
  */
-import { stepShift } from './dice.js';
+import { DIE_STEPS } from './dice.js';
 
 export const FEAR_START_DIE = 6; // dado recebido ao ganhar pavor pela primeira vez
 export const FEAR_MIN_DIE = 4;
 export const FEAR_MAX_DIE = 20; // o pavor nunca passa de d20
+
+/** Escada de passos do dado de pavor: a dos outros dados (d4 a d12) mais o d20 no topo. */
+export const FEAR_STEPS = Object.freeze([...DIE_STEPS, FEAR_MAX_DIE]);
+
+/**
+ * Move o dado de pavor pela escada de passos (d4 a d12 e d20), sem sair das pontas.
+ * @param {number} sides Lados do dado de pavor.
+ * @param {number} delta Passos (positivo aumenta, negativo reduz).
+ */
+export function fearStepShift(sides, delta) {
+  const index = FEAR_STEPS.indexOf(sides);
+  if (index === -1) throw new RangeError(`Dado de pavor inválido: d${sides}`);
+  const target = Math.min(FEAR_STEPS.length - 1, Math.max(0, index + delta));
+  return FEAR_STEPS[target];
+}
 export const CONTROL_FEAR_COST = 1;
 export const EMBRACE_FEAR_COST = 5;
 
-/** Dado de pavor depois de receber o efeito: começa em d6 e, se já tem, sobe um passo (até d12). */
+/** Dado de pavor depois de receber o efeito: começa em d6 e, se já tem, sobe um passo (até d20). */
 export function increaseFear(current) {
   if (!current) return FEAR_START_DIE;
-  return Math.min(FEAR_MAX_DIE, stepShift(current, 1));
+  return fearStepShift(current, 1);
 }
 
 /**
@@ -42,7 +57,7 @@ export function resolveFearOptions({
   let die = fearDie;
   let pdCost = 0;
   if (control && die > FEAR_MIN_DIE) {
-    die = stepShift(die, -1);
+    die = fearStepShift(die, -1);
     pdCost += CONTROL_FEAR_COST;
   }
   if (embrace) pdCost += EMBRACE_FEAR_COST;
