@@ -37,6 +37,7 @@ import {
   buildSkillRows,
   buildAreaRows,
   buildExtraRows,
+  shiftDirection,
   buildLesionRows,
   buildFearChoices,
   buildRelationRows,
@@ -220,6 +221,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       aptitudeAttrShownDie: shownDie(system.atributos.mente, attrStepOf('mente')),
       aptitudeAttrShifted:
         shownDie(system.atributos.mente, attrStepOf('mente')) !== Number(system.atributos.mente),
+      aptitudeAttrShiftDir: shiftDirection(
+        system.atributos.mente,
+        shownDie(system.atributos.mente, attrStepOf('mente')),
+      ),
       nextInjuryDT: injuryDT(system.cena.testesLesao),
       nextTraumaDT: traumaDT(system.cena.testesTrauma),
       traumas: buildLesionRows(

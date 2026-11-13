@@ -29,6 +29,20 @@ export function dieOptions(current) {
 }
 
 /**
+ * Direção em que um passo temporário mudou o dado: 'up' (dado maior), 'down' (menor) ou ''
+ * (igual; inclui o caso de um dado que já estava no limite e não pôde se mover).
+ * @param {number} base Dado base.
+ * @param {number} shown Dado mostrado, já com os passos.
+ */
+export function shiftDirection(base, shown) {
+  const from = Number(base);
+  const to = Number(shown);
+  if (to > from) return 'up';
+  if (to < from) return 'down';
+  return '';
+}
+
+/**
  * @param {Record<string, number>} attributes Ex.: { fisico: 6, ... }
  * @param {string[]} keys Chaves dos atributos, na ordem de exibição.
  * @param {(key: string) => string} label Devolve o nome traduzido.
@@ -46,6 +60,7 @@ export function buildAttributeRows(attributes, keys, label, stepOf) {
       die: Number(attributes[key]),
       shownDie: shownDie(attributes[key], indicator),
       shifted: shownDie(attributes[key], indicator) !== Number(attributes[key]),
+      shiftDir: shiftDirection(attributes[key], shownDie(attributes[key], indicator)),
       stepNet: indicator?.net ?? 0,
       stepUp: (indicator?.net ?? 0) > 0,
       stepAbs: Math.abs(indicator?.net ?? 0),
@@ -89,9 +104,14 @@ export function buildSkillRows(
         attrShownDie: attrBase === undefined ? undefined : shownDie(attrBase, attrStepOf?.(attrKey)),
         attrShifted:
           attrBase !== undefined && shownDie(attrBase, attrStepOf?.(attrKey)) !== attrBase,
+        attrShiftDir:
+          attrBase === undefined
+            ? ''
+            : shiftDirection(attrBase, shownDie(attrBase, attrStepOf?.(attrKey))),
         die: Number(skills[key]),
         shownDie: shownDie(skills[key], skillStep),
         shifted: shownDie(skills[key], skillStep) !== Number(skills[key]),
+        shiftDir: shiftDirection(skills[key], shownDie(skills[key], skillStep)),
         trained: Number(skills[key]) >= 6,
         search: normalizeSearch(`${skillLabel(key)} ${attrLabel(attrKey)}`),
         options: dieOptions(skills[key]),
