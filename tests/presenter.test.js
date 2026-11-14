@@ -106,18 +106,17 @@ test('resumo do teste de lesão monta as chaves de idioma', () => {
   const ctx = buildInjuryContext({
     outcome: 'failure',
     effects: ['sofreLesao'],
-    lesion: { key: 'semOlho' },
-    lesionRolls: [11, 11, 14],
     testNumber: 2,
   });
   assert.equal(ctx.outcomeText, 'DESORDEM.Lesao.Resultado.failure');
   assert.deepEqual(ctx.effects, ['DESORDEM.Lesao.Efeito.sofreLesao']);
-  assert.equal(ctx.lesion.name, 'DESORDEM.Lesoes.semOlho.Nome');
-  assert.equal(ctx.hasLesionRolls, true);
+  assert.equal(ctx.pending, true); // a tabela fica para o botão do cartão
+  assert.equal(ctx.pendingButton, 'DESORDEM.Tabela.Botao.lesion');
 
-  const semLesao = buildInjuryContext({ outcome: 'criticalFailure', testNumber: 1 });
-  assert.equal(semLesao.lesion, null);
-  assert.equal(semLesao.outcomeClass, 'falha-critica');
+  const semTabela = buildInjuryContext({ outcome: 'criticalFailure', testNumber: 1 });
+  assert.equal(semTabela.pending, false);
+  assert.equal(semTabela.outcomeClass, 'falha-critica');
+  assert.equal(buildInjuryContext({ outcome: 'success', testNumber: 1 }).pending, false);
 });
 
 test('dados devorados pelo pavor aparecem como tal e o pavor aparece no resumo', () => {
@@ -139,18 +138,13 @@ test('dados devorados pelo pavor aparecem como tal e o pavor aparece no resumo',
 });
 
 test('resumo do teste de trauma monta as chaves de idioma', () => {
-  const falha = buildTraumaContext({
-    outcome: 'failure',
-    trauma: { key: 'panico' },
-    traumaRolls: [3, 16],
-    testNumber: 2,
-  });
+  const falha = buildTraumaContext({ outcome: 'failure', testNumber: 2 });
   assert.equal(falha.outcomeText, 'DESORDEM.Trauma.Resultado.failure');
   assert.equal(falha.effect, 'DESORDEM.Trauma.Efeito.sofreTrauma');
-  assert.equal(falha.trauma.name, 'DESORDEM.Traumas.panico.Nome');
-  assert.equal(falha.hasTraumaRolls, true);
+  assert.equal(falha.pending, true);
+  assert.equal(falha.pendingButton, 'DESORDEM.Tabela.Botao.trauma');
 
   const ok = buildTraumaContext({ outcome: 'success', testNumber: 1 });
-  assert.equal(ok.trauma, null);
+  assert.equal(ok.pending, false);
   assert.equal(ok.effect, 'DESORDEM.Trauma.Efeito.semEfeito');
 });

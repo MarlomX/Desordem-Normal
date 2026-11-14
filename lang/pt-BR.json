@@ -388,6 +388,26 @@
         "Descricao": "O trauma não deixa sequelas e uma onda de ânimo faz recuperar 1 PD."
       }
     },
+    "Tabela": {
+      "Titulo": {
+        "lesion": "Tabela de lesões",
+        "trauma": "Tabela de traumas"
+      },
+      "Botao": {
+        "lesion": "Rolar tabela de lesão",
+        "trauma": "Rolar tabela de trauma"
+      },
+      "Nota": {
+        "rolled": "Tabela rolada",
+        "rolling": "Rolando a tabela…",
+        "waiting": "Aguardando a rolagem da tabela."
+      },
+      "AvisoNaoLetal": "Dano não letal: role 2d20 e fique com o melhor resultado.",
+      "Erro": {
+        "JaRolada": "Esta tabela já está sendo rolada ou foi rolada.",
+        "Rolar": "Não foi possível rolar a tabela. Tente de novo."
+      }
+    },
     "Relacao": {
       "SemNome": "alguém",
       "Grau": {

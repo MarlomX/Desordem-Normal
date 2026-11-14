@@ -12,9 +12,11 @@ import {
   applyEmotionalDamage,
   applyTrauma,
 } from './emotional.js';
-import { buildTraumaContext } from './presenter.js';
+import { buildTraumaContext, buildTableResultContext } from './presenter.js';
+import { createPending } from './pending-table.js';
 
 const TEMPLATE_TRAUMA = `systems/${SYSTEM_ID}/templates/chat/trauma.hbs`;
+const TEMPLATE_TABELA = `systems/${SYSTEM_ID}/templates/chat/tabela.hbs`;
 const TEMPLATE_DANO = `systems/${SYSTEM_ID}/templates/chat/dano.hbs`;
 const MAX_TRAUMA_REROLLS = 50;
 
@@ -31,7 +33,10 @@ function mindState(actor) {
   };
 }
 
-/** Atualização da ficha a partir do estado mental (e do contador de testes de trauma da cena). */
+/**
+ * Atualização da ficha a partir do estado mental. O contador de testes de trauma da cena só entra
+ * quando informado (o teste conta; aplicar o trauma depois, não).
+ */
 function mindUpdate(state, testsInScene) {
   return {
     'system.pd.value': state.pd,
@@ -40,30 +45,61 @@ function mindUpdate(state, testsInScene) {
     'system.estado.estupor': state.estupor,
     'system.estado.colapso': state.colapso,
     'system.traumas': state.traumas,
-    'system.cena.testesTrauma': testsInScene,
+    ...(testsInScene === undefined ? {} : { 'system.cena.testesTrauma': testsInScene }),
   };
 }
 
 /**
  * Rola na tabela de traumas (d20), repetindo enquanto cair um trauma persistente que o
- * personagem já tem.
- * @returns {Promise<{entry: object, rolls: Roll[]}>}
+ * personagem já tem. Só rola e escolhe a entrada: aplicar o trauma à ficha é `applyTraumaDraw`.
+ * @param {string[]} owned Chaves dos traumas que o personagem já possui.
+ * @returns {Promise<{entry: object, rolls: Roll[], shown: number[]}>} `rolls` são todos os d20
+ *   rolados (inclui repetições) e `shown` é o valor da última tentativa (o que a janela mostra).
  */
-async function rollTrauma(owned) {
+export async function drawTrauma(owned) {
   const allRolls = [];
   for (let attempt = 0; attempt < MAX_TRAUMA_REROLLS; attempt++) {
     const roll = await new Roll(`1d${TRAUMA_DIE}`).evaluate();
     allRolls.push(roll);
     const { entry, reroll } = pickTrauma(roll.total, owned);
-    if (!reroll) return { entry, rolls: allRolls };
+    if (!reroll) return { entry, rolls: allRolls, shown: [roll.total] };
   }
   // Praticamente inalcançável; evita laço infinito
-  return { entry: TRAUMAS.find((e) => e.key === 'chagaAlma'), rolls: allRolls };
+  return {
+    entry: TRAUMAS.find((e) => e.key === 'chagaAlma'),
+    rolls: allRolls,
+    shown: [allRolls.at(-1).total],
+  };
 }
 
 /**
- * Teste de trauma (Emoção + Disciplina) com as consequências aplicadas à ficha e publicadas no
- * chat. Em falha, rola na tabela de traumas.
+ * Aplica à ficha um trauma já sorteado e publica o resultado no chat. Lê o estado mental de agora
+ * (não o do momento do teste), porque a tabela pode ser rolada depois.
+ * @param {Actor} actor
+ * @param {{testNumber: number}} pending Estado pendente do cartão.
+ * @param {{entry: object, rolls: Roll[]}} drawn Retorno de `drawTrauma`.
+ */
+export async function applyTraumaDraw(actor, pending, drawn) {
+  const state = applyTrauma(mindState(actor), drawn.entry);
+  await actor.update(mindUpdate(state));
+  const context = buildTableResultContext({
+    kind: 'trauma',
+    entry: drawn.entry,
+    rolls: drawn.rolls.map((roll) => roll.total),
+    testNumber: pending.testNumber,
+  });
+  await postMessage({
+    actor,
+    content: await render(TEMPLATE_TABELA, context),
+    rolls: drawn.rolls,
+  });
+  return { entry: drawn.entry, state };
+}
+
+/**
+ * Teste de trauma (Emoção + Disciplina) com as consequências imediatas aplicadas à ficha e
+ * publicadas no chat. Em falha, a tabela de traumas NÃO é rolada: o cartão traz um botão para
+ * rolá-la depois (veja `table-chat.js`) e o retorno tem `pending: true`.
  * @param {Actor} actor
  */
 export async function rollTraumaTest(actor, { extraDice = [], active = [], dt } = {}) {
@@ -78,33 +114,29 @@ export async function rollTraumaTest(actor, { extraDice = [], active = [], dt } 
   const { result, rolls, card } = await runTest(actor, options);
 
   const outcome = traumaOutcome(result);
-  let state = mindState(actor);
-  let trauma = null;
-  let traumaRolls = [];
-  if (outcome === 'failure') {
-    const drawn = await rollTrauma(state.traumas);
-    trauma = drawn.entry;
-    traumaRolls = drawn.rolls;
-    state = applyTrauma(state, trauma);
-  }
-
+  const state = mindState(actor);
   await actor.update(mindUpdate(state, previousTests + 1));
 
+  const pending = outcome === 'failure';
   const context = {
-    ...buildTraumaContext({
-      outcome,
-      trauma,
-      traumaRolls: traumaRolls.map((roll) => roll.total),
-      testNumber: previousTests + 1,
-    }),
+    ...buildTraumaContext({ outcome, testNumber: previousTests + 1 }),
     testCard: card,
   };
   await postMessage({
     actor,
     content: await render(TEMPLATE_TRAUMA, context),
-    rolls: [...rolls, ...traumaRolls],
+    rolls,
+    flags: pending
+      ? {
+          tabela: createPending({
+            kind: 'trauma',
+            testNumber: previousTests + 1,
+            actorUuid: actor.uuid,
+          }),
+        }
+      : undefined,
   });
-  return { outcome, trauma, state };
+  return { outcome, pending, state };
 }
 
 /**

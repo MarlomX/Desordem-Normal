@@ -388,6 +388,26 @@
         "Descricao": "The trauma leaves no lasting effects and a surge of spirit restores 1 DP."
       }
     },
+    "Tabela": {
+      "Titulo": {
+        "lesion": "Injury table",
+        "trauma": "Trauma table"
+      },
+      "Botao": {
+        "lesion": "Roll injury table",
+        "trauma": "Roll trauma table"
+      },
+      "Nota": {
+        "rolled": "Table rolled",
+        "rolling": "Rolling the table…",
+        "waiting": "Waiting for the table roll."
+      },
+      "AvisoNaoLetal": "Non-lethal damage: roll 2d20 and keep the best result.",
+      "Erro": {
+        "JaRolada": "This table is already being rolled or was already rolled.",
+        "Rolar": "Could not roll the table. Try again."
+      }
+    },
     "Relacao": {
       "SemNome": "someone",
       "Grau": {

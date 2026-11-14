@@ -262,6 +262,54 @@
   font-size: 0.9em;
 }
 
+/* Botão (ou nota) que rola a tabela de lesão ou de trauma pendente no cartão do teste */
+.desordem-lesao__pendente {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.desordem-lesao__botao.is-oculta,
+.desordem-lesao__pendente .desordem-teste__nota.is-oculta {
+  display: none;
+}
+
+/* Janela do d20 da tabela */
+.desordem-tabela-janela {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.desordem-tabela-janela__dados {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px 0;
+}
+
+.desordem-tabela-janela .desordem-forma.is-rolando {
+  animation: desordem-tabela-gira 0.45s linear infinite;
+}
+
+@keyframes desordem-tabela-gira {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desordem-tabela-janela .desordem-forma.is-rolando {
+    animation: none;
+  }
+}
+
 .desordem-ficha__estado,
 .desordem-ficha__lesoes {
   display: flex;

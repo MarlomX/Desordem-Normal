@@ -17,6 +17,7 @@ import {
 } from './rolls/abilities-chat.js';
 import { computeDamage } from './rolls/damage.js';
 import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
+import { renderTableCard, registerTableSocket } from './rolls/table-chat.js';
 import {
   invokeRelation,
   renderRelationCard,
@@ -80,10 +81,12 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderRelationCard(message, html);
   renderEquipmentCard(message, html);
   renderTestButtons(message, html);
+  renderTableCard(message, html);
 });
 
 Hooks.once('ready', () => {
   registerRelationSocket();
   registerAbilitySocket();
+  registerTableSocket();
   console.log(`${SYSTEM_ID} | pronto`);
 });

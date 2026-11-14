@@ -19,9 +19,11 @@ import {
   applyLesion,
   resolveNonLethal,
 } from './injury.js';
-import { buildInjuryContext } from './presenter.js';
+import { buildInjuryContext, buildTableResultContext } from './presenter.js';
+import { createPending } from './pending-table.js';
 
 const TEMPLATE_LESAO = `systems/${SYSTEM_ID}/templates/chat/lesao.hbs`;
+const TEMPLATE_TABELA = `systems/${SYSTEM_ID}/templates/chat/tabela.hbs`;
 const TEMPLATE_DANO = `systems/${SYSTEM_ID}/templates/chat/dano.hbs`;
 const MAX_LESION_REROLLS = 50;
 
@@ -40,7 +42,10 @@ function healthState(actor) {
   };
 }
 
-/** Atualização da ficha a partir do estado de saúde (e do contador de testes da cena). */
+/**
+ * Atualização da ficha a partir do estado de saúde. O contador de testes de lesão da cena só entra
+ * quando informado (o teste conta; aplicar a lesão depois, não).
+ */
 function healthUpdate(state, testsInScene) {
   return {
     'system.pv.value': state.pv,
@@ -51,16 +56,20 @@ function healthUpdate(state, testsInScene) {
     'system.estado.morteLenta': state.morteLenta,
     'system.estado.contusao': state.contusao,
     'system.lesoes': state.lesoes,
-    'system.cena.testesLesao': testsInScene,
+    ...(testsInScene === undefined ? {} : { 'system.cena.testesLesao': testsInScene }),
   };
 }
 
 /**
  * Rola na tabela de lesões (d20, ou 2d20 ficando o melhor se o dano foi não letal),
- * repetindo enquanto cair uma lesão permanente que o personagem já tem.
- * @returns {Promise<{entry: object, rolls: Roll[]}>}
+ * repetindo enquanto cair uma lesão permanente que o personagem já tem. Só rola e escolhe a
+ * entrada: aplicar a lesão à ficha é `applyLesionDraw`.
+ * @param {string[]} owned Chaves das lesões que o personagem já possui.
+ * @param {boolean} nonLethal
+ * @returns {Promise<{entry: object, rolls: Roll[], shown: number[]}>} `rolls` são todos os d20
+ *   rolados (inclui repetições) e `shown` são os valores da última tentativa (os que a janela mostra).
  */
-async function rollLesion(owned, nonLethal) {
+export async function drawLesion(owned, nonLethal) {
   const allRolls = [];
   for (let attempt = 0; attempt < MAX_LESION_REROLLS; attempt++) {
     const rolls = await Promise.all(
@@ -69,16 +78,45 @@ async function rollLesion(owned, nonLethal) {
       ),
     );
     allRolls.push(...rolls);
-    const { entry, reroll } = pickLesion(bestLesionRoll(rolls.map((r) => r.total)), owned);
-    if (!reroll) return { entry, rolls: allRolls };
+    const shown = rolls.map((r) => r.total);
+    const { entry, reroll } = pickLesion(bestLesionRoll(shown), owned);
+    if (!reroll) return { entry, rolls: allRolls, shown };
   }
   // Praticamente inalcançável; evita laço infinito
-  return { entry: LESIONS.find((e) => e.key === 'lacearacaoProfunda'), rolls: allRolls };
+  const shown = allRolls.slice(-lesionRollCount(nonLethal)).map((r) => r.total);
+  return { entry: LESIONS.find((e) => e.key === 'lacearacaoProfunda'), rolls: allRolls, shown };
+}
+
+/**
+ * Aplica à ficha uma lesão já sorteada e publica o resultado no chat. Lê o estado de saúde de
+ * agora (não o do momento do teste), porque a tabela pode ser rolada depois.
+ * @param {Actor} actor
+ * @param {{kind: string, nonLethal: boolean, testNumber: number}} pending Estado pendente do cartão.
+ * @param {{entry: object, rolls: Roll[]}} drawn Retorno de `drawLesion`.
+ */
+export async function applyLesionDraw(actor, pending, drawn) {
+  const state = applyLesion(healthState(actor), drawn.entry);
+  await actor.update(healthUpdate(state));
+  const context = buildTableResultContext({
+    kind: 'lesion',
+    entry: drawn.entry,
+    rolls: drawn.rolls.map((roll) => roll.total),
+    testNumber: pending.testNumber,
+    nonLethal: pending.nonLethal,
+  });
+  await postMessage({
+    actor,
+    content: await render(TEMPLATE_TABELA, context),
+    rolls: drawn.rolls,
+  });
+  return { entry: drawn.entry, state };
 }
 
 /**
  * Teste de lesão (Físico + Vigor) com as consequências aplicadas à ficha e publicadas no chat.
  * O "teste de morte" do moribundo, no fim de cada rodada, também é feito por aqui.
+ * Em falha, a tabela de lesões NÃO é rolada: o cartão traz um botão para rolá-la depois
+ * (veja `table-chat.js`) e o retorno tem `pending: true`.
  * @param {Actor} actor
  * @param {Object} [options]
  * @param {boolean} [options.nonLethal=false] O dano não letal ajudou a zerar o PV: +1d6 no teste
@@ -106,23 +144,13 @@ export async function rollInjuryTest(
   const before = healthState(actor);
   let state = applyInjuryOutcome(before, outcome);
 
-  let lesion = null;
-  let lesionRolls = [];
-  if (outcome === 'failure') {
-    const drawn = await rollLesion(state.lesoes, nonLethal);
-    lesion = drawn.entry;
-    lesionRolls = drawn.rolls;
-    state = applyLesion(state, lesion);
-  }
-
   await actor.update(healthUpdate(state, previousTests + 1));
 
+  const pending = outcome === 'failure';
   const context = {
     ...buildInjuryContext({
       outcome,
       effects: outcomeEffects(outcome),
-      lesion,
-      lesionRolls: lesionRolls.map((roll) => roll.total),
       nonLethal,
       testNumber: previousTests + 1,
     }),
@@ -131,9 +159,19 @@ export async function rollInjuryTest(
   await postMessage({
     actor,
     content: await render(TEMPLATE_LESAO, context),
-    rolls: [...rolls, ...lesionRolls],
+    rolls,
+    flags: pending
+      ? {
+          tabela: createPending({
+            kind: 'lesion',
+            nonLethal,
+            testNumber: previousTests + 1,
+            actorUuid: actor.uuid,
+          }),
+        }
+      : undefined,
   });
-  return { outcome, lesion, state };
+  return { outcome, pending, state };
 }
 
 /**

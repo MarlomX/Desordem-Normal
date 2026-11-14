@@ -1,0 +1,10 @@
+<div class="desordem-lesao">
+  <h3 class="desordem-lesao__titulo">{{localize titleKey}} #{{testNumber}}</h3>
+  {{#if nonLethal}}<p class="desordem-teste__nota">{{localize "DESORDEM.Lesao.NotaNaoLetal"}}</p>{{/if}}
+
+  <div class="desordem-lesao__tabela">
+    {{#if hasRolls}}<p class="desordem-teste__nota">{{localize rollsLabelKey}}: {{#each rolls}}{{#unless @first}}, {{/unless}}{{this}}{{/each}}</p>{{/if}}
+    <p class="desordem-lesao__nome">{{localize nameKey}}</p>
+    <p class="desordem-lesao__descricao">{{localize descriptionKey}}</p>
+  </div>
+</div>

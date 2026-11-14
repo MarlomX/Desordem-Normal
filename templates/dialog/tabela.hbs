@@ -1,0 +1,13 @@
+<div class="desordem-tabela-janela">
+  <p class="desordem-pre__titulo">{{titulo}}</p>
+
+  <div class="desordem-tabela-janela__dados" aria-live="polite">
+    {{#each dice}}
+    <span class="desordem-forma desordem-forma--grande desordem-d-20" data-dado>
+      <span class="desordem-forma__valor" data-valor>20</span>
+    </span>
+    {{/each}}
+  </div>
+
+  {{#if aviso}}<p class="desordem-ficha__dica">{{aviso}}</p>{{/if}}
+</div>

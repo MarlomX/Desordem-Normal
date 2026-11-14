@@ -9,12 +9,10 @@
     {{#each effects}}<li>{{localize this}}</li>{{/each}}
   </ul>
 
-  {{#if lesion}}
-  <div class="desordem-lesao__tabela">
-    {{#if hasLesionRolls}}<p class="desordem-teste__nota">{{localize "DESORDEM.Lesao.RolagensTabela"}}: {{#each lesionRolls}}{{#unless @first}}, {{/unless}}{{this}}{{/each}}</p>{{/if}}
-    <p class="desordem-lesao__nome">{{localize lesion.name}}</p>
-    <p class="desordem-lesao__descricao">{{localize lesion.description}}</p>
+  {{#if pending}}
+  <div class="desordem-lesao__pendente" data-desordem-tabela>
+    <button type="button" class="desordem-lesao__botao">{{localize pendingButton}}</button>
+    <p class="desordem-teste__nota is-oculta" data-desordem-tabela-nota></p>
   </div>
   {{/if}}
-
 </div>

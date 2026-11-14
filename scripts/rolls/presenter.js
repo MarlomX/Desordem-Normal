@@ -93,57 +93,75 @@ export function buildOpposedContext({ winner, margin, decidedBy }) {
 }
 
 /**
- * Dados do resumo de um teste de lesão (chaves de idioma já montadas).
+ * Dados do resumo de um teste de lesão (chaves de idioma já montadas). Em falha, a tabela não é
+ * rolada aqui: o cartão mostra o botão de rolá-la (veja `pending-table.js`).
  * @param {Object} opts
  * @param {'criticalSuccess'|'success'|'failure'|'criticalFailure'} opts.outcome
  * @param {string[]} [opts.effects] Chaves de efeito (veja `outcomeEffects`).
- * @param {{key: string}|null} [opts.lesion] Lesão sorteada, se houver.
- * @param {number[]} [opts.lesionRolls] Todos os d20 rolados na tabela (inclui repetições).
  * @param {boolean} [opts.nonLethal]
  * @param {number} opts.testNumber Número do teste na cena (1, 2, 3...).
  */
-export function buildInjuryContext({
-  outcome,
-  effects = [],
-  lesion = null,
-  lesionRolls = [],
-  nonLethal = false,
-  testNumber,
-}) {
+export function buildInjuryContext({ outcome, effects = [], nonLethal = false, testNumber }) {
   return {
     outcomeText: `DESORDEM.Lesao.Resultado.${outcome}`,
     outcomeClass: outcome === 'criticalFailure' ? 'falha-critica' : outcome,
     effects: effects.map((effect) => `DESORDEM.Lesao.Efeito.${effect}`),
-    lesion: lesion && {
-      name: `DESORDEM.Lesoes.${lesion.key}.Nome`,
-      description: `DESORDEM.Lesoes.${lesion.key}.Descricao`,
-    },
-    lesionRolls,
-    hasLesionRolls: lesionRolls.length > 0,
+    pending: outcome === 'failure',
+    pendingButton: 'DESORDEM.Tabela.Botao.lesion',
     nonLethal,
     testNumber,
   };
 }
 
 /**
- * Dados do resumo de um teste de trauma (chaves de idioma já montadas).
+ * Dados do resumo de um teste de trauma (chaves de idioma já montadas). Em falha, o cartão mostra
+ * o botão de rolar a tabela de traumas.
  * @param {Object} opts
  * @param {'success'|'failure'} opts.outcome
- * @param {{key: string}|null} [opts.trauma] Trauma sorteado, se houver.
- * @param {number[]} [opts.traumaRolls] Todos os d20 rolados na tabela (inclui repetições).
  * @param {number} opts.testNumber Número do teste na cena (1, 2, 3...).
  */
-export function buildTraumaContext({ outcome, trauma = null, traumaRolls = [], testNumber }) {
+export function buildTraumaContext({ outcome, testNumber }) {
   return {
     outcomeText: `DESORDEM.Trauma.Resultado.${outcome}`,
     outcomeClass: outcome,
     effect: `DESORDEM.Trauma.Efeito.${outcome === 'success' ? 'semEfeito' : 'sofreTrauma'}`,
-    trauma: trauma && {
-      name: `DESORDEM.Traumas.${trauma.key}.Nome`,
-      description: `DESORDEM.Traumas.${trauma.key}.Descricao`,
-    },
-    traumaRolls,
-    hasTraumaRolls: traumaRolls.length > 0,
+    pending: outcome === 'failure',
+    pendingButton: 'DESORDEM.Tabela.Botao.trauma',
     testNumber,
+  };
+}
+
+const TABLE_TEXT = {
+  lesion: { label: 'Lesao', entries: 'Lesoes' },
+  trauma: { label: 'Trauma', entries: 'Traumas' },
+};
+
+/**
+ * Dados do cartão de resultado de uma tabela de lesão ou de trauma já rolada.
+ * @param {Object} opts
+ * @param {'lesion'|'trauma'} opts.kind
+ * @param {{key: string}} opts.entry Entrada sorteada na tabela.
+ * @param {number[]} [opts.rolls] Todos os d20 rolados (inclui repetições por lesão já possuída).
+ * @param {number} opts.testNumber
+ * @param {boolean} [opts.nonLethal]
+ */
+export function buildTableResultContext({
+  kind,
+  entry,
+  rolls = [],
+  testNumber,
+  nonLethal = false,
+}) {
+  const text = TABLE_TEXT[kind];
+  if (!text) throw new RangeError(`Tipo de tabela desconhecido: ${kind}`);
+  return {
+    titleKey: `DESORDEM.Tabela.Titulo.${kind}`,
+    rollsLabelKey: `DESORDEM.${text.label}.RolagensTabela`,
+    nameKey: `DESORDEM.${text.entries}.${entry.key}.Nome`,
+    descriptionKey: `DESORDEM.${text.entries}.${entry.key}.Descricao`,
+    rolls,
+    hasRolls: rolls.length > 0,
+    testNumber,
+    nonLethal: kind === 'lesion' && nonLethal,
   };
 }
