@@ -115,3 +115,16 @@ test('os ajustes de passo dizem se o dado subiu ou desceu', () => {
   );
   assert.deepEqual(subiu.adjustments, [{ name: 'Físico', from: 6, to: 8, direction: 'up' }]);
 });
+
+test('o espaço reservado do dado de pavor vira o SVG (o chat remove SVG vindo do template)', async () => {
+  const { fearSlotMarkup, FEAR_SLOT_ATTR } = await import('../scripts/rolls/fear-chat.js');
+  assert.equal(FEAR_SLOT_ATTR, 'data-dado-pavor');
+  const svg = fearSlotMarkup('6', '2'); // os atributos data-* chegam como texto
+  assert.match(svg, /^<svg/);
+  assert.match(svg, /desordem-dado-pavor--grande/);
+  // lados sem desenho: devolve vazio, e o número de reserva do template fica à mostra
+  assert.equal(fearSlotMarkup('7', '2'), '');
+  assert.equal(fearSlotMarkup(undefined, '2'), '');
+  // só dígitos chegam ao SVG
+  assert.doesNotMatch(fearSlotMarkup('6', '<b>3</b>'), /<b>/);
+});

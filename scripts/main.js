@@ -4,6 +4,7 @@ import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel } from './data/ite
 import PersonagemSheet from './sheets/personagem-sheet.js';
 import { fearDieHelper } from './sheets/dado-pavor.js';
 import { dieFaceHelper } from './rolls/die-face.js';
+import { renderFearDice } from './rolls/fear-chat.js';
 import ItemSheet from './sheets/item-sheet.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
@@ -91,6 +92,7 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderEquipmentCard(message, html);
   renderTestButtons(message, html);
   renderTableCard(message, html);
+  renderFearDice(message, html);
 });
 
 Hooks.once('ready', () => {

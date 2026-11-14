@@ -352,26 +352,12 @@
 
 /* Pavor */
 
-/* Dado devorado pelo pavor: esmaecido, com uma cruz fina e uma pequena aura azul pálida */
+/* Dado devorado pelo pavor: esmaecido e em cinza, com uma pequena aura azul pálida */
 .desordem-dado--devorado .desordem-forma {
-  opacity: 0.5;
+  opacity: 0.6;
   filter: grayscale(0.85)
     drop-shadow(0 0 2px color-mix(in srgb, var(--dn-pavor-brilho) 75%, transparent))
     drop-shadow(0 0 7px color-mix(in srgb, var(--dn-pavor-brilho) 40%, transparent));
-}
-
-.desordem-dado--devorado::after {
-  content: '';
-  position: absolute;
-  inset: 22% 14%;
-  pointer-events: none;
-  background: linear-gradient(
-    to top right,
-    transparent 46%,
-    color-mix(in srgb, var(--dn-pavor-linha) 85%, transparent) 49%,
-    color-mix(in srgb, var(--dn-pavor-linha) 85%, transparent) 51%,
-    transparent 54%
-  );
 }
 
 /* O dado de pavor é o momento dele: maior que os outros, separado e com um brilho próprio */
@@ -386,208 +372,27 @@
     drop-shadow(0 0 10px color-mix(in srgb, var(--dn-pavor-brilho) 30%, transparent));
 }
 
+/* Espaço reservado do dado de pavor: mostra o número até o SVG ser montado (veja fear-chat.js) */
+.desordem-dado-pavor-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2em;
+  font-family: var(--dn-fonte-numeros);
+  font-size: 1.6em;
+  font-weight: 700;
+}
+
+.desordem-dado-pavor-slot .desordem-dado-pavor {
+  font-size: 0.625em; /* o SVG tem tamanho próprio em em: volta ao corpo normal do texto */
+}
+
 /* Tirou 1 no dado de pavor: o efeito termina, então o brilho some */
 .desordem-dado--pavor-fim .desordem-dado-pavor {
   filter: none;
   opacity: 0.6;
 }
 
-.desordem-ficha__dica {
-  margin: 0 0 4px;
-  font-size: 0.85em;
-  opacity: 0.8;
-}
-
-.desordem-ficha__pericias {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px 12px;
-}
-
-.desordem-ficha__pericia {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 4px 2px 2px;
-  border-radius: 6px;
-  background: var(--dn-surface);
-}
-
-.desordem-ficha__rolar {
-  display: flex;
-  flex: 1;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
-  min-width: 0;
-  margin: 0;
-  padding: 3px 8px;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  text-align: left;
-}
-
-.desordem-ficha__pericia-attr {
-  font-size: 0.7em;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.65;
-}
-
-/* Teste oposto */
-
-.desordem-teste--neutro {
-  --desordem-cor: rgba(128, 128, 128, 0.7);
-}
-
-.desordem-oposto {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.desordem-oposto__titulo {
-  margin: 0;
-  border: none;
-}
-
-.desordem-oposto__lado--vencedor .desordem-teste {
-  box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.8);
-}
-
-.desordem-oposto__veredito {
-  margin: 0;
-  font-weight: bold;
-}
-
-/* Dano e lesões */
-
-.desordem-dano__linha,
-.desordem-dano__pv {
-  margin: 0;
-}
-
-.desordem-lesao {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.desordem-lesao__titulo {
-  margin: 0;
-  border: none;
-}
-
-.desordem-lesao__veredito {
-  margin: 0;
-  font-weight: bold;
-}
-
-.desordem-lesao__veredito--falha-critica {
-  color: #b3261e;
-}
-
-.desordem-lesao__efeitos {
-  margin: 0;
-  padding-left: 1.2em;
-}
-
-.desordem-lesao__nome {
-  margin: 0;
-  font-weight: bold;
-}
-
-.desordem-lesao__descricao {
-  margin: 0;
-  font-size: 0.9em;
-}
-
-/* Botão (ou nota) que rola a tabela de lesão ou de trauma pendente no cartão do teste */
-.desordem-lesao__pendente {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.desordem-lesao__botao.is-oculta,
-.desordem-lesao__pendente .desordem-teste__nota.is-oculta {
-  display: none;
-}
-
-/* Janela do d20 da tabela */
-.desordem-tabela-janela {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-}
-
-.desordem-tabela-janela__dados {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  padding: 12px 0;
-}
-
-.desordem-tabela-janela__manual {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  font-size: 0.9em;
-}
-
-.desordem-tabela-janela .desordem-forma.is-rolando {
-  animation: desordem-tabela-gira 0.45s linear infinite;
-}
-
-@keyframes desordem-tabela-gira {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .desordem-tabela-janela .desordem-forma.is-rolando {
-    animation: none;
-  }
-}
-
-.desordem-ficha__estado,
-.desordem-ficha__lesoes {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 12px;
-  margin-bottom: 4px;
-}
-
-.desordem-ficha__lesao {
-  padding: 0 6px;
-  border: 1px solid rgba(128, 128, 128, 0.7);
-  border-radius: 4px;
-}
-
-.desordem-ficha__remover {
-  width: auto;
-  height: auto;
-  margin: 0 0 0 4px;
-  padding: 0 4px;
-  line-height: 1.2;
-}
-
-/* Pavor */
-
-.desordem-dado--devorado {
-  opacity: 0.35;
-  text-decoration: line-through;
-}
 
 .desordem-ficha__dica {
   font-size: 0.85em;

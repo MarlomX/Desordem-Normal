@@ -24,7 +24,7 @@
     {{/each}}
     {{#if hasFear}}
     <li class="desordem-dado desordem-dado--pavor{{#if fear.ended}} desordem-dado--pavor-fim{{/if}}">
-      {{dadoPavor fear.sides fear.value "grande"}}
+      <span class="desordem-dado-pavor-slot" data-dado-pavor data-lados="{{fear.sides}}" data-valor="{{fear.value}}">{{fear.value}}</span>
     </li>
     {{/if}}
   </ol>
