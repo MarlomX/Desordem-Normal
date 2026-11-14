@@ -15,6 +15,11 @@
     <input type="number" name="system.cena.testesLesao" value="{{system.cena.testesLesao}}" min="0" {{#unless editable}}disabled{{/unless}}>
   </label>
 
+  <label class="desordem-ficha__campo">
+    <span>{{localize "DESORDEM.Ficha.PrimeirosSocorrosCena"}}</span>
+    <input type="number" name="system.cena.primeirosSocorros" value="{{system.cena.primeirosSocorros}}" min="0" {{#unless editable}}disabled{{/unless}}>
+  </label>
+
 </section>
 <section class="desordem-ficha__secao desordem-ficha__medo">
   <h3><i class="fa-solid fa-ghost" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Medo"}}</h3>

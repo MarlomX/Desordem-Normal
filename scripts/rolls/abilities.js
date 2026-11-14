@@ -163,7 +163,10 @@ export function sceneReset(state) {
     'system.pv.value': state.pv === 0 ? 1 : state.pv,
     'system.estado.contusao': false,
     'system.estado.estupor': false,
+    // Com o PV de volta (1 PV a quem estava em 0), o personagem deixa de estar moribundo
+    'system.estado.moribundo': false,
     'system.cena.testesLesao': 0,
+    'system.cena.primeirosSocorros': 0,
     'system.cena.testesTrauma': 0,
     'system.cena.curados': [],
     'system.cena.animalFerido': false,

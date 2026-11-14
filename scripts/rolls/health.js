@@ -95,7 +95,8 @@ export async function drawLesion(owned, nonLethal) {
  * @param {{entry: object, rolls: Roll[]}} drawn Retorno de `drawLesion`.
  */
 export async function applyLesionDraw(actor, pending, drawn) {
-  const state = applyLesion(healthState(actor), drawn.entry);
+  const before = healthState(actor);
+  const state = applyLesion(before, drawn.entry);
   await actor.update(healthUpdate(state));
   const context = buildTableResultContext({
     kind: 'lesion',
@@ -103,6 +104,7 @@ export async function applyLesionDraw(actor, pending, drawn) {
     rolls: drawn.rolls.map((roll) => roll.total),
     testNumber: pending.testNumber,
     nonLethal: pending.nonLethal,
+    recoveredDying: before.moribundo && !state.moribundo,
   });
   await postMessage({
     actor,

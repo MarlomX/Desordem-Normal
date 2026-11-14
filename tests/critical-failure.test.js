@@ -116,3 +116,19 @@ test('o cartão de resultado do efeito traz detalhe, aviso de zero e marca de es
   const texto = buildTableResultContext({ kind: 'disaster', entry: lookupDisaster(1) });
   assert.deepEqual([texto.detailKey, texto.zeroKey], [null, null]);
 });
+
+test('o cartão de resultado avisa quando a lesão tirou o personagem do moribundo', () => {
+  const ctx = buildTableResultContext({
+    kind: 'lesion',
+    entry: { key: 'semOlho' },
+    rolls: [11],
+    testNumber: 1,
+    recoveredDying: true,
+  });
+  assert.equal(ctx.recoveredDying, true);
+  assert.equal(
+    buildTableResultContext({ kind: 'lesion', entry: { key: 'semOlho' }, testNumber: 1 })
+      .recoveredDying,
+    false,
+  );
+});

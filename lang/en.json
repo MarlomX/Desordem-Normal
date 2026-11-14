@@ -104,6 +104,7 @@
       "Saude": "Health",
       "Dano": "Damage",
       "TestesLesaoCena": "Injury tests this scene",
+      "PrimeirosSocorrosCena": "First aid tests this scene",
       "Lesoes": "Injuries",
       "SemLesoes": "No injuries",
       "RemoverLesao": "Remove injury",
@@ -278,7 +279,8 @@
         "inconscienteMoribundo": "Becomes unconscious and dying.",
         "sofreLesao": "Suffers an injury.",
         "morre": "Dies."
-      }
+      },
+      "SaiuMoribundo": "You are no longer dying."
     },
     "Lesoes": {
       "morteSubita": {

@@ -151,6 +151,7 @@ const DISASTER_ZERO = { pv: 'AvisoLesao', pd: 'AvisoTrauma' };
  * @param {number} [opts.amount] Pontos perdidos (efeitos de PV e PD).
  * @param {boolean} [opts.manual] O mestre escolheu o efeito em vez de rolar.
  * @param {'pv'|'pd'|null} [opts.reachedZero] Recurso que chegou a 0 (só efeitos de PV e PD).
+ * @param {boolean} [opts.recoveredDying] A lesão tirou o personagem do estado moribundo.
  */
 export function buildTableResultContext({
   kind,
@@ -161,6 +162,7 @@ export function buildTableResultContext({
   amount = 0,
   manual = false,
   reachedZero = null,
+  recoveredDying = false,
 }) {
   const text = TABLE_TEXT[kind];
   if (!text) throw new RangeError(`Tipo de tabela desconhecido: ${kind}`);
@@ -177,6 +179,7 @@ export function buildTableResultContext({
     manual,
     detailKey: detail ? `DESORDEM.FalhaCritica.${detail}` : null,
     amount,
+    recoveredDying,
     zeroKey: reachedZero ? `DESORDEM.FalhaCritica.${DISASTER_ZERO[reachedZero]}` : null,
   };
 }

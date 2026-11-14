@@ -166,20 +166,39 @@ test('applyInjuryOutcome não altera o objeto original', () => {
   assert.equal(original.moribundo, false);
 });
 
-test('morte súbita mata; morte lenta cura 1 PV, acorda e marca a morte lenta', () => {
+test('morte súbita mata; morte lenta cura 1 PV, acorda, marca a morte lenta e tira o moribundo', () => {
   assert.equal(applyLesion(base(), lookupLesion(2)).morto, true);
   const s = applyLesion(base({ inconsciente: true, moribundo: true }), lookupLesion(7));
-  assert.deepEqual([s.pv, s.inconsciente, s.moribundo, s.morteLenta], [1, false, true, true]);
+  assert.deepEqual([s.pv, s.inconsciente, s.moribundo, s.morteLenta], [1, false, false, true]);
 });
 
-test('laceração profunda reduz o PV máximo em 2 (acumula); lesão não tira o moribundo', () => {
+test('laceração profunda reduz o PV máximo em 2 (acumula) e tira o moribundo', () => {
   let s = base({ pv: 0, pvMax: 10, moribundo: true });
   s = applyLesion(s, lookupLesion(10));
   s = applyLesion(s, lookupLesion(10));
   assert.deepEqual(
     [s.pvMax, s.pv, s.lesoes, s.moribundo],
-    [6, 0, ['lacearacaoProfunda', 'lacearacaoProfunda'], true],
+    [6, 0, ['lacearacaoProfunda', 'lacearacaoProfunda'], false],
   );
+});
+
+test('qualquer lesão de quem sobrevive tira o moribundo, mas não o inconsciente', () => {
+  const dying = () => base({ pv: 0, inconsciente: true, moribundo: true });
+  for (const roll of [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]) {
+    const s = applyLesion(dying(), lookupLesion(roll));
+    assert.equal(s.moribundo, false, `d20 = ${roll}`);
+    assert.equal(s.morto, false, `d20 = ${roll}`);
+  }
+  // contusão e as lesões permanentes não acordam ninguém
+  assert.equal(applyLesion(dying(), lookupLesion(19)).inconsciente, true);
+  assert.equal(applyLesion(dying(), lookupLesion(11)).inconsciente, true);
+  // quem não estava moribundo continua sem estar
+  assert.equal(applyLesion(base(), lookupLesion(11)).moribundo, false);
+});
+
+test('a morte súbita não mexe no moribundo (o personagem está morto)', () => {
+  const s = applyLesion(base({ moribundo: true }), lookupLesion(1));
+  assert.deepEqual([s.morto, s.moribundo], [true, true]);
 });
 
 test('laceração limita o PV atual ao novo máximo e o máximo não fica negativo', () => {

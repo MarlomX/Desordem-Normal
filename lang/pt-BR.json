@@ -104,6 +104,7 @@
       "Saude": "Saúde",
       "Dano": "Dano",
       "TestesLesaoCena": "Testes de lesão na cena",
+      "PrimeirosSocorrosCena": "Testes de primeiros socorros na cena",
       "Lesoes": "Lesões",
       "SemLesoes": "Nenhuma lesão",
       "RemoverLesao": "Remover lesão",
@@ -278,7 +279,8 @@
         "inconscienteMoribundo": "Fica inconsciente e moribundo.",
         "sofreLesao": "Sofre uma lesão.",
         "morre": "Morre."
-      }
+      },
+      "SaiuMoribundo": "Você deixou de estar moribundo."
     },
     "Lesoes": {
       "morteSubita": {

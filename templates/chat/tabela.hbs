@@ -10,6 +10,8 @@
     {{#if detailKey}}<p class="desordem-teste__nota">{{localize detailKey n=amount}}</p>{{/if}}
   </div>
 
+  {{#if recoveredDying}}<p class="desordem-teste__nota">{{localize "DESORDEM.Lesao.SaiuMoribundo"}}</p>{{/if}}
+
   {{#if zeroKey}}
   <p class="desordem-lesao__veredito desordem-lesao__veredito--falha-critica">{{localize zeroKey}}</p>
   {{/if}}

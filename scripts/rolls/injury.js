@@ -1,8 +1,9 @@
 /**
  * Teste de lesão, tabela de lesões e seus efeitos. Lógica pura, sem dependência do Foundry.
  *
- * Decisão de regras: o playtest não define o "teste de morte". Até a comunidade receber um
- * esclarecimento, ele é tratado como um teste de lesão (mesmo contador de testes na cena).
+ * O "teste de morte" do moribundo (no fim de cada rodada) é um teste de lesão, com o mesmo
+ * contador de testes na cena. Ao rolar na tabela de lesões, quem sobrevive deixa de estar
+ * moribundo (regras 1.2).
  */
 import { resolveTest } from './test.js';
 
@@ -204,14 +205,15 @@ export function applyInjuryOutcome(state, outcome) {
 }
 
 /**
- * Aplica uma lesão sorteada. Não mexe no estado moribundo: ele só termina em sucesso crítico
- * no teste de lesão ou ao fim da cena.
+ * Aplica uma lesão sorteada. Quem sobrevive a ela deixa de estar moribundo (os demais estados,
+ * como inconsciente, não mudam, exceto a morte lenta, que também acorda). Morte súbita mata.
  * @param {HealthState} state
  * @param {(typeof LESIONS)[number]} entry
  */
 export function applyLesion(state, entry) {
   const next = { ...state, lesoes: [...state.lesoes] };
   if (entry.kind === 'death') return { ...next, morto: true };
+  next.moribundo = false;
   if (entry.kind === 'slowDeath')
     return { ...heal(next, 1), inconsciente: false, morteLenta: true };
   if (entry.kind === 'adrenaline') return heal(next, 1);

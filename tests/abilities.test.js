@@ -142,6 +142,8 @@ test('sceneReset zera a cena, esvazia recursos e dá 1 PV a quem está com 0', (
   assert.equal(changes['system.estado.contusao'], false);
   assert.equal(changes['system.cena.testesLesao'], 0);
   assert.equal(changes['system.cena.testesTrauma'], 0);
+  assert.equal(changes['system.cena.primeirosSocorros'], 0);
+  assert.equal(changes['system.estado.moribundo'], false);
   assert.deepEqual(changes['system.cena.curados'], []);
   assert.equal(changes['system.recursos.impeto'], 0);
   assert.equal(changes['system.recursos.analise'], 0);
