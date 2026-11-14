@@ -9,23 +9,28 @@
  * "rolling" é a reserva feita no clique, para dois cliques não rolarem a mesma tabela duas vezes.
  */
 
-export const TABLE_KINDS = Object.freeze(['lesion', 'trauma']);
+/** Dado de cada tabela: lesão e trauma usam d20; o efeito de falha crítica usa d8. */
+const TABLE_DICE = Object.freeze({ lesion: 20, trauma: 20, disaster: 8 });
+
+export const TABLE_KINDS = Object.freeze(Object.keys(TABLE_DICE));
+
+/** Faces do dado da tabela de um tipo (20 ou 8). */
+export const tableDie = (kind) => TABLE_DICE[kind];
 
 /** Depois deste tempo, uma reserva "rolling" é considerada abandonada (navegador fechado etc.). */
 export const CLAIM_TIMEOUT_MS = 30_000;
 
 const MAX_ROLLS_STORED = 40;
-const TABLE_DIE = 20;
 
 /**
  * Cria o estado pendente guardado no cartão.
  * @param {Object} opts
- * @param {'lesion'|'trauma'} opts.kind
+ * @param {'lesion'|'trauma'|'disaster'} opts.kind `disaster` é o efeito de falha crítica de um teste.
  * @param {boolean} [opts.nonLethal=false] Só vale para lesão: a tabela rola 2d20 e fica o melhor.
- * @param {number} opts.testNumber Número do teste na cena (para o título do resultado).
+ * @param {number} [opts.testNumber] Número do teste na cena (só lesão e trauma; vira o #N do título).
  * @param {string} opts.actorUuid UUID do personagem que sofrerá o efeito.
  */
-export function createPending({ kind, nonLethal = false, testNumber, actorUuid }) {
+export function createPending({ kind, nonLethal = false, testNumber = null, actorUuid }) {
   if (!TABLE_KINDS.includes(kind)) throw new RangeError(`Tipo de tabela desconhecido: ${kind}`);
   return {
     kind,
@@ -48,13 +53,18 @@ const isStale = (pending, now) =>
 /** A tabela ainda pode ser rolada (pendente, ou com a reserva abandonada)? */
 export const isClaimable = (pending, now) => pending.status === 'pending' || isStale(pending, now);
 
-/** Aceita só um resultado bem formado: { key: texto curto, rolls: d20 inteiros }. */
-function cleanResult(result) {
+/**
+ * Aceita só um resultado bem formado: { key: texto curto, rolls: números do dado da tabela }.
+ * No efeito de falha crítica `rolls` pode vir vazio (o mestre escolheu o efeito sem rolar).
+ */
+function cleanResult(kind, result) {
   if (!result || typeof result.key !== 'string' || result.key.length === 0) return null;
   if (result.key.length > 60 || !Array.isArray(result.rolls)) return null;
-  if (result.rolls.length === 0 || result.rolls.length > MAX_ROLLS_STORED) return null;
+  const minRolls = kind === 'disaster' ? 0 : 1;
+  if (result.rolls.length < minRolls || result.rolls.length > MAX_ROLLS_STORED) return null;
+  const die = tableDie(kind);
   const valid = result.rolls.every(
-    (value) => Number.isInteger(value) && value >= 1 && value <= TABLE_DIE,
+    (value) => Number.isInteger(value) && value >= 1 && value <= die,
   );
   return valid ? { key: result.key, rolls: [...result.rolls] } : null;
 }
@@ -73,7 +83,7 @@ export function nextTableState(pending, request, now) {
     case 'rolling':
       return isClaimable(pending, now) ? { status: 'rolling', claimedAt: now, result: null } : null;
     case 'rolled': {
-      const result = cleanResult(request.result);
+      const result = cleanResult(pending.kind, request.result);
       return pending.status === 'rolling' && result ? { status: 'rolled', result } : null;
     }
     case 'pending':

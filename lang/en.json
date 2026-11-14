@@ -391,11 +391,13 @@
     "Tabela": {
       "Titulo": {
         "lesion": "Injury table",
-        "trauma": "Trauma table"
+        "trauma": "Trauma table",
+        "disaster": "Critical failure effect"
       },
       "Botao": {
         "lesion": "Roll injury table",
-        "trauma": "Roll trauma table"
+        "trauma": "Roll trauma table",
+        "disaster": "Roll critical failure effect"
       },
       "Nota": {
         "rolled": "Table rolled",
@@ -406,6 +408,48 @@
       "Erro": {
         "JaRolada": "This table is already being rolled or was already rolled.",
         "Rolar": "Could not roll the table. Try again."
+      },
+      "Manual": "Choose the effect instead of rolling (GM)",
+      "ManualRolar": "Roll normally"
+    },
+    "FalhaCritica": {
+      "RolagensTabela": "d8 on the table",
+      "EscolhidoMestre": "Effect chosen by the GM, no roll.",
+      "PerdeuPV": "Lost {n} HP.",
+      "PerdeuPD": "Lost {n} DP.",
+      "AvisoLesao": "HP reached 0: make the injury test with the button on the sheet.",
+      "AvisoTrauma": "DP reached 0: make the trauma test with the button on the sheet.",
+      "vexame": {
+        "Nome": "Embarrassment",
+        "Descricao": "The failure becomes an awkward moment: the player describes the scene. No rules effect."
+      },
+      "machucado": {
+        "Nome": "Hurt",
+        "Descricao": "You hurt yourself trying: Physical drops one step until the end of the scene."
+      },
+      "desatencao": {
+        "Nome": "Distracted",
+        "Descricao": "Your mind slips for a moment: Mind drops one step until the end of the scene."
+      },
+      "irritacao": {
+        "Nome": "Irritated",
+        "Descricao": "The failure gets under your skin: Emotion drops one step until the end of the scene."
+      },
+      "acidente": {
+        "Nome": "Accident",
+        "Descricao": "Something goes wrong and you get hurt: lose 1d4 HP."
+      },
+      "frustracao": {
+        "Nome": "Frustration",
+        "Descricao": "The setback shakes your spirit: lose 1d4 DP."
+      },
+      "perda": {
+        "Nome": "Loss",
+        "Descricao": "An item you carry, or a purchase slot, is lost: broken, forgotten or stolen. The GM decides which."
+      },
+      "nenhum": {
+        "Nome": "No extra effect",
+        "Descricao": "Just the ordinary failure, with no additional consequence."
       }
     },
     "Relacao": {

@@ -6,9 +6,10 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { render } from './chat.js';
-import { tableDiceCount, nextTableState, tableView } from './pending-table.js';
+import { tableDiceCount, tableDie, nextTableState, tableView } from './pending-table.js';
 import { drawLesion, applyLesionDraw } from './health.js';
 import { drawTrauma, applyTraumaDraw } from './mind.js';
+import { drawDisaster, applyDisasterDraw, disasterChoices } from './critical-chat.js';
 
 const TEMPLATE_JANELA = `systems/${SYSTEM_ID}/templates/dialog/tabela.hbs`;
 const SOCKET = `system.${SYSTEM_ID}`;
@@ -67,16 +68,20 @@ async function requestTableState(message, request) {
 }
 
 /**
- * Faz os números do d20 "girarem" e para no resultado já sorteado. É só efeito visual: o valor
+ * Faz os números do dado "girarem" e para no resultado já sorteado. É só efeito visual: o valor
  * verdadeiro já foi rolado pelo Foundry antes de chamar esta função.
+ * @param {HTMLElement} root Janela aberta.
+ * @param {number[]} finals Valores finais, um por dado.
+ * @param {number} sides Faces do dado (limita os números que giram).
+ * @param {boolean} [tumble=true] Falso quando o mestre escolheu o efeito: sem giro.
  */
-async function suspense(root, finals) {
+async function suspense(root, finals, sides, tumble = true) {
   const values = [...root.querySelectorAll('[data-valor]')];
   const dice = [...root.querySelectorAll('[data-dado]')];
   for (const die of dice) die.classList.add('is-rolando');
-  const end = Date.now() + TUMBLE_MS;
+  const end = Date.now() + (tumble ? TUMBLE_MS : 0);
   while (Date.now() < end) {
-    for (const el of values) el.textContent = String(1 + Math.floor(Math.random() * 20));
+    for (const el of values) el.textContent = String(1 + Math.floor(Math.random() * sides));
     await sleep(TUMBLE_STEP_MS);
   }
   values.forEach((el, i) => {
@@ -87,16 +92,28 @@ async function suspense(root, finals) {
 }
 
 /**
- * Abre a janela do d20. Rolar reserva o cartão, sorteia na tabela e mostra o número por um
+ * Abre a janela do dado da tabela (d20, ou d8 no efeito de falha crítica). Rolar reserva o cartão, sorteia na tabela e mostra o número por um
  * instante antes de fechar; Cancelar (ou fechar a janela antes de rolar) não muda nada.
  * @returns {Promise<{entry: object, rolls: Roll[]}|null>} O sorteio, ou null se nada foi rolado.
  */
 async function askAndDraw(message, pending, actor) {
   const count = tableDiceCount(pending);
+  const sides = tableDie(pending.kind);
+  // Só o mestre pode escolher o efeito de falha crítica em vez de rolar (se o sorteado não fizer sentido)
+  const manual =
+    pending.kind === 'disaster' && game.user.isGM
+      ? {
+          label: t('DESORDEM.Tabela.Manual'),
+          rollOption: t('DESORDEM.Tabela.ManualRolar'),
+          options: disasterChoices(),
+        }
+      : null;
   const content = await render(TEMPLATE_JANELA, {
     titulo: t(`DESORDEM.Tabela.Titulo.${pending.kind}`),
+    sides,
     dice: Array.from({ length: count }, (_, i) => i),
     aviso: count > 1 ? t('DESORDEM.Tabela.AvisoNaoLetal') : '',
+    manual,
   });
 
   // Fica numa variável de fora: se a janela for fechada no X durante o suspense, o sorteio já
@@ -120,16 +137,21 @@ async function askAndDraw(message, pending, actor) {
             ui.notifications.warn(t('DESORDEM.Tabela.Erro.JaRolada'));
             return { confirmed: false };
           }
+          const chosen = dialog.element.querySelector('[name="manual"]')?.value;
+          const manualValue = chosen ? Number(chosen) : null;
           try {
-            drawn =
-              pending.kind === 'lesion'
-                ? await drawLesion([...actor.system.lesoes], pending.nonLethal)
-                : await drawTrauma([...actor.system.traumas]);
+            if (pending.kind === 'lesion') {
+              drawn = await drawLesion([...actor.system.lesoes], pending.nonLethal);
+            } else if (pending.kind === 'trauma') {
+              drawn = await drawTrauma([...actor.system.traumas]);
+            } else {
+              drawn = await drawDisaster(manualValue);
+            }
           } catch (error) {
             await requestTableState(message, { status: 'pending' }); // desfaz a reserva
             throw error;
           }
-          await suspense(dialog.element, drawn.shown);
+          await suspense(dialog.element, drawn.shown, sides, !drawn.manual);
           return { confirmed: true };
         },
       },
@@ -150,7 +172,8 @@ async function rollTableFromMessage(message) {
     const drawn = await askAndDraw(message, pending, actor);
     if (!drawn) return;
     if (pending.kind === 'lesion') await applyLesionDraw(actor, pending, drawn);
-    else await applyTraumaDraw(actor, pending, drawn);
+    else if (pending.kind === 'trauma') await applyTraumaDraw(actor, pending, drawn);
+    else await applyDisasterDraw(actor, pending, drawn);
     await requestTableState(message, {
       status: 'rolled',
       result: { key: drawn.entry.key, rolls: drawn.rolls.map((roll) => roll.total) },
@@ -163,11 +186,36 @@ async function rollTableFromMessage(message) {
   }
 }
 
+/**
+ * Caixa do botão da tabela. Os cartões de lesão e de trauma já a trazem no template; o cartão de
+ * um teste comum não, então ela é criada aqui quando há um efeito de falha crítica pendente.
+ */
+function tableBox(message, html, pending) {
+  const found = html.querySelector('[data-desordem-tabela]');
+  const container = html.querySelector('.message-content');
+  if (found || pending.kind !== 'disaster' || !container) return found;
+  const doc = html.ownerDocument;
+  const box = doc.createElement('div');
+  box.className = 'desordem-lesao__pendente';
+  box.dataset.desordemTabela = '';
+  const button = doc.createElement('button');
+  button.type = 'button';
+  button.className = 'desordem-lesao__botao';
+  button.textContent = t('DESORDEM.Tabela.Botao.disaster');
+  const note = doc.createElement('p');
+  note.className = 'desordem-teste__nota is-oculta';
+  note.dataset.desordemTabelaNota = '';
+  box.append(button, note);
+  container.append(box);
+  return box;
+}
+
 /** Hook renderChatMessageHTML: mostra o botão de rolar a tabela a quem pode, ou a nota de estado. */
 export function renderTableCard(message, html) {
   const pending = tableData(message);
-  const box = html.querySelector('[data-desordem-tabela]');
-  if (!pending || !box) return;
+  if (!pending) return;
+  const box = tableBox(message, html, pending);
+  if (!box) return;
   const button = box.querySelector('button');
   const note = box.querySelector('[data-desordem-tabela-nota]');
 

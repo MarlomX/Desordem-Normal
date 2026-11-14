@@ -134,26 +134,37 @@ export function buildTraumaContext({ outcome, testNumber }) {
 const TABLE_TEXT = {
   lesion: { label: 'Lesao', entries: 'Lesoes' },
   trauma: { label: 'Trauma', entries: 'Traumas' },
+  disaster: { label: 'FalhaCritica', entries: 'FalhaCritica' },
 };
 
+const DISASTER_DETAIL = { hp: 'PerdeuPV', pd: 'PerdeuPD' };
+const DISASTER_ZERO = { pv: 'AvisoLesao', pd: 'AvisoTrauma' };
+
 /**
- * Dados do cartão de resultado de uma tabela de lesão ou de trauma já rolada.
+ * Dados do cartão de resultado de uma tabela de lesão, de trauma ou de efeito de falha crítica.
  * @param {Object} opts
- * @param {'lesion'|'trauma'} opts.kind
- * @param {{key: string}} opts.entry Entrada sorteada na tabela.
- * @param {number[]} [opts.rolls] Todos os d20 rolados (inclui repetições por lesão já possuída).
- * @param {number} opts.testNumber
+ * @param {'lesion'|'trauma'|'disaster'} opts.kind
+ * @param {{key: string, kind?: string}} opts.entry Entrada sorteada na tabela.
+ * @param {number[]} [opts.rolls] Dados da tabela rolados (inclui repetições por lesão já possuída).
+ * @param {number} [opts.testNumber] Número do teste na cena (lesão e trauma).
  * @param {boolean} [opts.nonLethal]
+ * @param {number} [opts.amount] Pontos perdidos (efeitos de PV e PD).
+ * @param {boolean} [opts.manual] O mestre escolheu o efeito em vez de rolar.
+ * @param {'pv'|'pd'|null} [opts.reachedZero] Recurso que chegou a 0 (só efeitos de PV e PD).
  */
 export function buildTableResultContext({
   kind,
   entry,
   rolls = [],
-  testNumber,
+  testNumber = null,
   nonLethal = false,
+  amount = 0,
+  manual = false,
+  reachedZero = null,
 }) {
   const text = TABLE_TEXT[kind];
   if (!text) throw new RangeError(`Tipo de tabela desconhecido: ${kind}`);
+  const detail = kind === 'disaster' ? DISASTER_DETAIL[entry.kind] : undefined;
   return {
     titleKey: `DESORDEM.Tabela.Titulo.${kind}`,
     rollsLabelKey: `DESORDEM.${text.label}.RolagensTabela`,
@@ -163,5 +174,9 @@ export function buildTableResultContext({
     hasRolls: rolls.length > 0,
     testNumber,
     nonLethal: kind === 'lesion' && nonLethal,
+    manual,
+    detailKey: detail ? `DESORDEM.FalhaCritica.${detail}` : null,
+    amount,
+    zeroKey: reachedZero ? `DESORDEM.FalhaCritica.${DISASTER_ZERO[reachedZero]}` : null,
   };
 }

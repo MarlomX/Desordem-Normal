@@ -21,6 +21,7 @@ import {
   resolveWithValues,
 } from './abilities.js';
 import { resolveFearOptions } from './fear.js';
+import { createPending } from './pending-table.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
 const TEMPLATE_OPOSTO = `systems/${SYSTEM_ID}/templates/chat/oposto.hbs`;
@@ -229,6 +230,10 @@ export async function rollTest({
   });
   // O cartão guarda o teste para as habilidades que mudam os dados depois da rolagem
   const flags = actor ? { teste: { plan, display, sides, values, notes: [], used: {} } } : undefined;
+  // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js)
+  if (flags && result.criticalFailure) {
+    flags.tabela = createPending({ kind: 'disaster', actorUuid: actor.uuid });
+  }
   await postMessage({ actor, content: card, rolls, flags });
   return result;
 }

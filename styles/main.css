@@ -291,6 +291,14 @@
   padding: 12px 0;
 }
 
+.desordem-tabela-janela__manual {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  font-size: 0.9em;
+}
+
 .desordem-tabela-janela .desordem-forma.is-rolando {
   animation: desordem-tabela-gira 0.45s linear infinite;
 }

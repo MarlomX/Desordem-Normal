@@ -4,6 +4,7 @@ import {
   CLAIM_TIMEOUT_MS,
   createPending,
   tableDiceCount,
+  tableDie,
   isClaimable,
   nextTableState,
   tableView,
@@ -166,5 +167,30 @@ test('o cartão de resultado monta as chaves de idioma de lesão e de trauma', (
   assert.throws(
     () => buildTableResultContext({ kind: 'x', entry: { key: 'a' }, testNumber: 1 }),
     RangeError,
+  );
+});
+
+test('o efeito de falha crítica usa d8 e aceita resultado sem rolagem (escolha do mestre)', () => {
+  const disaster = createPending({ kind: 'disaster', actorUuid: 'Actor.a' });
+  assert.equal(disaster.testNumber, null);
+  assert.deepEqual([tableDie('lesion'), tableDie('trauma'), tableDie('disaster')], [20, 20, 8]);
+  assert.equal(tableDiceCount(disaster), 1);
+
+  const rolling = { ...disaster, status: 'rolling', claimedAt: 1 };
+  const ok = (rolls) =>
+    nextTableState(rolling, { status: 'rolled', result: { key: 'a', rolls } }, 2);
+  assert.deepEqual(ok([5, 3]).result.rolls, [5, 3]); // d8 e o d4 da perda
+  assert.deepEqual(ok([]).result.rolls, []); // escolhido pelo mestre
+  assert.equal(ok([9]), null);
+
+  // lesão continua exigindo ao menos uma rolagem de até 20
+  const lesao = { ...lesion(), status: 'rolling', claimedAt: 1 };
+  assert.equal(
+    nextTableState(lesao, { status: 'rolled', result: { key: 'a', rolls: [] } }, 2),
+    null,
+  );
+  assert.notEqual(
+    nextTableState(lesao, { status: 'rolled', result: { key: 'a', rolls: [20] } }, 2),
+    null,
   );
 });

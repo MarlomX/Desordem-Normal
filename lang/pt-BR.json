@@ -391,11 +391,13 @@
     "Tabela": {
       "Titulo": {
         "lesion": "Tabela de lesões",
-        "trauma": "Tabela de traumas"
+        "trauma": "Tabela de traumas",
+        "disaster": "Efeito de falha crítica"
       },
       "Botao": {
         "lesion": "Rolar tabela de lesão",
-        "trauma": "Rolar tabela de trauma"
+        "trauma": "Rolar tabela de trauma",
+        "disaster": "Rolar efeito de falha crítica"
       },
       "Nota": {
         "rolled": "Tabela rolada",
@@ -406,6 +408,48 @@
       "Erro": {
         "JaRolada": "Esta tabela já está sendo rolada ou foi rolada.",
         "Rolar": "Não foi possível rolar a tabela. Tente de novo."
+      },
+      "Manual": "Escolher o efeito em vez de rolar (mestre)",
+      "ManualRolar": "Rolar normalmente"
+    },
+    "FalhaCritica": {
+      "RolagensTabela": "d8 na tabela",
+      "EscolhidoMestre": "Efeito escolhido pelo mestre, sem rolagem.",
+      "PerdeuPV": "Perdeu {n} PV.",
+      "PerdeuPD": "Perdeu {n} PD.",
+      "AvisoLesao": "O PV chegou a 0: faça o teste de lesão pelo botão da ficha.",
+      "AvisoTrauma": "O PD chegou a 0: faça o teste de trauma pelo botão da ficha.",
+      "vexame": {
+        "Nome": "Vexame",
+        "Descricao": "A falha vira um momento constrangedor: o jogador descreve a cena. Não há efeito de regras."
+      },
+      "machucado": {
+        "Nome": "Machucado",
+        "Descricao": "Você se fere na tentativa: o Físico cai um passo até o fim da cena."
+      },
+      "desatencao": {
+        "Nome": "Desatenção",
+        "Descricao": "Sua cabeça escapa por um instante: a Mente cai um passo até o fim da cena."
+      },
+      "irritacao": {
+        "Nome": "Irritação",
+        "Descricao": "O fracasso tira você do sério: a Emoção cai um passo até o fim da cena."
+      },
+      "acidente": {
+        "Nome": "Acidente",
+        "Descricao": "Algo dá errado e você se machuca: perde 1d4 PV."
+      },
+      "frustracao": {
+        "Nome": "Frustração",
+        "Descricao": "O revés abala seu ânimo: perde 1d4 PD."
+      },
+      "perda": {
+        "Nome": "Perda",
+        "Descricao": "Um item que você carrega, ou uma vaga de compra, se perde: quebra, é esquecido ou é roubado. O mestre decide qual."
+      },
+      "nenhum": {
+        "Nome": "Sem efeito extra",
+        "Descricao": "Só a falha comum, sem consequência adicional."
       }
     },
     "Relacao": {

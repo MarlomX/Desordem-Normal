@@ -15,6 +15,8 @@ import {
   replaceDie,
   sceneReset,
 } from './abilities.js';
+import { createPending } from './pending-table.js';
+import { disasterSync } from './critical-failure.js';
 
 const TEMPLATE_HABILIDADE = `systems/${SYSTEM_ID}/templates/chat/habilidade.hbs`;
 const TEMPLATE_CURA = `systems/${SYSTEM_ID}/templates/chat/cura.hbs`;
@@ -202,13 +204,31 @@ async function applyRewrite(message, values, patch = {}) {
   if (!data) return;
   const notes = [...(data.notes ?? []), ...(patch.notes ?? [])];
   const used = { ...data.used, ...patch.used };
-  const { card } = await rebuildTest({ plan: data.plan, display: data.display, values, notes });
-  await message.update({
+  const { result, card } = await rebuildTest({
+    plan: data.plan,
+    display: data.display,
+    values,
+    notes,
+  });
+  const update = {
     content: card,
     [`flags.${SYSTEM_ID}.teste.values`]: values,
     [`flags.${SYSTEM_ID}.teste.notes`]: notes,
     [`flags.${SYSTEM_ID}.teste.used`]: used,
-  });
+  };
+  // A análise e o repetir dado podem criar ou desfazer uma falha crítica
+  const sync = disasterSync(message.flags?.[SYSTEM_ID]?.tabela, result.criticalFailure);
+  if (sync === 'create') {
+    const actor = ChatMessage.getSpeakerActor(message.speaker);
+    if (actor)
+      update[`flags.${SYSTEM_ID}.tabela`] = createPending({
+        kind: 'disaster',
+        actorUuid: actor.uuid,
+      });
+  } else if (sync === 'remove') {
+    update[`flags.${SYSTEM_ID}.-=tabela`] = null;
+  }
+  await message.update(update);
 }
 
 /** Aplica a alteração direto, ou pede ao mestre ativo (socket) se o usuário não puder editar. */
