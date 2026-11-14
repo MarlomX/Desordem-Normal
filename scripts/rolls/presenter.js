@@ -3,6 +3,8 @@
  * Função pura (sem Foundry). A tradução dos textos acontece no template, via chaves de idioma.
  */
 
+import { CRIT_MIN_VALUE } from './test.js';
+
 const OUTCOMES = {
   Sucesso: 'sucesso',
   Falha: 'falha',
@@ -33,21 +35,34 @@ export function buildChatContext(
   const outcome = outcomeOf(result);
   const neutral = !showDt && !result.criticalSuccess && !result.criticalFailure;
 
+  // `direction` diz se o passo subiu ou desceu o dado (o cartão pinta a seta de azul ou vermelho)
   const adjustments = [];
   const { attribute, skill } = result.base;
   if (attribute.original !== attribute.final) {
-    adjustments.push({ name: attrLabel, from: attribute.original, to: attribute.final });
+    adjustments.push(stepAdjustment(attrLabel, attribute));
   }
   if (skill.original !== skill.final) {
-    adjustments.push({ name: skillLabel, from: skill.original, to: skill.final });
+    adjustments.push(stepAdjustment(skillLabel, skill));
   }
 
+  // Marcas de destaque: os dados que formam o crítico (valores iguais, 6 ou mais, não devorados
+  // pelo pavor) e os dados de uma falha crítica (todos em 1)
+  const counts = new Map();
+  for (const { value, annulled } of result.dice) {
+    if (!annulled) counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
   const dice = result.dice.map(({ sides, value, counted, source, annulled }) => ({
     sides,
     value,
     counted,
     source,
     annulled: Boolean(annulled),
+    critical:
+      Boolean(result.criticalSuccess) &&
+      !annulled &&
+      value >= CRIT_MIN_VALUE &&
+      counts.get(value) >= 2,
+    fumble: Boolean(result.criticalFailure) && !result.devouredAll && !annulled && value === 1,
   }));
 
   return {
@@ -74,6 +89,11 @@ export function buildChatContext(
     adjustments,
     discardedList: result.discardedExtras.map((sides) => `d${sides}`).join(', '),
   };
+}
+
+/** Ajuste de passo de um dado (atributo ou perícia): de qual dado para qual, e a direção. */
+function stepAdjustment(name, { original, final }) {
+  return { name, from: original, to: final, direction: final > original ? 'up' : 'down' };
 }
 
 /**

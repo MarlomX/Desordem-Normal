@@ -12,17 +12,21 @@
 
   {{#if adjustments.length}}
   <p class="desordem-teste__ajustes">
-    {{#each adjustments}}<span>{{name}}: d{{from}} → d{{to}}</span>{{/each}}
+    {{#each adjustments}}<span class="desordem-teste__passo">{{name}}: {{dadoFace from from "mini"}} → {{dadoFace to to "mini" direction}}</span>{{/each}}
   </p>
   {{/if}}
 
   <ol class="desordem-teste__dados">
     {{#each dice}}
-    <li class="desordem-dado{{#if annulled}} desordem-dado--devorado{{else}}{{#unless counted}} desordem-dado--ignorado{{/unless}}{{/if}}">
-      <span class="desordem-dado__tipo">d{{sides}}</span>
-      <span class="desordem-dado__valor">{{value}}</span>
+    <li class="desordem-dado{{#if annulled}} desordem-dado--devorado{{else}}{{#unless counted}} desordem-dado--ignorado{{/unless}}{{/if}}{{#if critical}} desordem-dado--critico{{/if}}{{#if fumble}} desordem-dado--fumble{{/if}}">
+      {{dadoFace sides value "grande"}}
     </li>
     {{/each}}
+    {{#if hasFear}}
+    <li class="desordem-dado desordem-dado--pavor{{#if fear.ended}} desordem-dado--pavor-fim{{/if}}">
+      {{dadoPavor fear.sides fear.value "grande"}}
+    </li>
+    {{/if}}
   </ol>
 
   {{#if hasFear}}

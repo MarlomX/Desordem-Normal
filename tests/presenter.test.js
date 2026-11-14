@@ -54,7 +54,7 @@ test('dados ignorados são marcados e listados na exibição', () => {
 test('ajustes de passo aparecem só quando o dado mudou', () => {
   const r = run({ attrDie: 8, skillDie: 8, stepMods: [{ target: 'skill', steps: -1 }] }, [3, 3]);
   const ctx = buildChatContext(r, { attrLabel: 'Físico', skillLabel: 'Luta' });
-  assert.deepEqual(ctx.adjustments, [{ name: 'Luta', from: 8, to: 6 }]);
+  assert.deepEqual(ctx.adjustments, [{ name: 'Luta', from: 8, to: 6, direction: 'down' }]);
 });
 
 test('dados extras descartados viram uma lista de texto', () => {

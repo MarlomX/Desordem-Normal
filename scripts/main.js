@@ -3,6 +3,7 @@ import PersonagemModel from './data/personagem.js';
 import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel } from './data/items.js';
 import PersonagemSheet from './sheets/personagem-sheet.js';
 import { fearDieHelper } from './sheets/dado-pavor.js';
+import { dieFaceHelper } from './rolls/die-face.js';
 import ItemSheet from './sheets/item-sheet.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
@@ -33,6 +34,14 @@ Hooks.once('init', () => {
   Handlebars.registerHelper(
     'dadoPavor',
     (sides, value, size) => new Handlebars.SafeString(fearDieHelper(sides, value, size)),
+  );
+
+  // Helper de template: {{dadoFace lados valor tamanho passo}} desenha a face de um dado nos cartões
+  // do chat (veja scripts/rolls/die-face.js). Só dígitos passam para o HTML.
+  Handlebars.registerHelper(
+    'dadoFace',
+    (sides, value, size, step) =>
+      new Handlebars.SafeString(dieFaceHelper(sides, value, size, step)),
   );
 
   CONFIG.DESORDEM = { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS };
