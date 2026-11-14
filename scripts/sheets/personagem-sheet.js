@@ -1,8 +1,8 @@
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import { rollSkill, rollAptitude, rollCraft } from '../rolls/chat.js';
-import { damageActor, rollInjuryTest } from '../rolls/health.js';
+import { rollInjuryTest } from '../rolls/health.js';
 import { injuryDT, injuryTestOptions } from '../rolls/injury.js';
-import { emotionalDamage, rollTraumaTest } from '../rolls/mind.js';
+import { rollTraumaTest } from '../rolls/mind.js';
 import { traumaDT } from '../rolls/emotional.js';
 import { invokeRelation } from '../rolls/relation-chat.js';
 import { attackWithWeapon, useItem, weaponCompanionDice } from '../rolls/equipment-chat.js';
@@ -90,10 +90,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       rollCraft: PersonagemSheet.#onRollCraft,
       addExtra: PersonagemSheet.#onAddExtra,
       removeExtra: PersonagemSheet.#onRemoveExtra,
-      applyDamage: PersonagemSheet.#onApplyDamage,
       rollInjury: PersonagemSheet.#onRollInjury,
       removeLesion: PersonagemSheet.#onRemoveLesion,
-      applyEmotionalDamage: PersonagemSheet.#onApplyEmotionalDamage,
       rollTrauma: PersonagemSheet.#onRollTrauma,
       removeTrauma: PersonagemSheet.#onRemoveTrauma,
       addRelation: PersonagemSheet.#onAddRelation,
@@ -583,25 +581,14 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     );
   }
 
-  /** Aplica o dano digitado (e o teste de lesão, se o PV chegar a 0). */
-  static async #onApplyDamage() {
-    const amount = Math.trunc(Number(this.element.querySelector('[data-dano]').value));
-    const nonLethal = this.element.querySelector('[data-nao-letal]').checked;
-    if (!(amount > 0)) return;
-    await damageActor(this.document, amount, { nonLethal });
-  }
-
   /** Teste de lesão manual (por exemplo, o do moribundo no fim da rodada). */
   static async #onRollInjury(event) {
-    const nonLethal = this.element.querySelector('[data-nao-letal]').checked;
-    const rule = injuryTestOptions({
-      previousTests: this.document.system.cena.testesLesao,
-      nonLethal,
-    });
+    const rule = injuryTestOptions({ previousTests: this.document.system.cena.testesLesao });
+    // "Dano não letal" aparece na janela como uma habilidade que acrescenta +d6 ao teste
     await this.#rollWithChoices(
       event,
-      { skillKey: 'vigor', baseExtraDice: rule.extraDice, ignoreFear: true, dt: rule.dt },
-      (options) => rollInjuryTest(this.document, { nonLethal, ...options }),
+      { skillKey: 'vigor', ignoreFear: true, dt: rule.dt, allowNonLethal: true },
+      (options) => rollInjuryTest(this.document, options),
     );
   }
 
@@ -612,13 +599,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     if (index < 0) return;
     lesoes.splice(index, 1);
     await this.document.update({ 'system.lesoes': lesoes });
-  }
-
-  /** Aplica o dano emocional digitado (e o teste de trauma, se o PD chegar a 0). */
-  static async #onApplyEmotionalDamage() {
-    const amount = Math.trunc(Number(this.element.querySelector('[data-dano-emocional]').value));
-    if (!(amount > 0)) return;
-    await emotionalDamage(this.document, amount);
   }
 
   /** Teste de trauma manual. */

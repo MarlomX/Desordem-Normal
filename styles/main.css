@@ -263,17 +263,12 @@
 }
 
 .desordem-ficha__estado,
-.desordem-ficha__acoes-saude,
 .desordem-ficha__lesoes {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 12px;
   margin-bottom: 4px;
-}
-
-.desordem-ficha__acoes-saude input[type='number'] {
-  width: 4em;
 }
 
 .desordem-ficha__lesao {

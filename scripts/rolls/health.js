@@ -17,6 +17,7 @@ import {
   pickLesion,
   applyInjuryOutcome,
   applyLesion,
+  resolveNonLethal,
 } from './injury.js';
 import { buildInjuryContext } from './presenter.js';
 
@@ -81,15 +82,21 @@ async function rollLesion(owned, nonLethal) {
  * @param {Actor} actor
  * @param {Object} [options]
  * @param {boolean} [options.nonLethal=false] O dano não letal ajudou a zerar o PV: +1d6 no teste
- *   e 2d20 (o melhor) na tabela de lesões.
+ *   e 2d20 (o melhor) na tabela de lesões. Também vale se a habilidade "naoLetal" vier em `active`.
  */
-export async function rollInjuryTest(actor, { nonLethal = false, extraDice = [], active = [], dt } = {}) {
+export async function rollInjuryTest(
+  actor,
+  { nonLethal: nonLethalFlag = false, extraDice = [], active: chosen = [], dt } = {},
+) {
   const previousTests = actor.system.cena.testesLesao;
-  const rule = injuryTestOptions({ previousTests, nonLethal });
+  // Dano não letal: marcador direto (arma) ou a habilidade escolhida na janela do teste (+d6 uma vez)
+  const { nonLethal, active } = resolveNonLethal(nonLethalFlag, chosen);
+  const rule = injuryTestOptions({ previousTests, nonLethal: nonLethalFlag });
   const options = skillTestOptions(actor, 'vigor', undefined, {
     dt: dt ?? rule.dt,
     extraDice: [...rule.extraDice, ...extraDice],
     active,
+    allowNonLethal: true,
     ignoreFear: true, // o teste de lesão não sofre o dado de pavor
     label: `${actor.name}: ${game.i18n.localize('DESORDEM.Lesao.TesteTitulo')}`,
   });

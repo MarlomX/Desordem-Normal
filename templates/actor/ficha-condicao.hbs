@@ -10,19 +10,6 @@
     <label><input type="checkbox" name="system.estado.morto" {{#if system.estado.morto}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.morto"}}</label>
   </div>
 
-  <div class="desordem-ficha__acoes-saude">
-    <label class="desordem-ficha__campo">
-      <span>{{localize "DESORDEM.Ficha.Dano"}}</span>
-      <input type="number" data-dano min="0" value="0" {{#unless editable}}disabled{{/unless}}>
-    </label>
-    <label class="desordem-ficha__campo">
-      <input type="checkbox" data-nao-letal {{#unless editable}}disabled{{/unless}}>
-      <span>{{localize "DESORDEM.Ficha.NaoLetal"}}</span>
-    </label>
-    <button type="button" data-action="applyDamage" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.AplicarDano"}}</button>
-    <button type="button" data-action="rollInjury" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.TesteLesao"}} ({{localize "DESORDEM.Teste.DT"}} {{nextInjuryDT}})</button>
-  </div>
-
   <label class="desordem-ficha__campo">
     <span>{{localize "DESORDEM.Ficha.TestesLesaoCena"}}</span>
     <input type="number" name="system.cena.testesLesao" value="{{system.cena.testesLesao}}" min="0" {{#unless editable}}disabled{{/unless}}>
@@ -42,17 +29,15 @@
         </select>
       </span>
     </label>
-    <label><input type="checkbox" name="system.estado.estupor" {{#if system.estado.estupor}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.estupor"}}</label>
-    <label><input type="checkbox" name="system.estado.colapso" {{#if system.estado.colapso}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.colapso"}}</label>
   </div>
 
-  <div class="desordem-ficha__acoes-saude">
-    <label class="desordem-ficha__campo">
-      <span>{{localize "DESORDEM.Ficha.DanoEmocional"}}</span>
-      <input type="number" data-dano-emocional min="0" value="0" {{#unless editable}}disabled{{/unless}}>
-    </label>
-    <button type="button" data-action="applyEmotionalDamage" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.AplicarDano"}}</button>
-    <button type="button" data-action="rollTrauma" {{#unless editable}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.TesteTrauma"}} ({{localize "DESORDEM.Teste.DT"}} {{nextTraumaDT}})</button>
+</section>
+<section class="desordem-ficha__secao desordem-ficha__trauma">
+  <h3><i class="fa-solid fa-brain" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Trauma"}}</h3>
+
+  <div class="desordem-ficha__estado">
+    <label><input type="checkbox" name="system.estado.estupor" {{#if system.estado.estupor}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.estupor"}}</label>
+    <label><input type="checkbox" name="system.estado.colapso" {{#if system.estado.colapso}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> {{localize "DESORDEM.Ficha.Estado.colapso"}}</label>
   </div>
 
   <label class="desordem-ficha__campo">
@@ -93,5 +78,10 @@
   {{/each}}
   {{#unless lesions.length}}{{#unless traumas.length}}{{#unless effects.length}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemEfeitos"}}</p>{{/unless}}{{/unless}}{{/unless}}
   {{#if editable}}<button type="button" data-action="addEffect">{{localize "DESORDEM.Ficha.AdicionarEfeito"}}</button>{{/if}}
+</section>
+<section class="desordem-ficha__secao desordem-ficha__cena">
+  <h3><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Cena"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaCena"}}</p>
+  {{#if editable}}<button type="button" data-action="newScene">{{localize "DESORDEM.Habilidade.NovaCena"}}</button>{{/if}}
 </section>
 </section>

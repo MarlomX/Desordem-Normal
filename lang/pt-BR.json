@@ -52,7 +52,8 @@
         "SemHabilidades": "Nenhuma habilidade se aplica a este teste.",
         "Hab": {
           "impetoDado": "Dado de ímpeto (+d{die})",
-          "sorrateiro": "Dado furtivo (+d{die})"
+          "sorrateiro": "Dado furtivo (+d{die})",
+          "naoLetal": "Dano não letal (+d{die})"
         },
         "Indisponivel": {
           "impeto": "sem ímpeto suficiente",
@@ -77,6 +78,7 @@
           "base": "Fixo",
           "impetoDado": "Ímpeto",
           "sorrateiro": "Furtivo",
+          "naoLetal": "Não letal",
           "pavor": "Pavor",
           "manual": "Bônus",
           "vazio": "Livre"
@@ -101,9 +103,6 @@
       "Oficios": "Ofícios",
       "Saude": "Saúde",
       "Dano": "Dano",
-      "NaoLetal": "Não letal",
-      "AplicarDano": "Aplicar dano",
-      "TesteLesao": "Teste de lesão",
       "TestesLesaoCena": "Testes de lesão na cena",
       "Lesoes": "Lesões",
       "SemLesoes": "Nenhuma lesão",
@@ -117,14 +116,15 @@
         "estupor": "Estupor",
         "colapso": "Colapso total"
       },
-      "Medo": "Medo e trauma",
+      "Medo": "Medo",
+      "Trauma": "Trauma",
+      "Cena": "Cena",
+      "DicaCena": "Reinicia a cena deste personagem: zera os testes de lesão e trauma da cena, esvazia ímpeto e análise e remove os efeitos até o fim da cena.",
       "DadoPavor": "Dado de pavor",
       "SemPavor": "Sem pavor",
       "ControlarPavor": "Controlar pavor (1 PD)",
       "AbracarPavor": "Abraçar pavor (5 PD)",
       "DicaPavor": "Valem só para o próximo teste de perícia ou aptidão.",
-      "DanoEmocional": "Dano emocional",
-      "TesteTrauma": "Teste de trauma",
       "TestesTraumaCena": "Testes de trauma na cena",
       "Traumas": "Traumas",
       "SemTraumas": "Nenhum trauma",

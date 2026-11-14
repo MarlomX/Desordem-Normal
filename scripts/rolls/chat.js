@@ -263,7 +263,14 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   const { system } = actor;
 
   // Dado de pavor (ignoreFear: testes que não sofrem pavor), com controlar/abraçar só neste teste
-  const { ignoreFear, controlFear, embraceFear, active = [], ...rest } = options;
+  const {
+    ignoreFear,
+    controlFear,
+    embraceFear,
+    active = [],
+    allowNonLethal = false,
+    ...rest
+  } = options;
   let fear;
   try {
     fear = resolveFearOptions({
@@ -283,6 +290,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     skillKey,
     impeto: system.recursos.impeto,
     pd: system.pd.value - fear.pdCost,
+    allowNonLethal,
   });
 
   return {

@@ -116,6 +116,23 @@ export const LESIONS = Object.freeze([
   { key: 'surtoAdrenalina', min: 20, max: Infinity, kind: 'adrenaline' },
 ]);
 
+/**
+ * Junta o dano não letal vindo de dois caminhos: o marcador direto (dano de arma não letal que
+ * zerou o PV) e a habilidade "naoLetal" marcada na janela do teste. O d6 só pode entrar uma vez:
+ * com o marcador direto, ele já vem das regras do teste e a habilidade é descartada.
+ * @param {boolean} flag Marcador direto de dano não letal.
+ * @param {string[]} active Habilidades marcadas na janela do teste.
+ * @returns {{nonLethal: boolean, active: string[]}} `nonLethal` vale para a tabela de lesões (2d20)
+ *   e `active` é a lista de habilidades que ainda geram dado.
+ */
+export function resolveNonLethal(flag, active = []) {
+  const chosen = active.includes('naoLetal');
+  return {
+    nonLethal: Boolean(flag) || chosen,
+    active: flag ? active.filter((key) => key !== 'naoLetal') : [...active],
+  };
+}
+
 /** Quantos d20 rolar na tabela: 2 (fica o melhor) se o dano não letal ajudou a zerar o PV. */
 export const lesionRollCount = (nonLethal) => (nonLethal ? 2 : 1);
 

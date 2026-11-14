@@ -52,7 +52,8 @@
         "SemHabilidades": "No ability applies to this test.",
         "Hab": {
           "impetoDado": "Drive die (+d{die})",
-          "sorrateiro": "Sneak die (+d{die})"
+          "sorrateiro": "Sneak die (+d{die})",
+          "naoLetal": "Non-lethal damage (+d{die})"
         },
         "Indisponivel": {
           "impeto": "not enough drive",
@@ -77,6 +78,7 @@
           "base": "Fixed",
           "impetoDado": "Drive",
           "sorrateiro": "Sneak",
+          "naoLetal": "Non-lethal",
           "pavor": "Fear",
           "manual": "Bonus",
           "vazio": "Free"
@@ -101,9 +103,6 @@
       "Oficios": "Crafts",
       "Saude": "Health",
       "Dano": "Damage",
-      "NaoLetal": "Non-lethal",
-      "AplicarDano": "Apply damage",
-      "TesteLesao": "Injury test",
       "TestesLesaoCena": "Injury tests this scene",
       "Lesoes": "Injuries",
       "SemLesoes": "No injuries",
@@ -117,14 +116,15 @@
         "estupor": "Stupor",
         "colapso": "Total collapse"
       },
-      "Medo": "Fear and trauma",
+      "Medo": "Fear",
+      "Trauma": "Trauma",
+      "Cena": "Scene",
+      "DicaCena": "Resets this character's scene: clears the scene's injury and trauma tests, empties drive and analysis and removes until-end-of-scene effects.",
       "DadoPavor": "Dread die",
       "SemPavor": "No dread",
       "ControlarPavor": "Control dread (1 DP)",
       "AbracarPavor": "Embrace dread (5 DP)",
       "DicaPavor": "They only apply to the next skill or aptitude test.",
-      "DanoEmocional": "Emotional damage",
-      "TesteTrauma": "Trauma test",
       "TestesTraumaCena": "Trauma tests this scene",
       "Traumas": "Traumas",
       "SemTraumas": "No traumas",

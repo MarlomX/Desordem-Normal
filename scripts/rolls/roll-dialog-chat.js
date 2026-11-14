@@ -169,6 +169,7 @@ function refresh(form, root, model) {
  * @param {boolean} [config.ignoreFear] Testes que não sofrem o dado de pavor.
  * @param {number} [config.dt=7] DT padrão do teste (editável na janela).
  * @param {boolean} [config.showDt=true] Falso em testes sem DT (esquiva).
+ * @param {boolean} [config.allowNonLethal=false] Oferece "dano não letal" (só no teste de lesão).
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
  */
 export async function askRollChoices(
@@ -180,6 +181,7 @@ export async function askRollChoices(
     ignoreFear = false,
     dt = 7,
     showDt = true,
+    allowNonLethal = false,
     shift = false,
   },
 ) {
@@ -190,7 +192,11 @@ export async function askRollChoices(
     attrDie: dice.attrDie,
     skillDie: dice.skillDie,
     baseExtraDice,
-    has: { impeto: hasAbility(actor, 'impeto'), sorrateiro: hasAbility(actor, 'sorrateiro') },
+    has: {
+      impeto: hasAbility(actor, 'impeto'),
+      sorrateiro: hasAbility(actor, 'sorrateiro'),
+      naoLetal: allowNonLethal,
+    },
     resources: { impeto: actor.system.recursos.impeto, pd: actor.system.pd.value },
     fearDie: actor.system.estado.pavor,
     ignoreFear,

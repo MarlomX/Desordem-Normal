@@ -3,6 +3,7 @@
  * recursos que elas usam (barra de ímpeto, marcadores de análise) e do reinício de cena.
  */
 import { resolveTest } from './test.js';
+import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { sequenceRng } from './dice.js';
 
 /** Automações disponíveis para uma habilidade (a chave fica no campo `automacao` do item). */
@@ -116,14 +117,15 @@ export function resolveWithValues(plan, values) {
 
 /**
  * Bônus das habilidades "ativadas" para o próximo teste, e o que cada uma gasta.
- * @param {string[]} active Habilidades ativadas na ficha ('impetoDado', 'sorrateiro').
+ * @param {string[]} active Habilidades ativadas na ficha ('impetoDado', 'sorrateiro', 'naoLetal').
  * @param {Object} context
  * @param {string} context.skillKey Perícia do teste.
  * @param {number} context.impeto Espaços de ímpeto.
  * @param {number} context.pd PD disponíveis (já descontado o custo do pavor).
+ * @param {boolean} [context.allowNonLethal=false] Só o teste de lesão aceita o dano não letal.
  * @returns {{extraDice: number[], pdCost: number, impetoCost: number, used: string[]}}
  */
-export function activeBoosts(active, { skillKey, impeto, pd }) {
+export function activeBoosts(active, { skillKey, impeto, pd, allowNonLethal = false }) {
   const boosts = { extraDice: [], pdCost: 0, impetoCost: 0, used: [] };
   if (active.includes('impetoDado') && impeto >= COSTS.impetoDado) {
     boosts.extraDice.push(4);
@@ -134,6 +136,11 @@ export function activeBoosts(active, { skillKey, impeto, pd }) {
     boosts.extraDice.push(8);
     boosts.pdCost += COSTS.sorrateiro;
     boosts.used.push('sorrateiro');
+  }
+  // Dano não letal (só no teste de lesão): +1d6, sem custo
+  if (allowNonLethal && active.includes('naoLetal')) {
+    boosts.extraDice.push(NON_LETHAL_BONUS_DIE);
+    boosts.used.push('naoLetal');
   }
   return boosts;
 }

@@ -3,6 +3,7 @@
  * controlar ou abraçar o pavor), com custos e uma prévia dos dados. Lógica pura, sem Foundry.
  */
 import { COSTS, SNEAK_SKILLS } from './abilities.js';
+import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { BONUS_SLOTS, bonusDice, normalizeBonus } from './bonus.js';
 import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } from './fear.js';
 import { DEFAULT_DT, MAX_COUNTED, planDice } from './test.js';
@@ -26,7 +27,8 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  * @param {number} input.attrDie Dado do atributo já com passos e contusão.
  * @param {number} input.skillDie Dado da perícia já com passos.
  * @param {number[]} [input.baseExtraDice] Dados extras fixos do teste (companheiro, não letal...).
- * @param {{impeto: boolean, sorrateiro: boolean}} input.has Habilidades que o personagem tem.
+ * @param {{impeto?: boolean, sorrateiro?: boolean, naoLetal?: boolean}} input.has Habilidades que
+ *   o personagem tem; `naoLetal` só no teste de lesão (+d6, sem custo).
  * @param {{impeto: number, pd: number}} input.resources Espaços de ímpeto e PD atuais.
  * @param {number} [input.fearDie=0] Dado de pavor guardado na ficha.
  * @param {boolean} [input.ignoreFear=false] Testes que não sofrem o dado de pavor.
@@ -64,6 +66,15 @@ export function buildRollModel({
       cost: { impeto: 0, pd: COSTS.sorrateiro },
       available: ok,
       reason: ok ? null : 'pd',
+    });
+  }
+  if (has.naoLetal) {
+    abilities.push({
+      key: 'naoLetal',
+      die: NON_LETHAL_BONUS_DIE,
+      cost: { impeto: 0, pd: 0 },
+      available: true,
+      reason: null,
     });
   }
   const fear =
