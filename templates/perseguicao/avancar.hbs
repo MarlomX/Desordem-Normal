@@ -1,0 +1,29 @@
+<div class="desordem-perseguicao-avancar">
+  <label class="desordem-perseguicao-avancar__campo">
+    <span>{{localize "DESORDEM.Perseguicao.Avancar.Pericia"}}</span>
+    <select name="skill">
+      {{#each skills}}
+      <option value="{{key}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{label}}</option>
+      {{/each}}
+    </select>
+  </label>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Perseguicao.Avancar.PericiaAviso"}}</p>
+
+  <label class="desordem-perseguicao-avancar__campo">
+    <span>{{localize "DESORDEM.Perseguicao.Avancar.Folego" n=folego}}</span>
+    {{#if hasBreath}}
+    <select name="breath">
+      {{#each breathOptions}}
+      <option value="{{n}}">{{n}}d6</option>
+      {{/each}}
+    </select>
+    {{else}}
+    <span class="desordem-perseguicao__vazio">{{localize "DESORDEM.Perseguicao.Avancar.SemFolego"}}</span>
+    {{/if}}
+  </label>
+
+  <label class="desordem-perseguicao-avancar__esforco">
+    <input type="checkbox" name="effort">
+    <span>{{effortLabel}}</span>
+  </label>
+</div>

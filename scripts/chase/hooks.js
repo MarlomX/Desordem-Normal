@@ -3,9 +3,15 @@
  * Liga a perseguição ao Foundry: redesenha a janela e as fichas quando o estado muda, abre a
  * janela sozinha para quem participa e coloca o botão na aba de combate.
  */
-import { CHASE_COMBAT_TYPE, shouldAutoOpen, trackerAction } from '../rolls/chase.js';
+import { PERICIAS } from '../config.js';
+import {
+  CHASE_COMBAT_TYPE,
+  sanitizeParticipantPatch,
+  shouldAutoOpen,
+  trackerAction,
+} from '../rolls/chase.js';
 import PerseguicaoApp from './app.js';
-import { createChase, currentAccess, findChase } from './store.js';
+import { SOCKET, createChase, currentAccess, findChase } from './store.js';
 
 const t = (key) => game.i18n.localize(key);
 
@@ -108,6 +114,25 @@ export function registerChaseHooks() {
 
   // Botão na aba de combate
   Hooks.on('renderCombatTracker', (app, html) => injectTrackerBar(html));
+}
+
+/**
+ * Socket: quando um jogador não pode editar o próprio participante, pede ao mestre ativo que
+ * grave. O mestre confere que o pedido vem de um dono do personagem e limpa os dados recebidos.
+ */
+export function registerChaseSocket() {
+  game.socket.on(SOCKET, async (data, userId) => {
+    if (data?.action !== 'chaseParticipant') return;
+    if (game.users.activeGM?.id !== game.user.id) return;
+    const combat = game.combats.get(data.combatId);
+    if (combat?.type !== CHASE_COMBAT_TYPE) return;
+    const combatant = combat.combatants.get(data.combatantId);
+    const requester = game.users.get(userId);
+    if (!combatant?.actor || !requester) return;
+    if (!combatant.actor.testUserPermission(requester, 'OWNER')) return;
+    const patch = sanitizeParticipantPatch(data.patch, Object.keys(PERICIAS));
+    if (Object.keys(patch).length) await combatant.update({ system: patch });
+  });
 }
 
 /** Interface para macros e testes no console: `game.desordem.perseguicao`. */

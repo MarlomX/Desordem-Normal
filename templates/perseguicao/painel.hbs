@@ -9,11 +9,34 @@
   {{#if view.participantes.length}}
   <ul class="desordem-perseguicao__lista">
     {{#each view.participantes}}
-    <li class="desordem-perseguicao__item">
-      <img class="desordem-perseguicao__retrato" src="{{img}}" alt="">
-      <span class="desordem-perseguicao__nome">{{name}}</span>
-      {{#if @root.isGM}}
-      <button type="button" class="desordem-perseguicao__remover" data-action="removeParticipant" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Perseguicao.Remover"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    <li class="desordem-perseguicao__item{{#if agiu}} is-agiu{{/if}}">
+      <div class="desordem-perseguicao__linha">
+        <img class="desordem-perseguicao__retrato" src="{{img}}" alt="">
+        <span class="desordem-perseguicao__nome">{{name}}</span>
+        {{#if @root.isGM}}
+        <button type="button" class="desordem-perseguicao__remover" data-action="removeParticipant" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Perseguicao.Remover"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        {{/if}}
+      </div>
+      {{#if @root.view.ativa}}
+      <div class="desordem-perseguicao__linha desordem-perseguicao__dados">
+        <span class="desordem-perseguicao__valor">
+          <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.PA"}}</span>
+          {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustParticipant" data-combatant-id="{{id}}" data-field="pa" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>{{/if}}
+          <strong>{{pa}}</strong>
+          {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustParticipant" data-combatant-id="{{id}}" data-field="pa" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>{{/if}}
+        </span>
+        <span class="desordem-perseguicao__valor">
+          <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.Folego"}}</span>
+          {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustParticipant" data-combatant-id="{{id}}" data-field="folego" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>{{/if}}
+          <strong>{{folego}}d6</strong>
+          {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustParticipant" data-combatant-id="{{id}}" data-field="folego" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>{{/if}}
+        </span>
+        {{#if podeAvancar}}
+        <button type="button" class="desordem-perseguicao__avancar" data-action="advance" data-combatant-id="{{id}}"><i class="fa-solid fa-person-running" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.BotaoAvancar"}}</button>
+        {{else if agiu}}
+        <span class="desordem-perseguicao__agiu">{{localize "DESORDEM.Perseguicao.Agiu"}}</span>
+        {{/if}}
+      </div>
       {{/if}}
     </li>
     {{/each}}
@@ -26,6 +49,7 @@
   <footer class="desordem-perseguicao__acoes">
     <button type="button" data-action="addParticipants"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Adicionar"}}</button>
     {{#if view.ativa}}
+    <button type="button" data-action="nextRound"><i class="fa-solid fa-forward-step" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.ProximaRodada"}}</button>
     <button type="button" data-action="endChase"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Encerrar"}}</button>
     {{else}}
     <button type="button" data-action="startChase"><i class="fa-solid fa-play" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Iniciar"}}</button>

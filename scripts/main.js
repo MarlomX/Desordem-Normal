@@ -7,7 +7,7 @@ import { dieFaceHelper } from './rolls/die-face.js';
 import { renderFearDice } from './rolls/fear-chat.js';
 import ItemSheet from './sheets/item-sheet.js';
 import { PerseguicaoModel, ParticipanteModel } from './chase/models.js';
-import { registerChaseHooks, chaseApi } from './chase/hooks.js';
+import { registerChaseHooks, registerChaseSocket, chaseApi } from './chase/hooks.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
@@ -114,5 +114,6 @@ Hooks.once('ready', () => {
   registerRelationSocket();
   registerAbilitySocket();
   registerTableSocket();
+  registerChaseSocket();
   console.log(`${SYSTEM_ID} | pronto`);
 });

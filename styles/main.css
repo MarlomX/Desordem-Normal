@@ -1796,8 +1796,9 @@
 
 .desordem-perseguicao__item {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   border-radius: 4px;
   padding: 4px 6px;
   background: var(--dn-surface);
@@ -1871,6 +1872,7 @@
 .desordem-perseguicao-cartao {
   display: flex;
   flex: 0 0 auto;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 4px 12px;
@@ -1910,4 +1912,76 @@
   gap: 6px;
   width: 100%;
   margin: 0;
+}
+
+/* ===== Perseguição: avançar e ajustes (v0.16.1) ===== */
+.desordem-perseguicao__item.is-agiu {
+  opacity: 0.8;
+}
+
+.desordem-perseguicao__linha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.desordem-perseguicao__dados {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.desordem-perseguicao__valor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--dn-fonte-numeros);
+}
+
+.desordem-perseguicao__rotulo {
+  font-family: var(--font-primary), sans-serif;
+  font-size: 0.8em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.desordem-perseguicao__passo {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-perseguicao__avancar {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  border-color: var(--dn-accent);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-perseguicao__agiu {
+  font-size: 0.8em;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.desordem-perseguicao-avancar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.desordem-perseguicao-avancar__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.desordem-perseguicao-avancar__esforco {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }

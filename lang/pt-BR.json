@@ -625,12 +625,37 @@
       "AdicionarAviso": "Marque os personagens que vão participar.",
       "SemPersonagens": "Não há personagens para adicionar.",
       "Remover": "Remover da perseguição",
+      "PA": "PA",
+      "Folego": "Fôlego",
+      "Agiu": "Já agiu",
+      "BotaoAvancar": "Avançar",
+      "ProximaRodada": "Próxima rodada",
+      "Avancar": {
+        "Titulo": "Avançar",
+        "Pericia": "Perícia",
+        "PericiaUsada": "{pericia} (já usada)",
+        "PericiaAviso": "Outras perícias além de Atletismo só valem uma vez e precisam ser justificadas à mesa.",
+        "Folego": "Fôlego a gastar (você tem {n})",
+        "SemFolego": "Sem fôlego",
+        "Esforco": "Esforço extra: +1 passo no teste e perde {dados}d4 PV",
+        "Continuar": "Continuar"
+      },
+      "Chat": {
+        "Titulo": "{nome} avança",
+        "Ganho": "+{pa} PA (total: {total})",
+        "Pericia": "Perícia: {pericia}",
+        "Folego": "Fôlego gasto: {n}d6",
+        "Esforco": "Esforço extra: perdeu {perda} PV ({dados}d4)",
+        "EsforcoZero": "Os PV chegaram a 0: faça o teste de lesão na ficha."
+      },
       "Cartao": {
         "Titulo": "Perseguição",
         "Abrir": "Abrir"
       },
       "Erro": {
-        "JaExiste": "Já existe uma perseguição. Exclua-a antes de criar outra."
+        "JaExiste": "Já existe uma perseguição. Exclua-a antes de criar outra.",
+        "JaAgiu": "{nome} já agiu nesta rodada.",
+        "NaoEmAndamento": "A perseguição não está em andamento."
       }
     }
   },

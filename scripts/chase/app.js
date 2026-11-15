@@ -5,14 +5,17 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { addableActors } from '../rolls/chase.js';
+import { advanceChase } from './advance.js';
 import {
   addParticipants,
+  adjustParticipant,
   chaseView,
   createChase,
   currentAccess,
   deleteChase,
   endChase,
   findChase,
+  nextRound,
   participantActorIds,
   removeParticipant,
   startChase,
@@ -43,6 +46,9 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
       deleteChase: PerseguicaoApp.#onDeleteChase,
       addParticipants: PerseguicaoApp.#onAddParticipants,
       removeParticipant: PerseguicaoApp.#onRemoveParticipant,
+      advance: PerseguicaoApp.#onAdvance,
+      adjustParticipant: PerseguicaoApp.#onAdjustParticipant,
+      nextRound: PerseguicaoApp.#onNextRound,
     },
   };
 
@@ -93,6 +99,23 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
   static async #onEndChase() {
     const chase = findChase();
     if (chase) await endChase(chase);
+  }
+
+  /** Avançar: o jogador (ou o mestre, pelos NPCs) faz o teste do participante. */
+  static async #onAdvance(event, target) {
+    await advanceChase(target.dataset.combatantId, { shift: event.shiftKey });
+  }
+
+  /** Ajuste manual de PA ou fôlego (só o mestre). */
+  static async #onAdjustParticipant(event, target) {
+    const chase = findChase();
+    const { combatantId, field } = target.dataset;
+    if (chase) await adjustParticipant(chase, combatantId, field, Number(target.dataset.delta));
+  }
+
+  static async #onNextRound() {
+    const chase = findChase();
+    if (chase) await nextRound(chase);
   }
 
   /** Apagar é destrutivo (some a lista de participantes): pede confirmação. */

@@ -34,6 +34,7 @@ import {
   setRelationDegree,
 } from '../rolls/relation.js';
 import PerseguicaoApp from '../chase/app.js';
+import { advanceChase } from '../chase/advance.js';
 import { chaseCardFor } from '../chase/store.js';
 import {
   buildAttributeRows,
@@ -114,6 +115,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       healAlly: PersonagemSheet.#onHealAlly,
       newScene: PersonagemSheet.#onNewScene,
       openChase: PersonagemSheet.#onOpenChase,
+      chaseAdvance: PersonagemSheet.#onChaseAdvance,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
@@ -736,6 +738,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Cura o aliado mirado (Medicina DT 7, 2 PD). */
   static async #onHealAlly() {
     await healAlly(this.document);
+  }
+
+  /** Avançar na perseguição (cartão da ficha). Shift+clique pula a janela pré-teste. */
+  static async #onChaseAdvance(event, target) {
+    await advanceChase(target.dataset.combatantId, { shift: event.shiftKey });
   }
 
   /** Abre a janela da perseguição (cartão da ficha). */

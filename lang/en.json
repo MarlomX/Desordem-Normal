@@ -625,12 +625,37 @@
       "AdicionarAviso": "Check the characters who will take part.",
       "SemPersonagens": "There are no characters to add.",
       "Remover": "Remove from the chase",
+      "PA": "AP",
+      "Folego": "Breath",
+      "Agiu": "Already acted",
+      "BotaoAvancar": "Advance",
+      "ProximaRodada": "Next round",
+      "Avancar": {
+        "Titulo": "Advance",
+        "Pericia": "Skill",
+        "PericiaUsada": "{pericia} (already used)",
+        "PericiaAviso": "Skills other than Athletics can only be used once and must be justified at the table.",
+        "Folego": "Breath to spend (you have {n})",
+        "SemFolego": "No breath",
+        "Esforco": "Extra effort: +1 step on the test and lose {dados}d4 HP",
+        "Continuar": "Continue"
+      },
+      "Chat": {
+        "Titulo": "{nome} advances",
+        "Ganho": "+{pa} AP (total: {total})",
+        "Pericia": "Skill: {pericia}",
+        "Folego": "Breath spent: {n}d6",
+        "Esforco": "Extra effort: lost {perda} HP ({dados}d4)",
+        "EsforcoZero": "HP reached 0: make the injury test on the sheet."
+      },
       "Cartao": {
         "Titulo": "Chase",
         "Abrir": "Open"
       },
       "Erro": {
-        "JaExiste": "A chase already exists. Delete it before creating another."
+        "JaExiste": "A chase already exists. Delete it before creating another.",
+        "JaAgiu": "{nome} has already acted this round.",
+        "NaoEmAndamento": "The chase is not in progress."
       }
     }
   },
