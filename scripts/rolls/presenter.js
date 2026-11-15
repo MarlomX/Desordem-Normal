@@ -3,8 +3,6 @@
  * Função pura (sem Foundry). A tradução dos textos acontece no template, via chaves de idioma.
  */
 
-import { CRIT_MIN_VALUE } from './test.js';
-
 const OUTCOMES = {
   Sucesso: 'sucesso',
   Falha: 'falha',
@@ -45,24 +43,16 @@ export function buildChatContext(
     adjustments.push(stepAdjustment(skillLabel, skill));
   }
 
-  // Marcas de destaque: os dados que formam o crítico (valores iguais, 6 ou mais, não devorados
-  // pelo pavor) e os dados de uma falha crítica (todos em 1)
-  const counts = new Map();
-  for (const { value, annulled } of result.dice) {
-    if (!annulled) counts.set(value, (counts.get(value) ?? 0) + 1);
-  }
-  const dice = result.dice.map(({ sides, value, counted, source, annulled }) => ({
+  // `critical` e `fumble` (dados em destaque no cartão) já vêm calculados por `resolveTest`,
+  // que é quem decide o que é crítico
+  const dice = result.dice.map(({ sides, value, counted, source, annulled, critical, fumble }) => ({
     sides,
     value,
     counted,
     source,
     annulled: Boolean(annulled),
-    critical:
-      Boolean(result.criticalSuccess) &&
-      !annulled &&
-      value >= CRIT_MIN_VALUE &&
-      counts.get(value) >= 2,
-    fumble: Boolean(result.criticalFailure) && !result.devouredAll && !annulled && value === 1,
+    critical: Boolean(critical),
+    fumble: Boolean(fumble),
   }));
 
   return {

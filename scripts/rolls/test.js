@@ -31,7 +31,8 @@ export function planDice({ attrDie, skillDie, extraDice = [], stepMods = [] }) {
   let attrShift = 0;
   let skillShift = 0;
   for (const mod of stepMods) {
-    if (!TARGETS.includes(mod.target)) throw new RangeError(`Alvo de passo inválido: ${mod.target}`);
+    if (!TARGETS.includes(mod.target))
+      throw new RangeError(`Alvo de passo inválido: ${mod.target}`);
     if (mod.target !== 'skill') attrShift += mod.steps;
     if (mod.target !== 'attribute') skillShift += mod.steps;
   }
@@ -90,6 +91,8 @@ export function resolveTest({
     source: sources[i] ?? 'extra',
     counted: false,
     annulled: false,
+    critical: false,
+    fumble: false,
   }));
 
   // Dado de pavor: rolado depois dos dados do teste; anula os dados menores que ele
@@ -122,13 +125,23 @@ export function resolveTest({
   const highRoll = topValues[0] ?? 0;
   const lowRoll = topValues[topValues.length - 1] ?? 0;
 
-  // 5. Críticos (consideram todos os dados rolados que não foram anulados pelo pavor)
+  // 5. Críticos. Valem só para os dados somados: o pavor já tirou os dados anulados e, com 4 dados
+  //    rolados, o menor já foi descartado (as regras mandam determinar o crítico depois disso).
   const occurrences = new Map();
-  for (const { value, annulled } of dice) {
-    if (!annulled) occurrences.set(value, (occurrences.get(value) ?? 0) + 1);
-  }
+  for (const { value } of counted) occurrences.set(value, (occurrences.get(value) ?? 0) + 1);
   const criticalSuccess = [...occurrences].some(([v, n]) => n >= 2 && v >= CRIT_MIN_VALUE);
-  const criticalFailure = devouredAll || dice.every((d) => d.value === 1);
+  const criticalFailure = devouredAll || counted.every((d) => d.value === 1);
+
+  // Dados em destaque no cartão: os que formam o crítico (valores iguais, 6 ou mais) e os de uma
+  // falha crítica (todos em 1; se foi o pavor que devorou os dados, nenhum é destacado)
+  for (const die of dice) {
+    die.critical =
+      criticalSuccess &&
+      die.counted &&
+      die.value >= CRIT_MIN_VALUE &&
+      occurrences.get(die.value) >= 2;
+    die.fumble = criticalFailure && !devouredAll && die.value === 1;
+  }
 
   // Em ataques e testes estendidos, o crítico soma as duas maiores rolagens
   const highSum = criticalSuccess ? countedValues[0] + (countedValues[1] ?? 0) : highRoll;
