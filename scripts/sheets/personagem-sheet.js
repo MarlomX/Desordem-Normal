@@ -33,6 +33,8 @@ import {
   updateRelation,
   setRelationDegree,
 } from '../rolls/relation.js';
+import PerseguicaoApp from '../chase/app.js';
+import { chaseCardFor } from '../chase/store.js';
 import {
   buildAttributeRows,
   buildSkillRows,
@@ -111,6 +113,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       dodge: PersonagemSheet.#onDodge,
       healAlly: PersonagemSheet.#onHealAlly,
       newScene: PersonagemSheet.#onNewScene,
+      openChase: PersonagemSheet.#onOpenChase,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
@@ -125,6 +128,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Cabeçalho e navegação ficam fixos; cada aba é uma parte que rola sozinha. */
   static PARTS = {
     cabecalho: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-cabecalho.hbs` },
+    perseguicao: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-perseguicao.hbs` },
     abas: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-abas.hbs` },
     testes: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-testes.hbs`, scrollable: [''] },
     habilidades: {
@@ -171,6 +175,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
     return {
       ...context,
+      perseguicao: chaseCardFor(this.document),
       sheetTabs: tabs.list,
       tabState: tabs.state,
       pvPercent: resourcePercent(system.pv.value, system.pv.max),
@@ -731,6 +736,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Cura o aliado mirado (Medicina DT 7, 2 PD). */
   static async #onHealAlly() {
     await healAlly(this.document);
+  }
+
+  /** Abre a janela da perseguição (cartão da ficha). */
+  static async #onOpenChase() {
+    await PerseguicaoApp.open();
   }
 
   /** Nova cena: reinicia contadores, recursos e efeitos de cena deste personagem. */

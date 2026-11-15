@@ -37,6 +37,12 @@
     "Actor": {
       "personagem": {}
     },
+    "Combat": {
+      "perseguicao": {}
+    },
+    "Combatant": {
+      "participante": {}
+    },
     "Item": {
       "arma": {},
       "armadura": {},

@@ -1,5 +1,7 @@
 {
   "TYPES.Actor.personagem": "Character",
+  "TYPES.Combat.perseguicao": "Chase",
+  "TYPES.Combatant.participante": "Participant",
   "DESORDEM": {
     "Atributos": {
       "fisico": "Physical",
@@ -601,6 +603,35 @@
       "Curar": "Heal ally",
       "AnimalFeridoMarca": "Animal hurt",
       "Sorrateiro": "+d8 on the next Crime or Stealth test (3 DP)"
+    },
+    "Perseguicao": {
+      "Titulo": "Chase",
+      "Nova": "New chase",
+      "Abrir": "Open chase",
+      "EmPreparacao": "Being prepared",
+      "EmAndamento": "In progress",
+      "Rodada": "Round {rodada}",
+      "Participantes": "Participants",
+      "SemParticipantes": "Nobody is taking part yet. Add the characters who will run.",
+      "SemPerseguicao": "There is no chase right now.",
+      "SemPerseguicaoMestre": "Create a chase to start preparing the scene.",
+      "Criar": "Create chase",
+      "Iniciar": "Start",
+      "Encerrar": "End",
+      "Excluir": "Delete chase",
+      "ExcluirConfirmar": "Delete the chase and its list of participants?",
+      "Adicionar": "Add participants",
+      "AdicionarBotao": "Add",
+      "AdicionarAviso": "Check the characters who will take part.",
+      "SemPersonagens": "There are no characters to add.",
+      "Remover": "Remove from the chase",
+      "Cartao": {
+        "Titulo": "Chase",
+        "Abrir": "Open"
+      },
+      "Erro": {
+        "JaExiste": "A chase already exists. Delete it before creating another."
+      }
     }
   },
   "TYPES.Item.arma": "Weapon",

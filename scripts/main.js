@@ -6,6 +6,8 @@ import { fearDieHelper } from './sheets/dado-pavor.js';
 import { dieFaceHelper } from './rolls/die-face.js';
 import { renderFearDice } from './rolls/fear-chat.js';
 import ItemSheet from './sheets/item-sheet.js';
+import { PerseguicaoModel, ParticipanteModel } from './chase/models.js';
+import { registerChaseHooks, chaseApi } from './chase/hooks.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
@@ -53,6 +55,18 @@ Hooks.once('init', () => {
     item: ItemModel,
     habilidade: HabilidadeModel,
   };
+  // Perseguição: subtipos de Combat e de Combatant (cópia dos objetos existentes, por segurança)
+  CONFIG.Combat.dataModels = { ...CONFIG.Combat.dataModels, perseguicao: PerseguicaoModel };
+  CONFIG.Combatant.dataModels = { ...CONFIG.Combatant.dataModels, participante: ParticipanteModel };
+  CONFIG.Combat.typeLabels = {
+    ...CONFIG.Combat.typeLabels,
+    perseguicao: 'TYPES.Combat.perseguicao',
+  };
+  CONFIG.Combatant.typeLabels = {
+    ...CONFIG.Combatant.typeLabels,
+    participante: 'TYPES.Combatant.participante',
+  };
+  registerChaseHooks();
   registerEquipmentGuards();
 
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, PersonagemSheet, {
@@ -84,6 +98,7 @@ Hooks.once('init', () => {
     endScene,
     healAlly,
     gainAnalysisMarkers,
+    perseguicao: chaseApi,
   };
 });
 

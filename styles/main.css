@@ -1731,3 +1731,183 @@
 .desordem-attr-etiqueta.is-alterado .desordem-attr-etiqueta__texto {
   opacity: 1;
 }
+
+/* ===== Perseguição (v0.16.0) ===== */
+
+/* Janela do mestre e dos jogadores: uma coluna, com a lista rolando sozinha. */
+.desordem-normal.perseguicao .window-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.desordem-perseguicao {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+}
+
+.desordem-perseguicao__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.desordem-perseguicao__estado {
+  border: 1px solid var(--dn-border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.desordem-perseguicao__estado.is-ativa {
+  border-color: var(--dn-accent);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-perseguicao__rodada {
+  font-family: var(--dn-fonte-numeros);
+  font-weight: 700;
+}
+
+.desordem-perseguicao__titulo {
+  margin: 0;
+  border: none;
+  font-size: 0.95em;
+}
+
+.desordem-perseguicao__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-perseguicao__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: var(--dn-surface);
+}
+
+.desordem-perseguicao__retrato {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.desordem-perseguicao__nome {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desordem-perseguicao__remover {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-perseguicao__vazio {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.desordem-perseguicao__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.desordem-perseguicao__acoes button {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+.desordem-perseguicao__perigo {
+  border-color: var(--dn-pv);
+}
+
+/* Janela de escolha dos participantes */
+.desordem-perseguicao-adicionar__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.desordem-perseguicao-adicionar__lista label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Cartão na ficha: só aparece para quem participa de uma perseguição */
+.desordem-perseguicao-cartao {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-block: 1px solid var(--dn-accent-line);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-perseguicao-cartao.is-oculta {
+  display: none;
+}
+
+.desordem-perseguicao-cartao__titulo {
+  font-weight: 700;
+}
+
+.desordem-perseguicao-cartao__estado {
+  flex: 1 1 auto;
+  font-family: var(--dn-fonte-numeros);
+}
+
+.desordem-perseguicao-cartao__abrir {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}
+
+/* Botão na aba de combate do Foundry */
+.desordem-perseguicao-barra {
+  display: flex;
+  padding: 4px 8px;
+}
+
+.desordem-perseguicao-barra button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+}

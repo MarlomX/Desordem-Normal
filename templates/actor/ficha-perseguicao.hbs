@@ -1,0 +1,7 @@
+<section class="desordem-perseguicao-cartao{{#unless perseguicao}} is-oculta{{/unless}}">
+  <span class="desordem-perseguicao-cartao__titulo"><i class="fa-solid fa-person-running" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Cartao.Titulo"}}</span>
+  {{#if perseguicao}}
+  <span class="desordem-perseguicao-cartao__estado">{{#if perseguicao.ativa}}{{localize "DESORDEM.Perseguicao.Rodada" rodada=perseguicao.rodadaAtual}}{{else}}{{localize "DESORDEM.Perseguicao.EmPreparacao"}}{{/if}}</span>
+  {{/if}}
+  <button type="button" class="desordem-perseguicao-cartao__abrir" data-action="openChase">{{localize "DESORDEM.Perseguicao.Cartao.Abrir"}}</button>
+</section>

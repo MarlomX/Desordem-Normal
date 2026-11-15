@@ -1,5 +1,7 @@
 {
   "TYPES.Actor.personagem": "Personagem",
+  "TYPES.Combat.perseguicao": "Perseguição",
+  "TYPES.Combatant.participante": "Participante",
   "DESORDEM": {
     "Atributos": {
       "fisico": "Físico",
@@ -601,6 +603,35 @@
       "Curar": "Curar aliado",
       "AnimalFeridoMarca": "Animal ferido",
       "Sorrateiro": "+d8 no próximo teste de Crime ou Furtividade (3 PD)"
+    },
+    "Perseguicao": {
+      "Titulo": "Perseguição",
+      "Nova": "Nova perseguição",
+      "Abrir": "Abrir perseguição",
+      "EmPreparacao": "Em preparação",
+      "EmAndamento": "Em andamento",
+      "Rodada": "Rodada {rodada}",
+      "Participantes": "Participantes",
+      "SemParticipantes": "Ninguém participa ainda. Adicione os personagens que vão correr.",
+      "SemPerseguicao": "Não há nenhuma perseguição no momento.",
+      "SemPerseguicaoMestre": "Crie uma perseguição para começar a preparar a cena.",
+      "Criar": "Criar perseguição",
+      "Iniciar": "Iniciar",
+      "Encerrar": "Encerrar",
+      "Excluir": "Excluir perseguição",
+      "ExcluirConfirmar": "Excluir a perseguição e a lista de participantes?",
+      "Adicionar": "Adicionar participantes",
+      "AdicionarBotao": "Adicionar",
+      "AdicionarAviso": "Marque os personagens que vão participar.",
+      "SemPersonagens": "Não há personagens para adicionar.",
+      "Remover": "Remover da perseguição",
+      "Cartao": {
+        "Titulo": "Perseguição",
+        "Abrir": "Abrir"
+      },
+      "Erro": {
+        "JaExiste": "Já existe uma perseguição. Exclua-a antes de criar outra."
+      }
     }
   },
   "TYPES.Item.arma": "Arma",

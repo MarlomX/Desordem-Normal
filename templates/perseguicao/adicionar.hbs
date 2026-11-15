@@ -1,0 +1,8 @@
+<div class="desordem-perseguicao-adicionar">
+  <p>{{localize "DESORDEM.Perseguicao.AdicionarAviso"}}</p>
+  <ul class="desordem-perseguicao-adicionar__lista">
+    {{#each candidates}}
+    <li><label><input type="checkbox" name="actor" value="{{id}}"> <span>{{name}}</span></label></li>
+    {{/each}}
+  </ul>
+</div>
