@@ -184,6 +184,18 @@ export function advanceGain(result) {
 }
 
 /**
+ * DT mostrada na janela pré-teste ao marcar ou desmarcar "usar como teste de avanço": marcar põe a
+ * DT do avanço (10) e guarda a que estava; desmarcar devolve a guardada.
+ * @param {{on: boolean, current: number, saved: number|null}} state `current` é a DT no campo;
+ *   `saved` é a DT guardada ao marcar (ou `null` se nada foi guardado).
+ * @returns {{value: number, saved: number|null}}
+ */
+export function advanceDtField({ on, current, saved }) {
+  if (on) return { value: ADVANCE_DT, saved: saved ?? current };
+  return { value: saved ?? current, saved: null };
+}
+
+/**
  * Por que o teste não pode ser usado como avanço agora (ou `null` se pode):
  * `inativa` (perseguição não está em andamento), `agiu` (já agiu nesta rodada; o jogador desmarca
  * "já agiu" na janela da perseguição para refazer) ou `pericia` (perícia, que não é Atletismo, já

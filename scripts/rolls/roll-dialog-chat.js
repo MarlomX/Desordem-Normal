@@ -5,6 +5,7 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { hasAbility } from './abilities.js';
+import { advanceDtField } from './chase.js';
 import { render, testDicePreview } from './chat.js';
 import { buildFearDie } from '../sheets/dado-pavor.js';
 import {
@@ -104,6 +105,20 @@ function costBlock(kind, spent, left) {
   remaining.textContent = t('DESORDEM.Teste.Pre.Restam', { n: left });
   block.append(amount, unit, remaining);
   return block;
+}
+
+/**
+ * Marcar "usar como teste de avanço" muda a DT do campo para a do avanço (10); desmarcar volta à
+ * DT de antes. Em testes sem campo de DT (como a esquiva) não há o que trocar.
+ */
+function syncAdvanceDt(form, on) {
+  const field = form.elements.dt;
+  if (!field) return;
+  const saved = field.dataset.dtAntes ? Number(field.dataset.dtAntes) : null;
+  const next = advanceDtField({ on, current: Number(field.value), saved });
+  field.value = String(next.value);
+  if (next.saved === null) delete field.dataset.dtAntes;
+  else field.dataset.dtAntes = String(next.saved);
 }
 
 /** Atualiza prévia, espaços, bloqueios, custos e o botão de rolar conforme as escolhas. */
@@ -278,7 +293,10 @@ export async function askRollChoices(
     render: (event, dialog) => {
       const root = dialog.element.querySelector('.desordem-pre');
       const form = root.closest('form') ?? dialog.element.querySelector('form');
-      form.addEventListener('change', () => refresh(form, root, model));
+      form.addEventListener('change', (event) => {
+        if (event.target.name === 'avancoOn') syncAdvanceDt(form, event.target.checked);
+        refresh(form, root, model);
+      });
       form.addEventListener('input', (event) => {
         if (event.target.name === 'dt') refresh(form, root, model);
       });

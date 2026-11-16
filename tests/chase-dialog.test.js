@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   buildRollModel,
   emptySelection,
@@ -95,4 +96,50 @@ test('selectionToOptions entrega a escolha de avanço para a ficha', () => {
   assert.deepEqual(options.avanco, { on: true, breath: 2, effort: true });
   // o fôlego não vira bônus manual: a ficha o acrescenta aos dados na hora de rolar
   assert.deepEqual(options.extraDice, []);
+});
+
+test('todo tipo de dado do preview tem rótulo em português e em inglês', () => {
+  const origins = ['pt-BR', 'en'].map(
+    (lang) =>
+      JSON.parse(readFileSync(new URL(`../lang/${lang}.json`, import.meta.url), 'utf8')).DESORDEM
+        .Teste.Pre.Origem,
+  );
+  const model = buildRollModel({
+    ...baseInput,
+    baseExtraDice: [6],
+    has: { impeto: true, sorrateiro: true, naoLetal: true },
+    skillKey: 'furtividade',
+    resources: { impeto: 5, pd: 9 },
+    fearDie: 6,
+    chase: chase(),
+  });
+  const kinds = new Set();
+  const runs = [
+    { avanco: { on: true, breath: 2 } },
+    { active: ['impetoDado'] },
+    { active: ['sorrateiro'] },
+    { active: ['naoLetal'] },
+    { embraceFear: true },
+    { bonus: [6, 0] },
+    {},
+  ];
+  for (const run of runs) {
+    for (const slot of evaluateSelection(model, { ...emptySelection(7), ...run }).slots) {
+      kinds.add(slot.kind);
+    }
+  }
+  for (const kind of [
+    'folego',
+    'base',
+    'impetoDado',
+    'sorrateiro',
+    'naoLetal',
+    'pavor',
+    'manual',
+  ]) {
+    assert.ok(kinds.has(kind), `o teste não gerou o tipo ${kind}`);
+  }
+  for (const origin of origins) {
+    for (const kind of kinds) assert.equal(typeof origin[kind], 'string', `falta Origem.${kind}`);
+  }
 });

@@ -170,6 +170,7 @@ import {
   breathLimit,
   effortDiceCount,
   advanceBlockReason,
+  advanceDtField,
   advanceGain,
   advanceSuccess,
   applyAdvance,
@@ -343,4 +344,21 @@ test('o pedido de gravação por socket é limpo', () => {
       .periciasUsadas.length,
     40,
   );
+});
+
+test('marcar o avanço põe a DT 10 e guarda a anterior; desmarcar devolve', () => {
+  const marked = advanceDtField({ on: true, current: 7, saved: null });
+  assert.deepEqual(marked, { value: 10, saved: 7 });
+  assert.deepEqual(advanceDtField({ on: false, current: 10, saved: marked.saved }), {
+    value: 7,
+    saved: null,
+  });
+});
+
+test('marcar de novo não perde a DT guardada; desmarcar sem nada guardado mantém a DT', () => {
+  assert.deepEqual(advanceDtField({ on: true, current: 10, saved: 7 }), { value: 10, saved: 7 });
+  assert.deepEqual(advanceDtField({ on: false, current: 12, saved: null }), {
+    value: 12,
+    saved: null,
+  });
 });
