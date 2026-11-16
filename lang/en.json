@@ -628,17 +628,18 @@
       "PA": "AP",
       "Folego": "Breath",
       "Agiu": "Already acted",
-      "BotaoAvancar": "Advance",
       "ProximaRodada": "Next round",
-      "Avancar": {
-        "Titulo": "Advance",
-        "Pericia": "Skill",
-        "PericiaUsada": "{pericia} (already used)",
-        "PericiaAviso": "Skills other than Athletics can only be used once and must be justified at the table.",
+      "Pre": {
+        "Titulo": "Chase",
+        "Usar": "Use as an advance test",
+        "Regra": "DT 10: adds the high roll on a pass or the low roll on a fail",
         "Folego": "Breath to spend (you have {n})",
-        "SemFolego": "No breath",
-        "Esforco": "Extra effort: +1 step on the test and lose {dados}d4 HP",
-        "Continuar": "Continue"
+        "SemFolego": "No breath available.",
+        "Esforco": "Extra effort: +1 step on the skill and lose {dados}d4 HP",
+        "Bloqueio": {
+          "agiu": "Already acted this round. To redo it, uncheck \"Already acted\" in the chase window.",
+          "pericia": "{pericia} was already used to advance. Only Athletics can repeat."
+        }
       },
       "Chat": {
         "Titulo": "{nome} advances",
@@ -655,7 +656,8 @@
       "Erro": {
         "JaExiste": "A chase already exists. Delete it before creating another.",
         "JaAgiu": "{nome} has already acted this round.",
-        "NaoEmAndamento": "The chase is not in progress."
+        "NaoEmAndamento": "The chase is not in progress.",
+        "AvancoBloqueado": "The test no longer counts as an advance (already acted or the skill was already used). It was rolled as a normal test."
       }
     }
   },

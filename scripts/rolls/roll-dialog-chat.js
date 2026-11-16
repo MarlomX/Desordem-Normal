@@ -27,6 +27,11 @@ function readSelection(form) {
     controlFear: Boolean(fields.controlFear?.checked),
     embraceFear: Boolean(fields.embraceFear?.checked),
     dt: fields.dt?.value,
+    avanco: {
+      on: Boolean(fields.avancoOn?.checked),
+      breath: Number(fields.avancoBreath?.value ?? 0),
+      effort: Boolean(fields.avancoEffort?.checked),
+    },
   };
 }
 
@@ -126,6 +131,21 @@ function refresh(form, root, model) {
     option.querySelector('[data-motivo]').textContent = blocked ? noRoom : '';
   }
 
+  // Avanço na perseguição: mostra fôlego e esforço extra só com a opção marcada. O fôlego ocupa os
+  // espaços de dado extra, então a quantidade pode ser reduzida para caber.
+  const advance = root.querySelector('[data-avanco]');
+  if (advance) {
+    advance
+      .querySelector('[data-avanco-detalhes]')
+      ?.classList.toggle('is-oculta', !evaluation.avanco.on);
+    const breathField = form.elements.avancoBreath;
+    if (breathField && evaluation.avanco.on) {
+      if (Number(breathField.value) !== evaluation.avanco.breath) {
+        breathField.value = String(evaluation.avanco.breath);
+      }
+    }
+  }
+
   // Prévia dos dados rolados (o dado de pavor normal aparece por último, fora do limite)
   root
     .querySelector('[data-previa]')
@@ -170,6 +190,8 @@ function refresh(form, root, model) {
  * @param {number} [config.dt=7] DT padrão do teste (editável na janela).
  * @param {boolean} [config.showDt=true] Falso em testes sem DT (esquiva).
  * @param {boolean} [config.allowNonLethal=false] Oferece "dano não letal" (só no teste de lesão).
+ * @param {object|null} [config.chase] Com perseguição em andamento, os dados do participante para
+ *   oferecer "usar como teste de avanço" (veja `buildRollModel`). Sem isso, a opção não aparece.
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
  */
 export async function askRollChoices(
@@ -182,6 +204,7 @@ export async function askRollChoices(
     dt = 7,
     showDt = true,
     allowNonLethal = false,
+    chase = null,
     shift = false,
   },
 ) {
@@ -202,6 +225,7 @@ export async function askRollChoices(
     ignoreFear,
     dt,
     showDt,
+    chase,
   });
 
   const costText = (cost) =>
@@ -215,6 +239,17 @@ export async function askRollChoices(
     titulo: `${dice.attrLabel} + ${dice.skillLabel}`,
     showDt,
     dt,
+    avanco: model.avanco && {
+      motivo: model.avanco.blocked
+        ? t(`DESORDEM.Perseguicao.Pre.Bloqueio.${model.avanco.blocked}`, {
+            pericia: dice.skillLabel,
+          })
+        : '',
+      hasBreath: model.avanco.breathMax > 0,
+      folego: chase.folego,
+      breathOptions: Array.from({ length: model.avanco.breathMax + 1 }, (_, n) => ({ n })),
+      esforcoTexto: t('DESORDEM.Perseguicao.Pre.Esforco', { dados: model.avanco.effortDice }),
+    },
     abilities: model.abilities.map((ability) => ({
       ...ability,
       label: t(`DESORDEM.Teste.Pre.Hab.${ability.key}`, { die: ability.die }),

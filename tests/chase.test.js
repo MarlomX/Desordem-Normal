@@ -169,7 +169,9 @@ import {
   skillAllowed,
   breathLimit,
   effortDiceCount,
+  advanceBlockReason,
   advanceGain,
+  advanceSuccess,
   applyAdvance,
   applyEffortLoss,
   adjustField,
@@ -229,10 +231,46 @@ test('esforço extra custa um d4 a mais a cada uso', () => {
   assert.deepEqual([0, 1, 2, 3].map(effortDiceCount), [1, 2, 3, 4]);
 });
 
+test('sucesso do avanço usa a DT 10 própria; críticos decidem sozinhos', () => {
+  const ok = (total, criticalSuccess = false, criticalFailure = false) =>
+    advanceSuccess({ total, criticalSuccess, criticalFailure });
+  assert.equal(ok(10), true);
+  assert.equal(ok(9), false);
+  assert.equal(ok(3, true), true);
+  assert.equal(ok(20, false, true), false);
+});
+
 test('ganho de PA: rolagem alta ao passar (as duas no crítico), baixa ao falhar', () => {
-  assert.equal(advanceGain({ success: true, highSum: 8, lowRoll: 3 }), 8);
-  assert.equal(advanceGain({ success: true, highSum: 14, lowRoll: 6 }), 14);
-  assert.equal(advanceGain({ success: false, highSum: 7, lowRoll: 2 }), 2);
+  const base = { criticalSuccess: false, criticalFailure: false };
+  assert.equal(advanceGain({ ...base, total: 12, highSum: 8, lowRoll: 3 }), 8);
+  assert.equal(
+    advanceGain({ ...base, criticalSuccess: true, total: 12, highSum: 14, lowRoll: 6 }),
+    14,
+  );
+  assert.equal(advanceGain({ ...base, total: 7, highSum: 7, lowRoll: 2 }), 2);
+  assert.equal(
+    advanceGain({ ...base, criticalFailure: true, total: 12, highSum: 9, lowRoll: 1 }),
+    1,
+  );
+});
+
+test('bloqueios do avanço: não iniciada, já agiu, perícia usada', () => {
+  const participant = { ultimaRodada: 1, periciasUsadas: ['luta'] };
+  const base = { ativa: true, rodadaAtual: 2, participant, skillKey: 'atletismo' };
+  assert.equal(advanceBlockReason(base), null);
+  assert.equal(advanceBlockReason({ ...base, ativa: false }), 'inativa');
+  assert.equal(advanceBlockReason({ ...base, rodadaAtual: 0 }), 'inativa');
+  assert.equal(
+    advanceBlockReason({ ...base, participant: { ...participant, ultimaRodada: 2 } }),
+    'agiu',
+  );
+  assert.equal(advanceBlockReason({ ...base, skillKey: 'luta' }), 'pericia');
+  assert.equal(advanceBlockReason({ ...base, skillKey: 'acrobacia' }), null);
+  // a perícia usada só importa se não for Atletismo
+  assert.equal(
+    advanceBlockReason({ ...base, participant: { ...participant, periciasUsadas: ['atletismo'] } }),
+    null,
+  );
 });
 
 test('applyAdvance soma PA, gasta fôlego e registra rodada, esforço e perícia', () => {
@@ -286,22 +324,23 @@ test('próxima rodada', () => {
 });
 
 test('o pedido de gravação por socket é limpo', () => {
-  const skills = ['atletismo', 'acrobacia'];
   assert.deepEqual(
-    sanitizeParticipantPatch(
-      {
-        pa: 12,
-        folego: -1,
-        esforcoExtra: 1.5,
-        ultimaRodada: 3,
-        periciasUsadas: ['acrobacia', 'acrobacia', 'hack'],
-        carregadoPor: 'x',
-        system: { evil: true },
-      },
-      skills,
-    ),
-    { pa: 12, ultimaRodada: 3, periciasUsadas: ['acrobacia'] },
+    sanitizeParticipantPatch({
+      pa: 12,
+      folego: -1,
+      esforcoExtra: 1.5,
+      ultimaRodada: 3,
+      periciasUsadas: ['acrobacia', 'acrobacia', 'oficio:k3j9x', 'ha ck', 7, '<b>'],
+      carregadoPor: 'x',
+      system: { evil: true },
+    }),
+    { pa: 12, ultimaRodada: 3, periciasUsadas: ['acrobacia', 'oficio:k3j9x'] },
   );
-  assert.deepEqual(sanitizeParticipantPatch(null, skills), {});
-  assert.deepEqual(sanitizeParticipantPatch({ pa: '9' }, skills), {});
+  assert.deepEqual(sanitizeParticipantPatch(null), {});
+  assert.deepEqual(sanitizeParticipantPatch({ pa: '9' }), {});
+  assert.equal(
+    sanitizeParticipantPatch({ periciasUsadas: Array.from({ length: 80 }, (_, i) => `k${i}`) })
+      .periciasUsadas.length,
+    40,
+  );
 });

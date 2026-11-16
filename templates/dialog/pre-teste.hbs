@@ -14,6 +14,38 @@
   </div>
   {{/if}}
 
+  {{#if avanco}}
+  <fieldset class="desordem-pre__grupo" data-avanco>
+    <legend><i class="fa-solid fa-person-running" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Pre.Titulo"}}</legend>
+    <label class="desordem-pre__opcao{{#if avanco.motivo}} is-indisponivel{{/if}}">
+      <input type="checkbox" name="avancoOn" {{#if avanco.motivo}}disabled{{/if}}>
+      <span class="desordem-pre__nome">{{localize "DESORDEM.Perseguicao.Pre.Usar"}}</span>
+      <span class="desordem-pre__custo">{{localize "DESORDEM.Perseguicao.Pre.Regra"}}</span>
+      {{#if avanco.motivo}}<span class="desordem-pre__motivo">{{avanco.motivo}}</span>{{/if}}
+    </label>
+    {{#unless avanco.motivo}}
+    <div class="desordem-pre__avanco is-oculta" data-avanco-detalhes>
+      {{#if avanco.hasBreath}}
+      <label class="desordem-pre__avanco-campo">
+        <span>{{localize "DESORDEM.Perseguicao.Pre.Folego" n=avanco.folego}}</span>
+        <select name="avancoBreath">
+          {{#each avanco.breathOptions}}
+          <option value="{{n}}">{{n}}d6</option>
+          {{/each}}
+        </select>
+      </label>
+      {{else}}
+      <p class="desordem-ficha__dica">{{localize "DESORDEM.Perseguicao.Pre.SemFolego"}}</p>
+      {{/if}}
+      <label class="desordem-pre__opcao">
+        <input type="checkbox" name="avancoEffort">
+        <span class="desordem-pre__nome">{{avanco.esforcoTexto}}</span>
+      </label>
+    </div>
+    {{/unless}}
+  </fieldset>
+  {{/if}}
+
   <fieldset class="desordem-pre__grupo">
     <legend><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Bonus.Titulo"}}</legend>
     <div class="desordem-bonus__slots" data-slots></div>

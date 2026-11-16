@@ -628,17 +628,18 @@
       "PA": "PA",
       "Folego": "Fôlego",
       "Agiu": "Já agiu",
-      "BotaoAvancar": "Avançar",
       "ProximaRodada": "Próxima rodada",
-      "Avancar": {
-        "Titulo": "Avançar",
-        "Pericia": "Perícia",
-        "PericiaUsada": "{pericia} (já usada)",
-        "PericiaAviso": "Outras perícias além de Atletismo só valem uma vez e precisam ser justificadas à mesa.",
+      "Pre": {
+        "Titulo": "Perseguição",
+        "Usar": "Usar como teste de avanço",
+        "Regra": "DT 10: soma a rolagem alta ao passar ou a baixa ao falhar",
         "Folego": "Fôlego a gastar (você tem {n})",
-        "SemFolego": "Sem fôlego",
-        "Esforco": "Esforço extra: +1 passo no teste e perde {dados}d4 PV",
-        "Continuar": "Continuar"
+        "SemFolego": "Sem fôlego disponível.",
+        "Esforco": "Esforço extra: +1 passo na perícia e perde {dados}d4 PV",
+        "Bloqueio": {
+          "agiu": "Já agiu nesta rodada. Para refazer, desmarque \"Já agiu\" na janela da perseguição.",
+          "pericia": "{pericia} já foi usada para avançar. Só Atletismo pode se repetir."
+        }
       },
       "Chat": {
         "Titulo": "{nome} avança",
@@ -655,7 +656,8 @@
       "Erro": {
         "JaExiste": "Já existe uma perseguição. Exclua-a antes de criar outra.",
         "JaAgiu": "{nome} já agiu nesta rodada.",
-        "NaoEmAndamento": "A perseguição não está em andamento."
+        "NaoEmAndamento": "A perseguição não está em andamento.",
+        "AvancoBloqueado": "O teste não vale mais como avanço (já agiu ou a perícia já foi usada). Ele foi feito como um teste comum."
       }
     }
   },

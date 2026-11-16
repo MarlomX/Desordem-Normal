@@ -161,12 +161,39 @@ export function effortDiceCount(previousUses) {
 }
 
 /**
+ * O teste conta como sucesso no avanço? O avanço tem DT própria (10), separada da DT do teste
+ * usado, para funcionar também em testes sem DT (como o oposto da esquiva). Sucesso crítico
+ * passa sempre e falha crítica falha sempre.
+ * @param {{total: number, criticalSuccess: boolean, criticalFailure: boolean}} result Resultado
+ *   de `resolveTest`.
+ */
+export function advanceSuccess(result) {
+  if (result.criticalFailure) return false;
+  if (result.criticalSuccess) return true;
+  return result.total >= ADVANCE_DT;
+}
+
+/**
  * Pontos de avanço de um teste: passou, soma a rolagem alta (no crítico, as duas maiores, que o
  * teste já calcula em `highSum`); falhou, soma a rolagem baixa.
- * @param {{success: boolean, highSum: number, lowRoll: number}} result Resultado de `resolveTest`.
+ * @param {{total: number, highSum: number, lowRoll: number, criticalSuccess: boolean,
+ *   criticalFailure: boolean}} result Resultado de `resolveTest`.
  */
 export function advanceGain(result) {
-  return result.success ? result.highSum : result.lowRoll;
+  return advanceSuccess(result) ? result.highSum : result.lowRoll;
+}
+
+/**
+ * Por que o teste não pode ser usado como avanço agora (ou `null` se pode):
+ * `inativa` (perseguição não está em andamento), `agiu` (já agiu nesta rodada; o jogador desmarca
+ * "já agiu" na janela da perseguição para refazer) ou `pericia` (perícia, que não é Atletismo, já
+ * usada).
+ */
+export function advanceBlockReason({ ativa, rodadaAtual, participant, skillKey }) {
+  if (!ativa || rodadaAtual < 1) return 'inativa';
+  if (!canAdvance({ ativa, rodadaAtual, participant })) return 'agiu';
+  if (!skillAllowed(skillKey, participant.periciasUsadas)) return 'pericia';
+  return null;
 }
 
 /**
@@ -206,13 +233,15 @@ export function nextRoundState(rodadaAtual) {
   return { rodadaAtual: rodadaAtual + 1 };
 }
 
+/** Chave de teste válida: letras, números, `_`, `-`, `:` e `.` (inclui as de áreas extras). */
+const SKILL_KEY_PATTERN = /^[A-Za-z0-9_.:-]{1,60}$/;
+
 /**
  * Limpa um pedido de gravação vindo de outro cliente: só campos conhecidos, números inteiros
- * não negativos e perícias que existem. Tudo o mais é ignorado.
+ * não negativos e chaves de teste com formato válido. Tudo o mais é ignorado.
  * @param {object} patch
- * @param {string[]} validSkills Chaves de perícia válidas.
  */
-export function sanitizeParticipantPatch(patch, validSkills) {
+export function sanitizeParticipantPatch(patch) {
   const clean = {};
   if (!patch || typeof patch !== 'object') return clean;
   for (const field of PARTICIPANT_NUMBER_FIELDS) {
@@ -221,8 +250,12 @@ export function sanitizeParticipantPatch(patch, validSkills) {
   }
   if (Array.isArray(patch.periciasUsadas)) {
     clean.periciasUsadas = [
-      ...new Set(patch.periciasUsadas.filter((skill) => validSkills.includes(skill))),
-    ];
+      ...new Set(
+        patch.periciasUsadas.filter(
+          (skill) => typeof skill === 'string' && SKILL_KEY_PATTERN.test(skill),
+        ),
+      ),
+    ].slice(0, 40);
   }
   return clean;
 }

@@ -34,8 +34,8 @@ import {
   setRelationDegree,
 } from '../rolls/relation.js';
 import PerseguicaoApp from '../chase/app.js';
-import { advanceChase } from '../chase/advance.js';
-import { chaseCardFor } from '../chase/store.js';
+import { withChaseAdvance } from '../chase/advance.js';
+import { chaseCardFor, chaseInfoFor } from '../chase/store.js';
 import {
   buildAttributeRows,
   buildSkillRows,
@@ -115,7 +115,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       healAlly: PersonagemSheet.#onHealAlly,
       newScene: PersonagemSheet.#onNewScene,
       openChase: PersonagemSheet.#onOpenChase,
-      chaseAdvance: PersonagemSheet.#onChaseAdvance,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
@@ -311,14 +310,22 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   /**
    * Abre a janela pré-teste (dados bônus, habilidades e pavor) e faz a rolagem com a escolha.
-   * Shift+clique rola direto, sem a janela. Se o jogador cancelar, não rola.
+   * Shift+clique rola direto, sem a janela. Se o jogador cancelar, não rola. Com uma perseguição
+   * em andamento, a janela oferece "usar como teste de avanço" (menos com `chase: false`).
    * @param {MouseEvent} event
    * @param {Object} config Veja `askRollChoices`.
    * @param {(options: object) => Promise<*>} run Faz a rolagem com as opções escolhidas.
    */
   async #rollWithChoices(event, config, run) {
-    const options = await askRollChoices(this.document, { ...config, shift: event?.shiftKey });
-    if (options) await run(options);
+    const { chase: offerAdvance = true, ...rest } = config;
+    const chase = offerAdvance ? chaseInfoFor(this.document, config.skillKey) : null;
+    const options = await askRollChoices(this.document, {
+      ...rest,
+      chase,
+      shift: event?.shiftKey,
+    });
+    if (!options) return;
+    await run(options.avanco ? withChaseAdvance(this.document, options, config.skillKey) : options);
   }
 
   /**
@@ -594,7 +601,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     // "Dano não letal" aparece na janela como uma habilidade que acrescenta +d6 ao teste
     await this.#rollWithChoices(
       event,
-      { skillKey: 'vigor', ignoreFear: true, dt: rule.dt, allowNonLethal: true },
+      { skillKey: 'vigor', ignoreFear: true, dt: rule.dt, allowNonLethal: true, chase: false },
       (options) => rollInjuryTest(this.document, options),
     );
   }
@@ -615,6 +622,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       {
         skillKey: 'disciplina',
         ignoreFear: true,
+        chase: false,
         dt: traumaDT(this.document.system.cena.testesTrauma),
       },
       (options) => rollTraumaTest(this.document, options),
@@ -738,11 +746,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Cura o aliado mirado (Medicina DT 7, 2 PD). */
   static async #onHealAlly() {
     await healAlly(this.document);
-  }
-
-  /** Avançar na perseguição (cartão da ficha). Shift+clique pula a janela pré-teste. */
-  static async #onChaseAdvance(event, target) {
-    await advanceChase(target.dataset.combatantId, { shift: event.shiftKey });
   }
 
   /** Abre a janela da perseguição (cartão da ficha). */

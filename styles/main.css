@@ -1954,18 +1954,11 @@
   line-height: 1;
 }
 
-.desordem-perseguicao__avancar {
-  flex: 0 0 auto;
-  width: auto;
-  margin: 0;
-  border-color: var(--dn-accent);
-  background: var(--dn-accent-soft);
-}
-
 .desordem-perseguicao__agiu {
-  font-size: 0.8em;
-  font-style: italic;
-  opacity: 0.8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
 }
 
 .desordem-perseguicao-avancar {
@@ -1984,4 +1977,23 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* ===== Perseguição: avanço na janela pré-teste (v0.16.2) ===== */
+.desordem-pre__avanco {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.desordem-pre__avanco.is-oculta {
+  display: none;
+}
+
+.desordem-pre__avanco-campo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }

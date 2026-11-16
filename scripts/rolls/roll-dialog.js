@@ -7,6 +7,7 @@ import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { BONUS_SLOTS, bonusDice, normalizeBonus } from './bonus.js';
 import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } from './fear.js';
 import { DEFAULT_DT, MAX_COUNTED, planDice } from './test.js';
+import { breathLimit } from './chase.js';
 
 /** Espaços de dado extra de um teste: o limite de 4 dados rolados menos atributo e perícia. */
 export const EXTRA_SLOTS = BONUS_SLOTS;
@@ -34,6 +35,9 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  * @param {boolean} [input.ignoreFear=false] Testes que não sofrem o dado de pavor.
  * @param {number} [input.dt=7] DT padrão do teste.
  * @param {boolean} [input.showDt=true] Falso em testes sem DT (por exemplo, a esquiva).
+ * @param {{blocked: string|null, folego: number, effortDice: number}|null} [input.chase] Com uma
+ *   perseguição em andamento: se o teste pode valer como avanço (`blocked` diz por que não),
+ *   quanto fôlego o personagem tem e quantos d4 de PV o esforço extra custaria.
  */
 export function buildRollModel({
   skillKey,
@@ -46,6 +50,7 @@ export function buildRollModel({
   ignoreFear = false,
   dt = DEFAULT_DT,
   showDt = true,
+  chase = null,
 }) {
   const abilities = [];
   if (has.impeto) {
@@ -87,7 +92,25 @@ export function buildRollModel({
           embraceCost: EMBRACE_FEAR_COST,
         }
       : null;
-  return { skillKey, attrDie, skillDie, baseExtraDice, abilities, fear, resources, dt, showDt };
+  const avanco = chase
+    ? {
+        blocked: chase.blocked ?? null,
+        breathMax: breathLimit(chase.folego),
+        effortDice: chase.effortDice,
+      }
+    : null;
+  return {
+    skillKey,
+    attrDie,
+    skillDie,
+    baseExtraDice,
+    abilities,
+    fear,
+    resources,
+    dt,
+    showDt,
+    avanco,
+  };
 }
 
 /** Escolha inicial: nada marcado e a DT padrão do teste. */
@@ -98,6 +121,7 @@ export function emptySelection(dt) {
     controlFear: false,
     embraceFear: false,
     dt,
+    avanco: { on: false, breath: 0, effort: false },
   };
 }
 
@@ -105,8 +129,8 @@ export function emptySelection(dt) {
  * Efeito de uma escolha: custos, dado de pavor resultante, espaços de dado extra e erros.
  *
  * Todo dado extra ocupa um dos dois espaços (limite de 4 dados rolados com atributo e perícia),
- * nesta ordem: dados fixos do teste (companheiro, não letal), habilidades marcadas, pavor abraçado
- * e, por último, os bônus escolhidos à mão. O que não cabe é ignorado. O dado de pavor normal
+ * nesta ordem: dados fixos do teste (companheiro, não letal), fôlego do avanço, habilidades
+ * marcadas, pavor abraçado e, por último, os bônus escolhidos à mão. O que não cabe é ignorado. O dado de pavor normal
  * não ocupa espaço.
  * @returns {{
  *   selection: object, dt: number|null, pdCost: number, impetoCost: number, pdLeft: number,
@@ -122,6 +146,21 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
 
   // Dados que ocupam espaço sem escolha manual, em ordem
   const locked = model.baseExtraDice.map((sides) => ({ kind: 'base', sides, locked: true }));
+  // Avanço na perseguição: o fôlego gasto vira dados d6 fixos e o esforço extra sobe um passo
+  const advance = model.avanco && !model.avanco.blocked && selection.avanco?.on;
+  let breath = 0;
+  if (advance) {
+    breath = Math.max(
+      0,
+      Math.min(
+        Math.trunc(Number(selection.avanco.breath) || 0),
+        model.avanco.breathMax,
+        EXTRA_SLOTS - locked.length,
+      ),
+    );
+    for (let i = 0; i < breath; i++) locked.push({ kind: 'folego', sides: 6, locked: true });
+  }
+  const effort = Boolean(advance && selection.avanco.effort);
   const active = [];
   for (const [key, ability] of usable) {
     if (!wanted.has(key) || locked.length >= EXTRA_SLOTS) continue;
@@ -167,10 +206,11 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     attrDie: model.attrDie,
     skillDie: model.skillDie,
     extraDice: [
-      ...lockedSides((kind) => kind === 'base'),
+      ...lockedSides((kind) => kind === 'base' || kind === 'folego'),
       ...manual,
-      ...lockedSides((kind) => kind !== 'base'),
+      ...lockedSides((kind) => kind !== 'base' && kind !== 'folego'),
     ],
+    stepMods: effort ? [{ target: 'skill', steps: 1 }] : [],
   });
   const errors = [];
   if (pdCost > model.resources.pd) errors.push('pd');
@@ -183,6 +223,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       controlFear: control,
       embraceFear: embrace,
       dt: model.showDt ? normalizeDt(selection.dt, model.dt) : null,
+      avanco: { on: Boolean(advance), breath, effort },
     },
     dt: model.showDt ? normalizeDt(selection.dt, model.dt) : null,
     pdCost,
@@ -196,6 +237,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       embrace: Boolean(model.fear) && !embrace && !roomLeft,
     },
     rolledSides: plan.rolledSides,
+    avanco: { on: Boolean(advance), breath, effort },
     summedDice: Math.min(plan.rolledSides.length, MAX_COUNTED),
     errors,
     valid: errors.length === 0,
@@ -215,5 +257,7 @@ export function selectionToOptions(model, selection) {
     embraceFear: evaluated.selection.embraceFear,
   };
   if (evaluated.dt !== null) options.dt = evaluated.dt;
+  // Avanço na perseguição: quem chama (a ficha) transforma isto em dados, passo e gravação
+  if (evaluated.avanco.on) options.avanco = evaluated.avanco;
   return options;
 }

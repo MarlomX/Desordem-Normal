@@ -8,8 +8,9 @@ import {
   CHASE_COMBAT_TYPE,
   CHASE_COMBATANT_TYPE,
   adjustField,
-  canAdvance,
+  advanceBlockReason,
   chaseAccess,
+  effortDiceCount,
   hasActed,
   initialChaseState,
   isAdjustableField,
@@ -63,9 +64,8 @@ function participantView(chase, combatant) {
     pa: participant.pa,
     folego: participant.folego,
     agiu: acted,
-    // Só quem é dono do personagem (e o mestre) avança por ele
-    podeAvancar:
-      Boolean(combatant.actor?.isOwner) && canAdvance({ ativa, rodadaAtual, participant }),
+    // Só quem é dono do personagem (e o mestre) marca ou desmarca "já agiu"
+    podeMarcar: Boolean(combatant.actor?.isOwner),
   };
 }
 
@@ -108,7 +108,31 @@ export function chaseCardFor(actor) {
     pa: view?.pa ?? 0,
     folego: view?.folego ?? 0,
     agiu: view?.agiu ?? false,
-    podeAvancar: view?.podeAvancar ?? false,
+  };
+}
+
+/**
+ * Dados para a janela pré-teste oferecer "usar como teste de avanço", ou `null` se a opção não
+ * deve aparecer (sem perseguição em andamento, personagem fora dela ou sem permissão).
+ * `blocked` diz por que o teste ainda não pode valer como avanço (já agiu, perícia já usada).
+ */
+export function chaseInfoFor(actor, skillKey) {
+  const chase = findChase();
+  if (!chase?.system.ativa || !actor?.isOwner) return null;
+  const id = actor.isToken ? actor.baseActor?.id : actor.id;
+  const combatant = chase.combatants.find((entry) => entry.actorId === id);
+  if (!combatant) return null;
+  const participant = combatant.system;
+  return {
+    combatantId: combatant.id,
+    folego: participant.folego,
+    effortDice: effortDiceCount(participant.esforcoExtra),
+    blocked: advanceBlockReason({
+      ativa: true,
+      rodadaAtual: chase.system.rodadaAtual,
+      participant,
+      skillKey,
+    }),
   };
 }
 
@@ -162,6 +186,16 @@ export async function endChase(chase) {
 export async function nextRound(chase) {
   if (!game.user.isGM || !chase.system.ativa) return;
   await chase.update({ system: nextRoundState(chase.system.rodadaAtual) });
+}
+
+/**
+ * Marca ou desmarca "já agiu" de um participante (o teste de avanço também marca). Marcar grava a
+ * rodada atual; desmarcar volta a 0, liberando um novo avanço na mesma rodada.
+ */
+export async function setActed(chase, combatantId, acted) {
+  const combatant = chase.combatants.get(combatantId);
+  if (!chase.system.ativa || !combatant?.actor?.isOwner) return;
+  await updateParticipant(combatant, { ultimaRodada: acted ? chase.system.rodadaAtual : 0 });
 }
 
 /** Ajuste manual (mestre) de PA ou fôlego de um participante. */

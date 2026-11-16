@@ -5,7 +5,6 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { addableActors } from '../rolls/chase.js';
-import { advanceChase } from './advance.js';
 import {
   addParticipants,
   adjustParticipant,
@@ -18,6 +17,7 @@ import {
   nextRound,
   participantActorIds,
   removeParticipant,
+  setActed,
   startChase,
 } from './store.js';
 
@@ -46,7 +46,7 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
       deleteChase: PerseguicaoApp.#onDeleteChase,
       addParticipants: PerseguicaoApp.#onAddParticipants,
       removeParticipant: PerseguicaoApp.#onRemoveParticipant,
-      advance: PerseguicaoApp.#onAdvance,
+      toggleActed: PerseguicaoApp.#onToggleActed,
       adjustParticipant: PerseguicaoApp.#onAdjustParticipant,
       nextRound: PerseguicaoApp.#onNextRound,
     },
@@ -101,9 +101,10 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
     if (chase) await endChase(chase);
   }
 
-  /** Avançar: o jogador (ou o mestre, pelos NPCs) faz o teste do participante. */
-  static async #onAdvance(event, target) {
-    await advanceChase(target.dataset.combatantId, { shift: event.shiftKey });
+  /** Caixa "já agiu": o dono do personagem e o mestre marcam e desmarcam. */
+  static async #onToggleActed(event, target) {
+    const chase = findChase();
+    if (chase) await setActed(chase, target.dataset.combatantId, target.checked);
   }
 
   /** Ajuste manual de PA ou fôlego (só o mestre). */

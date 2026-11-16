@@ -3,7 +3,6 @@
  * Liga a perseguição ao Foundry: redesenha a janela e as fichas quando o estado muda, abre a
  * janela sozinha para quem participa e coloca o botão na aba de combate.
  */
-import { PERICIAS } from '../config.js';
 import {
   CHASE_COMBAT_TYPE,
   sanitizeParticipantPatch,
@@ -130,7 +129,7 @@ export function registerChaseSocket() {
     const requester = game.users.get(userId);
     if (!combatant?.actor || !requester) return;
     if (!combatant.actor.testUserPermission(requester, 'OWNER')) return;
-    const patch = sanitizeParticipantPatch(data.patch, Object.keys(PERICIAS));
+    const patch = sanitizeParticipantPatch(data.patch);
     if (Object.keys(patch).length) await combatant.update({ system: patch });
   });
 }

@@ -56,7 +56,7 @@ export async function postMessage({ actor, content, rolls = [], flags }) {
  * Nome de uma perícia ou área de Aptidão ou de Ofício. Em áreas extras, é o nome digitado na
  * ficha do `actor` (ou um texto padrão, se estiver vazio).
  */
-function skillName(key, actor) {
+export function skillName(key, actor) {
   const found = actor ? findExtra(actor.system, key) : null;
   if (found) {
     return found.extra.nome || game.i18n.localize(`DESORDEM.Ficha.ExtraSemNome.${found.group}`);
@@ -216,11 +216,13 @@ async function settleAbilities(actor, options, result) {
  * @param {string} [opts.attrLabel]
  * @param {string} [opts.skillLabel]
  * @param {Actor} [opts.actor] Ator que fala no chat.
+ * @param {(result: object) => *} [opts.onResult] Chamado com o resultado, depois do cartão.
  */
 export async function rollTest({
   attrLabel = game.i18n.localize('DESORDEM.Teste.Atributo'),
   skillLabel = game.i18n.localize('DESORDEM.Teste.Pericia'),
   actor,
+  onResult,
   ...options
 }) {
   const { result, rolls, card, plan, display, sides, values } = await runTest(actor, {
@@ -235,6 +237,8 @@ export async function rollTest({
     flags.tabela = createPending({ kind: 'disaster', actorUuid: actor.uuid });
   }
   await postMessage({ actor, content: card, rolls, flags });
+  // Quem pediu o teste pode reagir ao resultado (por exemplo, a perseguição soma os pontos de avanço)
+  if (typeof onResult === 'function') await onResult(result);
   return result;
 }
 
