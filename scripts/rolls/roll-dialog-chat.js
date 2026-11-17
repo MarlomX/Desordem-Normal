@@ -108,14 +108,21 @@ function costBlock(kind, spent, left) {
 }
 
 /**
- * Marcar "usar como teste de avanço" muda a DT do campo para a do avanço (10); desmarcar volta à
- * DT de antes. Em testes sem campo de DT (como a esquiva) não há o que trocar.
+ * Marcar "usar como teste de avanço" muda a DT do campo para a da perseguição (padrão 10, o mestre
+ * pode mudar); desmarcar volta à DT de antes. Depois de marcar, a DT continua editável e é ela que
+ * vale para o avanço. Em testes sem campo de DT (como a esquiva) não há o que trocar.
  */
 function syncAdvanceDt(form, on) {
   const field = form.elements.dt;
   if (!field) return;
   const saved = field.dataset.dtAntes ? Number(field.dataset.dtAntes) : null;
-  const next = advanceDtField({ on, current: Number(field.value), saved });
+  const chaseDt = Number(form.querySelector('[data-avanco]')?.dataset.dt);
+  const next = advanceDtField({
+    on,
+    current: Number(field.value),
+    saved,
+    dt: Number.isFinite(chaseDt) && chaseDt > 0 ? chaseDt : undefined,
+  });
   field.value = String(next.value);
   if (next.saved === null) delete field.dataset.dtAntes;
   else field.dataset.dtAntes = String(next.saved);
@@ -260,6 +267,7 @@ export async function askRollChoices(
             pericia: dice.skillLabel,
           })
         : '',
+      dt: model.avanco.dt,
       hasBreath: model.avanco.breathMax > 0,
       folego: chase.folego,
       breathOptions: Array.from({ length: model.avanco.breathMax + 1 }, (_, n) => ({ n })),

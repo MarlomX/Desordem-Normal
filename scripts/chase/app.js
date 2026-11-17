@@ -18,6 +18,7 @@ import {
   participantActorIds,
   removeParticipant,
   setActed,
+  setChaseDt,
   startChase,
 } from './store.js';
 
@@ -49,6 +50,7 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
       toggleActed: PerseguicaoApp.#onToggleActed,
       adjustParticipant: PerseguicaoApp.#onAdjustParticipant,
       nextRound: PerseguicaoApp.#onNextRound,
+      adjustDt: PerseguicaoApp.#onAdjustDt,
     },
   };
 
@@ -112,6 +114,12 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
     const chase = findChase();
     const { combatantId, field } = target.dataset;
     if (chase) await adjustParticipant(chase, combatantId, field, Number(target.dataset.delta));
+  }
+
+  /** Muda a DT padrão do avanço desta perseguição (só o mestre). */
+  static async #onAdjustDt(event, target) {
+    const chase = findChase();
+    if (chase) await setChaseDt(chase, chase.system.dt + Number(target.dataset.delta));
   }
 
   static async #onNextRound() {

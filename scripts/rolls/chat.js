@@ -217,12 +217,15 @@ async function settleAbilities(actor, options, result) {
  * @param {string} [opts.skillLabel]
  * @param {Actor} [opts.actor] Ator que fala no chat.
  * @param {(result: object) => *} [opts.onResult] Chamado com o resultado, depois do cartão.
+ * @param {object} [opts.avancoFlag] Registro de teste de avanço da perseguição, guardado na
+ *   mensagem (flag `avanco`) para o botão do cartão.
  */
 export async function rollTest({
   attrLabel = game.i18n.localize('DESORDEM.Teste.Atributo'),
   skillLabel = game.i18n.localize('DESORDEM.Teste.Pericia'),
   actor,
   onResult,
+  avancoFlag,
   ...options
 }) {
   const { result, rolls, card, plan, display, sides, values } = await runTest(actor, {
@@ -232,6 +235,7 @@ export async function rollTest({
   });
   // O cartão guarda o teste para as habilidades que mudam os dados depois da rolagem
   const flags = actor ? { teste: { plan, display, sides, values, notes: [], used: {} } } : undefined;
+  if (flags && avancoFlag) flags.avanco = avancoFlag;
   // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js)
   if (flags && result.criticalFailure) {
     flags.tabela = createPending({ kind: 'disaster', actorUuid: actor.uuid });

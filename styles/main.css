@@ -1754,6 +1754,7 @@
 
 .desordem-perseguicao__topo {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -1996,4 +1997,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+/* ===== Perseguição: barra "adicionar PA" no cartão do teste (v0.16.4) ===== */
+.desordem-teste__avanco {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.desordem-teste__avanco-texto {
+  flex: 1 1 auto;
+  font-size: 0.9em;
 }

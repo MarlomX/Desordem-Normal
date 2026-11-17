@@ -3,6 +3,12 @@
   <header class="desordem-perseguicao__topo">
     <span class="desordem-perseguicao__estado{{#if view.ativa}} is-ativa{{/if}}">{{#if view.ativa}}{{localize "DESORDEM.Perseguicao.EmAndamento"}}{{else}}{{localize "DESORDEM.Perseguicao.EmPreparacao"}}{{/if}}</span>
     {{#if view.ativa}}<span class="desordem-perseguicao__rodada">{{localize "DESORDEM.Perseguicao.Rodada" rodada=view.rodadaAtual}}</span>{{/if}}
+    <span class="desordem-perseguicao__valor">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.DT"}}</span>
+      {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustDt" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>{{/if}}
+      <strong>{{view.dt}}</strong>
+      {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustDt" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>{{/if}}
+    </span>
   </header>
 
   <h3 class="desordem-perseguicao__titulo"><i class="fa-solid fa-users" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Participantes"}} ({{view.participantes.length}})</h3>

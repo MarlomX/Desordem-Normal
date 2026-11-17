@@ -626,6 +626,7 @@
       "AdicionarAviso": "Marque os personagens que vão participar.",
       "SemPersonagens": "Não há personagens para adicionar.",
       "Remover": "Remover da perseguição",
+      "DT": "DT",
       "PA": "PA",
       "Folego": "Fôlego",
       "Agiu": "Já agiu",
@@ -633,7 +634,7 @@
       "Pre": {
         "Titulo": "Perseguição",
         "Usar": "Usar como teste de avanço",
-        "Regra": "DT 10: soma a rolagem alta ao passar ou a baixa ao falhar",
+        "Regra": "Soma a rolagem alta ao passar ou a baixa ao falhar. A DT é a do campo (a da perseguição, se o teste não tiver).",
         "Folego": "Fôlego a gastar (você tem {n})",
         "SemFolego": "Sem fôlego disponível.",
         "Esforco": "Esforço extra: +1 passo na perícia e perde {dados}d4 PV",
@@ -643,12 +644,19 @@
         }
       },
       "Chat": {
-        "Titulo": "{nome} avança",
-        "Ganho": "+{pa} PA (total: {total})",
-        "Pericia": "Perícia: {pericia}",
-        "Folego": "Fôlego gasto: {n}d6",
+        "EsforcoTitulo": "{nome} faz esforço extra",
         "Esforco": "Esforço extra: perdeu {perda} PV ({dados}d4)",
         "EsforcoZero": "Os PV chegaram a 0: faça o teste de lesão na ficha."
+      },
+      "Barra": {
+        "Titulo": "Avanço (DT {dt})",
+        "passou": "passou, soma a rolagem alta ({pa} PA)",
+        "crit": "crítico, soma as duas maiores ({pa} PA)",
+        "falhou": "falhou, soma a rolagem baixa ({pa} PA)",
+        "falhaCritica": "falha crítica, soma a rolagem baixa ({pa} PA)",
+        "Adicionar": "Adicionar {pa} PA",
+        "Adicionado": "Avanço: {pa} PA adicionados",
+        "Aplicando": "Adicionando…"
       },
       "Cartao": {
         "Titulo": "Perseguição",
@@ -658,6 +666,7 @@
         "JaExiste": "Já existe uma perseguição. Exclua-a antes de criar outra.",
         "JaAgiu": "{nome} já agiu nesta rodada.",
         "NaoEmAndamento": "A perseguição não está em andamento.",
+                "SemMestre": "Não há mestre online para somar os pontos de avanço.",
         "AvancoBloqueado": "O teste não vale mais como avanço (já agiu ou a perícia já foi usada). Ele foi feito como um teste comum."
       }
     }

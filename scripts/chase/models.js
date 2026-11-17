@@ -12,6 +12,8 @@ export class PerseguicaoModel extends foundry.abstract.TypeDataModel {
       // false = em preparação (o mestre monta a lista); true = em andamento
       ativa: new f.BooleanField({ required: true, initial: false }),
       rodadaAtual: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
+      // DT padrão do avanço nesta perseguição (o mestre pode mudar na janela)
+      dt: new f.NumberField({ required: true, integer: true, min: 1, max: 40, initial: 10 }),
     };
   }
 }

@@ -15,6 +15,7 @@ import {
   initialChaseState,
   isAdjustableField,
   nextRoundState,
+  normalizeChaseDt,
   participantReset,
   participantStart,
   startState,
@@ -75,6 +76,7 @@ export function chaseView(chase) {
     id: chase.id,
     ativa: chase.system.ativa,
     rodadaAtual: chase.system.rodadaAtual,
+    dt: chase.system.dt,
     participantes: chase.combatants.map((combatant) => participantView(chase, combatant)),
   };
 }
@@ -127,6 +129,7 @@ export function chaseInfoFor(actor, skillKey) {
     combatantId: combatant.id,
     folego: participant.folego,
     effortDice: effortDiceCount(participant.esforcoExtra),
+    dt: chase.system.dt,
     blocked: advanceBlockReason({
       ativa: true,
       rodadaAtual: chase.system.rodadaAtual,
@@ -180,6 +183,12 @@ export async function endChase(chase) {
   }));
   if (updates.length) await chase.updateEmbeddedDocuments('Combatant', updates);
   await chase.update({ system: endState() });
+}
+
+/** Muda a DT padrão do avanço desta perseguição (só o mestre). */
+export async function setChaseDt(chase, dt) {
+  if (!game.user.isGM) return;
+  await chase.update({ system: { dt: normalizeChaseDt(dt) } });
 }
 
 /** Passa para a próxima rodada. */

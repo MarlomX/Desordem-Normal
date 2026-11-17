@@ -14,7 +14,7 @@ export const CHASE_COMBATANT_TYPE = 'participante';
 
 /** Estado de uma perseguição recém-criada: em preparação, sem rodada. */
 export function initialChaseState() {
-  return { ativa: false, rodadaAtual: 0 };
+  return { ativa: false, rodadaAtual: 0, dt: ADVANCE_DT };
 }
 
 /** Estado ao iniciar a perseguição: ativa, na rodada 1. */
@@ -88,8 +88,23 @@ export function shouldAutoOpen(event, { isGM, isAuthor, ownsParticipant }) {
 // Avançar (0.16.1)
 // ---------------------------------------------------------------------------------------------
 
-/** Dificuldade do teste de avançar. */
+/** DT padrão do avanço (o mestre pode mudar a DT de cada perseguição). */
 export const ADVANCE_DT = 10;
+
+/** Limites da DT da perseguição. */
+export const CHASE_DT_MIN = 1;
+export const CHASE_DT_MAX = 40;
+
+/** Tempo (ms) até uma reserva de clique parada deixar de bloquear o botão. */
+export const ADVANCE_CLAIM_TIMEOUT_MS = 30_000;
+
+/** DT válida da perseguição: inteiro entre 1 e 40; qualquer outra coisa vira a padrão. */
+export function normalizeChaseDt(value) {
+  if (value === null || value === undefined || value === '') return ADVANCE_DT;
+  const dt = Math.trunc(Number(value));
+  if (!Number.isFinite(dt)) return ADVANCE_DT;
+  return Math.min(CHASE_DT_MAX, Math.max(CHASE_DT_MIN, dt));
+}
 
 /** Perícia padrão do teste de avançar. Qualquer outra só pode ser usada uma vez por perseguição. */
 export const ADVANCE_SKILL = 'atletismo';
@@ -161,16 +176,17 @@ export function effortDiceCount(previousUses) {
 }
 
 /**
- * O teste conta como sucesso no avanço? O avanço tem DT própria (10), separada da DT do teste
- * usado, para funcionar também em testes sem DT (como o oposto da esquiva). Sucesso crítico
- * passa sempre e falha crítica falha sempre.
+ * O teste conta como sucesso no avanço? O avanço tem a sua DT (a do campo da janela pré-teste, ou a
+ * da perseguição em testes sem campo de DT). Sucesso crítico passa sempre e falha crítica falha
+ * sempre.
  * @param {{total: number, criticalSuccess: boolean, criticalFailure: boolean}} result Resultado
  *   de `resolveTest`.
+ * @param {number} [dt] DT do avanço.
  */
-export function advanceSuccess(result) {
+export function advanceSuccess(result, dt = ADVANCE_DT) {
   if (result.criticalFailure) return false;
   if (result.criticalSuccess) return true;
-  return result.total >= ADVANCE_DT;
+  return result.total >= dt;
 }
 
 /**
@@ -178,20 +194,21 @@ export function advanceSuccess(result) {
  * teste já calcula em `highSum`); falhou, soma a rolagem baixa.
  * @param {{total: number, highSum: number, lowRoll: number, criticalSuccess: boolean,
  *   criticalFailure: boolean}} result Resultado de `resolveTest`.
+ * @param {number} [dt] DT do avanço.
  */
-export function advanceGain(result) {
-  return advanceSuccess(result) ? result.highSum : result.lowRoll;
+export function advanceGain(result, dt = ADVANCE_DT) {
+  return advanceSuccess(result, dt) ? result.highSum : result.lowRoll;
 }
 
 /**
  * DT mostrada na janela pré-teste ao marcar ou desmarcar "usar como teste de avanço": marcar põe a
- * DT do avanço (10) e guarda a que estava; desmarcar devolve a guardada.
- * @param {{on: boolean, current: number, saved: number|null}} state `current` é a DT no campo;
- *   `saved` é a DT guardada ao marcar (ou `null` se nada foi guardado).
+ * DT da perseguição e guarda a que estava; desmarcar devolve a guardada.
+ * @param {{on: boolean, current: number, saved: number|null, dt?: number}} state `current` é a DT
+ *   no campo; `saved` é a DT guardada ao marcar (ou `null`); `dt` é a DT da perseguição.
  * @returns {{value: number, saved: number|null}}
  */
-export function advanceDtField({ on, current, saved }) {
-  if (on) return { value: ADVANCE_DT, saved: saved ?? current };
+export function advanceDtField({ on, current, saved, dt = ADVANCE_DT }) {
+  if (on) return { value: dt, saved: saved ?? current };
   return { value: saved ?? current, saved: null };
 }
 
@@ -209,22 +226,82 @@ export function advanceBlockReason({ ativa, rodadaAtual, participant, skillKey }
 }
 
 /**
- * Novo estado do participante depois de avançar.
- * @param {{pa: number, folego: number, esforcoExtra: number, periciasUsadas: string[]}} participant
- * @param {{gain: number, breathSpent: number, effort: boolean, skillKey: string,
- *   rodadaAtual: number}} action
- * @returns {{pa: number, folego: number, esforcoExtra: number, ultimaRodada: number,
+ * O que o avanço custa e registra no participante, na hora da rolagem: gasta o fôlego, conta o
+ * esforço extra, marca a rodada ("já agiu") e anota a perícia usada. Os PA ficam de fora: são
+ * somados depois, no botão do cartão do teste.
+ * @param {{folego: number, esforcoExtra: number, periciasUsadas: string[]}} participant
+ * @param {{breathSpent: number, effort: boolean, skillKey: string, rodadaAtual: number}} action
+ * @returns {{folego: number, esforcoExtra: number, ultimaRodada: number,
  *   periciasUsadas: string[]}}
  */
-export function applyAdvance(participant, { gain, breathSpent, effort, skillKey, rodadaAtual }) {
+export function applyAdvanceCosts(participant, { breathSpent, effort, skillKey, rodadaAtual }) {
   const used = [...participant.periciasUsadas];
   if (skillKey !== ADVANCE_SKILL && !used.includes(skillKey)) used.push(skillKey);
   return {
-    pa: participant.pa + gain,
     folego: Math.max(0, participant.folego - breathSpent),
     esforcoExtra: participant.esforcoExtra + (effort ? 1 : 0),
     ultimaRodada: rodadaAtual,
     periciasUsadas: used,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Botão "adicionar PA" no cartão do teste
+//
+// O teste de avanço guarda na mensagem do chat um registro (flag `avanco`). O valor do botão não
+// fica guardado: é recalculado dos dados atuais do cartão a cada vez, então trocar um dado (a
+// Análise, a Prontidão) antes do clique já muda o valor. O botão é de uso único.
+// ---------------------------------------------------------------------------------------------
+
+/** Registro de um teste de avanço recém-rolado: nada adicionado ainda. */
+export function createAdvanceFlag({ combatantId, skillKey, dt }) {
+  return { combatantId, skillKey, dt: normalizeChaseDt(dt), estado: 'pendente', ganho: null };
+}
+
+const isStaleClaim = (flag, now) =>
+  flag.estado === 'aplicando' && now - (flag.reservadoEm ?? 0) > ADVANCE_CLAIM_TIMEOUT_MS;
+
+/** O botão pode ser usado agora? (pendente, ou reserva parada há tempo demais) */
+export const isAdvanceClaimable = (flag, now) =>
+  flag.estado === 'pendente' || isStaleClaim(flag, now);
+
+/** Reserva o clique (contra o duplo clique). `null` se já foi usado ou está em uso. */
+export function reserveAdvance(flag, now) {
+  if (!isAdvanceClaimable(flag, now)) return null;
+  return { ...flag, estado: 'aplicando', reservadoEm: now };
+}
+
+/** Conclui o clique: guarda quantos PA foram adicionados. */
+export function finishAdvanceFlag(flag, gain) {
+  return { ...flag, estado: 'aplicado', ganho: gain, reservadoEm: null };
+}
+
+/** Desfaz a reserva quando a gravação falhou, para o jogador poder tentar de novo. */
+export function releaseAdvance(flag) {
+  return { ...flag, estado: 'pendente', reservadoEm: null };
+}
+
+/**
+ * O que a barra do cartão mostra. `kind` diz como o valor foi obtido (para o texto): `crit`,
+ * `passou`, `falhou` ou `falhaCritica`.
+ * @param {object} flag Registro do avanço.
+ * @param {object} result Resultado atual do teste (já com os dados que o cartão mostra).
+ * @param {{canApply: boolean, now: number}} viewer
+ */
+export function advanceBarView(flag, result, { canApply, now }) {
+  const pa = advanceGain(result, flag.dt);
+  let kind = 'passou';
+  if (result.criticalFailure) kind = 'falhaCritica';
+  else if (result.criticalSuccess) kind = 'crit';
+  else if (!advanceSuccess(result, flag.dt)) kind = 'falhou';
+  return {
+    dt: flag.dt,
+    kind,
+    pa,
+    applied: flag.estado === 'aplicado',
+    appliedPa: flag.ganho,
+    busy: flag.estado === 'aplicando' && !isStaleClaim(flag, now),
+    showButton: canApply && isAdvanceClaimable(flag, now),
   };
 }
 

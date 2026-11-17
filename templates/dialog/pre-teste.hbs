@@ -15,7 +15,7 @@
   {{/if}}
 
   {{#if avanco}}
-  <fieldset class="desordem-pre__grupo" data-avanco>
+  <fieldset class="desordem-pre__grupo" data-avanco data-dt="{{avanco.dt}}">
     <legend><i class="fa-solid fa-person-running" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Pre.Titulo"}}</legend>
     <label class="desordem-pre__opcao{{#if avanco.motivo}} is-indisponivel{{/if}}">
       <input type="checkbox" name="avancoOn" {{#if avanco.motivo}}disabled{{/if}}>

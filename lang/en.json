@@ -626,6 +626,7 @@
       "AdicionarAviso": "Check the characters who will take part.",
       "SemPersonagens": "There are no characters to add.",
       "Remover": "Remove from the chase",
+      "DT": "DT",
       "PA": "AP",
       "Folego": "Breath",
       "Agiu": "Already acted",
@@ -633,7 +634,7 @@
       "Pre": {
         "Titulo": "Chase",
         "Usar": "Use as an advance test",
-        "Regra": "DT 10: adds the high roll on a pass or the low roll on a fail",
+        "Regra": "Adds the high roll on a pass or the low roll on a fail. The DT is the one in the field (the chase DT if the test has none).",
         "Folego": "Breath to spend (you have {n})",
         "SemFolego": "No breath available.",
         "Esforco": "Extra effort: +1 step on the skill and lose {dados}d4 HP",
@@ -643,12 +644,19 @@
         }
       },
       "Chat": {
-        "Titulo": "{nome} advances",
-        "Ganho": "+{pa} AP (total: {total})",
-        "Pericia": "Skill: {pericia}",
-        "Folego": "Breath spent: {n}d6",
+        "EsforcoTitulo": "{nome} makes an extra effort",
         "Esforco": "Extra effort: lost {perda} HP ({dados}d4)",
         "EsforcoZero": "HP reached 0: make the injury test on the sheet."
+      },
+      "Barra": {
+        "Titulo": "Advance (DT {dt})",
+        "passou": "passed, adds the high roll ({pa} AP)",
+        "crit": "critical, adds the two highest ({pa} AP)",
+        "falhou": "failed, adds the low roll ({pa} AP)",
+        "falhaCritica": "critical failure, adds the low roll ({pa} AP)",
+        "Adicionar": "Add {pa} AP",
+        "Adicionado": "Advance: {pa} AP added",
+        "Aplicando": "Adding…"
       },
       "Cartao": {
         "Titulo": "Chase",
@@ -658,6 +666,7 @@
         "JaExiste": "A chase already exists. Delete it before creating another.",
         "JaAgiu": "{nome} has already acted this round.",
         "NaoEmAndamento": "The chase is not in progress.",
+                "SemMestre": "There is no GM online to add the advance points.",
         "AvancoBloqueado": "The test no longer counts as an advance (already acted or the skill was already used). It was rolled as a normal test."
       }
     }

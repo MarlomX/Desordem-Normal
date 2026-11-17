@@ -7,7 +7,7 @@ import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { BONUS_SLOTS, bonusDice, normalizeBonus } from './bonus.js';
 import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } from './fear.js';
 import { DEFAULT_DT, MAX_COUNTED, planDice } from './test.js';
-import { breathLimit } from './chase.js';
+import { breathLimit, normalizeChaseDt } from './chase.js';
 
 /** Espaços de dado extra de um teste: o limite de 4 dados rolados menos atributo e perícia. */
 export const EXTRA_SLOTS = BONUS_SLOTS;
@@ -35,9 +35,10 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  * @param {boolean} [input.ignoreFear=false] Testes que não sofrem o dado de pavor.
  * @param {number} [input.dt=7] DT padrão do teste.
  * @param {boolean} [input.showDt=true] Falso em testes sem DT (por exemplo, a esquiva).
- * @param {{blocked: string|null, folego: number, effortDice: number}|null} [input.chase] Com uma
- *   perseguição em andamento: se o teste pode valer como avanço (`blocked` diz por que não),
- *   quanto fôlego o personagem tem e quantos d4 de PV o esforço extra custaria.
+ * @param {{blocked: string|null, folego: number, effortDice: number, dt: number}|null} [input.chase]
+ *   Com uma perseguição em andamento: se o teste pode valer como avanço (`blocked` diz por que
+ *   não), quanto fôlego o personagem tem, quantos d4 de PV o esforço extra custaria e a DT da
+ *   perseguição.
  */
 export function buildRollModel({
   skillKey,
@@ -97,6 +98,7 @@ export function buildRollModel({
         blocked: chase.blocked ?? null,
         breathMax: breathLimit(chase.folego),
         effortDice: chase.effortDice,
+        dt: normalizeChaseDt(chase.dt),
       }
     : null;
   return {
@@ -161,6 +163,10 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     for (let i = 0; i < breath; i++) locked.push({ kind: 'folego', sides: 6, locked: true });
   }
   const effort = Boolean(advance && selection.avanco.effort);
+  // A DT do avanço é a do campo da janela; sem campo (teste oposto), a DT da perseguição
+  const advanceDt = advance
+    ? normalizeChaseDt(model.showDt ? normalizeDt(selection.dt, model.dt) : model.avanco.dt)
+    : null;
   const active = [];
   for (const [key, ability] of usable) {
     if (!wanted.has(key) || locked.length >= EXTRA_SLOTS) continue;
@@ -223,7 +229,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       controlFear: control,
       embraceFear: embrace,
       dt: model.showDt ? normalizeDt(selection.dt, model.dt) : null,
-      avanco: { on: Boolean(advance), breath, effort },
+      avanco: { on: Boolean(advance), breath, effort, dt: advanceDt },
     },
     dt: model.showDt ? normalizeDt(selection.dt, model.dt) : null,
     pdCost,
@@ -237,7 +243,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       embrace: Boolean(model.fear) && !embrace && !roomLeft,
     },
     rolledSides: plan.rolledSides,
-    avanco: { on: Boolean(advance), breath, effort },
+    avanco: { on: Boolean(advance), breath, effort, dt: advanceDt },
     summedDice: Math.min(plan.rolledSides.length, MAX_COUNTED),
     errors,
     valid: errors.length === 0,

@@ -9,6 +9,7 @@ import {
   shouldAutoOpen,
   trackerAction,
 } from '../rolls/chase.js';
+import { applyAdvancePoints } from './advance-card.js';
 import PerseguicaoApp from './app.js';
 import { SOCKET, createChase, currentAccess, findChase } from './store.js';
 
@@ -121,8 +122,13 @@ export function registerChaseHooks() {
  */
 export function registerChaseSocket() {
   game.socket.on(SOCKET, async (data, userId) => {
-    if (data?.action !== 'chaseParticipant') return;
     if (game.users.activeGM?.id !== game.user.id) return;
+    // Botão "adicionar PA" do cartão do teste de avanço (só o id da mensagem vem do jogador)
+    if (data?.action === 'chaseAdvancePoints') {
+      await applyAdvancePoints(game.messages.get(data.messageId), userId);
+      return;
+    }
+    if (data?.action !== 'chaseParticipant') return;
     const combat = game.combats.get(data.combatId);
     if (combat?.type !== CHASE_COMBAT_TYPE) return;
     const combatant = combat.combatants.get(data.combatantId);
