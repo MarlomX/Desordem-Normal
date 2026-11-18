@@ -33,6 +33,7 @@ function readSelection(form) {
       breath: Number(fields.avancoBreath?.value ?? 0),
       effort: Boolean(fields.avancoEffort?.checked),
     },
+    esconderijo: { on: Boolean(fields.esconderijoOn?.checked) },
   };
 }
 
@@ -168,6 +169,20 @@ function refresh(form, root, model) {
     }
   }
 
+  // Teste de esconderijo: sem DT e sem pavor enquanto a opção está marcada; não vale como avanço
+  const hiding = evaluation.esconderijo.on;
+  root.querySelector('[data-dt-bloco]')?.classList.toggle('is-oculta', hiding);
+  root.querySelector('[data-pavor-bloco]')?.classList.toggle('is-oculta', hiding);
+  const advanceBox = form.elements.avancoOn;
+  if (advanceBox && !root.querySelector('[data-avanco]')?.dataset.bloqueado) {
+    advanceBox.disabled = hiding;
+    if (hiding && advanceBox.checked) {
+      // Desmarcar o avanço devolve a DT que estava no campo antes dele
+      advanceBox.checked = false;
+      syncAdvanceDt(form, false);
+    }
+  }
+
   // Prévia dos dados rolados (o dado de pavor normal aparece por último, fora do limite)
   root
     .querySelector('[data-previa]')
@@ -214,6 +229,8 @@ function refresh(form, root, model) {
  * @param {boolean} [config.allowNonLethal=false] Oferece "dano não letal" (só no teste de lesão).
  * @param {object|null} [config.chase] Com perseguição em andamento, os dados do participante para
  *   oferecer "usar como teste de avanço" (veja `buildRollModel`). Sem isso, a opção não aparece.
+ * @param {object|null} [config.stealth] Com cena de furtividade e o personagem sem esconderijo,
+ *   oferece «usar como teste de esconderijo». Sem isso, a opção não aparece.
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
  */
 export async function askRollChoices(
@@ -227,6 +244,7 @@ export async function askRollChoices(
     showDt = true,
     allowNonLethal = false,
     chase = null,
+    stealth = null,
     shift = false,
   },
 ) {
@@ -248,6 +266,7 @@ export async function askRollChoices(
     dt,
     showDt,
     chase,
+    stealth,
   });
 
   const costText = (cost) =>
@@ -261,6 +280,7 @@ export async function askRollChoices(
     titulo: `${dice.attrLabel} + ${dice.skillLabel}`,
     showDt,
     dt,
+    esconderijo: Boolean(model.esconderijo),
     avanco: model.avanco && {
       motivo: model.avanco.blocked
         ? t(`DESORDEM.Perseguicao.Pre.Bloqueio.${model.avanco.blocked}`, {

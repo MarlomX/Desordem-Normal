@@ -8,6 +8,7 @@ import {
   STEALTH_COMBAT_TYPE,
   STEALTH_COMBATANT_TYPE,
   applyHideOp,
+  canOfferHideTest,
   hideDiceView,
   hideOpMessage,
   hideOpPatch,
@@ -232,8 +233,38 @@ export async function removeStealthParticipant(stealth, combatantId) {
   await stealth.deleteEmbeddedDocuments('Combatant', [combatantId]);
 }
 
+/**
+ * Dados para a janela pré-teste oferecer «usar como teste de esconderijo», ou `null` se a opção não
+ * deve aparecer (sem cena em andamento, personagem fora dela, sem permissão ou já escondido).
+ */
+export function hideTestInfoFor(actor) {
+  const stealth = findStealth();
+  if (!stealth) return null;
+  const combatant = combatantOf(stealth, actor);
+  const offer = canOfferHideTest({
+    ativa: stealth.system.ativa,
+    isParticipant: Boolean(combatant),
+    isOwner: Boolean(actor?.isOwner),
+    escondeu: Boolean(combatant?.system.escondeu),
+  });
+  return offer ? { combatantId: combatant.id } : null;
+}
+
+/**
+ * O mestre zera o esconderijo de um participante (para refazer o teste, por exemplo se a perícia
+ * foi marcada errada) e avisa no chat. A confirmação é pedida pela janela.
+ */
+export async function resetHide(combatant) {
+  if (!game.user.isGM || !combatant?.parent?.system.ativa) return;
+  await combatant.update({ system: stealthParticipantReset() });
+  await postStealthNotice({
+    titulo: t('DESORDEM.Furtividade.Chat.Titulo'),
+    texto: t('DESORDEM.Furtividade.Chat.zerou', { nome: combatant.name }),
+  });
+}
+
 /** Posta um aviso público da cena no chat (sem modo de rolagem: todos veem). */
-async function postStealthNotice({ actor, titulo, texto }) {
+export async function postStealthNotice({ actor, titulo, texto }) {
   const content = await renderTemplate(`systems/${SYSTEM_ID}/templates/chat/furtividade.hbs`, {
     titulo,
     texto,

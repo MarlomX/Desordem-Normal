@@ -206,3 +206,140 @@ export function hideOpMessage(op, countAfter) {
   if (op?.type === 'remove') return countAfter === 0 ? 'encontrado' : 'descartou';
   return null;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Teste de esconderijo (0.17.1)
+//
+// É uma opção da janela pré-teste («usar como teste de esconderijo»), oferecida só a quem ainda
+// está «sem esconderijo». O teste não tem DT, não sofre o dado de pavor e vai para o chat como
+// rolagem privada (só quem rolou vê). O resultado não é somado: os dados viram dados de
+// esconderijo quando o jogador aperta o botão do cartão. Até lá, a Análise e a Prontidão podem
+// mudar os valores, porque o botão lê os dados como o cartão os mostra no momento do clique.
+// ---------------------------------------------------------------------------------------------
+
+/** Quantos dados do teste viram dados de esconderijo (a norma do sistema: 3 valem). */
+export const HIDE_TEST_KEEP = 3;
+
+/** Tempo (ms) até uma reserva de clique parada deixar de bloquear o botão. */
+export const HIDE_CLAIM_TIMEOUT_MS = 30_000;
+
+/**
+ * A janela pré-teste deve oferecer o teste de esconderijo? Só com a cena em andamento, para um
+ * participante que ainda não se escondeu, num personagem que a pessoa controla.
+ * @param {{ativa: boolean, isParticipant: boolean, isOwner: boolean, escondeu: boolean}} params
+ */
+export function canOfferHideTest({ ativa, isParticipant, isOwner, escondeu }) {
+  return Boolean(ativa && isParticipant && isOwner && !escondeu);
+}
+
+/** Registro guardado na mensagem do teste de esconderijo (flag `esconderijo`). */
+export function createHideFlag({ combatantId }) {
+  return {
+    combatantId,
+    estado: 'pendente',
+    reservadoEm: null,
+    // Preenchidos quando os dados são guardados (só quantidades e valores do próprio cartão)
+    dados: null,
+    extra: null,
+  };
+}
+
+const isStaleHideClaim = (flag, now) =>
+  flag.estado === 'aplicando' && now - (flag.reservadoEm ?? 0) > HIDE_CLAIM_TIMEOUT_MS;
+
+/** O botão pode ser usado agora? (pendente, ou reserva parada há tempo demais) */
+export const isHideClaimable = (flag, now) =>
+  flag?.estado === 'pendente' || isStaleHideClaim(flag ?? {}, now);
+
+/** Reserva o clique (contra o duplo clique). `null` se já foi usado ou está em uso. */
+export function reserveHide(flag, now) {
+  if (!isHideClaimable(flag, now)) return null;
+  return { ...flag, estado: 'aplicando', reservadoEm: now };
+}
+
+/** Conclui o clique: guarda os dados que viraram esconderijo e o dado extra do crítico. */
+export function finishHide(flag, { dados, extra }) {
+  return { ...flag, estado: 'aplicado', reservadoEm: null, dados, extra: extra ?? null };
+}
+
+/** Desfaz a reserva quando a gravação falhou, para o jogador poder tentar de novo. */
+export function releaseHide(flag) {
+  return { ...flag, estado: 'pendente', reservadoEm: null };
+}
+
+/**
+ * Índices dos dados que ficam por padrão: todos, se o teste rolou até 3; com 4, os 3 maiores
+ * valores (no empate, o que veio primeiro).
+ * @param {number[]} values Valores rolados.
+ * @returns {number[]} Índices em ordem crescente.
+ */
+export function defaultHideKeep(values) {
+  const indices = values.map((_, index) => index);
+  if (values.length <= HIDE_TEST_KEEP) return indices;
+  return indices
+    .sort((a, b) => values[b] - values[a] || a - b)
+    .slice(0, HIDE_TEST_KEEP)
+    .sort((a, b) => a - b);
+}
+
+/**
+ * Confere a escolha do jogador de quais dados ficam. Até 3 dados rolados: ficam todos (a escolha é
+ * ignorada). Com 4: precisa ser exatamente 3 índices diferentes e válidos.
+ * @returns {number[]|null} Índices em ordem crescente, ou `null` se a escolha não vale.
+ */
+export function normalizeHideKeep(values, keep) {
+  if (values.length <= HIDE_TEST_KEEP) return values.map((_, index) => index);
+  if (!Array.isArray(keep)) return null;
+  const chosen = [
+    ...new Set(
+      keep.filter((index) => index !== null && index !== '' && index !== undefined).map(Number),
+    ),
+  ];
+  if (chosen.length !== HIDE_TEST_KEEP) return null;
+  if (!chosen.every((index) => Number.isInteger(index) && index >= 0 && index < values.length)) {
+    return null;
+  }
+  return chosen.sort((a, b) => a - b);
+}
+
+/** Dados de esconderijo a partir dos dados escolhidos do teste. */
+export function hideDiceFromTest({ sides, values, keep }) {
+  return keep.map((index) => ({ lados: sides[index], valor: values[index] })).map(normalizeHideDie);
+}
+
+/**
+ * Lados do dado extra do crítico: o maior dado do teste (mecanicamente, sempre a melhor escolha).
+ * Esse dado é uma exceção às regras de limite: entra mesmo que o teste já tenha rolado 4 dados.
+ */
+export function critExtraSides(sides) {
+  const valid = sides.filter((value) => HIDE_DIE_SIDES.includes(value));
+  return valid.length ? Math.max(...valid) : 0;
+}
+
+/**
+ * O que a barra do cartão mostra.
+ * @param {object} flag Registro do esconderijo da mensagem.
+ * @param {{sides: number[], values: number[], critical: boolean}} test Dados como o cartão os
+ *   mostra agora e se o teste é um sucesso crítico.
+ * @param {{canApply: boolean, alreadyHidden: boolean, now: number}} viewer
+ */
+export function hideBarView(flag, { sides, values, critical }, { canApply, alreadyHidden, now }) {
+  const applied = flag?.estado === 'aplicado';
+  return {
+    applied,
+    appliedCount: applied ? (flag.dados?.length ?? 0) + (flag.extra ? 1 : 0) : 0,
+    extra: applied ? flag.extra : null,
+    busy: flag?.estado === 'aplicando' && !isStaleHideClaim(flag, now),
+    mustChoose: values.length > HIDE_TEST_KEEP,
+    keepCount: Math.min(values.length, HIDE_TEST_KEEP),
+    critical: Boolean(critical),
+    critSides: critical ? critExtraSides(sides) : 0,
+    alreadyHidden: !applied && Boolean(alreadyHidden),
+    showButton: Boolean(canApply) && !alreadyHidden && isHideClaimable(flag, now),
+  };
+}
+
+/** Patch do participante ao guardar o teste de esconderijo (substitui a lista e marca escondeu). */
+export function hideTestPatch(dice) {
+  return { esconderijo: cleanHideDice(dice), escondeu: true };
+}

@@ -763,7 +763,9 @@
         "adicionou": "{nome} added a hiding die ({n} in total).",
         "descartou": "{nome} lost a hiding die ({n} left).",
         "encontrado": "{nome} lost the last hiding die and was found!",
-        "revelou": "{mestre} saw the values of {nome}'s hiding dice."
+        "revelou": "{mestre} saw the values of {nome}'s hiding dice.",
+        "escondeu": "{nome} hid with {n} hiding dice.",
+        "zerou": "The GM reset {nome}'s hiding; they can redo the test."
       },
       "Cartao": {
         "Titulo": "Stealth",
@@ -773,7 +775,24 @@
       "Erro": {
         "JaExiste": "A stealth scene already exists. Delete it before creating another.",
         "Operacao": "Could not change the hiding dice (invalid die or limit of 12).",
-        "SemMestre": "There is no GM online to save the hiding dice."
+        "SemMestre": "There is no GM online to save the hiding dice.",
+        "TesteBloqueado": "The test no longer counts as a hiding test. It was rolled as a normal test."
+      },
+      "Zerar": "Reset hiding",
+      "ZerarConfirmar": "Reset {nome}'s hiding? The dice are erased and the character goes back to not hidden, able to redo the test.",
+      "Pre": {
+        "Titulo": "Stealth",
+        "Usar": "Use as hiding test",
+        "Regra": "No DC and no fear die. The dice are not added: they become hiding dice. The roll is private (only you see it)."
+      },
+      "Barra": {
+        "Titulo": "Hiding test",
+        "Guardar": "Keep {n} hiding dice",
+        "Guardado": "{n} hiding dice kept:",
+        "Extra": "+ critical",
+        "Escolher": "Choose the {n} dice that stay (click to swap).",
+        "Critico": "Critical: when you keep them, an extra d{dado} is rolled and added too.",
+        "JaEscondido": "This character has already hidden in this scene."
       }
     }
   },

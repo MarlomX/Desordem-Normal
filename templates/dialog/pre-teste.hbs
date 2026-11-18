@@ -4,7 +4,7 @@
   <div class="desordem-pre__previa" data-previa aria-live="polite"></div>
 
   {{#if showDt}}
-  <div class="desordem-pre__dt">
+  <div class="desordem-pre__dt" data-dt-bloco>
     <span class="desordem-pre__dt-nome">{{localize "DESORDEM.Teste.Pre.DT"}}</span>
     <span class="desordem-passos-ctl">
       <button type="button" data-dt-passo="-1" aria-label="{{localize "DESORDEM.Teste.Pre.DTMenos"}}">−</button>
@@ -14,8 +14,19 @@
   </div>
   {{/if}}
 
+  {{#if esconderijo}}
+  <fieldset class="desordem-pre__grupo" data-esconderijo>
+    <legend><i class="fa-solid fa-user-secret" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Pre.Titulo"}}</legend>
+    <label class="desordem-pre__opcao">
+      <input type="checkbox" name="esconderijoOn">
+      <span class="desordem-pre__nome">{{localize "DESORDEM.Furtividade.Pre.Usar"}}</span>
+      <span class="desordem-pre__custo">{{localize "DESORDEM.Furtividade.Pre.Regra"}}</span>
+    </label>
+  </fieldset>
+  {{/if}}
+
   {{#if avanco}}
-  <fieldset class="desordem-pre__grupo" data-avanco data-dt="{{avanco.dt}}">
+  <fieldset class="desordem-pre__grupo" data-avanco data-dt="{{avanco.dt}}"{{#if avanco.motivo}} data-bloqueado="1"{{/if}}>
     <legend><i class="fa-solid fa-person-running" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Pre.Titulo"}}</legend>
     <label class="desordem-pre__opcao{{#if avanco.motivo}} is-indisponivel{{/if}}">
       <input type="checkbox" name="avancoOn" {{#if avanco.motivo}}disabled{{/if}}>
@@ -69,7 +80,7 @@
   </fieldset>
 
   {{#if fear}}
-  <fieldset class="desordem-pre__grupo">
+  <fieldset class="desordem-pre__grupo" data-pavor-bloco>
     <legend><i class="fa-solid fa-ghost" aria-hidden="true"></i> {{fear.title}}</legend>
     <label class="desordem-pre__opcao{{#unless fear.controlPossible}} is-indisponivel{{/unless}}">
       <input type="checkbox" name="controlFear" {{#unless fear.controlPossible}}disabled{{/unless}}>

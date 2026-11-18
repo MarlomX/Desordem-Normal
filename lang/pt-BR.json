@@ -763,7 +763,9 @@
         "adicionou": "{nome} acrescentou um dado de esconderijo ({n} no total).",
         "descartou": "{nome} perdeu um dado de esconderijo (restam {n}).",
         "encontrado": "{nome} perdeu o último dado de esconderijo e foi encontrado!",
-        "revelou": "{mestre} viu os valores dos dados de esconderijo de {nome}."
+        "revelou": "{mestre} viu os valores dos dados de esconderijo de {nome}.",
+        "escondeu": "{nome} se escondeu com {n} dados de esconderijo.",
+        "zerou": "O mestre zerou o esconderijo de {nome}, que pode refazer o teste."
       },
       "Cartao": {
         "Titulo": "Furtividade",
@@ -773,7 +775,24 @@
       "Erro": {
         "JaExiste": "Já existe uma cena de furtividade. Exclua-a antes de criar outra.",
         "Operacao": "Não foi possível alterar os dados de esconderijo (dado inválido ou limite de 12).",
-        "SemMestre": "Não há mestre online para gravar os dados de esconderijo."
+        "SemMestre": "Não há mestre online para gravar os dados de esconderijo.",
+        "TesteBloqueado": "O teste não vale mais como teste de esconderijo. Ele foi feito como um teste comum."
+      },
+      "Zerar": "Zerar esconderijo",
+      "ZerarConfirmar": "Zerar o esconderijo de {nome}? Os dados são apagados e ele volta a ficar sem esconderijo, podendo refazer o teste.",
+      "Pre": {
+        "Titulo": "Furtividade",
+        "Usar": "Usar como teste de esconderijo",
+        "Regra": "Sem DT e sem dado de pavor. Os dados não são somados: viram dados de esconderijo. A rolagem é privada (só você vê)."
+      },
+      "Barra": {
+        "Titulo": "Teste de esconderijo",
+        "Guardar": "Guardar {n} dados de esconderijo",
+        "Guardado": "{n} dados de esconderijo guardados:",
+        "Extra": "+ crítico",
+        "Escolher": "Escolha os {n} dados que ficam (clique para trocar).",
+        "Critico": "Crítico: ao guardar, um d{dado} extra é rolado e entra também.",
+        "JaEscondido": "Este personagem já se escondeu nesta cena."
       }
     }
   },

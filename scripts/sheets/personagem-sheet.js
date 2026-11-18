@@ -38,7 +38,8 @@ import { withChaseAdvance } from '../chase/advance.js';
 import { recoverBreath } from '../chase/breath.js';
 import { chaseCardFor, chaseInfoFor } from '../chase/store.js';
 import FurtividadeApp from '../stealth/app.js';
-import { stealthCardFor } from '../stealth/store.js';
+import { hideTestInfoFor, stealthCardFor } from '../stealth/store.js';
+import { withHideTest } from '../stealth/hide-test.js';
 import {
   buildAttributeRows,
   buildSkillRows,
@@ -318,20 +319,28 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /**
    * Abre a janela pré-teste (dados bônus, habilidades e pavor) e faz a rolagem com a escolha.
    * Shift+clique rola direto, sem a janela. Se o jogador cancelar, não rola. Com uma perseguição
-   * em andamento, a janela oferece "usar como teste de avanço" (menos com `chase: false`).
+   * em andamento, a janela oferece "usar como teste de avanço" (menos com `chase: false`). Com
+   * `stealth: true` (testes de perícia, aptidão e ofício) e uma cena de furtividade em andamento,
+   * oferece «usar como teste de esconderijo» a quem ainda não se escondeu.
    * @param {MouseEvent} event
    * @param {Object} config Veja `askRollChoices`.
    * @param {(options: object) => Promise<*>} run Faz a rolagem com as opções escolhidas.
    */
   async #rollWithChoices(event, config, run) {
-    const { chase: offerAdvance = true, ...rest } = config;
+    const { chase: offerAdvance = true, stealth: offerHide = false, ...rest } = config;
     const chase = offerAdvance ? chaseInfoFor(this.document, config.skillKey) : null;
+    const stealth = offerHide ? hideTestInfoFor(this.document) : null;
     const options = await askRollChoices(this.document, {
       ...rest,
       chase,
+      stealth,
       shift: event?.shiftKey,
     });
     if (!options) return;
+    if (options.esconderijo) {
+      await run(withHideTest(this.document, options));
+      return;
+    }
     await run(options.avanco ? withChaseAdvance(this.document, options, config.skillKey) : options);
   }
 
@@ -581,7 +590,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Clique no nome de uma perícia: faz o teste e publica no chat. */
   static async #onRollSkill(event, target) {
     const skillKey = target.dataset.skill;
-    await this.#rollWithChoices(event, { skillKey }, (options) =>
+    await this.#rollWithChoices(event, { skillKey, stealth: true }, (options) =>
       rollSkill(this.document, skillKey, options),
     );
   }
@@ -589,7 +598,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Clique no nome de uma área de Aptidão: faz o teste (Mente + área) e publica no chat. */
   static async #onRollAptitude(event, target) {
     const skillKey = target.dataset.aptitude;
-    await this.#rollWithChoices(event, { skillKey }, (options) =>
+    await this.#rollWithChoices(event, { skillKey, stealth: true }, (options) =>
       rollAptitude(this.document, skillKey, options),
     );
   }
@@ -597,7 +606,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Clique no nome de uma área de Ofício: faz o teste (Mente + área) e publica no chat. */
   static async #onRollCraft(event, target) {
     const skillKey = target.dataset.craft;
-    await this.#rollWithChoices(event, { skillKey }, (options) =>
+    await this.#rollWithChoices(event, { skillKey, stealth: true }, (options) =>
       rollCraft(this.document, skillKey, options),
     );
   }

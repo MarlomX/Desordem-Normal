@@ -39,8 +39,11 @@ function rollDice(sides) {
   return Promise.all(sides.map((faces) => new Roll(`1d${faces}`).evaluate()));
 }
 
-/** Publica uma mensagem de rolagem no chat, respeitando o modo de rolagem. */
-export async function postMessage({ actor, content, rolls = [], flags }) {
+/**
+ * Publica uma mensagem de rolagem no chat, respeitando o modo de rolagem. `rollMode` força um modo
+ * (por exemplo 'selfroll', só quem rolou vê); sem ele, vale o modo escolhido no chat.
+ */
+export async function postMessage({ actor, content, rolls = [], flags, rollMode }) {
   const messageData = {
     speaker: ChatMessage.getSpeaker({ actor }),
     content,
@@ -48,7 +51,7 @@ export async function postMessage({ actor, content, rolls = [], flags }) {
     sound: rolls.length ? CONFIG.sounds.dice : undefined,
     ...(flags ? { flags: { [SYSTEM_ID]: flags } } : {}),
   };
-  ChatMessage.applyRollMode(messageData, game.settings.get('core', 'rollMode'));
+  ChatMessage.applyRollMode(messageData, rollMode ?? game.settings.get('core', 'rollMode'));
   return ChatMessage.create(messageData);
 }
 
@@ -219,6 +222,9 @@ async function settleAbilities(actor, options, result) {
  * @param {(result: object) => *} [opts.onResult] Chamado com o resultado, depois do cartão.
  * @param {object} [opts.avancoFlag] Registro de teste de avanço da perseguição, guardado na
  *   mensagem (flag `avanco`) para o botão do cartão.
+ * @param {object} [opts.esconderijoFlag] Registro do teste de esconderijo da furtividade, guardado
+ *   na mensagem (flag `esconderijo`) para o botão do cartão.
+ * @param {string} [opts.rollMode] Modo de rolagem forçado (o esconderijo usa 'selfroll').
  */
 export async function rollTest({
   attrLabel = game.i18n.localize('DESORDEM.Teste.Atributo'),
@@ -226,6 +232,8 @@ export async function rollTest({
   actor,
   onResult,
   avancoFlag,
+  esconderijoFlag,
+  rollMode,
   ...options
 }) {
   const { result, rolls, card, plan, display, sides, values } = await runTest(actor, {
@@ -236,11 +244,13 @@ export async function rollTest({
   // O cartão guarda o teste para as habilidades que mudam os dados depois da rolagem
   const flags = actor ? { teste: { plan, display, sides, values, notes: [], used: {} } } : undefined;
   if (flags && avancoFlag) flags.avanco = avancoFlag;
-  // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js)
-  if (flags && result.criticalFailure) {
+  if (flags && esconderijoFlag) flags.esconderijo = esconderijoFlag;
+  // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js). O teste de
+  // esconderijo não tem efeito de falha crítica (a regra não traz nenhum).
+  if (flags && result.criticalFailure && !esconderijoFlag) {
     flags.tabela = createPending({ kind: 'disaster', actorUuid: actor.uuid });
   }
-  await postMessage({ actor, content: card, rolls, flags });
+  await postMessage({ actor, content: card, rolls, flags, rollMode });
   // Quem pediu o teste pode reagir ao resultado (por exemplo, a perseguição soma os pontos de avanço)
   if (typeof onResult === 'function') await onResult(result);
   return result;

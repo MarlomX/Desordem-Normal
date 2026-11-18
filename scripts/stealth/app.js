@@ -17,6 +17,7 @@ import {
   nextStealthRound,
   removeStealthParticipant,
   requestHideOp,
+  resetHide,
   revealHideDice,
   setStealthRound,
   stealthCandidates,
@@ -68,6 +69,7 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
       toggleReveal: FurtividadeApp.#onToggleReveal,
       addHideDie: FurtividadeApp.#onAddHideDie,
       removeHideDie: FurtividadeApp.#onRemoveHideDie,
+      resetHide: FurtividadeApp.#onResetHide,
     },
   };
 
@@ -218,6 +220,21 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
     if (!ok) return;
     await revealHideDice(combatant);
     this.render();
+  }
+
+  /**
+   * O mestre zera o esconderijo de um participante (ele volta a «sem esconderijo» e pode refazer o
+   * teste). Pede confirmação e avisa no chat.
+   */
+  static async #onResetHide(event, target) {
+    if (!game.user.isGM) return;
+    const stealth = findStealth();
+    const combatant = stealth?.combatants.get(target.dataset.combatantId);
+    if (!combatant) return;
+    const ok = await confirm('DESORDEM.Furtividade.Zerar', 'DESORDEM.Furtividade.ZerarConfirmar', {
+      nome: combatant.name,
+    });
+    if (ok) await resetHide(combatant);
   }
 
   /** Acrescenta um dado à mão: pergunta os lados e o valor que saiu. */

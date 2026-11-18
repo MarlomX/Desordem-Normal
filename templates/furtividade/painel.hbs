@@ -32,6 +32,7 @@
         {{/if}}
         {{#if @root.isGM}}
         {{#if @root.view.ativa}}
+        <button type="button" class="desordem-perseguicao__passo" data-action="resetHide" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Furtividade.Zerar"}}"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></button>
         <button type="button" class="desordem-perseguicao__passo{{#if revealed}} is-ligado{{/if}}" data-action="toggleReveal" data-combatant-id="{{id}}" data-revealed="{{#if revealed}}true{{else}}false{{/if}}" title="{{#if revealed}}{{localize "DESORDEM.Furtividade.Esconder"}}{{else}}{{localize "DESORDEM.Furtividade.Revelar"}}{{/if}}"><i class="fa-solid {{#if revealed}}fa-eye{{else}}fa-eye-slash{{/if}}" aria-hidden="true"></i></button>
         {{/if}}
         <button type="button" class="desordem-perseguicao__remover" data-action="removeParticipant" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Furtividade.Remover"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>

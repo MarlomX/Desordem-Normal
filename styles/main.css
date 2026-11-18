@@ -2182,3 +2182,45 @@
 .desordem-furtividade-cartao .desordem-perseguicao-cartao__estado {
   font-family: var(--font-primary), sans-serif;
 }
+
+/* ===== Furtividade: teste de esconderijo (v0.17.1) ===== */
+/* Janela pré-teste: sem DT e sem pavor enquanto «usar como teste de esconderijo» está marcado */
+.desordem-pre .desordem-pre__dt.is-oculta,
+.desordem-pre .desordem-pre__grupo.is-oculta {
+  display: none;
+}
+
+/* Barra do cartão do teste: dados que viram esconderijo */
+.desordem-esconderijo-barra {
+  flex-wrap: wrap;
+}
+
+.desordem-esconderijo-barra__dados {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.desordem-esconderijo-barra__escolha {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 2px;
+  /* A barra fica fora do .desordem-teste, onde os tokens vivem: currentColor como reserva */
+  border: 2px solid var(--dn-accent-line, currentColor);
+  border-radius: 6px;
+  background: transparent;
+}
+
+.desordem-esconderijo-barra__escolha.is-fora {
+  border-color: transparent;
+  opacity: 0.4;
+}
+
+.desordem-esconderijo-barra__extra {
+  font-size: 0.85em;
+  opacity: 0.8;
+}

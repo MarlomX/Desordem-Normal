@@ -39,6 +39,8 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  *   Com uma perseguição em andamento: se o teste pode valer como avanço (`blocked` diz por que
  *   não), quanto fôlego o personagem tem, quantos d4 de PV o esforço extra custaria e a DT da
  *   perseguição.
+ * @param {object|null} [input.stealth] Com uma cena de furtividade em andamento e o personagem
+ *   ainda sem esconderijo: oferece «usar como teste de esconderijo». Sem isso, a opção não aparece.
  */
 export function buildRollModel({
   skillKey,
@@ -52,6 +54,7 @@ export function buildRollModel({
   dt = DEFAULT_DT,
   showDt = true,
   chase = null,
+  stealth = null,
 }) {
   const abilities = [];
   if (has.impeto) {
@@ -113,6 +116,8 @@ export function buildRollModel({
     dt,
     showDt,
     avanco,
+    // Teste de esconderijo: sem DT, sem pavor, rolagem privada (veja a ficha e stealth.js)
+    esconderijo: stealth ? {} : null,
   };
 }
 
@@ -125,6 +130,7 @@ export function emptySelection(dt) {
     embraceFear: false,
     dt,
     avanco: { on: false, breath: 0, effort: false },
+    esconderijo: { on: false },
   };
 }
 
@@ -149,8 +155,10 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
 
   // Dados que ocupam espaço sem escolha manual, em ordem
   const locked = model.baseExtraDice.map((sides) => ({ kind: 'base', sides, locked: true }));
+  // Teste de esconderijo: o teste não tem DT nem sofre pavor, e não vale ao mesmo tempo como avanço
+  const hide = Boolean(model.esconderijo && selection.esconderijo?.on);
   // Avanço na perseguição: o fôlego gasto vira dados d6 fixos e o esforço extra sobe um passo
-  const advance = model.avanco && !model.avanco.blocked && selection.avanco?.on;
+  const advance = !hide && model.avanco && !model.avanco.blocked && selection.avanco?.on;
   let breath = 0;
   if (advance) {
     breath = Math.max(
@@ -176,7 +184,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
   }
   let fear = null;
   let embrace = false;
-  if (model.fear) {
+  if (model.fear && !hide) {
     const die = control ? model.fear.controlledDie : model.fear.die;
     embrace = Boolean(selection.embraceFear) && locked.length < EXTRA_SLOTS;
     fear = embrace ? { die: null, bonusDie: die } : { die, bonusDie: null };
@@ -203,7 +211,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     pdCost += usable.get(key).cost.pd;
     impetoCost += usable.get(key).cost.impeto;
   }
-  if (model.fear) {
+  if (model.fear && !hide) {
     if (control) pdCost += model.fear.controlCost;
     if (embrace) pdCost += model.fear.embraceCost;
   }
@@ -223,16 +231,19 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
   if (pdCost > model.resources.pd) errors.push('pd');
   if (impetoCost > model.resources.impeto) errors.push('impeto');
 
+  // Sem DT no teste de esconderijo (o campo some da janela enquanto a opção está marcada)
+  const testDt = model.showDt && !hide ? normalizeDt(selection.dt, model.dt) : null;
   return {
     selection: {
       bonus: normalizeBonus(manual),
       active,
-      controlFear: control,
+      controlFear: control && !hide,
       embraceFear: embrace,
-      dt: model.showDt ? normalizeDt(selection.dt, model.dt) : null,
+      dt: testDt,
       avanco: { on: Boolean(advance), breath, effort, dt: advanceDt },
+      esconderijo: { on: hide },
     },
-    dt: model.showDt ? normalizeDt(selection.dt, model.dt) : null,
+    dt: testDt,
     pdCost,
     impetoCost,
     pdLeft: model.resources.pd - pdCost,
@@ -245,6 +256,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     },
     rolledSides: plan.rolledSides,
     avanco: { on: Boolean(advance), breath, effort, dt: advanceDt },
+    esconderijo: { on: hide },
     summedDice: Math.min(plan.rolledSides.length, MAX_COUNTED),
     errors,
     valid: errors.length === 0,
@@ -266,5 +278,7 @@ export function selectionToOptions(model, selection) {
   if (evaluated.dt !== null) options.dt = evaluated.dt;
   // Avanço na perseguição: quem chama (a ficha) transforma isto em dados, passo e gravação
   if (evaluated.avanco.on) options.avanco = evaluated.avanco;
+  // Teste de esconderijo: quem chama (a ficha) tira o pavor, a DT e torna a rolagem privada
+  if (evaluated.esconderijo.on) options.esconderijo = true;
   return options;
 }
