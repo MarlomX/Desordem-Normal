@@ -2487,3 +2487,54 @@
   align-items: center;
   gap: 4px;
 }
+
+/* ===== PV ou PD em dois botões que se excluem (v0.17.8) ===== */
+/* Rádios com aparência de botão: o marcado fica aceso e o outro, apagado */
+.desordem-tipo-botoes {
+  display: flex;
+  gap: 6px;
+}
+
+.desordem-tipo-botoes__opcao {
+  position: relative;
+  flex: 1 1 0;
+  cursor: pointer;
+}
+
+.desordem-tipo-botoes__opcao input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.desordem-tipo-botoes__opcao span {
+  display: block;
+  padding: 6px 10px;
+  border: 2px solid var(--dn-border, currentColor);
+  border-radius: 6px;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0.45;
+}
+
+.desordem-tipo-botoes__opcao input:checked + span {
+  opacity: 1;
+}
+
+.desordem-tipo-botoes__opcao--pv input:checked + span {
+  border-color: var(--dn-pv, #c0392b);
+  color: var(--dn-pv, #c0392b);
+}
+
+.desordem-tipo-botoes__opcao--pd input:checked + span {
+  border-color: var(--dn-pd, #2f6fb5);
+  color: var(--dn-pd, #2f6fb5);
+}
+
+/* Teclado: o botão em foco ganha contorno */
+.desordem-tipo-botoes__opcao input:focus-visible + span {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

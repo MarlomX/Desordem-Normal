@@ -7,6 +7,7 @@
 import { SYSTEM_ID } from '../config.js';
 import { HIDE_DIE_SIDES } from '../rolls/stealth.js';
 import { ProcuraApp } from './search.js';
+import { askAndPostPenalty } from '../chase/penalty-card.js';
 import {
   addStealthParticipants,
   createStealth,
@@ -77,6 +78,7 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
       openSearch: FurtividadeApp.#onOpenSearch,
       adjustDistract: FurtividadeApp.#onAdjustDistract,
       callAttention: FurtividadeApp.#onCallAttention,
+      openConsequence: FurtividadeApp.#onOpenConsequence,
     },
   };
 
@@ -241,6 +243,23 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
       transfer: die(answer.transfer),
       discard: die(answer.discard),
     });
+  }
+
+  /**
+   * Consequência de estar encontrado (só o mestre): a mesma janela da penalidade da perseguição
+   * (valor fixo ou dados, PV ou PD). Só quem está encontrado agora recebe o botão no cartão.
+   */
+  static async #onOpenConsequence() {
+    const stealth = findStealth();
+    if (!game.user.isGM || !stealth?.system.ativa) return;
+    const alvos = stealthView(stealth)
+      .participantes.filter((entry) => entry.status === 'encontrado')
+      .map(({ id, name }) => ({ id, name }));
+    if (alvos.length === 0) {
+      ui.notifications.warn(t('DESORDEM.Furtividade.Consequencia.Ninguem'));
+      return;
+    }
+    await askAndPostPenalty({ cena: 'furtividade', alvos });
   }
 
   /** Contador de distrair da cena, pelos botões −/+ (só o mestre). */

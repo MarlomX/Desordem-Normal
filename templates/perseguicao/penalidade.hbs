@@ -3,12 +3,14 @@
     <span>{{localize "DESORDEM.Perseguicao.Penalidade.Valor"}}</span>
     <input type="text" name="valor" placeholder="2d6" autocomplete="off" autofocus>
   </label>
-  <label class="desordem-perseguicao-penalidade__campo">
+  {{! PV ou PD: dois botões que se excluem (rádios com a aparência de botão) }}
+  <div class="desordem-perseguicao-penalidade__campo">
     <span>{{localize "DESORDEM.Perseguicao.Penalidade.Tipo"}}</span>
-    <select name="tipo">
-      <option value="pv">{{localize "DESORDEM.Perseguicao.Penalidade.PV"}}</option>
-      <option value="pd">{{localize "DESORDEM.Perseguicao.Penalidade.PD"}}</option>
-    </select>
-  </label>
-  <p class="desordem-ficha__dica">{{localize "DESORDEM.Perseguicao.Penalidade.Dica"}}</p>
+    <div class="desordem-tipo-botoes" role="radiogroup">
+      <label class="desordem-tipo-botoes__opcao desordem-tipo-botoes__opcao--pv"><input type="radio" name="tipo" value="pv" checked><span>{{localize "DESORDEM.Perseguicao.Penalidade.PV"}}</span></label>
+      <label class="desordem-tipo-botoes__opcao desordem-tipo-botoes__opcao--pd"><input type="radio" name="tipo" value="pd"><span>{{localize "DESORDEM.Perseguicao.Penalidade.PD"}}</span></label>
+    </div>
+  </div>
+  {{#if alvos}}<p class="desordem-ficha__dica"><strong>{{localize "DESORDEM.Furtividade.Consequencia.Alvos"}}</strong> {{alvos}}</p>{{/if}}
+  <p class="desordem-ficha__dica">{{dica}}</p>
 </div>

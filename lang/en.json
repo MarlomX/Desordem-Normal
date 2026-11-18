@@ -921,6 +921,16 @@
         "Aliado": "Ally",
         "Confirmar": "Draw attention",
         "Mesmo": "Choose different dice to pass and to discard."
+      },
+      "Consequencia": {
+        "Abrir": "Consequence",
+        "Titulo": "Consequence of being found",
+        "TituloCartao": "Found by the creatures",
+        "Fixa": "Whoever was found loses {valor} {tipo}.",
+        "Rolada": "Rolled {formula}: whoever was found loses {valor} {tipo}.",
+        "Dica": "With dice, the GM rolls once and everyone takes the same value. Only those found right now get the button on the card.",
+        "Alvos": "Found right now:",
+        "Ninguem": "Nobody is found right now."
       }
     }
   },

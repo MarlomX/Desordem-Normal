@@ -921,6 +921,16 @@
         "Aliado": "Aliado",
         "Confirmar": "Chamar atenção",
         "Mesmo": "Escolha dados diferentes para passar e para descartar."
+      },
+      "Consequencia": {
+        "Abrir": "Consequência",
+        "Titulo": "Consequência de estar encontrado",
+        "TituloCartao": "Encontrados pelas criaturas",
+        "Fixa": "Quem foi encontrado perde {valor} {tipo}.",
+        "Rolada": "Rolou {formula}: quem foi encontrado perde {valor} {tipo}.",
+        "Dica": "Com dados, o mestre rola uma vez e todos levam o mesmo valor. Só quem está encontrado agora recebe o botão no cartão.",
+        "Alvos": "Encontrados agora:",
+        "Ninguem": "Ninguém está encontrado agora."
       }
     }
   },

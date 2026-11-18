@@ -594,15 +594,33 @@ export function parsePenaltyValue(raw) {
   return { valid: true, kind: 'dice', formula };
 }
 
-/** Registro de uma penalidade postada no chat: quem já aplicou fica em `aplicados`. */
-export function createPenaltyFlag({ tipo, valor, formula = '' }) {
-  return {
+/**
+ * Registro de uma penalidade postada no chat: quem já aplicou fica em `aplicados`.
+ * A mesma penalidade serve à cena de furtividade (consequência de estar encontrado): nesse caso o
+ * registro guarda `cena: 'furtividade'` e `alvos` (os encontrados quando ela foi postada), e só
+ * eles têm o botão. Na perseguição o registro continua igual ao de antes.
+ */
+export function createPenaltyFlag({ tipo, valor, formula = '', cena, alvos }) {
+  const flag = {
     tipo: PENALTY_TYPES.includes(tipo) ? tipo : 'pv',
     valor: Math.min(MAX_PENALTY, Math.max(0, Math.trunc(valor))),
     formula: String(formula),
     aplicados: [],
   };
+  if (cena === 'furtividade') {
+    flag.cena = 'furtividade';
+    flag.alvos = (Array.isArray(alvos) ? alvos : []).map(String);
+  }
+  return flag;
 }
+
+/** De qual cena é a penalidade ('perseguicao' para os registros antigos, sem `cena`). */
+export const penaltyScene = (flag) =>
+  flag?.cena === 'furtividade' ? 'furtividade' : 'perseguicao';
+
+/** Esse participante pode aplicar a penalidade? (com `alvos`, só quem está na lista) */
+export const penaltyAllows = (flag, combatantId) =>
+  !Array.isArray(flag?.alvos) || flag.alvos.includes(combatantId);
 
 /** Esse participante já aplicou esta penalidade? */
 export const penaltyApplied = (flag, combatantId) =>
@@ -639,11 +657,12 @@ export function applyPenaltyTo(flag, combatantId, current) {
  * @param {{combatantId: string, name: string}[]} rows
  */
 export function penaltyBarView(flag, rows) {
+  const allowed = rows.filter(({ combatantId }) => penaltyAllows(flag, combatantId));
   return {
     valor: flag.valor,
     tipo: flag.tipo,
-    multiple: rows.length > 1,
-    rows: rows.map(({ combatantId, name }) => {
+    multiple: allowed.length > 1,
+    rows: allowed.map(({ combatantId, name }) => {
       const entry = flag.aplicados.find((item) => item.id === combatantId);
       return {
         combatantId,
