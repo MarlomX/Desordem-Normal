@@ -2,7 +2,18 @@
   {{#if view}}
   <header class="desordem-perseguicao__topo">
     <span class="desordem-perseguicao__estado{{#if view.ativa}} is-ativa{{/if}}">{{#if view.ativa}}{{localize "DESORDEM.Perseguicao.EmAndamento"}}{{else}}{{localize "DESORDEM.Perseguicao.EmPreparacao"}}{{/if}}</span>
-    {{#if view.ativa}}<span class="desordem-perseguicao__rodada">{{localize "DESORDEM.Perseguicao.Rodada" rodada=view.rodadaAtual}}</span>{{/if}}
+    {{#if view.ativa}}
+    {{#if @root.isGM}}
+    <span class="desordem-perseguicao__valor">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.RodadaRotulo"}}</span>
+      <button type="button" class="desordem-perseguicao__passo" data-action="adjustRound" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="rodada" value="{{view.rodadaAtual}}" min="1" max="99" step="1" inputmode="numeric" aria-label="{{localize "DESORDEM.Perseguicao.RodadaRotulo"}}">
+      <button type="button" class="desordem-perseguicao__passo" data-action="adjustRound" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>
+    </span>
+    {{else}}
+    <span class="desordem-perseguicao__rodada">{{localize "DESORDEM.Perseguicao.Rodada" rodada=view.rodadaAtual}}</span>
+    {{/if}}
+    {{/if}}
     <span class="desordem-perseguicao__valor">
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.DT"}}</span>
       {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustDt" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>{{/if}}
@@ -67,7 +78,7 @@
           <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.Folego"}}</span>
           {{#if podeEditar}}
           <button type="button" class="desordem-perseguicao__passo" data-action="adjustParticipant" data-combatant-id="{{id}}" data-field="folego" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>
-          <input type="number" class="desordem-perseguicao__campo" data-campo="folego" data-combatant-id="{{id}}" value="{{folego}}" min="0" max="6" step="1" inputmode="numeric" aria-label="{{localize "DESORDEM.Perseguicao.Folego"}}">
+          <input type="number" class="desordem-perseguicao__campo" data-campo="folego" data-combatant-id="{{id}}" value="{{folego}}" min="0" max="99" step="1" inputmode="numeric" aria-label="{{localize "DESORDEM.Perseguicao.Folego"}}">
           <strong>d6</strong>
           <button type="button" class="desordem-perseguicao__passo" data-action="adjustParticipant" data-combatant-id="{{id}}" data-field="folego" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>
           {{else}}
@@ -88,6 +99,7 @@
   {{/if}}
 
   {{#if @root.isGM}}
+  {{#if view.ativa}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Perseguicao.DicaManual"}}</p>{{/if}}
   <footer class="desordem-perseguicao__acoes">
     <button type="button" data-action="addParticipants"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Adicionar"}}</button>
     {{#if view.ativa}}

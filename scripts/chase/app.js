@@ -22,6 +22,7 @@ import {
   setActed,
   setChaseDt,
   setParticipantField,
+  setRound,
   startChase,
   toggleReveal,
 } from './store.js';
@@ -55,6 +56,7 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
       adjustParticipant: PerseguicaoApp.#onAdjustParticipant,
       nextRound: PerseguicaoApp.#onNextRound,
       adjustDt: PerseguicaoApp.#onAdjustDt,
+      adjustRound: PerseguicaoApp.#onAdjustRound,
       openPoints: PerseguicaoApp.#onOpenPoints,
       openPenalty: PerseguicaoApp.#onOpenPenalty,
       toggleReveal: PerseguicaoApp.#onToggleReveal,
@@ -137,7 +139,9 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
     const chase = findChase();
     if (chase) {
       const { campo, combatantId } = input.dataset;
-      if (campo === 'dt') {
+      if (campo === 'rodada') {
+        await setRound(chase, { raw: input.value });
+      } else if (campo === 'dt') {
         const typed = parseTypedValue('dt', input.value);
         if (typed.valid && game.user.isGM) await setChaseDt(chase, typed.value);
       } else {
@@ -191,6 +195,12 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
   static async #onAdjustDt(event, target) {
     const chase = findChase();
     if (chase) await setChaseDt(chase, chase.system.dt + Number(target.dataset.delta));
+  }
+
+  /** Muda a rodada atual na mão pelos botões −/+ (só o mestre). */
+  static async #onAdjustRound(event, target) {
+    const chase = findChase();
+    if (chase) await setRound(chase, { delta: Number(target.dataset.delta) });
   }
 
   /** Abre a janela dos pontos de checagem (só o mestre). */

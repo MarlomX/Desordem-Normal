@@ -6,5 +6,8 @@
   <span class="desordem-perseguicao__agiu">{{localize "DESORDEM.Perseguicao.Agiu"}}</span>
   {{/if}}
   {{/if}}
+  {{#if perseguicao.podeRecuperar}}
+  <button type="button" class="desordem-perseguicao-cartao__abrir" data-action="recoverBreath" title="{{localize "DESORDEM.Perseguicao.Cartao.RecuperarFolegoDica"}}">{{localize "DESORDEM.Perseguicao.Cartao.RecuperarFolego"}}</button>
+  {{/if}}
   <button type="button" class="desordem-perseguicao-cartao__abrir" data-action="openChase">{{localize "DESORDEM.Perseguicao.Cartao.Abrir"}}</button>
 </section>

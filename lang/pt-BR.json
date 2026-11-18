@@ -612,6 +612,8 @@
       "EmPreparacao": "Em preparação",
       "EmAndamento": "Em andamento",
       "Rodada": "Rodada {rodada}",
+      "RodadaRotulo": "Rodada",
+      "DicaManual": "Carregar outro e sacrifício: ajuste o PA e o fôlego dos participantes à mão, pelos campos acima.",
       "Participantes": "Participantes",
       "SemParticipantes": "Ninguém participa ainda. Adicione os personagens que vão correr.",
       "SemPerseguicao": "Não há nenhuma perseguição no momento.",
@@ -646,6 +648,8 @@
         }
       },
       "Chat": {
+        "FolegoTitulo": "{nome} recupera o fôlego",
+        "Folego": "+{dados}d6 de fôlego (agora {total}d6).",
         "EsforcoTitulo": "{nome} faz esforço extra",
         "Esforco": "Esforço extra: rolou {perda} PV de perda ({dados}d4)",
         "EsforcoPendente": "O PV ainda não foi descontado: {pv} PV a aplicar.",
@@ -704,7 +708,9 @@
       },
       "Cartao": {
         "Titulo": "Perseguição",
-        "Abrir": "Abrir"
+        "Abrir": "Abrir",
+        "RecuperarFolego": "Recuperar fôlego",
+        "RecuperarFolegoDica": "Ação da rodada: recupera 2 dados de fôlego e marca «já agiu»."
       },
       "Erro": {
         "JaExiste": "Já existe uma perseguição. Exclua-a antes de criar outra.",

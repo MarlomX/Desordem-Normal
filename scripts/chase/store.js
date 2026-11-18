@@ -9,8 +9,10 @@ import {
   CHASE_COMBATANT_TYPE,
   addCheckpoint,
   adjustField,
+  adjustRound,
   advanceBlockReason,
   advanceWarning,
+  breathBlockReason,
   canEditChaseNumbers,
   chaseAccess,
   checkpointsView,
@@ -146,6 +148,15 @@ export function chaseCardFor(actor) {
     pa: view?.pa ?? 0,
     folego: view?.folego ?? 0,
     agiu: view?.agiu ?? false,
+    // O botão «recuperar fôlego» só aparece para o dono (ou o mestre) que ainda não agiu na rodada
+    podeRecuperar: Boolean(
+      combatant?.actor?.isOwner &&
+      !breathBlockReason({
+        ativa: chase.system.ativa,
+        rodadaAtual: chase.system.rodadaAtual,
+        participant: combatant.system,
+      }),
+    ),
   };
 }
 
@@ -261,6 +272,27 @@ export async function clearCheckpoints(chase) {
 export async function toggleReveal(chase, field) {
   if (!game.user.isGM || !['revelarProximo', 'revelarFinal'].includes(field)) return;
   await chase.update({ system: { [field]: !chase.system[field] } });
+}
+
+/**
+ * Muda a rodada atual na mão (só o mestre, com a perseguição em andamento), pelo valor digitado ou
+ * pelos botões −/+ (`delta`). Não mexe em PA, fôlego nem no «já agiu». Valor inválido não grava.
+ * @param {Combat} chase
+ * @param {{raw?: string|number, delta?: number}} change `raw` é o texto digitado; `delta` é ±1.
+ * @returns {Promise<boolean>} `true` se gravou um valor válido.
+ */
+export async function setRound(chase, { raw, delta } = {}) {
+  if (!game.user.isGM || !chase.system.ativa) return false;
+  let next;
+  if (delta !== undefined) {
+    next = adjustRound(chase.system.rodadaAtual, delta);
+  } else {
+    const typed = parseTypedValue('rodada', raw);
+    if (!typed.valid) return false;
+    next = typed.value;
+  }
+  if (next !== chase.system.rodadaAtual) await chase.update({ system: { rodadaAtual: next } });
+  return true;
 }
 
 /** Passa para a próxima rodada. */

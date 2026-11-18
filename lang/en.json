@@ -612,6 +612,8 @@
       "EmPreparacao": "Being prepared",
       "EmAndamento": "In progress",
       "Rodada": "Round {rodada}",
+      "RodadaRotulo": "Round",
+      "DicaManual": "Carrying another and sacrifice: adjust the participants' AP and breath by hand, using the fields above.",
       "Participantes": "Participants",
       "SemParticipantes": "Nobody is taking part yet. Add the characters who will run.",
       "SemPerseguicao": "There is no chase right now.",
@@ -646,6 +648,8 @@
         }
       },
       "Chat": {
+        "FolegoTitulo": "{nome} catches their breath",
+        "Folego": "+{dados}d6 of breath (now {total}d6).",
         "EsforcoTitulo": "{nome} makes an extra effort",
         "Esforco": "Extra effort: rolled {perda} HP of loss ({dados}d4)",
         "EsforcoPendente": "The HP has not been deducted yet: {pv} HP to apply.",
@@ -704,7 +708,9 @@
       },
       "Cartao": {
         "Titulo": "Chase",
-        "Abrir": "Open"
+        "Abrir": "Open",
+        "RecuperarFolego": "Catch breath",
+        "RecuperarFolegoDica": "Round action: recovers 2 breath dice and marks \"already acted\"."
       },
       "Erro": {
         "JaExiste": "A chase already exists. Delete it before creating another.",

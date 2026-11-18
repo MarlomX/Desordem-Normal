@@ -35,6 +35,7 @@ import {
 } from '../rolls/relation.js';
 import PerseguicaoApp from '../chase/app.js';
 import { withChaseAdvance } from '../chase/advance.js';
+import { recoverBreath } from '../chase/breath.js';
 import { chaseCardFor, chaseInfoFor } from '../chase/store.js';
 import {
   buildAttributeRows,
@@ -115,6 +116,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       healAlly: PersonagemSheet.#onHealAlly,
       newScene: PersonagemSheet.#onNewScene,
       openChase: PersonagemSheet.#onOpenChase,
+      recoverBreath: PersonagemSheet.#onRecoverBreath,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
@@ -751,6 +753,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Abre a janela da perseguição (cartão da ficha). */
   static async #onOpenChase() {
     await PerseguicaoApp.open();
+  }
+
+  /** Recupera o fôlego na perseguição (cartão da ficha): ação da rodada, marca «já agiu». */
+  static async #onRecoverBreath() {
+    await recoverBreath(this.document);
   }
 
   /** Nova cena: reinicia contadores, recursos e efeitos de cena deste personagem. */

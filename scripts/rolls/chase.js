@@ -119,8 +119,20 @@ export const ADVANCE_SKILL = 'atletismo';
 /** Máximo de dados de fôlego gastos num mesmo teste (o teste rola no máximo 4 dados). */
 export const MAX_BREATH_PER_TEST = 2;
 
-/** Máximo de dados de fôlego que um participante pode ter. */
+/** Fôlego inicial pelo Vigor: no máximo 6 dados (Vigor d12). */
 export const MAX_BREATH = 6;
+
+/**
+ * Teto técnico do fôlego ao recuperar ou ajustar à mão. A regra não fala em fôlego máximo, então
+ * os dados podem passar de 6; o teto só evita números absurdos.
+ */
+export const MAX_BREATH_DICE = 99;
+
+/** Dados de fôlego devolvidos pela ação «recuperar fôlego». */
+export const BREATH_RECOVERY = 2;
+
+/** Rodadas aceitas ao mudar a rodada atual na mão (o mesmo teto dos pontos de checagem). */
+export const MAX_ROUND = 99;
 
 /** Campos que o mestre pode ajustar à mão na janela. */
 export const ADJUSTABLE_FIELDS = Object.freeze(['pa', 'folego']);
@@ -365,7 +377,7 @@ export function applyEffortLoss(pv, loss) {
 /** Valor de um campo ajustado à mão (nunca abaixo de 0; fôlego e PA têm um máximo). */
 export function adjustField(field, value, delta) {
   const next = Math.max(0, Math.trunc(value + delta));
-  return Math.min(field === 'folego' ? MAX_BREATH : MAX_POINTS, next);
+  return Math.min(field === 'folego' ? MAX_BREATH_DICE : MAX_POINTS, next);
 }
 
 /** Maior PA que a janela aceita (o mesmo limite que o socket aceita de um jogador). */
@@ -375,8 +387,8 @@ export const MAX_POINTS = 10_000;
  * Valida um valor digitado na janela da perseguição (campos `pa`, `folego` ou `dt`).
  * Vazio, texto ou número com vírgula/decimal inválido não valem (`valid: false`: o campo volta ao
  * valor anterior). Decimais são cortados (4,7 vira 4); os limites são os mesmos dos botões −/+:
- * PA de 0 a 10 000, fôlego de 0 a 6 e DT de 1 a 40.
- * @param {'pa'|'folego'|'dt'} field
+ * PA de 0 a 10 000, fôlego de 0 a 99, DT de 1 a 40 e rodada de 1 a 99.
+ * @param {'pa'|'folego'|'dt'|'rodada'} field
  * @param {string|number} raw O que a pessoa digitou.
  * @returns {{valid: boolean, value?: number}}
  */
@@ -386,7 +398,10 @@ export function parseTypedValue(field, raw) {
   if (!Number.isFinite(number)) return { valid: false };
   const whole = Math.trunc(number);
   if (field === 'dt') return { valid: true, value: normalizeChaseDt(whole) };
-  if (field === 'folego') return { valid: true, value: Math.min(MAX_BREATH, Math.max(0, whole)) };
+  if (field === 'folego') {
+    return { valid: true, value: Math.min(MAX_BREATH_DICE, Math.max(0, whole)) };
+  }
+  if (field === 'rodada') return { valid: true, value: Math.min(MAX_ROUND, Math.max(1, whole)) };
   if (field === 'pa') return { valid: true, value: Math.min(MAX_POINTS, Math.max(0, whole)) };
   return { valid: false };
 }
@@ -639,5 +654,38 @@ export function penaltyBarView(flag, rows) {
         showButton: !entry,
       };
     }),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Rodada na mão e recuperar fôlego (0.16.8)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Rodada nova ao mudar a rodada atual na mão (botões −/+). Fica entre 1 e 99. Mudar a rodada não
+ * mexe em PA, fôlego nem no «já agiu» de ninguém (só «próxima rodada» zera o «já agiu»).
+ */
+export function adjustRound(current, delta) {
+  const next = Math.trunc(Number(current) + Number(delta));
+  return Number.isFinite(next) ? Math.min(MAX_ROUND, Math.max(1, next)) : 1;
+}
+
+/**
+ * Por que o participante não pode recuperar o fôlego agora (ou `null` se pode): `inativa` (a
+ * perseguição não está em andamento) ou `agiu` (já agiu nesta rodada: recuperar fôlego é a ação
+ * da rodada, no lugar de avançar).
+ */
+export function breathBlockReason({ ativa, rodadaAtual, participant }) {
+  return advanceBlockReason({ ativa, rodadaAtual, participant });
+}
+
+/**
+ * O que gravar ao recuperar o fôlego: soma 2 dados (sem teto de 6) e marca «já agiu» na rodada.
+ * @returns {{folego: number, ultimaRodada: number}} Patch do participante.
+ */
+export function recoverBreathPatch({ participant, rodadaAtual }) {
+  return {
+    folego: Math.min(MAX_BREATH_DICE, Math.max(0, participant.folego) + BREATH_RECOVERY),
+    ultimaRodada: rodadaAtual,
   };
 }

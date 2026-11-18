@@ -197,6 +197,11 @@ import {
   parseTypedValue,
   canEditChaseNumbers,
   TRUSTED_ROLE,
+  adjustRound,
+  breathBlockReason,
+  recoverBreathPatch,
+  BREATH_RECOVERY,
+  MAX_BREATH_DICE,
   MAX_CHECKPOINTS,
   normalizeCheckpoints,
   addCheckpoint,
@@ -362,7 +367,9 @@ test('ajuste manual: nunca abaixo de 0; fôlego limitado a 6', () => {
   assert.equal(adjustField('pa', 3, -1), 2);
   assert.equal(adjustField('pa', 0, -1), 0);
   assert.equal(adjustField('pa', 29, 1), 30);
-  assert.equal(adjustField('folego', 6, 1), 6);
+  // fôlego não tem teto de 6 (a regra não fala em máximo): só o teto técnico de 99
+  assert.equal(adjustField('folego', 6, 1), 7);
+  assert.equal(adjustField('folego', 99, 1), 99);
   assert.equal(adjustField('folego', 0, -1), 0);
   assert.equal(isAdjustableField('pa'), true);
   assert.equal(isAdjustableField('esforcoExtra'), false);
@@ -594,7 +601,12 @@ test('valor digitado: inteiro dentro dos limites; vazio e texto não valem', () 
   assert.deepEqual(parseTypedValue('pa', ' 4,7 '), { valid: true, value: 4 });
   assert.deepEqual(parseTypedValue('pa', -3), { valid: true, value: 0 });
   assert.deepEqual(parseTypedValue('pa', '99999'), { valid: true, value: 10000 });
-  assert.deepEqual(parseTypedValue('folego', '9'), { valid: true, value: 6 });
+  assert.deepEqual(parseTypedValue('folego', '9'), { valid: true, value: 9 });
+  assert.deepEqual(parseTypedValue('folego', '500'), { valid: true, value: 99 });
+  assert.deepEqual(parseTypedValue('rodada', '12'), { valid: true, value: 12 });
+  assert.deepEqual(parseTypedValue('rodada', '0'), { valid: true, value: 1 });
+  assert.deepEqual(parseTypedValue('rodada', '250'), { valid: true, value: 99 });
+  assert.equal(parseTypedValue('rodada', '').valid, false);
   assert.deepEqual(parseTypedValue('folego', '0'), { valid: true, value: 0 });
   assert.deepEqual(parseTypedValue('dt', '99'), { valid: true, value: 40 });
   assert.deepEqual(parseTypedValue('dt', '0'), { valid: true, value: 1 });
@@ -608,7 +620,8 @@ test('os limites digitados são os mesmos dos botões −/+', () => {
   for (const field of ['pa', 'folego']) {
     assert.equal(parseTypedValue(field, '1000000').value, adjustField(field, 1_000_000, 0));
   }
-  assert.equal(parseTypedValue('folego', '7').value, adjustField('folego', 6, 1));
+  assert.equal(parseTypedValue('folego', '100').value, adjustField('folego', 99, 1));
+  assert.equal(parseTypedValue('rodada', '0').value, adjustRound(1, -1));
 });
 
 test('quem edita PA e fôlego: mestre sempre; confiável só o próprio; jogador comum não', () => {
@@ -814,4 +827,43 @@ test('barra da penalidade: uma linha por participante da pessoa', () => {
   );
   assert.equal(penaltyBarView(flag, [{ combatantId: 'a', name: 'A' }]).multiple, false);
   assert.deepEqual(penaltyBarView(flag, []).rows, []);
+});
+
+// ---- 0.16.8: rodada na mão e recuperar fôlego ----
+test('rodada na mão: de 1 a 99, não mexe em mais nada', () => {
+  assert.equal(adjustRound(3, 1), 4);
+  assert.equal(adjustRound(3, -1), 2);
+  assert.equal(adjustRound(1, -1), 1);
+  assert.equal(adjustRound(99, 1), 99);
+  assert.equal(adjustRound('x', 1), 1);
+});
+
+test('recuperar fôlego: soma 2 dados sem teto de 6 e marca «já agiu» na rodada', () => {
+  assert.equal(BREATH_RECOVERY, 2);
+  assert.deepEqual(recoverBreathPatch({ participant: { folego: 1 }, rodadaAtual: 3 }), {
+    folego: 3,
+    ultimaRodada: 3,
+  });
+  // passa de 6: a regra não fala em fôlego máximo
+  assert.deepEqual(recoverBreathPatch({ participant: { folego: 6 }, rodadaAtual: 2 }), {
+    folego: 8,
+    ultimaRodada: 2,
+  });
+  assert.equal(
+    recoverBreathPatch({ participant: { folego: 98 }, rodadaAtual: 2 }).folego,
+    MAX_BREATH_DICE,
+  );
+  assert.equal(recoverBreathPatch({ participant: { folego: -4 }, rodadaAtual: 2 }).folego, 2);
+});
+
+test('recuperar fôlego é bloqueado como o avanço: fora da perseguição e depois de agir', () => {
+  const base = { ativa: true, rodadaAtual: 2, participant: { ultimaRodada: 1 } };
+  assert.equal(breathBlockReason(base), null);
+  assert.equal(breathBlockReason({ ...base, ativa: false }), 'inativa');
+  assert.equal(breathBlockReason({ ...base, participant: { ultimaRodada: 2 } }), 'agiu');
+  // depois de recuperar o fôlego, o participante fica «já agiu» e não pode avançar nem recuperar de novo
+  const patch = recoverBreathPatch({ participant: { folego: 1 }, rodadaAtual: 2 });
+  const after = { ...base, participant: { ultimaRodada: patch.ultimaRodada } };
+  assert.equal(breathBlockReason(after), 'agiu');
+  assert.equal(advanceBlockReason(after), 'agiu');
 });
