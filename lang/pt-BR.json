@@ -793,6 +793,38 @@
         "Escolher": "Escolha os {n} dados que ficam (clique para trocar).",
         "Critico": "Crítico: ao guardar, um d{dado} extra é rolado e entra também.",
         "JaEscondido": "Este personagem já se escondeu nesta cena."
+      },
+      "Procura": {
+        "Titulo": "Procura das criaturas",
+        "Abrir": "Procura",
+        "Dica": "Digite dados (2d6, d10) e/ou valores (3 5). Os dados são rolados em público; quem tiver dados de esconderijo com algum desses valores os perde.",
+        "Campo": "Dados ou valores",
+        "Alvo": "Alvo",
+        "Escolhido": "Personagem",
+        "Modo": {
+          "todos": "Todos os escondidos",
+          "sorteado": "Um sorteado",
+          "escolhido": "Um escolhido"
+        },
+        "Procurar": "Procurar",
+        "SortearAlvo": "Só sortear um alvo",
+        "Sorteado": "Evento das criaturas: o alvo sorteado é {nome}.",
+        "CartaoTitulo": "As criaturas procuram",
+        "Pendente": "{nome}: ainda não conferiu",
+        "Conferir": "Conferir meus dados",
+        "Resolver": "Resolver pendentes ({n})",
+        "Resultado": {
+          "nada": "{nome}: nada encontrado (continua com {restam}).",
+          "perdeu": "{nome}: perdeu {n} dado(s) de esconderijo (restam {restam}).",
+          "encontrado": "{nome}: perdeu {n} dado(s) e foi encontrado!",
+          "ignorado": "{nome}: já não estava escondido."
+        },
+        "Erro": {
+          "vazio": "Digite dados ou valores para a procura.",
+          "termo": "Use dados de d2 a d20 (até 10 de cada, como 2d6) ou valores de 1 a 20.",
+          "muitos": "Termos demais no campo (no máximo 12).",
+          "semAlvo": "Ninguém está escondido para ser procurado."
+        }
       }
     }
   },

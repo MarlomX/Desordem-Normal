@@ -14,6 +14,7 @@ import { registerChaseHooks, registerChaseSocket, chaseApi } from './chase/hooks
 import { FurtividadeModel, FurtivoModel } from './stealth/models.js';
 import { registerStealthHooks, registerStealthSocket, stealthApi } from './stealth/hooks.js';
 import { renderHideBar } from './stealth/hide-test.js';
+import { renderSearchBar } from './stealth/search.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
@@ -124,6 +125,7 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderEffortBar(message, html);
   renderPenaltyBar(message, html);
   renderHideBar(message, html);
+  renderSearchBar(message, html);
   renderTableCard(message, html);
   renderFearDice(message, html);
 });

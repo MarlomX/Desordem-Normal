@@ -2224,3 +2224,57 @@
   font-size: 0.85em;
   opacity: 0.8;
 }
+
+/* ===== Furtividade: procura das criaturas (v0.17.3) ===== */
+.desordem-procura__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.desordem-procura__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.desordem-procura-cartao__valores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.desordem-procura-barra {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.desordem-procura-barra__alvos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-procura-barra__alvo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.desordem-procura-barra__alvo button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}
+
+.desordem-procura-barra__alvo.is-encontrado {
+  font-weight: 700;
+}

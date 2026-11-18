@@ -1,0 +1,7 @@
+<div class="desordem-teste desordem-procura-cartao">
+  <h4 class="desordem-teste__titulo"><i class="fa-solid fa-eye" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Procura.CartaoTitulo"}}</h4>
+  {{#if entrada}}<p class="desordem-ficha__dica">{{entrada}}</p>{{/if}}
+  <div class="desordem-procura-cartao__valores">
+    {{#each valores}}{{dadoFace lados valor "grande"}}{{/each}}
+  </div>
+</div>

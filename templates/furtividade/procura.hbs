@@ -1,0 +1,26 @@
+<section class="desordem-procura__corpo">
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Procura.Dica"}}</p>
+  <label class="desordem-procura__campo">
+    <span>{{localize "DESORDEM.Furtividade.Procura.Campo"}}</span>
+    <input type="text" name="busca" value="{{state.text}}" placeholder="2d6 · d10 · 3 5" autocomplete="off">
+  </label>
+  <label class="desordem-procura__campo">
+    <span>{{localize "DESORDEM.Furtividade.Procura.Alvo"}}</span>
+    <select name="modo">
+      {{#each modes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+    </select>
+  </label>
+  {{#if escolhido}}
+  <label class="desordem-procura__campo">
+    <span>{{localize "DESORDEM.Furtividade.Procura.Escolhido"}}</span>
+    <select name="alvo">
+      {{#each candidates}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}
+    </select>
+  </label>
+  {{/if}}
+  {{#unless hasCandidates}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Procura.Erro.semAlvo"}}</p>{{/unless}}
+  <footer class="desordem-perseguicao__acoes">
+    <button type="button" data-action="search" {{#unless hasCandidates}}disabled{{/unless}}><i class="fa-solid fa-eye" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Procura.Procurar"}}</button>
+    <button type="button" data-action="drawTarget" {{#unless hasCandidates}}disabled{{/unless}}><i class="fa-solid fa-shuffle" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Procura.SortearAlvo"}}</button>
+  </footer>
+</section>

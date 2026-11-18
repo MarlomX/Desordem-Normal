@@ -8,6 +8,7 @@ import { shouldAutoOpen, trackerAction } from '../rolls/chase.js';
 import { STEALTH_COMBAT_TYPE } from '../rolls/stealth.js';
 import FurtividadeApp from './app.js';
 import { HIDE_TEST_SOCKET_ACTION, handleHideTestSocket } from './hide-test.js';
+import { ProcuraApp, SEARCH_SOCKET_ACTION, handleSearchSocket } from './search.js';
 import {
   HIDE_SOCKET_ACTION,
   SOCKET,
@@ -87,6 +88,7 @@ export function registerStealthHooks() {
     Hooks.on(name, (doc) => {
       if (!isStealthDocument(doc)) return;
       FurtividadeApp.refresh();
+      ProcuraApp.refresh();
       refreshSheets();
     });
   }
@@ -134,6 +136,8 @@ export function registerStealthSocket() {
     if (data?.action === HIDE_SOCKET_ACTION) await handleHideSocket(data, userId);
     // Botão «Guardar dados de esconderijo» do cartão do teste (só o id da mensagem e os índices)
     if (data?.action === HIDE_TEST_SOCKET_ACTION) await handleHideTestSocket(data, userId);
+    // Botão «Conferir meus dados» do cartão da procura (só ids)
+    if (data?.action === SEARCH_SOCKET_ACTION) await handleSearchSocket(data, userId);
   });
 }
 

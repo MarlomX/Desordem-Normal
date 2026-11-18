@@ -793,6 +793,38 @@
         "Escolher": "Choose the {n} dice that stay (click to swap).",
         "Critico": "Critical: when you keep them, an extra d{dado} is rolled and added too.",
         "JaEscondido": "This character has already hidden in this scene."
+      },
+      "Procura": {
+        "Titulo": "Creatures search",
+        "Abrir": "Search",
+        "Dica": "Type dice (2d6, d10) and/or values (3 5). Dice are rolled in public; anyone with hiding dice showing one of these values loses them.",
+        "Campo": "Dice or values",
+        "Alvo": "Target",
+        "Escolhido": "Character",
+        "Modo": {
+          "todos": "All hidden",
+          "sorteado": "One at random",
+          "escolhido": "One chosen"
+        },
+        "Procurar": "Search",
+        "SortearAlvo": "Just draw a target",
+        "Sorteado": "Creature event: the drawn target is {nome}.",
+        "CartaoTitulo": "The creatures search",
+        "Pendente": "{nome}: not checked yet",
+        "Conferir": "Check my dice",
+        "Resolver": "Resolve pending ({n})",
+        "Resultado": {
+          "nada": "{nome}: nothing found (still has {restam}).",
+          "perdeu": "{nome}: lost {n} hiding die/dice ({restam} left).",
+          "encontrado": "{nome}: lost {n} die/dice and was found!",
+          "ignorado": "{nome}: was no longer hidden."
+        },
+        "Erro": {
+          "vazio": "Type dice or values for the search.",
+          "termo": "Use dice from d2 to d20 (up to 10 each, like 2d6) or values from 1 to 20.",
+          "muitos": "Too many terms in the field (at most 12).",
+          "semAlvo": "Nobody is hidden to be searched."
+        }
       }
     }
   },

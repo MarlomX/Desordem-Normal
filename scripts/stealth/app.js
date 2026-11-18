@@ -6,6 +6,7 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { HIDE_DIE_SIDES } from '../rolls/stealth.js';
+import { ProcuraApp } from './search.js';
 import {
   addStealthParticipants,
   createStealth,
@@ -70,6 +71,7 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
       addHideDie: FurtividadeApp.#onAddHideDie,
       removeHideDie: FurtividadeApp.#onRemoveHideDie,
       resetHide: FurtividadeApp.#onResetHide,
+      openSearch: FurtividadeApp.#onOpenSearch,
     },
   };
 
@@ -178,6 +180,11 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
     if (await confirm('DESORDEM.Furtividade.Excluir', 'DESORDEM.Furtividade.ExcluirConfirmar')) {
       await deleteStealth(stealth);
     }
+  }
+
+  /** Abre a janela de procura das criaturas (só o mestre). */
+  static async #onOpenSearch() {
+    await ProcuraApp.open();
   }
 
   static async #onNextRound() {

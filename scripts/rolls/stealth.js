@@ -343,3 +343,167 @@ export function hideBarView(flag, { sides, values, critical }, { canApply, alrea
 export function hideTestPatch(dice) {
   return { esconderijo: cleanHideDice(dice), escondeu: true };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Procura das criaturas (0.17.3)
+//
+// O mestre digita dados (`2d6`, `d10`) e/ou valores (`3 5`) na janela de procura. Os dados são
+// rolados em público e, junto com os valores digitados, formam a lista de valores procurados.
+// Cada alvo perde TODOS os dados de esconderijo com valor igual a algum valor procurado (os
+// valores não são somados). O cálculo é feito pelo mestre, a partir dos dados guardados no
+// participante; o cartão só mostra quantidades.
+// ---------------------------------------------------------------------------------------------
+
+/** Lados aceitos nos dados da procura e maior valor que se pode digitar. */
+export const SEARCH_MIN_SIDES = 2;
+export const SEARCH_MAX_SIDES = 20;
+
+/** Máximo de dados numa mesma parcela (`10d6`) e de parcelas no campo. */
+export const SEARCH_MAX_COUNT = 10;
+export const SEARCH_MAX_TERMS = 12;
+
+/**
+ * Lê o campo da procura. Aceita dados (`2d6`, `d10`, `1D8`) e valores (`3`, `5`), separados por
+ * espaço, vírgula, ponto e vírgula ou `+`. Qualquer outra coisa invalida o campo inteiro.
+ * @param {string} text
+ * @returns {{valid: boolean, dice: {count: number, sides: number}[], values: number[],
+ *   reason?: string}} `reason`: 'vazio', 'termo' (algo que não é dado nem valor) ou 'muitos'.
+ */
+export function parseSearchInput(text) {
+  const tokens = String(text ?? '')
+    .split(/[\s,;+]+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+  if (tokens.length === 0) return { valid: false, dice: [], values: [], reason: 'vazio' };
+  if (tokens.length > SEARCH_MAX_TERMS) {
+    return { valid: false, dice: [], values: [], reason: 'muitos' };
+  }
+  const dice = [];
+  const values = [];
+  for (const token of tokens) {
+    const die = /^(\d*)[dD](\d+)$/.exec(token);
+    if (die) {
+      const count = die[1] === '' ? 1 : Number(die[1]);
+      const sides = Number(die[2]);
+      const okCount = Number.isInteger(count) && count >= 1 && count <= SEARCH_MAX_COUNT;
+      const okSides = sides >= SEARCH_MIN_SIDES && sides <= SEARCH_MAX_SIDES;
+      if (!okCount || !okSides) return { valid: false, dice: [], values: [], reason: 'termo' };
+      dice.push({ count, sides });
+      continue;
+    }
+    if (/^\d+$/.test(token)) {
+      const value = Number(token);
+      if (value < 1 || value > SEARCH_MAX_SIDES) {
+        return { valid: false, dice: [], values: [], reason: 'termo' };
+      }
+      values.push(value);
+      continue;
+    }
+    return { valid: false, dice: [], values: [], reason: 'termo' };
+  }
+  return { valid: true, dice, values };
+}
+
+/** Fórmula para o motor de dados (`2d6 + 1d10`), ou '' sem dados. */
+export function searchFormula(dice) {
+  return dice.map(({ count, sides }) => `${count}d${sides}`).join(' + ');
+}
+
+/**
+ * Valores procurados a partir dos dados rolados (com lados) e dos valores digitados (sem lados,
+ * `lados: 0`). A ordem é a dos dados rolados e depois a dos digitados.
+ * @param {{lados: number, valor: number}[]} rolled
+ * @param {number[]} typed
+ */
+export function searchValues(rolled, typed) {
+  return [
+    ...rolled.map(({ lados, valor }) => ({ lados, valor })),
+    ...typed.map((valor) => ({ lados: 0, valor })),
+  ];
+}
+
+/**
+ * Aplica a procura aos dados de esconderijo de um alvo: descarta todos os dados cujo valor aparece
+ * entre os valores procurados. Nunca altera a lista recebida.
+ * @param {{lados: number, valor: number}[]} dice Dados de esconderijo do alvo.
+ * @param {number[]} values Valores procurados.
+ * @returns {{list: {lados: number, valor: number}[], lost: number}}
+ */
+export function applySearchToDice(dice, values) {
+  const current = cleanHideDice(dice);
+  const wanted = new Set(values.map(Number));
+  const list = current.filter((die) => !wanted.has(die.valor));
+  return { list, lost: current.length - list.length };
+}
+
+/** Como descrever o resultado de um alvo: 'nada', 'perdeu' ou 'encontrado'. */
+export function searchResultKind(lost, remaining) {
+  if (lost === 0) return 'nada';
+  return remaining === 0 ? 'encontrado' : 'perdeu';
+}
+
+/**
+ * Quem pode ser alvo da procura: só quem está escondido (com pelo menos um dado).
+ * @param {{id: string, name: string, status: string}[]} participants
+ */
+export function searchCandidates(participants) {
+  return participants.filter((participant) => participant.status === 'escondido');
+}
+
+/**
+ * Alvos escolhidos pelo mestre.
+ * @param {{id: string, name: string}[]} candidates Só os escondidos (veja `searchCandidates`).
+ * @param {{mode: 'todos'|'sorteado'|'escolhido', chosenId?: string}} choice
+ * @param {() => number} [random] Gerador de 0 a 1 (Math.random por padrão; os testes trocam).
+ * @returns {{id: string, name: string}[]} Vazio se não há alvo válido.
+ */
+export function pickSearchTargets(candidates, { mode, chosenId }, random = Math.random) {
+  if (candidates.length === 0) return [];
+  if (mode === 'todos') return [...candidates];
+  if (mode === 'escolhido') {
+    const found = candidates.find((candidate) => candidate.id === chosenId);
+    return found ? [found] : [];
+  }
+  if (mode === 'sorteado') {
+    const index = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
+    return [candidates[index]];
+  }
+  return [];
+}
+
+/** Registro guardado no cartão da procura (flag `procura`): valores e um resultado por alvo. */
+export function createSearchFlag({ values, targets }) {
+  return {
+    valores: values.map(({ lados, valor }) => ({ lados, valor })),
+    alvos: targets.map(({ id, name }) => ({
+      combatantId: id,
+      nome: name,
+      estado: 'pendente',
+      perdeu: null,
+      restam: null,
+      resultado: null,
+    })),
+  };
+}
+
+/** Ids dos alvos ainda pendentes do cartão. */
+export function pendingSearchTargets(flag) {
+  return (flag?.alvos ?? [])
+    .filter((target) => target.estado === 'pendente')
+    .map((target) => target.combatantId);
+}
+
+/**
+ * Registra no cartão o resultado de um alvo. Alvo que já foi resolvido não muda (uso único).
+ * `resultado` é 'nada', 'perdeu', 'encontrado' ou 'ignorado' (já não estava escondido).
+ */
+export function resolveSearchTarget(flag, combatantId, { perdeu, restam, resultado }) {
+  return {
+    ...flag,
+    alvos: flag.alvos.map((target) =>
+      target.combatantId === combatantId && target.estado === 'pendente'
+        ? { ...target, estado: 'aplicado', perdeu, restam, resultado }
+        : target,
+    ),
+  };
+}
