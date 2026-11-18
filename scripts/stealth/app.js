@@ -247,7 +247,8 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
 
   /**
    * Consequência de estar encontrado (só o mestre): a mesma janela da penalidade da perseguição
-   * (valor fixo ou dados, PV ou PD). Só quem está encontrado agora recebe o botão no cartão.
+   * (valor fixo ou dados, PV ou PD). Só quem está encontrado agora recebe o botão no cartão; sem
+   * ninguém encontrado, o cartão sai sem botões.
    */
   static async #onOpenConsequence() {
     const stealth = findStealth();
@@ -255,10 +256,7 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
     const alvos = stealthView(stealth)
       .participantes.filter((entry) => entry.status === 'encontrado')
       .map(({ id, name }) => ({ id, name }));
-    if (alvos.length === 0) {
-      ui.notifications.warn(t('DESORDEM.Furtividade.Consequencia.Ninguem'));
-      return;
-    }
+    // Sem ninguém encontrado a consequência ainda pode ser rolada: o cartão sai sem botões
     await askAndPostPenalty({ cena: 'furtividade', alvos });
   }
 

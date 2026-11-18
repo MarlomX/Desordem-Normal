@@ -930,7 +930,7 @@
         "Rolada": "Rolled {formula}: whoever was found loses {valor} {tipo}.",
         "Dica": "With dice, the GM rolls once and everyone takes the same value. Only those found right now get the button on the card.",
         "Alvos": "Found right now:",
-        "Ninguem": "Nobody is found right now."
+        "Ninguem": "nobody (the card has no buttons)."
       }
     }
   },

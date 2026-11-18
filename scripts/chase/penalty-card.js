@@ -66,7 +66,10 @@ export async function askAndPostPenalty({ cena = 'perseguicao', alvos } = {}) {
   const texts = TEXTS[cena] ?? TEXTS.perseguicao;
   const content = await render(`systems/${SYSTEM_ID}/templates/perseguicao/penalidade.hbs`, {
     dica: t(texts.dica),
-    alvos: alvos?.map((alvo) => alvo.name).join(', ') ?? '',
+    // Furtividade: quem está encontrado agora (ou «ninguém»: o cartão sai sem botões)
+    alvos: alvos
+      ? alvos.map((alvo) => alvo.name).join(', ') || t('DESORDEM.Furtividade.Consequencia.Ninguem')
+      : '',
   });
   const answer = await DialogV2.wait({
     window: { title: t(texts.titulo) },

@@ -52,3 +52,13 @@ test('alvos mal formados viram lista vazia (ninguém recebe o botão)', () => {
   assert.deepEqual(flag.alvos, []);
   assert.equal(penaltyAllows(flag, 'a'), false);
 });
+
+test('consequência sem ninguém encontrado: o cartão sai sem botões', () => {
+  const flag = createPenaltyFlag({ tipo: 'pv', valor: 3, cena: 'furtividade', alvos: [] });
+  assert.deepEqual(flag.alvos, []);
+  const view = penaltyBarView(flag, [
+    { combatantId: 'a', name: 'Ana' },
+    { combatantId: 'b', name: 'Bia' },
+  ]);
+  assert.deepEqual(view.rows, []);
+});
