@@ -14,7 +14,14 @@ export const CHASE_COMBATANT_TYPE = 'participante';
 
 /** Estado de uma perseguição recém-criada: em preparação, sem rodada. */
 export function initialChaseState() {
-  return { ativa: false, rodadaAtual: 0, dt: ADVANCE_DT };
+  return {
+    ativa: false,
+    rodadaAtual: 0,
+    dt: ADVANCE_DT,
+    pontos: [],
+    revelarProximo: false,
+    revelarFinal: false,
+  };
 }
 
 /** Estado ao iniciar a perseguição: ativa, na rodada 1. */
@@ -427,4 +434,210 @@ export function sanitizeParticipantPatch(patch) {
     ].slice(0, 40);
   }
   return clean;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Pontos de checagem e penalidade (0.16.7)
+//
+// O mestre monta uma lista de pontos de checagem: em tal rodada, os participantes devem ter tantos
+// PA. O último ponto da lista (a maior rodada) é o PA final, o de chegada. Nada acontece sozinho:
+// o sistema só mostra quem está abaixo do alvo (para o mestre) e o mestre decide as consequências.
+// ---------------------------------------------------------------------------------------------
+
+/** Máximo de pontos de checagem de uma perseguição. */
+export const MAX_CHECKPOINTS = 30;
+
+/** Maior número de rodada aceito num ponto de checagem. */
+export const MAX_CHECKPOINT_ROUND = 99;
+
+/** Ponto de checagem válido: `{rodada, pa}` com rodada inteira de 1 a 99 e PA inteiro de 0 a 10 000. */
+function cleanCheckpoint(point) {
+  const round = Number(point?.rodada);
+  const pa = Number(point?.pa);
+  if (!Number.isInteger(round) || round < 1 || round > MAX_CHECKPOINT_ROUND) return null;
+  if (!Number.isInteger(pa) || pa < 0 || pa > MAX_POINTS) return null;
+  return { rodada: round, pa };
+}
+
+/**
+ * Lista de pontos limpa: descarta pontos inválidos, deixa um só por rodada (o último da lista
+ * vence) e ordena por rodada.
+ * @param {{rodada: number, pa: number}[]} list
+ */
+export function normalizeCheckpoints(list) {
+  const byRound = new Map();
+  for (const point of Array.isArray(list) ? list : []) {
+    const clean = cleanCheckpoint(point);
+    if (clean) byRound.set(clean.rodada, clean);
+  }
+  return [...byRound.values()].sort((a, b) => a.rodada - b.rodada).slice(0, MAX_CHECKPOINTS);
+}
+
+/**
+ * Acrescenta (ou troca, se a rodada já tem ponto) um ponto de checagem. Aceita o texto digitado:
+ * vazio, texto, decimal ou fora dos limites (rodada 1 a 99, PA 0 a 10 000) não valem.
+ * @returns {{valid: boolean, list: object[]}} `list` é a lista nova (ou a antiga, se inválido).
+ */
+export function addCheckpoint(list, round, pa) {
+  // Texto vazio não vira 0: `Number('')` é 0, então o vazio é tratado à parte
+  const toNumber = (value) =>
+    typeof value === 'string' ? (value.trim() === '' ? Number.NaN : Number(value.trim())) : value;
+  const typedRound = toNumber(round);
+  const typedPa = toNumber(pa);
+  const clean = cleanCheckpoint({ rodada: typedRound, pa: typedPa });
+  const current = normalizeCheckpoints(list);
+  if (!clean) return { valid: false, list: current };
+  const next = normalizeCheckpoints([...current, clean]);
+  // Se a lista estava cheia e o ponto é de uma rodada nova, ele não cabe
+  if (!next.some((point) => point.rodada === clean.rodada)) return { valid: false, list: current };
+  return { valid: true, list: next };
+}
+
+/** Lista sem o ponto da rodada dada. */
+export function removeCheckpoint(list, round) {
+  return normalizeCheckpoints(list).filter((point) => point.rodada !== round);
+}
+
+/** PA final: o ponto da maior rodada (ou `null` sem pontos). */
+export function finalCheckpoint(list) {
+  const points = normalizeCheckpoints(list);
+  return points.length ? points[points.length - 1] : null;
+}
+
+/** Próximo ponto a alcançar: o primeiro com rodada igual ou maior que a atual (ou `null`). */
+export function nextCheckpoint(list, currentRound) {
+  const round = Math.max(1, Math.trunc(currentRound) || 1);
+  return normalizeCheckpoints(list).find((point) => point.rodada >= round) ?? null;
+}
+
+/** Ponto de checagem da rodada atual (a checagem desta rodada), ou `null`. */
+export function checkpointOfRound(list, currentRound) {
+  return normalizeCheckpoints(list).find((point) => point.rodada === currentRound) ?? null;
+}
+
+/**
+ * O que cada pessoa vê dos pontos. O mestre vê tudo; o jogador só vê o próximo alvo se o mestre
+ * revelou o próximo, e só vê o PA final se revelou o final (um não revela o outro). A lista
+ * inteira nunca vai para o jogador.
+ * @returns {{next: object|null, final: object|null, list: object[]|null}}
+ */
+export function checkpointsView({ pontos, rodadaAtual, revelarProximo, revelarFinal, isGM }) {
+  const next = nextCheckpoint(pontos, rodadaAtual);
+  const final = finalCheckpoint(pontos);
+  if (isGM) return { next, final, list: normalizeCheckpoints(pontos) };
+  return {
+    next: revelarProximo ? next : null,
+    final: revelarFinal ? final : null,
+    list: null,
+  };
+}
+
+/**
+ * Selos de um participante: `abaixo` (só o mestre vê) se há checagem nesta rodada e ele está
+ * abaixo do alvo; `chegou` se alcançou o PA final (o mestre sempre vê; o jogador, só com o PA
+ * final revelado).
+ */
+export function participantBadges({ pontos, rodadaAtual, pa, isGM, revelarFinal }) {
+  const target = checkpointOfRound(pontos, rodadaAtual);
+  const final = finalCheckpoint(pontos);
+  return {
+    abaixo: Boolean(isGM && target && pa < target.pa),
+    chegou: Boolean((isGM || revelarFinal) && final && pa >= final.pa),
+  };
+}
+
+/** Tipos de penalidade: perde PV ou PD. */
+export const PENALTY_TYPES = Object.freeze(['pv', 'pd']);
+
+/** Maior valor fixo de uma penalidade. */
+export const MAX_PENALTY = 999;
+
+const PENALTY_DICE = /^(\d{1,2})d(\d{1,3})(?:\s*([+-])\s*(\d{1,3}))?$/i;
+
+/**
+ * Valor digitado da penalidade: um número inteiro (de 1 a 999) ou uma fórmula simples `NdM`,
+ * com `+K` ou `-K` opcional (N de 1 a 20, M de 2 a 100). Qualquer outra coisa não vale.
+ * @returns {{valid: boolean, kind?: 'fixed'|'dice', formula?: string, fixed?: number}}
+ */
+export function parsePenaltyValue(raw) {
+  const text = String(raw ?? '')
+    .trim()
+    .replace(/\s+/g, '');
+  if (/^\d{1,3}$/.test(text)) {
+    const fixed = Number(text);
+    return fixed >= 1 && fixed <= MAX_PENALTY
+      ? { valid: true, kind: 'fixed', fixed }
+      : { valid: false };
+  }
+  const match = PENALTY_DICE.exec(text);
+  if (!match) return { valid: false };
+  const [, count, sides, sign, bonus] = match;
+  if (Number(count) < 1 || Number(count) > 20 || Number(sides) < 2 || Number(sides) > 100) {
+    return { valid: false };
+  }
+  const formula = `${Number(count)}d${Number(sides)}${bonus ? `${sign}${Number(bonus)}` : ''}`;
+  return { valid: true, kind: 'dice', formula };
+}
+
+/** Registro de uma penalidade postada no chat: quem já aplicou fica em `aplicados`. */
+export function createPenaltyFlag({ tipo, valor, formula = '' }) {
+  return {
+    tipo: PENALTY_TYPES.includes(tipo) ? tipo : 'pv',
+    valor: Math.min(MAX_PENALTY, Math.max(0, Math.trunc(valor))),
+    formula: String(formula),
+    aplicados: [],
+  };
+}
+
+/** Esse participante já aplicou esta penalidade? */
+export const penaltyApplied = (flag, combatantId) =>
+  flag.aplicados.some((entry) => entry.id === combatantId);
+
+/**
+ * Registra que um participante aplicou a penalidade. Devolve `null` se ele já tinha aplicado
+ * (uso único por participante). O recurso nunca fica abaixo de 0.
+ * @param {object} flag Registro da penalidade.
+ * @param {string} combatantId
+ * @param {number} current Valor atual do recurso (PV ou PD) do personagem.
+ * @returns {{flag: object, next: number, applied: number, reachedZero: boolean}|null}
+ */
+export function applyPenaltyTo(flag, combatantId, current) {
+  if (penaltyApplied(flag, combatantId)) return null;
+  const next = Math.max(0, current - flag.valor);
+  const applied = current - next;
+  const reachedZero = flag.valor > 0 && next === 0;
+  return {
+    flag: {
+      ...flag,
+      aplicados: [...flag.aplicados, { id: combatantId, perda: applied, zerou: reachedZero }],
+    },
+    next,
+    applied,
+    reachedZero,
+  };
+}
+
+/**
+ * O que a barra da penalidade mostra a quem está vendo: uma linha por participante que a pessoa
+ * controla. `rows` são os participantes dela (o mestre vê todos).
+ * @param {object} flag
+ * @param {{combatantId: string, name: string}[]} rows
+ */
+export function penaltyBarView(flag, rows) {
+  return {
+    valor: flag.valor,
+    tipo: flag.tipo,
+    multiple: rows.length > 1,
+    rows: rows.map(({ combatantId, name }) => {
+      const entry = flag.aplicados.find((item) => item.id === combatantId);
+      return {
+        combatantId,
+        name,
+        applied: Boolean(entry),
+        appliedLoss: entry?.perda ?? 0,
+        reachedZero: Boolean(entry?.zerou),
+        showButton: !entry,
+      };
+    }),
+  };
 }

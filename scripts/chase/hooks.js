@@ -11,6 +11,8 @@ import {
 } from '../rolls/chase.js';
 import { applyAdvancePoints } from './advance-card.js';
 import PerseguicaoApp from './app.js';
+import PontosApp from './points-app.js';
+import { applyPenalty } from './penalty-card.js';
 import { SOCKET, createChase, currentAccess, findChase } from './store.js';
 
 const t = (key) => game.i18n.localize(key);
@@ -80,7 +82,10 @@ export function registerChaseHooks() {
     'deleteCombatant',
   ]) {
     Hooks.on(name, (doc) => {
-      if (isChaseDocument(doc)) refreshAll();
+      if (!isChaseDocument(doc)) return;
+      refreshAll();
+      // A janela dos pontos só depende do encontro (os pontos), não dos participantes
+      if (doc.documentName === 'Combat') PontosApp.refresh();
     });
   }
 
@@ -126,6 +131,11 @@ export function registerChaseSocket() {
     // Botão "adicionar PA" do cartão do teste de avanço (só o id da mensagem vem do jogador)
     if (data?.action === 'chaseAdvancePoints') {
       await applyAdvancePoints(game.messages.get(data.messageId), userId);
+      return;
+    }
+    // Botão «Aplicar penalidade» do cartão do chat (só os ids vêm do jogador)
+    if (data?.action === 'chasePenalty') {
+      await applyPenalty(game.messages.get(data.messageId), data.combatantId, userId);
       return;
     }
     if (data?.action !== 'chaseParticipant') return;

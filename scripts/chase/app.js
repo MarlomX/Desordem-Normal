@@ -5,6 +5,8 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { addableActors, parseTypedValue } from '../rolls/chase.js';
+import { askAndPostPenalty } from './penalty-card.js';
+import PontosApp from './points-app.js';
 import {
   addParticipants,
   adjustParticipant,
@@ -21,6 +23,7 @@ import {
   setChaseDt,
   setParticipantField,
   startChase,
+  toggleReveal,
 } from './store.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
@@ -52,6 +55,9 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
       adjustParticipant: PerseguicaoApp.#onAdjustParticipant,
       nextRound: PerseguicaoApp.#onNextRound,
       adjustDt: PerseguicaoApp.#onAdjustDt,
+      openPoints: PerseguicaoApp.#onOpenPoints,
+      openPenalty: PerseguicaoApp.#onOpenPenalty,
+      toggleReveal: PerseguicaoApp.#onToggleReveal,
     },
   };
 
@@ -114,7 +120,8 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
         this.#typing = false;
         if (!this.#renderPending) return;
         this.#renderPending = false;
-        this.render();
+        // Pequeno atraso: não troca a tela debaixo do clique no botão que veio logo depois
+        globalThis.setTimeout(() => this.render(), 250);
       });
     }
   }
@@ -184,6 +191,22 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
   static async #onAdjustDt(event, target) {
     const chase = findChase();
     if (chase) await setChaseDt(chase, chase.system.dt + Number(target.dataset.delta));
+  }
+
+  /** Abre a janela dos pontos de checagem (só o mestre). */
+  static async #onOpenPoints() {
+    await PontosApp.open();
+  }
+
+  /** Abre a janela da penalidade (só o mestre) e posta o cartão no chat. */
+  static async #onOpenPenalty() {
+    await askAndPostPenalty();
+  }
+
+  /** Olhos: mostra ou esconde dos jogadores o próximo PA alvo ou o PA final (só o mestre). */
+  static async #onToggleReveal(event, target) {
+    const chase = findChase();
+    if (chase) await toggleReveal(chase, target.dataset.field);
   }
 
   static async #onNextRound() {

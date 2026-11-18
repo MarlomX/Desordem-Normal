@@ -1,0 +1,32 @@
+<section class="desordem-pontos">
+  {{#if existe}}
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Perseguicao.Pontos.Dica"}}</p>
+  {{#if pontos.length}}
+  <ul class="desordem-pontos__lista">
+    {{#each pontos}}
+    <li class="desordem-pontos__linha{{#if final}} is-final{{/if}}">
+      <span class="desordem-pontos__rodada">{{localize "DESORDEM.Perseguicao.Rodada" rodada=rodada}}</span>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="ponto-pa" data-rodada="{{rodada}}" value="{{pa}}" min="0" step="1" inputmode="numeric" aria-label="{{localize "DESORDEM.Perseguicao.PA"}}">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.PA"}}</span>
+      {{#if final}}<span class="desordem-perseguicao__selo is-final">{{localize "DESORDEM.Perseguicao.Pontos.Final"}}</span>{{/if}}
+      <button type="button" class="desordem-perseguicao__remover" data-action="removePoint" data-rodada="{{rodada}}" title="{{localize "DESORDEM.Perseguicao.Pontos.Remover"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{localize "DESORDEM.Perseguicao.Pontos.Vazio"}}</p>
+  {{/if}}
+  <div class="desordem-pontos__novo">
+    <label class="desordem-pontos__campo"><span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.Pontos.NovaRodada"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" name="novaRodada" value="{{sugestaoRodada}}" min="1" max="99" step="1" inputmode="numeric"></label>
+    <label class="desordem-pontos__campo"><span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.PA"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" name="novoPa" min="0" step="1" inputmode="numeric"></label>
+    <button type="button" data-action="addPoint"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Pontos.Adicionar"}}</button>
+  </div>
+  <footer class="desordem-perseguicao__acoes">
+    <button type="button" class="desordem-perseguicao__perigo" data-action="clearPoints"><i class="fa-solid fa-eraser" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Pontos.Limpar"}}</button>
+  </footer>
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{localize "DESORDEM.Perseguicao.SemPerseguicaoMestre"}}</p>
+  {{/if}}
+</section>

@@ -16,7 +16,14 @@ import {
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('estados do ciclo de vida: preparação, em andamento e de volta à preparação', () => {
-  assert.deepEqual(initialChaseState(), { ativa: false, rodadaAtual: 0, dt: 10 });
+  assert.deepEqual(initialChaseState(), {
+    ativa: false,
+    rodadaAtual: 0,
+    dt: 10,
+    pontos: [],
+    revelarProximo: false,
+    revelarFinal: false,
+  });
   assert.deepEqual(startState(), { ativa: true, rodadaAtual: 1 });
   assert.deepEqual(endState(), { ativa: false, rodadaAtual: 0 });
 });
@@ -190,6 +197,19 @@ import {
   parseTypedValue,
   canEditChaseNumbers,
   TRUSTED_ROLE,
+  MAX_CHECKPOINTS,
+  normalizeCheckpoints,
+  addCheckpoint,
+  removeCheckpoint,
+  finalCheckpoint,
+  nextCheckpoint,
+  checkpointOfRound,
+  checkpointsView,
+  participantBadges,
+  parsePenaltyValue,
+  createPenaltyFlag,
+  applyPenaltyTo,
+  penaltyBarView,
   adjustField,
   isAdjustableField,
   nextRoundState,
@@ -598,4 +618,200 @@ test('quem edita PA e fôlego: mestre sempre; confiável só o próprio; jogador
   assert.equal(canEditChaseNumbers({ isGM: false, role: 2, isOwner: false }), false);
   assert.equal(canEditChaseNumbers({ isGM: false, role: 1, isOwner: true }), false);
   assert.equal(canEditChaseNumbers({ isGM: false, role: 0, isOwner: true }), false);
+});
+
+// ---- 0.16.7: pontos de checagem e penalidade ----
+const pts = [
+  { rodada: 2, pa: 10 },
+  { rodada: 4, pa: 18 },
+  { rodada: 5, pa: 25 },
+];
+
+test('lista de pontos: ordena, um por rodada, descarta o inválido', () => {
+  const messy = [
+    { rodada: 5, pa: 25 },
+    { rodada: 2, pa: 10 },
+    { rodada: 2, pa: 12 },
+    { rodada: 0, pa: 3 },
+    { rodada: 3, pa: -1 },
+    { rodada: 4.5, pa: 3 },
+    { rodada: 100, pa: 3 },
+    null,
+  ];
+  assert.deepEqual(normalizeCheckpoints(messy), [
+    { rodada: 2, pa: 12 },
+    { rodada: 5, pa: 25 },
+  ]);
+  assert.deepEqual(normalizeCheckpoints(undefined), []);
+  assert.equal(
+    normalizeCheckpoints(Array.from({ length: 50 }, (_, i) => ({ rodada: i + 1, pa: 1 }))).length,
+    MAX_CHECKPOINTS,
+  );
+});
+
+test('acrescentar ponto: troca a rodada repetida; texto e vazio não valem', () => {
+  const added = addCheckpoint(pts, '6', '30');
+  assert.equal(added.valid, true);
+  assert.deepEqual(added.list.at(-1), { rodada: 6, pa: 30 });
+  const replaced = addCheckpoint(pts, 4, 20);
+  assert.deepEqual(replaced.list, [
+    { rodada: 2, pa: 10 },
+    { rodada: 4, pa: 20 },
+    { rodada: 5, pa: 25 },
+  ]);
+  for (const [round, pa] of [
+    ['', '5'],
+    ['3', ''],
+    ['x', '5'],
+    [3, -2],
+    [0, 4],
+    [3, 1.5],
+  ]) {
+    const result = addCheckpoint(pts, round, pa);
+    assert.equal(result.valid, false);
+    assert.deepEqual(result.list, pts);
+  }
+  // lista cheia: uma rodada nova não cabe, mas trocar uma existente cabe
+  const full = Array.from({ length: MAX_CHECKPOINTS }, (_, i) => ({ rodada: i + 1, pa: i }));
+  assert.equal(addCheckpoint(full, 99, 1).valid, false);
+  assert.equal(addCheckpoint(full, 3, 77).valid, true);
+});
+
+test('remover ponto', () => {
+  assert.deepEqual(removeCheckpoint(pts, 4), [
+    { rodada: 2, pa: 10 },
+    { rodada: 5, pa: 25 },
+  ]);
+  assert.deepEqual(removeCheckpoint(pts, 9), pts);
+});
+
+test('o PA final é o ponto da maior rodada e muda se um ponto mais à frente entra', () => {
+  assert.deepEqual(finalCheckpoint(pts), { rodada: 5, pa: 25 });
+  assert.equal(finalCheckpoint([]), null);
+  const later = addCheckpoint(pts, 8, 40).list;
+  assert.deepEqual(finalCheckpoint(later), { rodada: 8, pa: 40 });
+});
+
+test('próximo alvo e checagem da rodada', () => {
+  assert.deepEqual(nextCheckpoint(pts, 1), { rodada: 2, pa: 10 });
+  assert.deepEqual(nextCheckpoint(pts, 2), { rodada: 2, pa: 10 });
+  assert.deepEqual(nextCheckpoint(pts, 3), { rodada: 4, pa: 18 });
+  assert.equal(nextCheckpoint(pts, 6), null);
+  assert.deepEqual(nextCheckpoint(pts, 0), { rodada: 2, pa: 10 });
+  assert.deepEqual(checkpointOfRound(pts, 4), { rodada: 4, pa: 18 });
+  assert.equal(checkpointOfRound(pts, 3), null);
+});
+
+test('o jogador só vê o que o mestre revelou e nunca a lista', () => {
+  const base = { pontos: pts, rodadaAtual: 3 };
+  const gm = checkpointsView({ ...base, isGM: true, revelarProximo: false, revelarFinal: false });
+  assert.deepEqual([gm.next.pa, gm.final.pa, gm.list.length], [18, 25, 3]);
+  const hidden = checkpointsView({
+    ...base,
+    isGM: false,
+    revelarProximo: false,
+    revelarFinal: false,
+  });
+  assert.deepEqual(hidden, { next: null, final: null, list: null });
+  const onlyNext = checkpointsView({
+    ...base,
+    isGM: false,
+    revelarProximo: true,
+    revelarFinal: false,
+  });
+  assert.deepEqual([onlyNext.next.pa, onlyNext.final, onlyNext.list], [18, null, null]);
+  const onlyFinal = checkpointsView({
+    ...base,
+    isGM: false,
+    revelarProximo: false,
+    revelarFinal: true,
+  });
+  assert.deepEqual([onlyFinal.next, onlyFinal.final.pa, onlyFinal.list], [null, 25, null]);
+});
+
+test('selos: «abaixo» só para o mestre e só em rodada com checagem; «chegou» com PA final', () => {
+  const base = { pontos: pts, rodadaAtual: 4, revelarFinal: false };
+  assert.equal(participantBadges({ ...base, pa: 17, isGM: true }).abaixo, true);
+  assert.equal(participantBadges({ ...base, pa: 18, isGM: true }).abaixo, false);
+  assert.equal(participantBadges({ ...base, pa: 5, isGM: false }).abaixo, false);
+  // rodada sem checagem: ninguém fica «abaixo»
+  assert.equal(participantBadges({ ...base, rodadaAtual: 3, pa: 0, isGM: true }).abaixo, false);
+  assert.equal(participantBadges({ ...base, pa: 25, isGM: true }).chegou, true);
+  assert.equal(participantBadges({ ...base, pa: 25, isGM: false }).chegou, false);
+  assert.equal(
+    participantBadges({ ...base, pa: 25, isGM: false, revelarFinal: true }).chegou,
+    true,
+  );
+  assert.deepEqual(
+    participantBadges({ pontos: [], rodadaAtual: 2, pa: 9, isGM: true, revelarFinal: true }),
+    {
+      abaixo: false,
+      chegou: false,
+    },
+  );
+});
+
+test('valor da penalidade: número de 1 a 999 ou dados NdM com bônus opcional', () => {
+  assert.deepEqual(parsePenaltyValue(' 7 '), { valid: true, kind: 'fixed', fixed: 7 });
+  assert.deepEqual(parsePenaltyValue('2d6'), { valid: true, kind: 'dice', formula: '2d6' });
+  assert.deepEqual(parsePenaltyValue('1D8 + 2'), { valid: true, kind: 'dice', formula: '1d8+2' });
+  assert.deepEqual(parsePenaltyValue('3d4-1'), { valid: true, kind: 'dice', formula: '3d4-1' });
+  for (const bad of [
+    '',
+    '0',
+    '1000',
+    '-3',
+    'd6',
+    '0d6',
+    '21d6',
+    '2d1',
+    '2d101',
+    '2d6*5',
+    'abc',
+    null,
+  ]) {
+    assert.equal(parsePenaltyValue(bad).valid, false, String(bad));
+  }
+});
+
+test('penalidade: uso único por participante, PV de agora, nunca abaixo de 0', () => {
+  const flag = createPenaltyFlag({ tipo: 'pd', valor: 6, formula: '2d6' });
+  assert.deepEqual(flag, { tipo: 'pd', valor: 6, formula: '2d6', aplicados: [] });
+  assert.equal(createPenaltyFlag({ tipo: 'xx', valor: 3 }).tipo, 'pv');
+
+  const first = applyPenaltyTo(flag, 'a', 10);
+  assert.deepEqual([first.next, first.applied, first.reachedZero], [4, 6, false]);
+  assert.deepEqual(first.flag.aplicados, [{ id: 'a', perda: 6, zerou: false }]);
+  // o mesmo participante não aplica duas vezes; outro participante aplica
+  assert.equal(applyPenaltyTo(first.flag, 'a', 10), null);
+  const second = applyPenaltyTo(first.flag, 'b', 4);
+  assert.deepEqual([second.next, second.applied, second.reachedZero], [0, 4, true]);
+  assert.equal(second.flag.aplicados.length, 2);
+  // a marca antiga não muda (o registro é imutável)
+  assert.equal(flag.aplicados.length, 0);
+});
+
+test('barra da penalidade: uma linha por participante da pessoa', () => {
+  const flag = createPenaltyFlag({ tipo: 'pv', valor: 5 });
+  const done = applyPenaltyTo(flag, 'a', 3).flag;
+  const view = penaltyBarView(done, [
+    { combatantId: 'a', name: 'A' },
+    { combatantId: 'b', name: 'B' },
+  ]);
+  assert.equal(view.multiple, true);
+  assert.deepEqual(
+    view.rows.map((row) => [
+      row.combatantId,
+      row.applied,
+      row.showButton,
+      row.appliedLoss,
+      row.reachedZero,
+    ]),
+    [
+      ['a', true, false, 3, true],
+      ['b', false, true, 0, false],
+    ],
+  );
+  assert.equal(penaltyBarView(flag, [{ combatantId: 'a', name: 'A' }]).multiple, false);
+  assert.deepEqual(penaltyBarView(flag, []).rows, []);
 });

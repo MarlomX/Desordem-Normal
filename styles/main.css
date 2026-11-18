@@ -2036,3 +2036,93 @@
   margin: 2px 0 0;
   font-size: 0.8em;
 }
+
+/* ===== Perseguição: pontos de checagem e penalidade (v0.16.7) ===== */
+.desordem-perseguicao__alvos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0;
+}
+
+.desordem-perseguicao__passo.is-ligado {
+  border-color: var(--dn-accent-line);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-perseguicao__selo {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border: 1px solid var(--dn-border);
+  border-radius: 999px;
+  font-size: 0.72em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
+.desordem-perseguicao__selo.is-abaixo {
+  border-color: var(--dn-pv);
+  color: var(--dn-pv);
+}
+
+.desordem-perseguicao__selo.is-chegou,
+.desordem-perseguicao__selo.is-final {
+  border-color: var(--dn-accent-line);
+  color: var(--dn-accent);
+}
+
+.desordem-perseguicao__item.is-abaixo {
+  border-color: var(--dn-pv);
+}
+
+.desordem-pontos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.desordem-pontos__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-pontos__linha,
+.desordem-pontos__novo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.desordem-pontos__linha.is-final {
+  font-weight: 600;
+}
+
+.desordem-pontos__rodada {
+  min-width: 5.5em;
+}
+
+.desordem-pontos__campo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-perseguicao-penalidade {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.desordem-perseguicao-penalidade__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

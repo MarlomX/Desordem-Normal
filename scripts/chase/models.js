@@ -14,6 +14,17 @@ export class PerseguicaoModel extends foundry.abstract.TypeDataModel {
       rodadaAtual: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
       // DT padrão do avanço nesta perseguição (o mestre pode mudar na janela)
       dt: new f.NumberField({ required: true, integer: true, min: 1, max: 40, initial: 10 }),
+      // Pontos de checagem (rodada + PA que se espera ter). O último (maior rodada) é o PA final.
+      // A lista continua quando a perseguição é encerrada; o mestre pode limpá-la.
+      pontos: new f.ArrayField(
+        new f.SchemaField({
+          rodada: new f.NumberField({ required: true, integer: true, min: 1, max: 99 }),
+          pa: new f.NumberField({ required: true, integer: true, min: 0, max: 10000 }),
+        }),
+      ),
+      // O mestre mostra aos jogadores só o próximo PA alvo e/ou só o PA final (a lista nunca)
+      revelarProximo: new f.BooleanField({ required: true, initial: false }),
+      revelarFinal: new f.BooleanField({ required: true, initial: false }),
     };
   }
 }

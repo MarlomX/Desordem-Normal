@@ -7,20 +7,24 @@ import { SYSTEM_ID } from '../config.js';
 import {
   CHASE_COMBAT_TYPE,
   CHASE_COMBATANT_TYPE,
+  addCheckpoint,
   adjustField,
   advanceBlockReason,
   advanceWarning,
   canEditChaseNumbers,
   chaseAccess,
+  checkpointsView,
   effortDiceCount,
   hasActed,
   initialChaseState,
   isAdjustableField,
   nextRoundState,
   normalizeChaseDt,
+  participantBadges,
   parseTypedValue,
   participantReset,
   participantStart,
+  removeCheckpoint,
   startState,
   endState,
 } from '../rolls/chase.js';
@@ -81,6 +85,14 @@ function participantView(chase, combatant) {
     podeMarcar: Boolean(combatant.actor?.isOwner),
     // PA e fôlego: o mestre edita todos; só o jogador confiável edita o próprio personagem
     podeEditar: canEditParticipant(combatant),
+    // Selos: «abaixo do alvo» (só o mestre vê) e «chegou» (o jogador só com o PA final revelado)
+    ...participantBadges({
+      pontos: chase.system.pontos,
+      rodadaAtual,
+      pa: participant.pa,
+      isGM: game.user.isGM,
+      revelarFinal: chase.system.revelarFinal,
+    }),
   };
 }
 
@@ -91,6 +103,16 @@ export function chaseView(chase) {
     ativa: chase.system.ativa,
     rodadaAtual: chase.system.rodadaAtual,
     dt: chase.system.dt,
+    // O que a pessoa pode ver dos pontos de checagem (o jogador nunca vê a lista inteira)
+    pontos: checkpointsView({
+      pontos: chase.system.pontos,
+      rodadaAtual: chase.system.rodadaAtual,
+      revelarProximo: chase.system.revelarProximo,
+      revelarFinal: chase.system.revelarFinal,
+      isGM: game.user.isGM,
+    }),
+    revelarProximo: chase.system.revelarProximo,
+    revelarFinal: chase.system.revelarFinal,
     participantes: chase.combatants.map((combatant) => participantView(chase, combatant)),
   };
 }
@@ -207,6 +229,38 @@ export async function endChase(chase) {
 export async function setChaseDt(chase, dt) {
   if (!game.user.isGM) return;
   await chase.update({ system: { dt: normalizeChaseDt(dt) } });
+}
+
+/**
+ * Acrescenta (ou troca) um ponto de checagem. Só o mestre. Devolve `false` se o valor não vale.
+ * @param {Combat} chase
+ * @param {string|number} round Rodada do ponto.
+ * @param {string|number} pa PA que se espera ter nessa rodada.
+ */
+export async function setCheckpoint(chase, round, pa) {
+  if (!game.user.isGM) return false;
+  const result = addCheckpoint(chase.system.pontos, round, pa);
+  if (!result.valid) return false;
+  await chase.update({ system: { pontos: result.list } });
+  return true;
+}
+
+/** Tira o ponto de checagem de uma rodada (só o mestre). */
+export async function deleteCheckpoint(chase, round) {
+  if (!game.user.isGM) return;
+  await chase.update({ system: { pontos: removeCheckpoint(chase.system.pontos, round) } });
+}
+
+/** Apaga todos os pontos de checagem (só o mestre). */
+export async function clearCheckpoints(chase) {
+  if (!game.user.isGM) return;
+  await chase.update({ system: { pontos: [] } });
+}
+
+/** Liga ou desliga a revelação do próximo PA alvo ou do PA final aos jogadores (só o mestre). */
+export async function toggleReveal(chase, field) {
+  if (!game.user.isGM || !['revelarProximo', 'revelarFinal'].includes(field)) return;
+  await chase.update({ system: { [field]: !chase.system[field] } });
 }
 
 /** Passa para a próxima rodada. */

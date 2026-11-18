@@ -9,6 +9,7 @@ import ItemSheet from './sheets/item-sheet.js';
 import { PerseguicaoModel, ParticipanteModel } from './chase/models.js';
 import { renderAdvanceBar } from './chase/advance-card.js';
 import { renderEffortBar } from './chase/effort-card.js';
+import { renderPenaltyBar } from './chase/penalty-card.js';
 import { registerChaseHooks, registerChaseSocket, chaseApi } from './chase/hooks.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
@@ -110,6 +111,7 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderTestButtons(message, html);
   renderAdvanceBar(message, html);
   renderEffortBar(message, html);
+  renderPenaltyBar(message, html);
   renderTableCard(message, html);
   renderFearDice(message, html);
 });

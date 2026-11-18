@@ -15,14 +15,38 @@
     </span>
   </header>
 
+  {{#if @root.isGM}}
+  <div class="desordem-perseguicao__alvos">
+    <span class="desordem-perseguicao__valor">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.Pontos.Proximo"}}</span>
+      <strong>{{#if view.pontos.next}}{{view.pontos.next.pa}} {{localize "DESORDEM.Perseguicao.PA"}} ({{localize "DESORDEM.Perseguicao.Rodada" rodada=view.pontos.next.rodada}}){{else}}—{{/if}}</strong>
+      <button type="button" class="desordem-perseguicao__passo{{#if view.revelarProximo}} is-ligado{{/if}}" data-action="toggleReveal" data-field="revelarProximo" title="{{#if view.revelarProximo}}{{localize "DESORDEM.Perseguicao.Pontos.EsconderProximo"}}{{else}}{{localize "DESORDEM.Perseguicao.Pontos.RevelarProximo"}}{{/if}}"><i class="fa-solid {{#if view.revelarProximo}}fa-eye{{else}}fa-eye-slash{{/if}}" aria-hidden="true"></i></button>
+    </span>
+    <span class="desordem-perseguicao__valor">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.Pontos.Final"}}</span>
+      <strong>{{#if view.pontos.final}}{{view.pontos.final.pa}} {{localize "DESORDEM.Perseguicao.PA"}}{{else}}—{{/if}}</strong>
+      <button type="button" class="desordem-perseguicao__passo{{#if view.revelarFinal}} is-ligado{{/if}}" data-action="toggleReveal" data-field="revelarFinal" title="{{#if view.revelarFinal}}{{localize "DESORDEM.Perseguicao.Pontos.EsconderFinal"}}{{else}}{{localize "DESORDEM.Perseguicao.Pontos.RevelarFinal"}}{{/if}}"><i class="fa-solid {{#if view.revelarFinal}}fa-eye{{else}}fa-eye-slash{{/if}}" aria-hidden="true"></i></button>
+    </span>
+    <button type="button" data-action="openPoints"><i class="fa-solid fa-list-check" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Pontos.Abrir"}}</button>
+  </div>
+  {{else}}
+  {{#if view.ativa}}{{#if view.pontos.next}}{{! o mestre revelou o próximo alvo }}
+  <p class="desordem-perseguicao__alvos"><span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.Pontos.Proximo"}}</span> <strong>{{view.pontos.next.pa}} {{localize "DESORDEM.Perseguicao.PA"}} ({{localize "DESORDEM.Perseguicao.Rodada" rodada=view.pontos.next.rodada}})</strong></p>
+  {{/if}}{{#if view.pontos.final}}{{! o mestre revelou o PA final }}
+  <p class="desordem-perseguicao__alvos"><span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.Pontos.Final"}}</span> <strong>{{view.pontos.final.pa}} {{localize "DESORDEM.Perseguicao.PA"}}</strong></p>
+  {{/if}}{{/if}}
+  {{/if}}
+
   <h3 class="desordem-perseguicao__titulo"><i class="fa-solid fa-users" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Participantes"}} ({{view.participantes.length}})</h3>
   {{#if view.participantes.length}}
   <ul class="desordem-perseguicao__lista">
     {{#each view.participantes}}
-    <li class="desordem-perseguicao__item{{#if agiu}} is-agiu{{/if}}">
+    <li class="desordem-perseguicao__item{{#if agiu}} is-agiu{{/if}}{{#if abaixo}} is-abaixo{{/if}}">
       <div class="desordem-perseguicao__linha">
         <img class="desordem-perseguicao__retrato" src="{{img}}" alt="">
         <span class="desordem-perseguicao__nome">{{name}}</span>
+        {{#if abaixo}}<span class="desordem-perseguicao__selo is-abaixo" title="{{localize "DESORDEM.Perseguicao.Pontos.AbaixoDica"}}">{{localize "DESORDEM.Perseguicao.Pontos.Abaixo"}}</span>{{/if}}
+        {{#if chegou}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Perseguicao.Pontos.Chegou"}}</span>{{/if}}
         {{#if @root.isGM}}
         <button type="button" class="desordem-perseguicao__remover" data-action="removeParticipant" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Perseguicao.Remover"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         {{/if}}
@@ -67,6 +91,7 @@
   <footer class="desordem-perseguicao__acoes">
     <button type="button" data-action="addParticipants"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Adicionar"}}</button>
     {{#if view.ativa}}
+    <button type="button" data-action="openPenalty"><i class="fa-solid fa-skull" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Penalidade.Titulo"}}</button>
     <button type="button" data-action="nextRound"><i class="fa-solid fa-forward-step" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.ProximaRodada"}}</button>
     <button type="button" data-action="endChase"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Encerrar"}}</button>
     {{else}}
