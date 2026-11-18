@@ -353,6 +353,9 @@ export function renderTestButtons(message, html) {
   const info = testData(message);
   const container = html.querySelector('.message-content');
   if (!info || !container) return;
+  // Rolagem privada de outra pessoa (os «???» do Foundry): sem botões, porque as janelas da
+  // Análise e da Prontidão mostram os valores dos dados
+  if (!(message.isContentVisible ?? message.visible ?? true)) return;
   const bar = html.ownerDocument.createElement('div');
   bar.className = 'desordem-teste__habilidades';
 

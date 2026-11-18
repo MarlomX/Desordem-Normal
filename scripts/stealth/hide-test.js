@@ -166,6 +166,10 @@ export function renderHideBar(message, html) {
   const test = info?.teste;
   const container = html.querySelector('.message-content');
   if (!flag || !test || !container) return;
+  // Rolagem privada: quem não pode ver o conteúdo (os «???» do Foundry) também não vê a barra,
+  // senão os valores dos dados apareceriam aqui embaixo. Sem a propriedade, usa `visible`.
+  const contentVisible = message.isContentVisible ?? message.visible ?? true;
+  if (!contentVisible) return;
 
   const current = currentTest(test);
   const combatant = participantOf(flag);
