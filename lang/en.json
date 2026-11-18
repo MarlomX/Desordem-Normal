@@ -875,7 +875,9 @@
         "SorteioTitulo": "Table {nome}",
         "SorteioLinha": "Result {n}: {texto}",
         "SorteioSemLinha": "Result {n}: no row with that result.",
-        "SorteadoEscalonado": "Drawn target: {nome} (tier {faixa})."
+        "SorteadoEscalonado": "Drawn target: {nome} (tier {faixa}).",
+        "Recolher": "Collapse the table",
+        "Expandir": "Show the table"
       }
     }
   },

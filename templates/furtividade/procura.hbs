@@ -1,15 +1,20 @@
 <section class="desordem-procura__corpo">
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Procura.Dica"}}</p>
 
-  <fieldset class="desordem-pre__grupo desordem-procura__tabela">
-    <legend><i class="fa-solid fa-table-list" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Titulo"}}</legend>
-    {{#if tabelas.length}}
-    <div class="desordem-tabelas__topo">
-      <select name="tabela" aria-label="{{localize "DESORDEM.Furtividade.Tabela.Escolher"}}">
-        {{#each tabelas}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{nome}}</option>{{/each}}
-      </select>
-      <button type="button" data-action="drawRow" title="{{localize "DESORDEM.Furtividade.Tabela.SortearDica"}}"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Sortear"}} (d{{tabela.dado}})</button>
+  <fieldset class="desordem-pre__grupo desordem-procura__tabela{{#if state.tableCollapsed}} is-recolhida{{/if}}">
+    <legend>
+      <button type="button" class="desordem-procura__recolher" data-action="toggleTable" aria-expanded="{{#if state.tableCollapsed}}false{{else}}true{{/if}}" title="{{#if state.tableCollapsed}}{{localize "DESORDEM.Furtividade.Tabela.Expandir"}}{{else}}{{localize "DESORDEM.Furtividade.Tabela.Recolher"}}{{/if}}"><i class="fa-solid {{#if state.tableCollapsed}}fa-chevron-right{{else}}fa-chevron-down{{/if}}" aria-hidden="true"></i> <i class="fa-solid fa-table-list" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Titulo"}}</button>
+    </legend>
+    {{! Linha de cima: Sortear à esquerda, Editar à direita (aparece também com a tabela recolhida) }}
+    <div class="desordem-procura__tabela-topo">
+      <button type="button" data-action="drawRow" title="{{localize "DESORDEM.Furtividade.Tabela.SortearDica"}}" {{#unless tabela}}disabled{{/unless}}><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Sortear"}}{{#if tabela}} (d{{tabela.dado}}){{/if}}</button>
+      <button type="button" data-action="editTables"><i class="fa-solid fa-pen" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Editar"}}</button>
     </div>
+    {{#unless state.tableCollapsed}}
+    {{#if tabelas.length}}
+    <select name="tabela" aria-label="{{localize "DESORDEM.Furtividade.Tabela.Escolher"}}">
+      {{#each tabelas}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{nome}}</option>{{/each}}
+    </select>
     {{#if tabela.linhas.length}}
     <ul class="desordem-procura__linhas">
       {{#each tabela.linhas}}
@@ -25,7 +30,7 @@
     {{else}}
     <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Tabela.SemTabelas"}}</p>
     {{/if}}
-    <button type="button" data-action="editTables"><i class="fa-solid fa-pen" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Editar"}}</button>
+    {{/unless}}
   </fieldset>
   <label class="desordem-procura__campo">
     <span>{{localize "DESORDEM.Furtividade.Procura.Campo"}}</span>

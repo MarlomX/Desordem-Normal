@@ -2319,6 +2319,10 @@
 }
 
 .desordem-normal.desordem-tabelas .window-content {
+  /* O corpo rola sozinho dentro da janela (como na janela da perseguição) */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 0;
 }
 
@@ -2387,4 +2391,57 @@
   margin: 0;
   color: var(--dn-pv);
   font-size: 0.85em;
+}
+
+/* ===== Furtividade: ajustes visuais das tabelas (v0.17.5) ===== */
+/* Editor: o corpo ocupa a janela e rola; antes as linhas a mais saíam da tela */
+.desordem-tabelas .desordem-tabelas__corpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Janela de procura: nunca passa da altura da tela; o conteúdo rola */
+.desordem-normal.desordem-procura .window-content {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+/* Linha de cima da seção das tabelas: Sortear à esquerda, Editar à direita */
+.desordem-procura__tabela-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.desordem-procura__tabela-topo button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}
+
+/* Botão de recolher no título da seção */
+.desordem-procura__recolher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  margin: 0;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.desordem-procura__tabela select {
+  width: 100%;
+}
+
+.desordem-procura__tabela {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }

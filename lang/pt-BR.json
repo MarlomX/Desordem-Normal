@@ -875,7 +875,9 @@
         "SorteioTitulo": "Tabela {nome}",
         "SorteioLinha": "Resultado {n}: {texto}",
         "SorteioSemLinha": "Resultado {n}: nenhuma linha com esse resultado.",
-        "SorteadoEscalonado": "Alvo sorteado: {nome} (faixa {faixa})."
+        "SorteadoEscalonado": "Alvo sorteado: {nome} (faixa {faixa}).",
+        "Recolher": "Recolher a tabela",
+        "Expandir": "Mostrar a tabela"
       }
     }
   },

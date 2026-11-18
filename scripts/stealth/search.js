@@ -272,6 +272,7 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
       selectRow: ProcuraApp.#onSelectRow,
       drawRow: ProcuraApp.#onDrawRow,
       editTables: ProcuraApp.#onEditTables,
+      toggleTable: ProcuraApp.#onToggleTable,
     },
   };
 
@@ -283,7 +284,16 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * Escolhas atuais: o texto do campo, o modo do alvo, o alvo escolhido, a tabela e a linha
    * escolhidas e, na procura escalonada, quem foi sorteado e a faixa (d12, d10 ou d8).
    */
-  #state = { text: '', mode: 'todos', chosenId: '', tableId: '', rowId: '', drawn: null };
+  #state = {
+    text: '',
+    mode: 'todos',
+    chosenId: '',
+    tableId: '',
+    rowId: '',
+    drawn: null,
+    // Tabela recolhida: só os botões Sortear e Editar aparecem (lembrado enquanto a página está aberta)
+    tableCollapsed: false,
+  };
 
   static async open() {
     if (!game.user.isGM) return null;
@@ -434,6 +444,12 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
       whisper: ChatMessage.getWhisperRecipients('GM').map((user) => user.id),
     });
     if (row) this.#applyRow(row);
+  }
+
+  /** Recolhe ou mostra a seção das tabelas. */
+  static async #onToggleTable() {
+    this.#state.tableCollapsed = !this.#state.tableCollapsed;
+    this.render();
   }
 
   /** Abre o editor das tabelas na tabela escolhida. */
