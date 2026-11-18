@@ -15,6 +15,7 @@ import { FurtividadeModel, FurtivoModel } from './stealth/models.js';
 import { registerStealthHooks, registerStealthSocket, stealthApi } from './stealth/hooks.js';
 import { renderHideBar } from './stealth/hide-test.js';
 import { renderSearchBar } from './stealth/search.js';
+import { registerCreatureTables } from './stealth/tables.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
@@ -81,6 +82,8 @@ Hooks.once('init', () => {
   registerChaseHooks();
   // Depois da perseguição: o botão da furtividade fica logo abaixo do dela na aba de combate
   registerStealthHooks();
+  // Tabelas de ações das criaturas: configuração do mundo, editada pelo mestre
+  registerCreatureTables();
   registerEquipmentGuards();
 
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, PersonagemSheet, {

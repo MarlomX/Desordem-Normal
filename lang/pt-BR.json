@@ -825,6 +825,57 @@
           "muitos": "Termos demais no campo (no máximo 12).",
           "semAlvo": "Ninguém está escondido para ser procurado."
         }
+      },
+      "Tabela": {
+        "Titulo": "Tabelas de ações",
+        "Dica": "Tabelas escritas por você (o sistema não traz nenhuma). Cada linha tem a faixa do resultado no dado da tabela; escolher uma linha só preenche a janela de procura.",
+        "Escolher": "Tabela",
+        "Nova": "Nova tabela",
+        "NovaNome": "Nova tabela",
+        "Excluir": "Excluir tabela",
+        "ExcluirConfirmar": "Excluir a tabela {nome} e todas as linhas dela?",
+        "Nome": "Nome",
+        "Dado": "Dado da tabela",
+        "SemNome": "(sem nome)",
+        "Faixa": "Resultado",
+        "AlvoRotulo": "Alvo",
+        "ProcuraRotulo": "Procura",
+        "RemoverLinha": "Remover linha",
+        "Texto": "Texto (só o mestre vê)",
+        "AdicionarLinha": "Adicionar linha",
+        "SemLinhas": "Nenhuma linha ainda.",
+        "SemTabelas": "Nenhuma tabela ainda. Crie uma no editor.",
+        "SemTexto": "(sem texto)",
+        "Alvo": {
+          "todos": "Todos os escondidos",
+          "sorteado": "Um sorteado",
+          "nenhum": "Nenhum"
+        },
+        "Procura": {
+          "nenhuma": "Nenhuma (só texto)",
+          "fixa": "Dados ou valores fixos",
+          "manual": "Valores na hora",
+          "escalonada": "Pelo maior dado do alvo"
+        },
+        "Escalonada": {
+          "d12": "Maior dado d12",
+          "d10": "Maior dado d10",
+          "d8": "Maior dado d8 ou menor"
+        },
+        "Aviso": {
+          "faixa": "Linha {faixa}: resultado inválido (use 3 ou 3-4).",
+          "foraDoDado": "Linha {faixa}: passa do dado da tabela.",
+          "sobreposta": "Linha {faixa}: o resultado {detalhe} já está em outra linha.",
+          "formula": "Linha {faixa}: dados ou valores inválidos.",
+          "semResultado": "Resultados sem linha: {detalhe}."
+        },
+        "Sortear": "Sortear",
+        "SortearDica": "Rola o dado da tabela só para o mestre e escolhe a linha.",
+        "Editar": "Editar tabelas",
+        "SorteioTitulo": "Tabela {nome}",
+        "SorteioLinha": "Resultado {n}: {texto}",
+        "SorteioSemLinha": "Resultado {n}: nenhuma linha com esse resultado.",
+        "SorteadoEscalonado": "Alvo sorteado: {nome} (faixa {faixa})."
       }
     }
   },

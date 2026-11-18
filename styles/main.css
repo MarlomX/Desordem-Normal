@@ -2278,3 +2278,113 @@
 .desordem-procura-barra__alvo.is-encontrado {
   font-weight: 700;
 }
+
+/* ===== Furtividade: tabelas de ações (v0.17.4) ===== */
+.desordem-procura__linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.desordem-procura__linha {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  text-align: start;
+}
+
+.desordem-procura__linha span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desordem-procura__linha.is-escolhida {
+  border-color: var(--dn-accent-line);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-procura__nota {
+  margin: 0;
+  padding: 6px 8px;
+  border-inline-start: 3px solid var(--dn-accent-line);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-normal.desordem-tabelas .window-content {
+  padding: 0;
+}
+
+.desordem-tabelas__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.desordem-tabelas__topo,
+.desordem-tabelas__campos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.desordem-tabelas__topo button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}
+
+.desordem-tabelas__nome {
+  flex: 1 1 200px;
+}
+
+.desordem-tabelas__dado {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.desordem-tabelas__dado input {
+  width: 4em;
+}
+
+.desordem-tabelas__faixa input {
+  width: 5em;
+}
+
+.desordem-tabelas__linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-tabelas__linha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 6px;
+}
+
+.desordem-tabelas__linha textarea {
+  resize: vertical;
+}
+
+.desordem-tabelas__aviso {
+  margin: 0;
+  color: var(--dn-pv);
+  font-size: 0.85em;
+}

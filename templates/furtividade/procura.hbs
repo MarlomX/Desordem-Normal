@@ -1,5 +1,32 @@
 <section class="desordem-procura__corpo">
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Procura.Dica"}}</p>
+
+  <fieldset class="desordem-pre__grupo desordem-procura__tabela">
+    <legend><i class="fa-solid fa-table-list" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Titulo"}}</legend>
+    {{#if tabelas.length}}
+    <div class="desordem-tabelas__topo">
+      <select name="tabela" aria-label="{{localize "DESORDEM.Furtividade.Tabela.Escolher"}}">
+        {{#each tabelas}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{nome}}</option>{{/each}}
+      </select>
+      <button type="button" data-action="drawRow" title="{{localize "DESORDEM.Furtividade.Tabela.SortearDica"}}"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Sortear"}} (d{{tabela.dado}})</button>
+    </div>
+    {{#if tabela.linhas.length}}
+    <ul class="desordem-procura__linhas">
+      {{#each tabela.linhas}}
+      <li><button type="button" class="desordem-procura__linha{{#if selected}} is-escolhida{{/if}}" data-action="selectRow" data-row-id="{{id}}"><strong>{{faixa}}</strong> <span>{{texto}}</span></button></li>
+      {{/each}}
+    </ul>
+    {{else}}
+    <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Tabela.SemLinhas"}}</p>
+    {{/if}}
+    {{#if linha}}
+    <p class="desordem-procura__nota"><strong>{{linha.faixa}}</strong> {{linha.texto}}{{#if linha.sorteado}}<br><em>{{linha.sorteado}}</em>{{/if}}</p>
+    {{/if}}
+    {{else}}
+    <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Tabela.SemTabelas"}}</p>
+    {{/if}}
+    <button type="button" data-action="editTables"><i class="fa-solid fa-pen" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Editar"}}</button>
+  </fieldset>
   <label class="desordem-procura__campo">
     <span>{{localize "DESORDEM.Furtividade.Procura.Campo"}}</span>
     <input type="text" name="busca" value="{{state.text}}" placeholder="2d6 · d10 · 3 5" autocomplete="off">

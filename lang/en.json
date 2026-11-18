@@ -825,6 +825,57 @@
           "muitos": "Too many terms in the field (at most 12).",
           "semAlvo": "Nobody is hidden to be searched."
         }
+      },
+      "Tabela": {
+        "Titulo": "Action tables",
+        "Dica": "Tables written by you (the system ships none). Each row has its result range on the table's die; choosing a row only fills in the search window.",
+        "Escolher": "Table",
+        "Nova": "New table",
+        "NovaNome": "New table",
+        "Excluir": "Delete table",
+        "ExcluirConfirmar": "Delete the table {nome} and all its rows?",
+        "Nome": "Name",
+        "Dado": "Table die",
+        "SemNome": "(unnamed)",
+        "Faixa": "Result",
+        "AlvoRotulo": "Target",
+        "ProcuraRotulo": "Search",
+        "RemoverLinha": "Remove row",
+        "Texto": "Text (GM only)",
+        "AdicionarLinha": "Add row",
+        "SemLinhas": "No rows yet.",
+        "SemTabelas": "No tables yet. Create one in the editor.",
+        "SemTexto": "(no text)",
+        "Alvo": {
+          "todos": "All hidden",
+          "sorteado": "One at random",
+          "nenhum": "None"
+        },
+        "Procura": {
+          "nenhuma": "None (text only)",
+          "fixa": "Fixed dice or values",
+          "manual": "Values typed on the spot",
+          "escalonada": "By the target's largest die"
+        },
+        "Escalonada": {
+          "d12": "Largest die d12",
+          "d10": "Largest die d10",
+          "d8": "Largest die d8 or smaller"
+        },
+        "Aviso": {
+          "faixa": "Row {faixa}: invalid result (use 3 or 3-4).",
+          "foraDoDado": "Row {faixa}: goes beyond the table's die.",
+          "sobreposta": "Row {faixa}: result {detalhe} is already in another row.",
+          "formula": "Row {faixa}: invalid dice or values.",
+          "semResultado": "Results with no row: {detalhe}."
+        },
+        "Sortear": "Draw",
+        "SortearDica": "Rolls the table's die for the GM only and picks the row.",
+        "Editar": "Edit tables",
+        "SorteioTitulo": "Table {nome}",
+        "SorteioLinha": "Result {n}: {texto}",
+        "SorteioSemLinha": "Result {n}: no row with that result.",
+        "SorteadoEscalonado": "Drawn target: {nome} (tier {faixa})."
       }
     }
   },

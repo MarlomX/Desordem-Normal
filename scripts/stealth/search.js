@@ -22,7 +22,9 @@ import {
   searchResultKind,
   searchValues,
 } from '../rolls/stealth.js';
+import { findRow, maxHideSides, rowToSearchState } from '../rolls/creature-table.js';
 import { SOCKET, findStealth, postStealthNotice, stealthView } from './store.js';
+import { TabelasApp, onTablesChange, readTables } from './tables.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 
@@ -34,10 +36,17 @@ const FLAG = `flags.${SYSTEM_ID}.procura`;
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const renderTemplate = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
 
-/** Escondidos da cena agora ({id, name}), na ordem da lista de participantes. */
+/**
+ * Escondidos da cena agora ({id, name, maxSides}), na ordem da lista de participantes. `maxSides`
+ * é o maior dado de esconderijo (só os lados, nunca os valores), usado na procura escalonada.
+ */
 function currentCandidates(stealth) {
   if (!stealth?.system.ativa) return [];
-  return searchCandidates(stealthView(stealth).participantes).map(({ id, name }) => ({ id, name }));
+  return searchCandidates(stealthView(stealth).participantes).map(({ id, name }) => ({
+    id,
+    name,
+    maxSides: maxHideSides(stealth.combatants.get(id)?.system.esconderijo),
+  }));
 }
 
 /** Valores que saíram numa rolagem do Foundry, com os lados de cada dado. */
@@ -251,7 +260,7 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
     id: 'desordem-procura',
     classes: ['desordem-normal', 'desordem-procura'],
-    position: { width: 380, height: 'auto' },
+    position: { width: 440, height: 'auto' },
     window: {
       title: 'DESORDEM.Furtividade.Procura.Titulo',
       icon: 'fa-solid fa-eye',
@@ -260,6 +269,9 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
     actions: {
       search: ProcuraApp.#onSearch,
       drawTarget: ProcuraApp.#onDrawTarget,
+      selectRow: ProcuraApp.#onSelectRow,
+      drawRow: ProcuraApp.#onDrawRow,
+      editTables: ProcuraApp.#onEditTables,
     },
   };
 
@@ -267,8 +279,11 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
     form: { template: `systems/${SYSTEM_ID}/templates/furtividade/procura.hbs` },
   };
 
-  /** Escolhas atuais (o texto do campo, o modo do alvo e o alvo escolhido). */
-  #state = { text: '', mode: 'todos', chosenId: '' };
+  /**
+   * Escolhas atuais: o texto do campo, o modo do alvo, o alvo escolhido, a tabela e a linha
+   * escolhidas e, na procura escalonada, quem foi sorteado e a faixa (d12, d10 ou d8).
+   */
+  #state = { text: '', mode: 'todos', chosenId: '', tableId: '', rowId: '', drawn: null };
 
   static async open() {
     if (!game.user.isGM) return null;
@@ -292,9 +307,41 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!candidates.some((candidate) => candidate.id === this.#state.chosenId)) {
       this.#state.chosenId = candidates[0]?.id ?? '';
     }
+    // Tabelas de ações (só atalhos: escolher uma linha preenche os campos acima)
+    const { tabelas } = readTables();
+    const table = tabelas.find((entry) => entry.id === this.#state.tableId) ?? tabelas[0] ?? null;
+    if (table?.id !== this.#state.tableId) {
+      this.#state.tableId = table?.id ?? '';
+      this.#state.rowId = '';
+    }
+    const row = table?.linhas.find((entry) => entry.id === this.#state.rowId) ?? null;
     return {
       ...context,
       state: this.#state,
+      tabelas: tabelas.map((entry) => ({
+        id: entry.id,
+        nome: entry.nome || t('DESORDEM.Furtividade.Tabela.SemNome'),
+        selected: entry.id === table?.id,
+      })),
+      tabela: table && {
+        dado: table.dado,
+        linhas: table.linhas.map((entry) => ({
+          id: entry.id,
+          faixa: entry.faixa,
+          texto: entry.texto || t('DESORDEM.Furtividade.Tabela.SemTexto'),
+          selected: entry.id === row?.id,
+        })),
+      },
+      linha: row && {
+        faixa: row.faixa,
+        texto: row.texto,
+        sorteado: this.#state.drawn
+          ? t('DESORDEM.Furtividade.Tabela.SorteadoEscalonado', {
+              nome: this.#state.drawn.name,
+              faixa: this.#state.drawn.tier,
+            })
+          : '',
+      },
       candidates: candidates.map((candidate) => ({
         ...candidate,
         selected: candidate.id === this.#state.chosenId,
@@ -330,12 +377,78 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
     chosen?.addEventListener('change', () => {
       this.#state.chosenId = chosen.value;
     });
+    const tableSelect = this.element.querySelector('select[name="tabela"]');
+    tableSelect?.addEventListener('change', () => {
+      this.#state.tableId = tableSelect.value;
+      this.#state.rowId = '';
+      this.#state.drawn = null;
+      this.render();
+    });
+  }
+
+  /** Preenche os campos com uma linha da tabela (não procura nada sozinho). */
+  #applyRow(row) {
+    const next = rowToSearchState(row, currentCandidates(findStealth()));
+    this.#state = { ...this.#state, ...next, rowId: row.id };
+    if (row.procura === 'escalonada' && !next.drawn) {
+      ui.notifications.warn(t('DESORDEM.Furtividade.Procura.Erro.semAlvo'));
+    }
+    this.render();
+  }
+
+  /** Tabela escolhida na janela, ou `null`. */
+  #table() {
+    return readTables().tabelas.find((entry) => entry.id === this.#state.tableId) ?? null;
+  }
+
+  /** Clique numa linha (por exemplo, quando o jogador rolou o dado da tabela na mesa). */
+  static async #onSelectRow(event, target) {
+    const row = this.#table()?.linhas.find((entry) => entry.id === target.dataset.rowId);
+    if (row) this.#applyRow(row);
+  }
+
+  /**
+   * Sorteia: rola o dado da tabela só para o mestre (sussurro) e escolhe a linha correspondente.
+   * O número e o texto da linha não aparecem para os jogadores.
+   */
+  static async #onDrawRow() {
+    const table = this.#table();
+    if (!table || !game.user.isGM) return;
+    const roll = await new Roll(`1d${table.dado}`).evaluate();
+    const row = findRow(table, roll.total);
+    const content = await renderTemplate(`systems/${SYSTEM_ID}/templates/chat/furtividade.hbs`, {
+      titulo: t('DESORDEM.Furtividade.Tabela.SorteioTitulo', {
+        nome: table.nome || t('DESORDEM.Furtividade.Tabela.SemNome'),
+      }),
+      texto: row
+        ? t('DESORDEM.Furtividade.Tabela.SorteioLinha', {
+            n: roll.total,
+            texto: row.texto || t('DESORDEM.Furtividade.Tabela.SemTexto'),
+          })
+        : t('DESORDEM.Furtividade.Tabela.SorteioSemLinha', { n: roll.total }),
+    });
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker(),
+      content,
+      rolls: [roll],
+      whisper: ChatMessage.getWhisperRecipients('GM').map((user) => user.id),
+    });
+    if (row) this.#applyRow(row);
+  }
+
+  /** Abre o editor das tabelas na tabela escolhida. */
+  static async #onEditTables() {
+    await TabelasApp.open(this.#state.tableId);
   }
 
   static async #onSearch(event, target) {
     target.disabled = true;
     try {
-      await postSearch(this.#state);
+      // Procurar encerra o uso da linha: o sorteado da escalonada não vale para a próxima procura
+      if (await postSearch(this.#state)) {
+        this.#state.drawn = null;
+        this.render();
+      }
     } finally {
       target.disabled = false;
     }
@@ -345,3 +458,6 @@ export class ProcuraApp extends HandlebarsApplicationMixin(ApplicationV2) {
     await drawEventTarget();
   }
 }
+
+// Tabelas editadas: a janela de procura mostra as linhas novas
+onTablesChange(() => ProcuraApp.refresh());

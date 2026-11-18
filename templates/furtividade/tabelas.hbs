@@ -1,0 +1,81 @@
+<section class="desordem-tabelas__corpo">
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Tabela.Dica"}}</p>
+  <div class="desordem-tabelas__topo">
+    {{#if tabelas.length}}
+    <select data-tabela aria-label="{{localize "DESORDEM.Furtividade.Tabela.Escolher"}}">
+      {{#each tabelas}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{nome}}</option>{{/each}}
+    </select>
+    {{/if}}
+    <button type="button" data-action="newTable" {{#unless podeCriar}}disabled{{/unless}}><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Nova"}}</button>
+    {{#if tabela}}
+    <button type="button" class="desordem-perseguicao__perigo" data-action="deleteTable"><i class="fa-solid fa-trash" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.Excluir"}}</button>
+    {{/if}}
+  </div>
+
+  {{#if tabela}}
+  <div class="desordem-tabelas__topo">
+    <label class="desordem-procura__campo desordem-tabelas__nome">
+      <span>{{localize "DESORDEM.Furtividade.Tabela.Nome"}}</span>
+      <input type="text" data-campo="nome" value="{{tabela.nome}}" maxlength="80">
+    </label>
+    <label class="desordem-procura__campo">
+      <span>{{localize "DESORDEM.Furtividade.Tabela.Dado"}}</span>
+      <span class="desordem-tabelas__dado">d<input type="number" data-campo="dado" value="{{tabela.dado}}" min="2" max="100" step="1" inputmode="numeric"></span>
+    </label>
+  </div>
+
+  {{#each tabela.avisosGerais}}<p class="desordem-tabelas__aviso">{{this}}</p>{{/each}}
+
+  {{#if tabela.linhas.length}}
+  <ol class="desordem-tabelas__linhas">
+    {{#each tabela.linhas}}
+    <li class="desordem-tabelas__linha">
+      <div class="desordem-tabelas__campos">
+        <label class="desordem-procura__campo desordem-tabelas__faixa">
+          <span>{{localize "DESORDEM.Furtividade.Tabela.Faixa"}}</span>
+          <input type="text" data-campo="faixa" data-row-id="{{id}}" value="{{faixa}}" maxlength="20" placeholder="3-4">
+        </label>
+        <label class="desordem-procura__campo">
+          <span>{{localize "DESORDEM.Furtividade.Tabela.AlvoRotulo"}}</span>
+          <select data-campo="alvo" data-row-id="{{id}}">{{#each alvos}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+        </label>
+        <label class="desordem-procura__campo">
+          <span>{{localize "DESORDEM.Furtividade.Tabela.ProcuraRotulo"}}</span>
+          <select data-campo="procura" data-row-id="{{id}}">{{#each procuras}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+        </label>
+        <button type="button" class="desordem-perseguicao__remover" data-action="removeRow" data-row-id="{{id}}" title="{{localize "DESORDEM.Furtividade.Tabela.RemoverLinha"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <label class="desordem-procura__campo">
+        <span>{{localize "DESORDEM.Furtividade.Tabela.Texto"}}</span>
+        <textarea data-campo="texto" data-row-id="{{id}}" rows="2" maxlength="500">{{texto}}</textarea>
+      </label>
+      {{#if fixa}}
+      <label class="desordem-procura__campo">
+        <span>{{localize "DESORDEM.Furtividade.Procura.Campo"}}</span>
+        <input type="text" data-campo="formula" data-row-id="{{id}}" value="{{formula}}" placeholder="2d6" maxlength="60">
+      </label>
+      {{/if}}
+      {{#if escalonada}}
+      <div class="desordem-tabelas__campos">
+        {{#each faixas}}
+        <label class="desordem-procura__campo">
+          <span>{{label}}</span>
+          <input type="text" data-campo="escalonada.{{tier}}" data-row-id="{{../id}}" value="{{value}}" placeholder="2d6" maxlength="60">
+        </label>
+        {{/each}}
+      </div>
+      {{/if}}
+      {{#each avisos}}<p class="desordem-tabelas__aviso">{{this}}</p>{{/each}}
+    </li>
+    {{/each}}
+  </ol>
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{localize "DESORDEM.Furtividade.Tabela.SemLinhas"}}</p>
+  {{/if}}
+  <footer class="desordem-perseguicao__acoes">
+    <button type="button" data-action="addRow" {{#unless tabela.podeAdicionar}}disabled{{/unless}}><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Tabela.AdicionarLinha"}}</button>
+  </footer>
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{localize "DESORDEM.Furtividade.Tabela.SemTabelas"}}</p>
+  {{/if}}
+</section>
