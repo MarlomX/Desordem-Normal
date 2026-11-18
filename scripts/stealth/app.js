@@ -17,6 +17,8 @@ import {
   hideRevealed,
   nextStealthRound,
   adjustDistractUses,
+  attentionTargets,
+  requestAttention,
   removeStealthParticipant,
   requestHideOp,
   resetHide,
@@ -74,6 +76,7 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
       resetHide: FurtividadeApp.#onResetHide,
       openSearch: FurtividadeApp.#onOpenSearch,
       adjustDistract: FurtividadeApp.#onAdjustDistract,
+      callAttention: FurtividadeApp.#onCallAttention,
     },
   };
 
@@ -182,6 +185,62 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
     if (await confirm('DESORDEM.Furtividade.Excluir', 'DESORDEM.Furtividade.ExcluirConfirmar')) {
       await deleteStealth(stealth);
     }
+  }
+
+  /**
+   * Chamar atenção: escolhe o dado que vai para um aliado, o dado descartado e o aliado. Os
+   * valores aparecem só para quem já pode vê-los (o dono, ou o mestre com os dados revelados).
+   */
+  static async #onCallAttention(event, target) {
+    const stealth = findStealth();
+    const combatant = stealth?.combatants.get(target.dataset.combatantId);
+    if (!combatant) return;
+    const view = stealthView(stealth).participantes.find((entry) => entry.id === combatant.id);
+    const allies = attentionTargets(stealth, combatant.id);
+    if (!view?.podeChamar || allies.length === 0) return;
+    const content = await renderTemplate(
+      `systems/${SYSTEM_ID}/templates/furtividade/chamar-atencao.hbs`,
+      { dados: view.dice, aliados: allies },
+    );
+    const answer = await DialogV2.wait({
+      window: { title: t('DESORDEM.Furtividade.Atencao.Titulo') },
+      classes: ['desordem-normal', 'desordem-perseguicao-dialogo'],
+      content,
+      modal: true,
+      rejectClose: false,
+      buttons: [
+        {
+          action: 'call',
+          label: t('DESORDEM.Furtividade.Atencao.Confirmar'),
+          icon: 'fa-solid fa-bullhorn',
+          default: true,
+          callback: (evt, button, dialog) => ({
+            confirmed: true,
+            transfer: dialog.element.querySelector('input[name="passar"]:checked')?.value,
+            discard: dialog.element.querySelector('input[name="descartar"]:checked')?.value,
+            toId: dialog.element.querySelector('select[name="aliado"]')?.value,
+          }),
+        },
+        { action: 'cancel', label: t('DESORDEM.Teste.Pre.Cancelar') },
+      ],
+    });
+    if (answer?.confirmed !== true) return;
+    if (answer.transfer === undefined || answer.discard === undefined) return;
+    if (answer.transfer === answer.discard) {
+      ui.notifications.warn(t('DESORDEM.Furtividade.Atencao.Mesmo'));
+      return;
+    }
+    // Os dados esperados vão junto: se a lista mudar antes de gravar, nada acontece
+    const die = (index) => {
+      const found = view.dice.find((entry) => entry.index === Number(index));
+      return { index: Number(index), lados: found?.lados, valor: found?.valor };
+    };
+    await requestAttention({
+      fromId: combatant.id,
+      toId: answer.toId,
+      transfer: die(answer.transfer),
+      discard: die(answer.discard),
+    });
   }
 
   /** Contador de distrair da cena, pelos botões −/+ (só o mestre). */

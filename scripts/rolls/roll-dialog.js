@@ -125,6 +125,8 @@ export function buildRollModel({
       stealth && (stealth.esconder || stealth.distrair)
         ? { esconder: stealth.esconder ?? null, distrair: stealth.distrair ?? null }
         : null,
+    // Ação chamativa: sacrificar um dado de esconderijo escolhido (veja `flashyOption`)
+    chamativa: stealth?.chamativa ?? null,
   };
 }
 
@@ -139,6 +141,7 @@ export function emptySelection(dt) {
     avanco: { on: false, breath: 0, effort: false },
     esconderijo: { on: false },
     furtiva: { acao: '', destino: '' },
+    chamativa: { on: false, index: null },
   };
 }
 
@@ -163,8 +166,17 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
 
   // Dados que ocupam espaço sem escolha manual, em ordem
   const locked = model.baseExtraDice.map((sides) => ({ kind: 'base', sides, locked: true }));
+  // Ação chamativa: sacrifica um dado; com ela marcada, esconder-se e distrair não valem
+  const flashyDice = model.chamativa?.dice ?? [];
+  const flashyOn = Boolean(model.chamativa && selection.chamativa?.on);
+  const flashyDie = flashyOn
+    ? (flashyDice.find((die) => die.index === Number(selection.chamativa?.index)) ?? flashyDice[0])
+    : null;
+  const chamativa = flashyDie
+    ? { on: true, index: flashyDie.index, lados: flashyDie.lados, valor: flashyDie.valor }
+    : { on: false, index: null };
   // Esconder-se ou distrair (só se a opção existe para o personagem)
-  const wantedAction = selection.furtiva?.acao;
+  const wantedAction = chamativa.on ? '' : selection.furtiva?.acao;
   const action =
     model.furtiva && STEALTH_TEST_ACTIONS.includes(wantedAction) && model.furtiva[wantedAction]
       ? wantedAction
@@ -175,7 +187,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       ? ((recipients.find((r) => r.id === selection.furtiva?.destino) ?? recipients[0])?.id ?? '')
       : '';
   // Teste de esconderijo: o teste não tem DT nem sofre pavor, e não vale ao mesmo tempo como avanço
-  const hide = !action && Boolean(model.esconderijo && selection.esconderijo?.on);
+  const hide = !action && !chamativa.on && Boolean(model.esconderijo && selection.esconderijo?.on);
   // Avanço na perseguição: o fôlego gasto vira dados d6 fixos e o esforço extra sobe um passo
   const advance = !hide && !action && model.avanco && !model.avanco.blocked && selection.avanco?.on;
   let breath = 0;
@@ -268,6 +280,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       avanco: { on: Boolean(advance), breath, effort, dt: advanceDt },
       esconderijo: { on: hide },
       furtiva: { acao: action, destino },
+      chamativa: { on: chamativa.on, index: chamativa.index },
     },
     dt: testDt,
     pdCost,
@@ -284,6 +297,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     avanco: { on: Boolean(advance), breath, effort, dt: advanceDt },
     esconderijo: { on: hide },
     furtiva,
+    chamativa,
     summedDice: Math.min(plan.rolledSides.length, MAX_COUNTED),
     errors,
     valid: errors.length === 0,
@@ -309,5 +323,7 @@ export function selectionToOptions(model, selection) {
   if (evaluated.esconderijo.on) options.esconderijo = true;
   // Esconder-se ou distrair: quem chama (a ficha) torna a rolagem privada e guarda a ação
   if (evaluated.furtiva.acao) options.furtiva = evaluated.furtiva;
+  // Ação chamativa: a ficha descarta o dado escolhido quando o teste é rolado
+  if (evaluated.chamativa.on) options.chamativa = evaluated.chamativa;
   return options;
 }

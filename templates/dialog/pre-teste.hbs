@@ -49,6 +49,20 @@
       </select>
     </label>
     {{/if}}
+    {{#if chamativa}}
+    {{! Ação chamativa: combina com o teste comum (ou o avanço), mas não com esconder-se e distrair }}
+    <label class="desordem-pre__opcao">
+      <input type="checkbox" name="chamativaOn">
+      <span class="desordem-pre__nome">{{localize "DESORDEM.Furtividade.Pre.Chamativa"}}</span>
+      <span class="desordem-pre__custo">{{localize "DESORDEM.Furtividade.Pre.ChamativaRegra"}}</span>
+    </label>
+    <label class="desordem-pre__avanco-campo is-oculta" data-chamativa-dado>
+      <span>{{localize "DESORDEM.Furtividade.Pre.ChamativaDado"}}</span>
+      <select name="chamativaDado">
+        {{#each chamativa.dados}}<option value="{{index}}">{{label}}</option>{{/each}}
+      </select>
+    </label>
+    {{/if}}
   </fieldset>
   {{/if}}
 

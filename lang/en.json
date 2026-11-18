@@ -767,7 +767,11 @@
         "escondeu": "{nome} hid with {n} hiding dice.",
         "zerou": "The GM reset {nome}'s hiding; they can redo the test.",
         "distraiu": "{nome} distracted the creatures: {alvo} gained 1 hiding die ({n} in total).",
-        "escondeuDeNovo": "{nome} hid better: +1 hiding die ({n} in total)."
+        "escondeuDeNovo": "{nome} hid better: +1 hiding die ({n} in total).",
+        "chamativa": "{nome} made a flashy action and lost 1 hiding die ({n} left).",
+        "chamativaEncontrado": "{nome} made a flashy action, lost the last die and was found!",
+        "atencao": "{nome} drew the creatures' attention: lost 2 dice ({restam} left) and {alvo} gained 1 ({n} in total).",
+        "atencaoEncontrado": "{nome} drew the creatures' attention and was found; {alvo} gained 1 die ({n} in total)."
       },
       "Cartao": {
         "Titulo": "Stealth",
@@ -793,7 +797,10 @@
         "Distrair": "Distract (DC {dt})",
         "DistrairRegra": "On a success, one of the rolled dice becomes a hiding die for you or an ally. Private roll.",
         "Destino": "Who gets the die",
-        "Voce": "{nome} (you)"
+        "Voce": "{nome} (you)",
+        "Chamativa": "Flashy action",
+        "ChamativaRegra": "Running, making noise... When this test is rolled, you lose the chosen hiding die. Not allowed with hide or distract.",
+        "ChamativaDado": "Die to sacrifice"
       },
       "Barra": {
         "Titulo": "Hiding test",
@@ -905,7 +912,16 @@
       },
       "DistrairUsos": "Distract",
       "DistrairDica": "Distract uses in the scene, by any character. The DC goes up by 3 each use.",
-      "ProximaDt": "next DC {dt}"
+      "ProximaDt": "next DC {dt}",
+      "Atencao": {
+        "Titulo": "Draw attention",
+        "Dica": "You pass one of your dice to an ally and discard another: you lose two so they gain one.",
+        "Passar": "Die that goes to the ally",
+        "Descartar": "Die discarded",
+        "Aliado": "Ally",
+        "Confirmar": "Draw attention",
+        "Mesmo": "Choose different dice to pass and to discard."
+      }
     }
   },
   "TYPES.Item.arma": "Weapon",

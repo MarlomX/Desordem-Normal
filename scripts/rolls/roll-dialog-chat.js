@@ -43,6 +43,10 @@ function readSelection(form) {
       acao: ['esconder', 'distrair'].includes(stealthChoice(form)) ? stealthChoice(form) : '',
       destino: fields.furtivaDestino?.value ?? '',
     },
+    chamativa: {
+      on: Boolean(fields.chamativaOn?.checked),
+      index: fields.chamativaDado?.value ?? null,
+    },
   };
 }
 
@@ -188,6 +192,19 @@ function refresh(form, root, model) {
   root
     .querySelector('[data-furtiva-destino]')
     ?.classList.toggle('is-oculta', evaluation.furtiva.acao !== 'distrair');
+  // Ação chamativa: mostra a escolha do dado e desliga esconder-se e distrair (volta ao comum)
+  const flashy = evaluation.chamativa.on;
+  root.querySelector('[data-chamativa-dado]')?.classList.toggle('is-oculta', !flashy);
+  for (const radio of root.querySelectorAll('input[name="furtivaAcao"]')) {
+    if (radio.value === 'esconder' || radio.value === 'distrair') {
+      radio.disabled = flashy;
+      if (flashy && radio.checked) {
+        radio.checked = false;
+        const plain = root.querySelector('input[name="furtivaAcao"][value=""]');
+        if (plain) plain.checked = true;
+      }
+    }
+  }
   const advanceBox = form.elements.avancoOn;
   if (advanceBox && !root.querySelector('[data-avanco]')?.dataset.bloqueado) {
     advanceBox.disabled = hiding;
@@ -296,7 +313,13 @@ export async function askRollChoices(
     showDt,
     dt,
     esconderijo: Boolean(model.esconderijo),
-    temFurtividade: Boolean(model.esconderijo || model.furtiva),
+    temFurtividade: Boolean(model.esconderijo || model.furtiva || model.chamativa),
+    chamativa: model.chamativa && {
+      dados: model.chamativa.dice.map((die) => ({
+        index: die.index,
+        label: `d${die.lados} = ${die.valor}`,
+      })),
+    },
     furtiva: model.furtiva && {
       esconderTexto: model.furtiva.esconder
         ? t('DESORDEM.Furtividade.Pre.Esconder', { dt: model.furtiva.esconder.dt })

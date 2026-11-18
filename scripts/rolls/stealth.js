@@ -120,6 +120,12 @@ export function applyHideOp(list, op) {
     if (!Number.isInteger(index) || index < 0 || index >= current.length) {
       return { valid: false, list: current, reason: 'indice' };
     }
+    // Com `lados`/`valor` esperados (escolhidos antes, numa janela), o dado daquela posição precisa
+    // ser o mesmo: se a lista mudou nesse meio-tempo, nada é descartado
+    const die = current[index];
+    const sidesMismatch = op.lados !== undefined && op.lados !== null && die.lados !== op.lados;
+    const valueMismatch = op.valor !== undefined && op.valor !== null && die.valor !== op.valor;
+    if (sidesMismatch || valueMismatch) return { valid: false, list: current, reason: 'mudou' };
     return { valid: true, list: current.filter((_, position) => position !== index) };
   }
   return { valid: false, list: current, reason: 'operacao' };
@@ -135,7 +141,14 @@ export function sanitizeHideOp(op) {
   if (op?.type === 'remove') {
     // Índice vazio vira `null` (inválido), não 0
     const blank = op.index === null || op.index === undefined || String(op.index).trim() === '';
-    return { type: 'remove', index: blank ? null : Number(op.index) };
+    const expected = (value) =>
+      value === null || value === undefined || value === '' ? undefined : Number(value);
+    return {
+      type: 'remove',
+      index: blank ? null : Number(op.index),
+      lados: expected(op.lados),
+      valor: expected(op.valor),
+    };
   }
   return null;
 }
@@ -204,10 +217,22 @@ export function hideOpPatch(op, list, escondeu) {
  * Que mensagem do chat a operação gera: 'adicionou', 'descartou' ou 'encontrado' (descartou o
  * último dado). As mensagens mostram só quantidades, nunca valores.
  */
-export function hideOpMessage(op, countAfter) {
+export function hideOpMessage(op, countAfter, motivo) {
   if (op?.type === 'add') return 'adicionou';
-  if (op?.type === 'remove') return countAfter === 0 ? 'encontrado' : 'descartou';
+  if (op?.type === 'remove') {
+    // Ação chamativa: mensagem própria (e a de encontrado, se foi o último dado)
+    if (motivo === 'chamativa') return countAfter === 0 ? 'chamativaEncontrado' : 'chamativa';
+    return countAfter === 0 ? 'encontrado' : 'descartou';
+  }
   return null;
+}
+
+/** Motivos aceitos numa operação (o socket só deixa passar estes). */
+export const HIDE_OP_REASONS = Object.freeze(['chamativa']);
+
+/** Motivo limpo de uma operação (`undefined` se não for conhecido). */
+export function sanitizeReason(motivo) {
+  return HIDE_OP_REASONS.includes(motivo) ? motivo : undefined;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -638,4 +663,88 @@ export function actionBarView(flag, { values, success }, { canApply, recipientOk
 export function validActionChoice(values, index) {
   if (index === null || index === undefined || index === '') return false;
   return actionEligibleDice(values).includes(Number(index));
+}
+
+// ---------------------------------------------------------------------------------------------
+// Chamar atenção e ação chamativa (0.17.7)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Quem pode receber o dado do «chamar atenção»: outro participante já escondido ou encontrado.
+ * @param {{id: string, name: string, status: string}[]} participants
+ * @param {string} selfId
+ */
+export function attentionRecipients(participants, selfId) {
+  return participants
+    .filter((p) => p.id !== selfId && (p.status === 'escondido' || p.status === 'encontrado'))
+    .map(({ id, name }) => ({ id, name }));
+}
+
+/** Conferência de um dado esperado numa posição da lista (índice e, se informados, lados e valor). */
+function matchesAt(list, { index, lados, valor }) {
+  const die = list[index];
+  if (!die) return false;
+  if (lados !== undefined && lados !== null && die.lados !== lados) return false;
+  if (valor !== undefined && valor !== null && die.valor !== valor) return false;
+  return true;
+}
+
+/**
+ * Chamar atenção: o personagem passa um dos seus dados para um aliado e descarta mais um (perde
+ * dois para o aliado ganhar um). Nunca altera as listas recebidas.
+ * @param {{lados: number, valor: number}[]} own Dados de quem chama atenção.
+ * @param {{lados: number, valor: number}[]} ally Dados do aliado.
+ * @param {{index: number, lados?: number, valor?: number}} transfer Dado que vai para o aliado.
+ * @param {{index: number, lados?: number, valor?: number}} discard Dado descartado.
+ * @returns {{valid: boolean, own: object[], ally: object[], reason?: string}} `reason`: 'poucos'
+ *   (menos de 2 dados), 'mesmo' (o mesmo dado nas duas escolhas), 'mudou' (a lista mudou) ou
+ *   'cheio' (o aliado já está no teto de dados).
+ */
+export function applyAttention(own, ally, transfer, discard) {
+  const mine = cleanHideDice(own);
+  const theirs = cleanHideDice(ally);
+  const fail = (reason) => ({ valid: false, own: mine, ally: theirs, reason });
+  if (mine.length < 2) return fail('poucos');
+  const t = Number(transfer?.index);
+  const d = Number(discard?.index);
+  if (!Number.isInteger(t) || !Number.isInteger(d)) return fail('mudou');
+  if (t === d) return fail('mesmo');
+  const expectT = { index: t, lados: transfer.lados, valor: transfer.valor };
+  const expectD = { index: d, lados: discard.lados, valor: discard.valor };
+  if (!matchesAt(mine, expectT) || !matchesAt(mine, expectD)) return fail('mudou');
+  if (theirs.length >= MAX_HIDE_DICE) return fail('cheio');
+  return {
+    valid: true,
+    own: mine.filter((_, index) => index !== t && index !== d),
+    ally: [...theirs, mine[t]],
+  };
+}
+
+/**
+ * Pedido limpo de «chamar atenção» (socket): ids e os dois dados escolhidos (índice, lados,
+ * valor). O mestre confere tudo de novo em `applyAttention`.
+ */
+export function sanitizeAttention(data) {
+  const die = (value) => ({
+    index: Number(value?.index),
+    lados: value?.lados === undefined ? undefined : Number(value.lados),
+    valor: value?.valor === undefined ? undefined : Number(value.valor),
+  });
+  return {
+    fromId: String(data?.fromId ?? ''),
+    toId: String(data?.toId ?? ''),
+    transfer: die(data?.transfer),
+    discard: die(data?.discard),
+  };
+}
+
+/**
+ * Ação chamativa na janela pré-teste: os dados que podem ser sacrificados. Só aparece para quem
+ * pode ver e mexer nos próprios dados (o jogador dono, ou o mestre com os dados revelados).
+ * @returns {{dice: {index: number, lados: number, valor: number}[]}|null}
+ */
+export function flashyOption({ ativa, canEdit, dice }) {
+  const list = cleanHideDice(dice);
+  if (!ativa || !canEdit || list.length === 0) return null;
+  return { dice: list.map((die, index) => ({ index, ...die })) };
 }

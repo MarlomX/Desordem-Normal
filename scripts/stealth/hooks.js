@@ -14,6 +14,8 @@ import {
   HIDE_SOCKET_ACTION,
   SOCKET,
   USES_SOCKET_ACTION,
+  ATTENTION_SOCKET_ACTION,
+  commitAttention,
   createStealth,
   currentStealthAccess,
   findStealth,
@@ -152,6 +154,8 @@ export function registerStealthSocket() {
     if (data?.action === ACTION_SOCKET_ACTION) await handleActionSocket(data, userId);
     // Contador de esconder-se ajustado na aba Condição (só ids e ±1)
     if (data?.action === USES_SOCKET_ACTION) await handleUsesSocket(data, userId);
+    // «Chamar atenção» (mexe em dois participantes, por isso sempre pelo mestre)
+    if (data?.action === ATTENTION_SOCKET_ACTION) await commitAttention(data, userId);
   });
 }
 

@@ -40,7 +40,7 @@ import { chaseCardFor, chaseInfoFor } from '../chase/store.js';
 import FurtividadeApp from '../stealth/app.js';
 import { adjustHideUses, findStealth, stealthCardFor, stealthInfoFor } from '../stealth/store.js';
 import { withHideTest } from '../stealth/hide-test.js';
-import { withStealthAction } from '../stealth/action.js';
+import { withFlashyAction, withStealthAction } from '../stealth/action.js';
 import {
   buildAttributeRows,
   buildSkillRows,
@@ -332,13 +332,15 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const { chase: offerAdvance = true, stealth: offerHide = false, ...rest } = config;
     const chase = offerAdvance ? chaseInfoFor(this.document, config.skillKey) : null;
     const stealth = offerHide ? stealthInfoFor(this.document) : null;
-    const options = await askRollChoices(this.document, {
+    let options = await askRollChoices(this.document, {
       ...rest,
       chase,
       stealth,
       shift: event?.shiftKey,
     });
     if (!options) return;
+    // Ação chamativa: o dado é descartado quando o teste rolar (combina com o avanço, se houver)
+    if (options.chamativa) options = withFlashyAction(this.document, options);
     if (options.esconderijo) {
       await run(withHideTest(this.document, options));
       return;

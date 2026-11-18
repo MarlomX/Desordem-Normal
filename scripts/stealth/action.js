@@ -22,7 +22,7 @@ import {
   reserveHide,
   validActionChoice,
 } from '../rolls/stealth.js';
-import { SOCKET, findStealth, postStealthNotice, stealthInfoFor } from './store.js';
+import { SOCKET, findStealth, postStealthNotice, requestHideOp, stealthInfoFor } from './store.js';
 
 /** Ação de socket do botão do cartão. */
 export const ACTION_SOCKET_ACTION = 'stealthAction';
@@ -59,6 +59,35 @@ export function withStealthAction(actor, options) {
       recipientId: furtiva.destino,
       dt: offer.dt,
     }),
+  };
+}
+
+/**
+ * Ação chamativa: o teste continua normal (público, com DT); quando ele é rolado, o dado de
+ * esconderijo escolhido na janela é descartado e o chat avisa (só quantidades). Se o dado mudou
+ * nesse meio-tempo (outra procura, por exemplo), nada é descartado e o jogador é avisado.
+ * @param {Actor} actor
+ * @param {object} options Opções da janela pré-teste (com `chamativa: {index, lados, valor}`).
+ */
+export function withFlashyAction(actor, options) {
+  const { chamativa, ...rest } = options;
+  const info = stealthInfoFor(actor);
+  if (!chamativa?.on || !info?.chamativa) {
+    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.AcaoBloqueada'));
+    return rest;
+  }
+  return {
+    ...rest,
+    onResult: async (result) => {
+      await rest.onResult?.(result);
+      const combatant = findStealth()?.combatants.get(info.combatantId);
+      if (!combatant) return;
+      await requestHideOp(
+        combatant,
+        { type: 'remove', index: chamativa.index, lados: chamativa.lados, valor: chamativa.valor },
+        'chamativa',
+      );
+    },
   };
 }
 

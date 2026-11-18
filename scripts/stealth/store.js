@@ -7,7 +7,10 @@ import { addableActors, chaseAccess } from '../rolls/chase.js';
 import {
   STEALTH_COMBAT_TYPE,
   STEALTH_COMBATANT_TYPE,
+  applyAttention,
   applyHideOp,
+  attentionRecipients,
+  canEditHideDice,
   canOfferHideTest,
   distractRecipients,
   hideDiceView,
@@ -18,7 +21,10 @@ import {
   stealthEndState,
   stealthNextRound,
   stealthParticipantReset,
+  flashyOption,
   normalizeUses,
+  sanitizeAttention,
+  sanitizeReason,
   stealthActionDt,
   stealthOptions,
   stealthRoundChange,
@@ -35,6 +41,9 @@ export const HIDE_SOCKET_ACTION = 'stealthHideDice';
 
 /** Nome da ação de socket do contador de esconder-se (ajuste à mão na aba Condição). */
 export const USES_SOCKET_ACTION = 'stealthHideUses';
+
+/** Nome da ação de socket do «chamar atenção». */
+export const ATTENTION_SOCKET_ACTION = 'stealthAttention';
 
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const renderTemplate = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
@@ -119,8 +128,24 @@ export function stealthView(stealth) {
     // Distrair: usos na cena (de qualquer personagem) e a DT do próximo uso
     distrairUsos: normalizeUses(stealth.system.distrairUsos),
     distrairDt: stealthActionDt(stealth.system.distrairUsos),
-    participantes: stealth.combatants.map((combatant) => participantView(stealth, combatant)),
+    participantes: withAttention(
+      stealth.combatants.map((combatant) => participantView(stealth, combatant)),
+    ),
   };
+}
+
+/**
+ * Marca quem pode «chamar atenção» agora: quem vê e mexe nos próprios dados, tem pelo menos 2 e
+ * tem para quem passar (outro participante escondido ou encontrado).
+ */
+function withAttention(participants) {
+  return participants.map((participant) => ({
+    ...participant,
+    podeChamar:
+      participant.canEdit &&
+      participant.count >= 2 &&
+      attentionRecipients(participants, participant.id).length > 0,
+  }));
 }
 
 /**
@@ -283,7 +308,19 @@ export function stealthInfoFor(actor) {
     distrairUsos: stealth.system.distrairUsos,
     recipients: combatant ? distractRecipients(participants, combatant.id) : [],
   });
-  return options ? { ...options, combatantId: combatant.id } : null;
+  if (!options) return null;
+  // Ação chamativa: sacrificar um dado escolhido (só quem pode ver e mexer nos próprios dados)
+  const chamativa = flashyOption({
+    ativa: stealth.system.ativa,
+    canEdit: canEditHideDice({
+      isGM: game.user.isGM,
+      isOwner: Boolean(actor?.isOwner),
+      revealed: isRevealed(combatant.id),
+      ativa: stealth.system.ativa,
+    }),
+    dice: combatant.system.esconderijo,
+  });
+  return { ...options, chamativa, combatantId: combatant.id };
 }
 
 /** Muda o contador de distrair da cena (só o mestre, pelos botões −/+ da janela). */
@@ -361,8 +398,9 @@ export async function postStealthNotice({ actor, titulo, texto }) {
  * A operação é conferida de novo aqui; a lista atual vem do documento, não de quem pediu.
  * @returns {Promise<boolean>} `true` se gravou.
  */
-export async function commitHideOp(combatant, rawOp) {
+export async function commitHideOp(combatant, rawOp, rawReason) {
   const op = sanitizeHideOp(rawOp);
+  const motivo = sanitizeReason(rawReason);
   const stealth = combatant?.parent;
   if (!op || !stealth?.system.ativa) return false;
   const result = applyHideOp(combatant.system.esconderijo, op);
@@ -370,7 +408,7 @@ export async function commitHideOp(combatant, rawOp) {
   await combatant.update({
     system: hideOpPatch(op, result.list, combatant.system.escondeu),
   });
-  const kind = hideOpMessage(op, result.list.length);
+  const kind = hideOpMessage(op, result.list.length, motivo);
   if (kind) {
     const nome = combatant.name;
     await postStealthNotice({
@@ -385,27 +423,30 @@ export async function commitHideOp(combatant, rawOp) {
 /**
  * Pede uma operação nos dados de esconderijo. Quem pode editar o participante grava direto; o
  * jogador sem essa permissão pede ao mestre ativo pelo socket (que confere o dono do personagem).
- * O mestre só mexe nos dados que revelou.
+ * O mestre só mexe nos dados que revelou. `motivo` ('chamativa') só muda a mensagem do chat.
+ * @returns {Promise<boolean>} `true` se gravou aqui ou mandou o pedido ao mestre.
  */
-export async function requestHideOp(combatant, op) {
-  if (!combatant?.parent?.system.ativa) return;
+export async function requestHideOp(combatant, op, motivo) {
+  if (!combatant?.parent?.system.ativa) return false;
   const isOwner = Boolean(combatant.actor?.isOwner);
-  if (game.user.isGM ? !isRevealed(combatant.id) : !isOwner) return;
+  if (game.user.isGM ? !isRevealed(combatant.id) : !isOwner) return false;
   if (combatant.canUserModify(game.user, 'update')) {
-    const ok = await commitHideOp(combatant, op);
+    const ok = await commitHideOp(combatant, op, motivo);
     if (!ok) ui.notifications.warn(t('DESORDEM.Furtividade.Erro.Operacao'));
-    return;
+    return ok;
   }
   if (!game.users.activeGM) {
     ui.notifications.warn(t('DESORDEM.Furtividade.Erro.SemMestre'));
-    return;
+    return false;
   }
   game.socket.emit(SOCKET, {
     action: HIDE_SOCKET_ACTION,
     combatId: combatant.parent.id,
     combatantId: combatant.id,
     op: sanitizeHideOp(op),
+    motivo: sanitizeReason(motivo),
   });
+  return true;
 }
 
 /**
@@ -419,7 +460,67 @@ export async function handleHideSocket(data, userId) {
   const requester = game.users.get(userId);
   if (!combatant?.actor || !requester) return;
   if (!combatant.actor.testUserPermission(requester, 'OWNER')) return;
-  await commitHideOp(combatant, data.op);
+  await commitHideOp(combatant, data.op, data.motivo);
+}
+
+/**
+ * Grava o «chamar atenção» (no mestre ativo, ou no mestre que clicou). Confere que quem pediu é
+ * dono de quem chama atenção, que o aliado está na cena (escondido ou encontrado) e que os dados
+ * escolhidos ainda são os mesmos; os dados vêm dos participantes, não do pedido.
+ */
+export async function commitAttention(rawData, userId) {
+  const data = sanitizeAttention(rawData);
+  const stealth = findStealth();
+  const from = stealth?.combatants.get(data.fromId);
+  const to = stealth?.combatants.get(data.toId);
+  const requester = game.users.get(userId);
+  if (!stealth?.system.ativa || !from?.actor || !to || !requester || from.id === to.id) return;
+  if (!from.actor.testUserPermission(requester, 'OWNER')) return;
+  if (!to.system.escondeu) return;
+  const result = applyAttention(from.system.esconderijo, to.system.esconderijo, data.transfer, {
+    ...data.discard,
+  });
+  if (!result.valid) {
+    if (requester.id === game.user.id)
+      ui.notifications.warn(t('DESORDEM.Furtividade.Erro.Operacao'));
+    return;
+  }
+  await from.update({ system: { esconderijo: result.own } });
+  await to.update({ system: { esconderijo: result.ally, escondeu: true } });
+  await postStealthNotice({
+    actor: from.actor,
+    titulo: t('DESORDEM.Furtividade.Chat.Titulo'),
+    texto: t(
+      result.own.length === 0
+        ? 'DESORDEM.Furtividade.Chat.atencaoEncontrado'
+        : 'DESORDEM.Furtividade.Chat.atencao',
+      { nome: from.name, alvo: to.name, restam: result.own.length, n: result.ally.length },
+    ),
+  });
+}
+
+/**
+ * Pede o «chamar atenção». O mestre grava direto (só com os dados revelados); o jogador pede ao
+ * mestre ativo, porque a gravação mexe em dois participantes.
+ */
+export async function requestAttention(payload) {
+  const from = findStealth()?.combatants.get(payload?.fromId);
+  if (!from?.parent?.system.ativa || !from.actor?.isOwner) return;
+  if (game.user.isGM) {
+    if (!isRevealed(from.id)) return;
+    await commitAttention(payload, game.user.id);
+    return;
+  }
+  if (!game.users.activeGM) {
+    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.SemMestre'));
+    return;
+  }
+  game.socket.emit(SOCKET, { action: ATTENTION_SOCKET_ACTION, ...sanitizeAttention(payload) });
+}
+
+/** Quem pode receber o dado do «chamar atenção» de um participante (para a janela). */
+export function attentionTargets(stealth, combatantId) {
+  return attentionRecipients(stealthView(stealth).participantes, combatantId);
 }
 
 /**

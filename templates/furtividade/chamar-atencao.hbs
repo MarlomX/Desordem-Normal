@@ -1,0 +1,25 @@
+<div class="desordem-perseguicao-penalidade desordem-atencao">
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Atencao.Dica"}}</p>
+  <fieldset class="desordem-pre__grupo">
+    <legend>{{localize "DESORDEM.Furtividade.Atencao.Passar"}}</legend>
+    <div class="desordem-atencao__dados">
+      {{#each dados}}
+      <label class="desordem-atencao__dado"><input type="radio" name="passar" value="{{index}}" {{#if @first}}checked{{/if}}> {{dadoFace lados valor "grande"}}</label>
+      {{/each}}
+    </div>
+  </fieldset>
+  <fieldset class="desordem-pre__grupo">
+    <legend>{{localize "DESORDEM.Furtividade.Atencao.Descartar"}}</legend>
+    <div class="desordem-atencao__dados">
+      {{#each dados}}
+      <label class="desordem-atencao__dado"><input type="radio" name="descartar" value="{{index}}" {{#if @last}}checked{{/if}}> {{dadoFace lados valor "grande"}}</label>
+      {{/each}}
+    </div>
+  </fieldset>
+  <label class="desordem-perseguicao-penalidade__campo">
+    <span>{{localize "DESORDEM.Furtividade.Atencao.Aliado"}}</span>
+    <select name="aliado">
+      {{#each aliados}}<option value="{{id}}">{{name}}</option>{{/each}}
+    </select>
+  </label>
+</div>

@@ -767,7 +767,11 @@
         "escondeu": "{nome} se escondeu com {n} dados de esconderijo.",
         "zerou": "O mestre zerou o esconderijo de {nome}, que pode refazer o teste.",
         "distraiu": "{nome} distraiu as criaturas: {alvo} ganhou 1 dado de esconderijo ({n} no total).",
-        "escondeuDeNovo": "{nome} se escondeu melhor: +1 dado de esconderijo ({n} no total)."
+        "escondeuDeNovo": "{nome} se escondeu melhor: +1 dado de esconderijo ({n} no total).",
+        "chamativa": "{nome} fez uma ação chamativa e perdeu 1 dado de esconderijo (restam {n}).",
+        "chamativaEncontrado": "{nome} fez uma ação chamativa, perdeu o último dado e foi encontrado!",
+        "atencao": "{nome} chamou a atenção das criaturas: perdeu 2 dados (restam {restam}) e {alvo} ganhou 1 ({n} no total).",
+        "atencaoEncontrado": "{nome} chamou a atenção das criaturas e foi encontrado; {alvo} ganhou 1 dado ({n} no total)."
       },
       "Cartao": {
         "Titulo": "Furtividade",
@@ -793,7 +797,10 @@
         "Distrair": "Distrair (DT {dt})",
         "DistrairRegra": "Se passar, um dos dados rolados vira dado de esconderijo para você ou um aliado. Rolagem privada.",
         "Destino": "Quem recebe o dado",
-        "Voce": "{nome} (você)"
+        "Voce": "{nome} (você)",
+        "Chamativa": "Ação chamativa",
+        "ChamativaRegra": "Correr, fazer barulho... Ao rolar este teste, você perde o dado de esconderijo escolhido. Não vale com esconder-se nem distrair.",
+        "ChamativaDado": "Dado sacrificado"
       },
       "Barra": {
         "Titulo": "Teste de esconderijo",
@@ -905,7 +912,16 @@
       },
       "DistrairUsos": "Distrair",
       "DistrairDica": "Usos de distrair na cena, por qualquer personagem. A DT sobe 3 a cada uso.",
-      "ProximaDt": "próx. DT {dt}"
+      "ProximaDt": "próx. DT {dt}",
+      "Atencao": {
+        "Titulo": "Chamar atenção",
+        "Dica": "Você passa um dos seus dados para um aliado e descarta outro: perde dois para ele ganhar um.",
+        "Passar": "Dado que vai para o aliado",
+        "Descartar": "Dado descartado",
+        "Aliado": "Aliado",
+        "Confirmar": "Chamar atenção",
+        "Mesmo": "Escolha dados diferentes para passar e para descartar."
+      }
     }
   },
   "TYPES.Item.arma": "Arma",

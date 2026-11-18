@@ -59,6 +59,9 @@
         {{#if canEdit}}
         <button type="button" class="desordem-furtividade__adicionar" data-action="addHideDie" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Furtividade.Dados.Adicionar"}}"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
         {{/if}}
+        {{#if podeChamar}}
+        <button type="button" class="desordem-furtividade__adicionar" data-action="callAttention" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Furtividade.Atencao.Titulo"}}"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i></button>
+        {{/if}}
       </div>
       {{/if}}{{/if}}
     </li>

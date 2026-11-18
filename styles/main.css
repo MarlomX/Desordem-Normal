@@ -2458,3 +2458,32 @@
   justify-content: space-between;
   gap: 8px;
 }
+
+/* ===== Janela pré-teste com rolagem e chamar atenção (v0.17.7) ===== */
+/* A janela pré-teste cresceu (furtividade, distrair): o conteúdo rola e os botões ficam à vista */
+.desordem-normal.desordem-pre-teste .dialog-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Reserva: se a janela não tiver .dialog-content, ela mesma nunca passa da altura da tela */
+.desordem-normal.desordem-pre-teste .window-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.desordem-pre [data-chamativa-dado].is-oculta {
+  display: none;
+}
+
+.desordem-atencao__dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.desordem-atencao__dado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

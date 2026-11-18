@@ -126,9 +126,12 @@ test('operação limpa para o socket só leva os campos esperados', () => {
     lados: 6,
     valor: 2,
   });
-  assert.deepEqual(sanitizeHideOp({ type: 'remove', index: '0', lados: 6 }), {
+  // No descarte, `lados` e `valor` esperados viajam junto (conferidos ao gravar); extras não
+  assert.deepEqual(sanitizeHideOp({ type: 'remove', index: '0', lados: 6, extra: 'x' }), {
     type: 'remove',
     index: 0,
+    lados: 6,
+    valor: undefined,
   });
   // Índice vazio não pode virar 0 (descartaria o primeiro dado)
   const blank = sanitizeHideOp({ type: 'remove', index: '' });
