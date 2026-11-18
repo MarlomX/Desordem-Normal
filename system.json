@@ -38,10 +38,12 @@
       "personagem": {}
     },
     "Combat": {
-      "perseguicao": {}
+      "perseguicao": {},
+      "furtividade": {}
     },
     "Combatant": {
-      "participante": {}
+      "participante": {},
+      "furtivo": {}
     },
     "Item": {
       "arma": {},

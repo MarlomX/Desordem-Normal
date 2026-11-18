@@ -2,6 +2,8 @@
   "TYPES.Actor.personagem": "Character",
   "TYPES.Combat.perseguicao": "Chase",
   "TYPES.Combatant.participante": "Participant",
+  "TYPES.Combat.furtividade": "Stealth",
+  "TYPES.Combatant.furtivo": "Sneaking participant",
   "DESORDEM": {
     "Atributos": {
       "fisico": "Physical",
@@ -716,8 +718,62 @@
         "JaExiste": "A chase already exists. Delete it before creating another.",
         "JaAgiu": "{nome} has already acted this round.",
         "NaoEmAndamento": "The chase is not in progress.",
-                "SemMestre": "There is no GM online to add the advance points.",
+        "SemMestre": "There is no GM online to add the advance points.",
         "AvancoBloqueado": "The test no longer counts as an advance (already acted this round). It was rolled as a normal test."
+      }
+    },
+    "Furtividade": {
+      "Titulo": "Stealth",
+      "Nova": "New stealth scene",
+      "Abrir": "Open stealth scene",
+      "Criar": "Create stealth scene",
+      "SemCena": "There is no stealth scene right now.",
+      "SemCenaMestre": "Create a stealth scene to start preparing.",
+      "SemParticipantes": "Nobody is taking part yet. Add the characters who will sneak.",
+      "Adicionar": "Add participants",
+      "Remover": "Remove from the scene",
+      "Encerrar": "End",
+      "EncerrarConfirmar": "End the scene? Everyone's hiding dice will be erased.",
+      "Excluir": "Delete scene",
+      "ExcluirConfirmar": "Delete the stealth scene and its participant list?",
+      "Revelar": "See the hiding dice",
+      "RevelarConfirmar": "See the values of {nome}'s hiding dice? Everyone will be told in the chat.",
+      "Esconder": "Hide the dice again",
+      "DicaMestre": "You only see how many dice each one has. The eye reveals the values (with a chat notice) and lets you adjust them.",
+      "DicaJogador": "Only you see the values of your dice. The others only see how many you have.",
+      "Status": {
+        "preparacao": "Preparing",
+        "aguardando": "Not hidden yet",
+        "escondido": "Hidden",
+        "encontrado": "Found"
+      },
+      "Dados": {
+        "Quantidade": "Hiding dice",
+        "Nenhum": "No hiding dice.",
+        "Adicionar": "Add hiding die",
+        "AdicionarBotao": "Add",
+        "AdicionarDica": "Choose the die and the value rolled (for example, rolled at the table).",
+        "Lados": "Die",
+        "Valor": "Value rolled",
+        "Descartar": "Discard die",
+        "DescartarConfirmar": "Discard this hiding die? It does not come back."
+      },
+      "Chat": {
+        "Titulo": "Stealth",
+        "adicionou": "{nome} added a hiding die ({n} in total).",
+        "descartou": "{nome} lost a hiding die ({n} left).",
+        "encontrado": "{nome} lost the last hiding die and was found!",
+        "revelou": "{mestre} saw the values of {nome}'s hiding dice."
+      },
+      "Cartao": {
+        "Titulo": "Stealth",
+        "Dados": "hiding dice: {n}",
+        "AbrirDica": "The values of your dice are in the scene window."
+      },
+      "Erro": {
+        "JaExiste": "A stealth scene already exists. Delete it before creating another.",
+        "Operacao": "Could not change the hiding dice (invalid die or limit of 12).",
+        "SemMestre": "There is no GM online to save the hiding dice."
       }
     }
   },

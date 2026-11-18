@@ -11,6 +11,8 @@ import { renderAdvanceBar } from './chase/advance-card.js';
 import { renderEffortBar } from './chase/effort-card.js';
 import { renderPenaltyBar } from './chase/penalty-card.js';
 import { registerChaseHooks, registerChaseSocket, chaseApi } from './chase/hooks.js';
+import { FurtividadeModel, FurtivoModel } from './stealth/models.js';
+import { registerStealthHooks, registerStealthSocket, stealthApi } from './stealth/hooks.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
@@ -61,15 +63,22 @@ Hooks.once('init', () => {
   // Perseguição: subtipos de Combat e de Combatant (cópia dos objetos existentes, por segurança)
   CONFIG.Combat.dataModels = { ...CONFIG.Combat.dataModels, perseguicao: PerseguicaoModel };
   CONFIG.Combatant.dataModels = { ...CONFIG.Combatant.dataModels, participante: ParticipanteModel };
+  // Furtividade: mais um subtipo de Combat e de Combatant, no mesmo molde da perseguição
+  CONFIG.Combat.dataModels.furtividade = FurtividadeModel;
+  CONFIG.Combatant.dataModels.furtivo = FurtivoModel;
   CONFIG.Combat.typeLabels = {
     ...CONFIG.Combat.typeLabels,
     perseguicao: 'TYPES.Combat.perseguicao',
+    furtividade: 'TYPES.Combat.furtividade',
   };
   CONFIG.Combatant.typeLabels = {
     ...CONFIG.Combatant.typeLabels,
     participante: 'TYPES.Combatant.participante',
+    furtivo: 'TYPES.Combatant.furtivo',
   };
   registerChaseHooks();
+  // Depois da perseguição: o botão da furtividade fica logo abaixo do dela na aba de combate
+  registerStealthHooks();
   registerEquipmentGuards();
 
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, PersonagemSheet, {
@@ -102,6 +111,7 @@ Hooks.once('init', () => {
     healAlly,
     gainAnalysisMarkers,
     perseguicao: chaseApi,
+    furtividade: stealthApi,
   };
 });
 
@@ -121,5 +131,6 @@ Hooks.once('ready', () => {
   registerAbilitySocket();
   registerTableSocket();
   registerChaseSocket();
+  registerStealthSocket();
   console.log(`${SYSTEM_ID} | pronto`);
 });

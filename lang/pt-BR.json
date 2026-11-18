@@ -2,6 +2,8 @@
   "TYPES.Actor.personagem": "Personagem",
   "TYPES.Combat.perseguicao": "Perseguição",
   "TYPES.Combatant.participante": "Participante",
+  "TYPES.Combat.furtividade": "Furtividade",
+  "TYPES.Combatant.furtivo": "Furtivo",
   "DESORDEM": {
     "Atributos": {
       "fisico": "Físico",
@@ -716,8 +718,62 @@
         "JaExiste": "Já existe uma perseguição. Exclua-a antes de criar outra.",
         "JaAgiu": "{nome} já agiu nesta rodada.",
         "NaoEmAndamento": "A perseguição não está em andamento.",
-                "SemMestre": "Não há mestre online para somar os pontos de avanço.",
+        "SemMestre": "Não há mestre online para somar os pontos de avanço.",
         "AvancoBloqueado": "O teste não vale mais como avanço (já agiu nesta rodada). Ele foi feito como um teste comum."
+      }
+    },
+    "Furtividade": {
+      "Titulo": "Furtividade",
+      "Nova": "Nova furtividade",
+      "Abrir": "Abrir furtividade",
+      "Criar": "Criar cena de furtividade",
+      "SemCena": "Não há nenhuma cena de furtividade no momento.",
+      "SemCenaMestre": "Crie uma cena de furtividade para começar a preparar.",
+      "SemParticipantes": "Ninguém participa ainda. Adicione os personagens que vão se esgueirar.",
+      "Adicionar": "Adicionar participantes",
+      "Remover": "Remover da cena",
+      "Encerrar": "Encerrar",
+      "EncerrarConfirmar": "Encerrar a cena? Os dados de esconderijo de todos serão apagados.",
+      "Excluir": "Excluir cena",
+      "ExcluirConfirmar": "Excluir a cena de furtividade e a lista de participantes?",
+      "Revelar": "Ver os dados de esconderijo",
+      "RevelarConfirmar": "Ver os valores dos dados de esconderijo de {nome}? Todos serão avisados no chat.",
+      "Esconder": "Esconder os dados de novo",
+      "DicaMestre": "Você vê só a quantidade de dados de cada um. O olho revela os valores (com aviso no chat) e permite ajustá-los.",
+      "DicaJogador": "Só você vê os valores dos seus dados. Os demais veem apenas a quantidade.",
+      "Status": {
+        "preparacao": "Em preparação",
+        "aguardando": "Sem esconderijo",
+        "escondido": "Escondido",
+        "encontrado": "Encontrado"
+      },
+      "Dados": {
+        "Quantidade": "Dados de esconderijo",
+        "Nenhum": "Nenhum dado de esconderijo.",
+        "Adicionar": "Acrescentar dado de esconderijo",
+        "AdicionarBotao": "Acrescentar",
+        "AdicionarDica": "Escolha o dado e o valor que saiu (por exemplo, rolado na mesa).",
+        "Lados": "Dado",
+        "Valor": "Valor que saiu",
+        "Descartar": "Descartar dado",
+        "DescartarConfirmar": "Descartar este dado de esconderijo? Ele não volta."
+      },
+      "Chat": {
+        "Titulo": "Furtividade",
+        "adicionou": "{nome} acrescentou um dado de esconderijo ({n} no total).",
+        "descartou": "{nome} perdeu um dado de esconderijo (restam {n}).",
+        "encontrado": "{nome} perdeu o último dado de esconderijo e foi encontrado!",
+        "revelou": "{mestre} viu os valores dos dados de esconderijo de {nome}."
+      },
+      "Cartao": {
+        "Titulo": "Furtividade",
+        "Dados": "dados de esconderijo: {n}",
+        "AbrirDica": "Os valores dos seus dados estão na janela da cena."
+      },
+      "Erro": {
+        "JaExiste": "Já existe uma cena de furtividade. Exclua-a antes de criar outra.",
+        "Operacao": "Não foi possível alterar os dados de esconderijo (dado inválido ou limite de 12).",
+        "SemMestre": "Não há mestre online para gravar os dados de esconderijo."
       }
     }
   },

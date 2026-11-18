@@ -1,0 +1,7 @@
+<section class="desordem-perseguicao-cartao desordem-furtividade-cartao{{#unless furtividade}} is-oculta{{/unless}}">
+  <span class="desordem-perseguicao-cartao__titulo"><i class="fa-solid fa-user-secret" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Cartao.Titulo"}}</span>
+  {{#if furtividade}}
+  <span class="desordem-perseguicao-cartao__estado">{{#if furtividade.ativa}}{{localize "DESORDEM.Perseguicao.Rodada" rodada=furtividade.rodadaAtual}} · {{furtividade.statusLabel}} · {{localize "DESORDEM.Furtividade.Cartao.Dados" n=furtividade.count}}{{else}}{{localize "DESORDEM.Perseguicao.EmPreparacao"}}{{/if}}</span>
+  {{/if}}
+  <button type="button" class="desordem-perseguicao-cartao__abrir" data-action="openStealth" title="{{localize "DESORDEM.Furtividade.Cartao.AbrirDica"}}">{{localize "DESORDEM.Perseguicao.Cartao.Abrir"}}</button>
+</section>

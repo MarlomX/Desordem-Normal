@@ -1,0 +1,13 @@
+<div class="desordem-perseguicao-penalidade desordem-furtividade-novo">
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Dados.AdicionarDica"}}</p>
+  <label class="desordem-perseguicao-penalidade__campo">
+    <span>{{localize "DESORDEM.Furtividade.Dados.Lados"}}</span>
+    <select name="lados">
+      {{#each lados}}<option value="{{value}}" {{#if selected}}selected{{/if}}>d{{value}}</option>{{/each}}
+    </select>
+  </label>
+  <label class="desordem-perseguicao-penalidade__campo">
+    <span>{{localize "DESORDEM.Furtividade.Dados.Valor"}}</span>
+    <input type="number" name="valor" min="1" max="20" step="1" inputmode="numeric" autofocus>
+  </label>
+</div>

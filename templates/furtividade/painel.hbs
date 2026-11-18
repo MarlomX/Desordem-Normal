@@ -1,0 +1,82 @@
+<section class="desordem-perseguicao desordem-furtividade">
+  {{#if view}}
+  <header class="desordem-perseguicao__topo">
+    <span class="desordem-perseguicao__estado{{#if view.ativa}} is-ativa{{/if}}">{{#if view.ativa}}{{localize "DESORDEM.Perseguicao.EmAndamento"}}{{else}}{{localize "DESORDEM.Perseguicao.EmPreparacao"}}{{/if}}</span>
+    {{#if view.ativa}}
+    {{#if @root.isGM}}
+    <span class="desordem-perseguicao__valor">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.RodadaRotulo"}}</span>
+      <button type="button" class="desordem-perseguicao__passo" data-action="adjustRound" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="rodada" value="{{view.rodadaAtual}}" min="1" max="99" step="1" inputmode="numeric" aria-label="{{localize "DESORDEM.Perseguicao.RodadaRotulo"}}">
+      <button type="button" class="desordem-perseguicao__passo" data-action="adjustRound" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>
+    </span>
+    {{else}}
+    <span class="desordem-perseguicao__rodada">{{localize "DESORDEM.Perseguicao.Rodada" rodada=view.rodadaAtual}}</span>
+    {{/if}}
+    {{/if}}
+  </header>
+
+  {{#if view.ativa}}<p class="desordem-ficha__dica">{{#if @root.isGM}}{{localize "DESORDEM.Furtividade.DicaMestre"}}{{else}}{{localize "DESORDEM.Furtividade.DicaJogador"}}{{/if}}</p>{{/if}}
+
+  <h3 class="desordem-perseguicao__titulo"><i class="fa-solid fa-users" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Participantes"}} ({{view.participantes.length}})</h3>
+  {{#if view.participantes.length}}
+  <ul class="desordem-perseguicao__lista">
+    {{#each view.participantes}}
+    <li class="desordem-perseguicao__item desordem-furtividade__item is-{{status}}">
+      <div class="desordem-perseguicao__linha">
+        <img class="desordem-perseguicao__retrato" src="{{img}}" alt="">
+        <span class="desordem-perseguicao__nome">{{name}}</span>
+        {{#if @root.view.ativa}}
+        <span class="desordem-perseguicao__selo desordem-furtividade__selo is-{{status}}">{{statusLabel}}</span>
+        <span class="desordem-perseguicao__valor" title="{{localize "DESORDEM.Furtividade.Dados.Quantidade"}}"><i class="fa-solid fa-dice" aria-hidden="true"></i> <strong>{{count}}</strong></span>
+        {{/if}}
+        {{#if @root.isGM}}
+        {{#if @root.view.ativa}}
+        <button type="button" class="desordem-perseguicao__passo{{#if revealed}} is-ligado{{/if}}" data-action="toggleReveal" data-combatant-id="{{id}}" data-revealed="{{#if revealed}}true{{else}}false{{/if}}" title="{{#if revealed}}{{localize "DESORDEM.Furtividade.Esconder"}}{{else}}{{localize "DESORDEM.Furtividade.Revelar"}}{{/if}}"><i class="fa-solid {{#if revealed}}fa-eye{{else}}fa-eye-slash{{/if}}" aria-hidden="true"></i></button>
+        {{/if}}
+        <button type="button" class="desordem-perseguicao__remover" data-action="removeParticipant" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Furtividade.Remover"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        {{/if}}
+      </div>
+      {{#if @root.view.ativa}}{{#if visible}}
+      <div class="desordem-perseguicao__linha desordem-furtividade__dados">
+        {{#each dice}}
+        <span class="desordem-furtividade__dado">
+          {{dadoFace lados valor "grande"}}
+          {{#if ../canEdit}}<button type="button" class="desordem-furtividade__descartar" data-action="removeHideDie" data-combatant-id="{{../id}}" data-index="{{index}}" title="{{localize "DESORDEM.Furtividade.Dados.Descartar"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>{{/if}}
+        </span>
+        {{else}}
+        <span class="desordem-furtividade__vazio">{{localize "DESORDEM.Furtividade.Dados.Nenhum"}}</span>
+        {{/each}}
+        {{#if canEdit}}
+        <button type="button" class="desordem-furtividade__adicionar" data-action="addHideDie" data-combatant-id="{{id}}" title="{{localize "DESORDEM.Furtividade.Dados.Adicionar"}}"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+        {{/if}}
+      </div>
+      {{/if}}{{/if}}
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{localize "DESORDEM.Furtividade.SemParticipantes"}}</p>
+  {{/if}}
+
+  {{#if @root.isGM}}
+  <footer class="desordem-perseguicao__acoes">
+    <button type="button" data-action="addParticipants"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Adicionar"}}</button>
+    {{#if view.ativa}}
+    <button type="button" data-action="nextRound"><i class="fa-solid fa-forward-step" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.ProximaRodada"}}</button>
+    <button type="button" data-action="endStealth"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Encerrar"}}</button>
+    {{else}}
+    <button type="button" data-action="startStealth"><i class="fa-solid fa-play" aria-hidden="true"></i> {{localize "DESORDEM.Perseguicao.Iniciar"}}</button>
+    {{/if}}
+    <button type="button" class="desordem-perseguicao__perigo" data-action="deleteStealth"><i class="fa-solid fa-trash" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Excluir"}}</button>
+  </footer>
+  {{/if}}
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{#if @root.isGM}}{{localize "DESORDEM.Furtividade.SemCenaMestre"}}{{else}}{{localize "DESORDEM.Furtividade.SemCena"}}{{/if}}</p>
+  {{#if access.canCreate}}
+  <footer class="desordem-perseguicao__acoes">
+    <button type="button" data-action="createStealth"><i class="fa-solid fa-user-secret" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Criar"}}</button>
+  </footer>
+  {{/if}}
+  {{/if}}
+</section>

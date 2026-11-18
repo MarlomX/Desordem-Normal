@@ -37,6 +37,8 @@ import PerseguicaoApp from '../chase/app.js';
 import { withChaseAdvance } from '../chase/advance.js';
 import { recoverBreath } from '../chase/breath.js';
 import { chaseCardFor, chaseInfoFor } from '../chase/store.js';
+import FurtividadeApp from '../stealth/app.js';
+import { stealthCardFor } from '../stealth/store.js';
 import {
   buildAttributeRows,
   buildSkillRows,
@@ -117,6 +119,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       newScene: PersonagemSheet.#onNewScene,
       openChase: PersonagemSheet.#onOpenChase,
       recoverBreath: PersonagemSheet.#onRecoverBreath,
+      openStealth: PersonagemSheet.#onOpenStealth,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
@@ -132,6 +135,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   static PARTS = {
     cabecalho: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-cabecalho.hbs` },
     perseguicao: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-perseguicao.hbs` },
+    furtividade: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-furtividade.hbs` },
     abas: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-abas.hbs` },
     testes: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-testes.hbs`, scrollable: [''] },
     habilidades: {
@@ -179,6 +183,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     return {
       ...context,
       perseguicao: chaseCardFor(this.document),
+      furtividade: stealthCardFor(this.document),
       sheetTabs: tabs.list,
       tabState: tabs.state,
       pvPercent: resourcePercent(system.pv.value, system.pv.max),
@@ -758,6 +763,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Recupera o fôlego na perseguição (cartão da ficha): ação da rodada, marca «já agiu». */
   static async #onRecoverBreath() {
     await recoverBreath(this.document);
+  }
+
+  /** Abre a janela da cena de furtividade (cartão da ficha). */
+  static async #onOpenStealth() {
+    await FurtividadeApp.open();
   }
 
   /** Nova cena: reinicia contadores, recursos e efeitos de cena deste personagem. */

@@ -2126,3 +2126,59 @@
   flex-direction: column;
   gap: 2px;
 }
+
+/* ===== Furtividade: janela, dados de esconderijo e cartão da ficha (v0.17.0) ===== */
+/* A janela reaproveita o layout da perseguição (classes desordem-perseguicao__*) */
+.desordem-furtividade__item.is-encontrado {
+  border-color: var(--dn-pv);
+}
+
+.desordem-furtividade__selo.is-escondido {
+  border-color: var(--dn-accent-line);
+  color: var(--dn-accent);
+}
+
+.desordem-furtividade__selo.is-encontrado {
+  border-color: var(--dn-pv);
+  color: var(--dn-pv);
+}
+
+.desordem-furtividade__dados {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.desordem-furtividade__dado {
+  position: relative;
+  display: inline-flex;
+}
+
+.desordem-furtividade__descartar {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 0.6em;
+  line-height: 1;
+}
+
+.desordem-furtividade__adicionar {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+}
+
+.desordem-furtividade__vazio {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.desordem-furtividade-cartao .desordem-perseguicao-cartao__estado {
+  font-family: var(--font-primary), sans-serif;
+}
