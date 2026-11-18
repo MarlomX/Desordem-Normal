@@ -170,6 +170,7 @@ import {
   breathLimit,
   effortDiceCount,
   advanceBlockReason,
+  advanceWarning,
   advanceDtField,
   advanceGain,
   advanceSuccess,
@@ -183,6 +184,12 @@ import {
   reserveAdvance,
   ADVANCE_CLAIM_TIMEOUT_MS,
   applyEffortLoss,
+  createEffortFlag,
+  finishEffortFlag,
+  effortBarView,
+  parseTypedValue,
+  canEditChaseNumbers,
+  TRUSTED_ROLE,
   adjustField,
   isAdjustableField,
   nextRoundState,
@@ -274,7 +281,7 @@ test('ganho de PA: rolagem alta ao passar (as duas no crítico), baixa ao falhar
   );
 });
 
-test('bloqueios do avanço: não iniciada, já agiu, perícia usada', () => {
+test('bloqueios do avanço: não iniciada e já agiu (perícia usada só avisa)', () => {
   const participant = { ultimaRodada: 1, periciasUsadas: ['luta'] };
   const base = { ativa: true, rodadaAtual: 2, participant, skillKey: 'atletismo' };
   assert.equal(advanceBlockReason(base), null);
@@ -284,13 +291,16 @@ test('bloqueios do avanço: não iniciada, já agiu, perícia usada', () => {
     advanceBlockReason({ ...base, participant: { ...participant, ultimaRodada: 2 } }),
     'agiu',
   );
-  assert.equal(advanceBlockReason({ ...base, skillKey: 'luta' }), 'pericia');
+  // perícia já usada não bloqueia mais: a decisão é do mestre
+  assert.equal(advanceBlockReason({ ...base, skillKey: 'luta' }), null);
   assert.equal(advanceBlockReason({ ...base, skillKey: 'acrobacia' }), null);
-  // a perícia usada só importa se não for Atletismo
-  assert.equal(
-    advanceBlockReason({ ...base, participant: { ...participant, periciasUsadas: ['atletismo'] } }),
-    null,
-  );
+});
+
+test('lembrete de perícia já usada: só para quem não é Atletismo', () => {
+  const participant = { periciasUsadas: ['luta', 'atletismo'] };
+  assert.equal(advanceWarning({ participant, skillKey: 'luta' }), 'pericia');
+  assert.equal(advanceWarning({ participant, skillKey: 'acrobacia' }), null);
+  assert.equal(advanceWarning({ participant, skillKey: 'atletismo' }), null);
 });
 
 test('applyAdvanceCosts gasta fôlego e registra rodada, esforço e perícia (sem mexer nos PA)', () => {
@@ -511,4 +521,81 @@ test('o valor do botão acompanha a Análise: trocar os dados do cartão muda os
   const harder = createAdvanceFlag({ combatantId: 'a', skillKey: 'atletismo', dt: 12 });
   const failed = advanceBarView(harder, resolveWithValues(plan, [5, 6]), viewer);
   assert.deepEqual([failed.kind, failed.pa], ['falhou', 5]);
+});
+
+// ---- 0.16.6: esforço extra pelo botão, campos digitáveis ----
+test('registro do esforço extra nasce pendente, com a perda rolada', () => {
+  const flag = createEffortFlag({ actorUuid: 'Actor.abc', loss: 5.9, dice: 2 });
+  assert.deepEqual(flag, {
+    actorUuid: 'Actor.abc',
+    perda: 5,
+    dados: 2,
+    estado: 'pendente',
+    aplicado: null,
+    zerou: false,
+  });
+  assert.equal(createEffortFlag({ actorUuid: 'x', loss: -3, dice: 0 }).perda, 0);
+});
+
+test('barra do esforço extra: botão de uso único, reserva e conclusão', () => {
+  const flag = createEffortFlag({ actorUuid: 'Actor.abc', loss: 4, dice: 1 });
+  const viewer = { canApply: true, now: 1000 };
+  const pending = effortBarView(flag, viewer);
+  assert.deepEqual(
+    [pending.loss, pending.applied, pending.busy, pending.showButton],
+    [4, false, false, true],
+  );
+  assert.equal(effortBarView(flag, { ...viewer, canApply: false }).showButton, false);
+
+  const reserved = reserveAdvance(flag, 1000);
+  assert.equal(reserveAdvance(reserved, 1500), null);
+  const busy = effortBarView(reserved, viewer);
+  assert.deepEqual([busy.busy, busy.showButton], [true, false]);
+  // reserva parada há tempo demais libera o botão de novo
+  const stale = effortBarView(reserved, { ...viewer, now: 1000 + ADVANCE_CLAIM_TIMEOUT_MS + 1 });
+  assert.deepEqual([stale.busy, stale.showButton], [false, true]);
+
+  const done = finishEffortFlag(reserved, { applied: 3, reachedZero: true });
+  const view = effortBarView(done, viewer);
+  assert.deepEqual(
+    [view.applied, view.appliedLoss, view.reachedZero, view.showButton],
+    [true, 3, true, false],
+  );
+  assert.equal(reserveAdvance(done, 2000), null);
+});
+
+test('o PV do esforço extra usa o PV de agora e nunca fica abaixo de 0', () => {
+  assert.deepEqual(applyEffortLoss(12, 4), { pv: 8, reachedZero: false });
+  assert.deepEqual(applyEffortLoss(3, 4), { pv: 0, reachedZero: true });
+});
+
+test('valor digitado: inteiro dentro dos limites; vazio e texto não valem', () => {
+  assert.deepEqual(parseTypedValue('pa', '17'), { valid: true, value: 17 });
+  assert.deepEqual(parseTypedValue('pa', ' 4,7 '), { valid: true, value: 4 });
+  assert.deepEqual(parseTypedValue('pa', -3), { valid: true, value: 0 });
+  assert.deepEqual(parseTypedValue('pa', '99999'), { valid: true, value: 10000 });
+  assert.deepEqual(parseTypedValue('folego', '9'), { valid: true, value: 6 });
+  assert.deepEqual(parseTypedValue('folego', '0'), { valid: true, value: 0 });
+  assert.deepEqual(parseTypedValue('dt', '99'), { valid: true, value: 40 });
+  assert.deepEqual(parseTypedValue('dt', '0'), { valid: true, value: 1 });
+  for (const bad of ['', '   ', 'abc', null, undefined, 'Infinity']) {
+    assert.equal(parseTypedValue('pa', bad).valid, false);
+  }
+  assert.equal(parseTypedValue('esforcoExtra', '3').valid, false);
+});
+
+test('os limites digitados são os mesmos dos botões −/+', () => {
+  for (const field of ['pa', 'folego']) {
+    assert.equal(parseTypedValue(field, '1000000').value, adjustField(field, 1_000_000, 0));
+  }
+  assert.equal(parseTypedValue('folego', '7').value, adjustField('folego', 6, 1));
+});
+
+test('quem edita PA e fôlego: mestre sempre; confiável só o próprio; jogador comum não', () => {
+  assert.equal(TRUSTED_ROLE, 2);
+  assert.equal(canEditChaseNumbers({ isGM: true, role: 4, isOwner: false }), true);
+  assert.equal(canEditChaseNumbers({ isGM: false, role: 2, isOwner: true }), true);
+  assert.equal(canEditChaseNumbers({ isGM: false, role: 2, isOwner: false }), false);
+  assert.equal(canEditChaseNumbers({ isGM: false, role: 1, isOwner: true }), false);
+  assert.equal(canEditChaseNumbers({ isGM: false, role: 0, isOwner: true }), false);
 });

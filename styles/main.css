@@ -2012,3 +2012,27 @@
   flex: 1 1 auto;
   font-size: 0.9em;
 }
+
+/* ===== Perseguição: campos digitáveis e lembrete (v0.16.6) ===== */
+.desordem-perseguicao__campo {
+  flex: 0 0 auto;
+  width: 3.2em;
+  height: 22px;
+  margin: 0;
+  padding: 0 2px;
+  text-align: center;
+  font-family: var(--dn-fonte-numeros);
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.desordem-perseguicao__campo::-webkit-outer-spin-button,
+.desordem-perseguicao__campo::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.desordem-pre__aviso {
+  margin: 2px 0 0;
+  font-size: 0.8em;
+}

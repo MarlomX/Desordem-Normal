@@ -70,7 +70,7 @@ test('o fôlego respeita o que o personagem tem, o máximo por teste e os espaç
 });
 
 test('avanço bloqueado ignora a escolha', () => {
-  for (const blocked of ['agiu', 'pericia']) {
+  for (const blocked of ['agiu', 'inativa']) {
     const model = buildRollModel({ ...baseInput, chase: chase({ blocked }) });
     const evaluated = evaluateSelection(model, withAdvance({ on: true, breath: 2, effort: true }));
     assert.equal(evaluated.avanco.on, false);
@@ -168,4 +168,13 @@ test('a DT do avanço é a do campo da janela, e a da perseguição quando o tes
 test('a DT da perseguição inválida volta ao padrão 10', () => {
   const model = buildRollModel({ ...baseInput, showDt: false, chase: chase({ dt: 'x' }) });
   assert.equal(evaluateSelection(model, withAdvance({ on: true })).avanco.dt, 10);
+});
+
+test('perícia já usada só gera um lembrete: o avanço continua valendo', () => {
+  const model = buildRollModel({ ...baseInput, chase: chase({ warning: 'pericia' }) });
+  assert.equal(model.avanco.warning, 'pericia');
+  assert.equal(model.avanco.blocked, null);
+  const evaluated = evaluateSelection(model, withAdvance({ on: true, breath: 1, effort: false }));
+  assert.equal(evaluated.avanco.on, true);
+  assert.equal(buildRollModel({ ...baseInput, chase: chase() }).avanco.warning, null);
 });

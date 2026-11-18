@@ -639,13 +639,18 @@
         "SemFolego": "No breath available.",
         "Esforco": "Extra effort: +1 step on the skill and lose {dados}d4 HP",
         "Bloqueio": {
-          "agiu": "Already acted this round. To redo it, uncheck \"Already acted\" in the chase window.",
-          "pericia": "{pericia} was already used to advance. Only Athletics can repeat."
+          "agiu": "Already acted this round. To redo it, uncheck \"Already acted\" in the chase window."
+        },
+        "Aviso": {
+          "pericia": "Already used this scene (by the rules, only once; the GM decides)."
         }
       },
       "Chat": {
         "EsforcoTitulo": "{nome} makes an extra effort",
-        "Esforco": "Extra effort: lost {perda} HP ({dados}d4)",
+        "Esforco": "Extra effort: rolled {perda} HP of loss ({dados}d4)",
+        "EsforcoPendente": "The HP has not been deducted yet: {pv} HP to apply.",
+        "EsforcoAplicar": "Apply {pv} HP",
+        "EsforcoAplicado": "{pv} HP deducted.",
         "EsforcoZero": "HP reached 0: make the injury test on the sheet."
       },
       "Barra": {
@@ -667,7 +672,7 @@
         "JaAgiu": "{nome} has already acted this round.",
         "NaoEmAndamento": "The chase is not in progress.",
                 "SemMestre": "There is no GM online to add the advance points.",
-        "AvancoBloqueado": "The test no longer counts as an advance (already acted or the skill was already used). It was rolled as a normal test."
+        "AvancoBloqueado": "The test no longer counts as an advance (already acted this round). It was rolled as a normal test."
       }
     }
   },

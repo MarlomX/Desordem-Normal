@@ -639,13 +639,18 @@
         "SemFolego": "Sem fôlego disponível.",
         "Esforco": "Esforço extra: +1 passo na perícia e perde {dados}d4 PV",
         "Bloqueio": {
-          "agiu": "Já agiu nesta rodada. Para refazer, desmarque \"Já agiu\" na janela da perseguição.",
-          "pericia": "{pericia} já foi usada para avançar. Só Atletismo pode se repetir."
+          "agiu": "Já agiu nesta rodada. Para refazer, desmarque \"Já agiu\" na janela da perseguição."
+        },
+        "Aviso": {
+          "pericia": "Já usada nesta cena (pela regra, só uma vez; o mestre decide)."
         }
       },
       "Chat": {
         "EsforcoTitulo": "{nome} faz esforço extra",
-        "Esforco": "Esforço extra: perdeu {perda} PV ({dados}d4)",
+        "Esforco": "Esforço extra: rolou {perda} PV de perda ({dados}d4)",
+        "EsforcoPendente": "O PV ainda não foi descontado: {pv} PV a aplicar.",
+        "EsforcoAplicar": "Aplicar {pv} PV",
+        "EsforcoAplicado": "{pv} PV descontados.",
         "EsforcoZero": "Os PV chegaram a 0: faça o teste de lesão na ficha."
       },
       "Barra": {
@@ -667,7 +672,7 @@
         "JaAgiu": "{nome} já agiu nesta rodada.",
         "NaoEmAndamento": "A perseguição não está em andamento.",
                 "SemMestre": "Não há mestre online para somar os pontos de avanço.",
-        "AvancoBloqueado": "O teste não vale mais como avanço (já agiu ou a perícia já foi usada). Ele foi feito como um teste comum."
+        "AvancoBloqueado": "O teste não vale mais como avanço (já agiu nesta rodada). Ele foi feito como um teste comum."
       }
     }
   },

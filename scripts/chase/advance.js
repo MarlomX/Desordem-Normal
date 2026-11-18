@@ -4,8 +4,8 @@
  * liga a escolha feita lá ao teste e ao que acontece com ele:
  *   - antes da rolagem: o fôlego gasto vira dados d6 e o esforço extra, +1 passo na perícia, e o
  *     registro do avanço (com a DT escolhida) é guardado na mensagem do teste;
- *   - na rolagem: gasta o fôlego, marca "já agiu", anota a perícia e, se houve esforço extra, rola e
- *     desconta os d4 de PV;
+ *   - na rolagem: gasta o fôlego, marca "já agiu", anota a perícia e, se houve esforço extra, rola
+ *     os d4 e posta o valor no chat (o PV só é descontado pelo botão do cartão, effort-card.js);
  *   - os PA NÃO são somados aqui: o cartão do teste ganha um botão (advance-card.js), que soma
  *     depois, lendo os dados como estão naquele momento (a Análise pode ter mudado o resultado).
  * Se o jogador cancelar a janela ou o teste der erro, nada é gasto nem gravado.
@@ -13,8 +13,8 @@
 import { SYSTEM_ID } from '../config.js';
 import {
   applyAdvanceCosts,
-  applyEffortLoss,
   createAdvanceFlag,
+  createEffortFlag,
   effortDiceCount,
 } from '../rolls/chase.js';
 import { postMessage, render } from '../rolls/chat.js';
@@ -79,19 +79,19 @@ async function payCosts({ actor, info, skillKey, avanco }) {
     }),
   );
 
-  // Esforço extra: rola os d4 e desconta os PV. Chegar a 0 só avisa; o teste de lesão é do jogador.
+  // Esforço extra: rola os d4 e mostra o valor no chat. O PV NÃO é descontado aqui: o jogador
+  // aplica pelo botão do cartão (effort-card.js). Nunca dispara teste de lesão sozinho.
   if (!avanco.effort) return;
   const dice = effortDiceCount(current.esforcoExtra);
   const roll = await new Roll(`${dice}d4`).evaluate();
-  const { pv, reachedZero } = applyEffortLoss(actor.system.pv.value, roll.total);
-  await actor.update({ 'system.pv.value': pv });
   await postMessage({
     actor,
     rolls: [roll],
     content: await render(`systems/${SYSTEM_ID}/templates/chat/avanco.hbs`, {
       titulo: t('DESORDEM.Perseguicao.Chat.EsforcoTitulo', { nome: actor.name }),
       esforco: t('DESORDEM.Perseguicao.Chat.Esforco', { perda: roll.total, dados: dice }),
-      aviso: reachedZero ? t('DESORDEM.Perseguicao.Chat.EsforcoZero') : '',
+      aviso: '',
     }),
+    flags: { esforco: createEffortFlag({ actorUuid: actor.uuid, loss: roll.total, dice }) },
   });
 }

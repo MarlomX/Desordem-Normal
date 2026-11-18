@@ -4,7 +4,7 @@
  * encontro (veja store.js) e a janela é redesenhada pelos hooks de hooks.js.
  */
 import { SYSTEM_ID } from '../config.js';
-import { addableActors } from '../rolls/chase.js';
+import { addableActors, parseTypedValue } from '../rolls/chase.js';
 import {
   addParticipants,
   adjustParticipant,
@@ -19,6 +19,7 @@ import {
   removeParticipant,
   setActed,
   setChaseDt,
+  setParticipantField,
   startChase,
 } from './store.js';
 
@@ -70,10 +71,73 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
     return app;
   }
 
-  /** Redesenha a janela se ela estiver aberta (chamado quando o estado muda). */
+  /** A pessoa está digitando num campo e ainda não confirmou (Enter ou sair do campo)? */
+  #typing = false;
+
+  /** Chegou uma atualização enquanto ela digitava: a janela é redesenhada quando terminar. */
+  #renderPending = false;
+
+  /**
+   * Redesenha a janela se ela estiver aberta (chamado quando o estado muda). Se alguém está
+   * digitando num campo, espera: redesenhar agora apagaria o que está sendo digitado.
+   */
   static refresh() {
     const app = PerseguicaoApp.#instance;
-    if (app?.rendered) app.render();
+    if (!app?.rendered) return;
+    if (app.#typing) {
+      app.#renderPending = true;
+      return;
+    }
+    app.render();
+  }
+
+  /**
+   * Depois de cada desenho, liga os campos digitáveis (PA, fôlego e DT). As ações do
+   * ApplicationV2 (`data-action`) só tratam clique, então os campos usam `data-campo` e estes
+   * ouvintes. O valor só é gravado ao confirmar (evento `change`: Enter ou sair do campo), nunca a
+   * cada tecla.
+   */
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+    for (const input of this.element.querySelectorAll('input[data-campo]')) {
+      input.addEventListener('input', () => {
+        this.#typing = true;
+      });
+      input.addEventListener('change', () => this.#commitField(input));
+      input.addEventListener('keydown', (event) => {
+        // Enter confirma: tirar o foco do campo dispara o `change`
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        input.blur();
+      });
+      input.addEventListener('blur', () => {
+        this.#typing = false;
+        if (!this.#renderPending) return;
+        this.#renderPending = false;
+        this.render();
+      });
+    }
+  }
+
+  /**
+   * Grava o valor digitado. Valor inválido (vazio, texto) ou sem permissão não grava nada. Em
+   * qualquer caso a janela é redesenhada em seguida, o que devolve o campo ao valor guardado.
+   * O mestre decide a DT; PA e fôlego seguem a regra de `canEditParticipant` (store.js).
+   */
+  async #commitField(input) {
+    this.#typing = false;
+    this.#renderPending = false;
+    const chase = findChase();
+    if (chase) {
+      const { campo, combatantId } = input.dataset;
+      if (campo === 'dt') {
+        const typed = parseTypedValue('dt', input.value);
+        if (typed.valid && game.user.isGM) await setChaseDt(chase, typed.value);
+      } else {
+        await setParticipantField(chase, combatantId, campo, input.value);
+      }
+    }
+    this.render();
   }
 
   async _prepareContext(options) {
@@ -109,7 +173,7 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
     if (chase) await setActed(chase, target.dataset.combatantId, target.checked);
   }
 
-  /** Ajuste manual de PA ou fôlego (só o mestre). */
+  /** Ajuste de PA ou fôlego pelos botões (o mestre, ou o jogador confiável no próprio personagem). */
   static async #onAdjustParticipant(event, target) {
     const chase = findChase();
     const { combatantId, field } = target.dataset;

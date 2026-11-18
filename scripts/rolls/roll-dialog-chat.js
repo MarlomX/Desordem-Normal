@@ -267,6 +267,10 @@ export async function askRollChoices(
             pericia: dice.skillLabel,
           })
         : '',
+      // Lembrete pequeno (não bloqueia): perícia já usada para avançar
+      aviso: model.avanco.warning
+        ? t(`DESORDEM.Perseguicao.Pre.Aviso.${model.avanco.warning}`)
+        : '',
       dt: model.avanco.dt,
       hasBreath: model.avanco.breathMax > 0,
       folego: chase.folego,

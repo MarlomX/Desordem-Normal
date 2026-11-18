@@ -23,6 +23,7 @@
       <span class="desordem-pre__custo">{{localize "DESORDEM.Perseguicao.Pre.Regra"}}</span>
       {{#if avanco.motivo}}<span class="desordem-pre__motivo">{{avanco.motivo}}</span>{{/if}}
     </label>
+    {{#if avanco.aviso}}<p class="desordem-ficha__dica desordem-pre__aviso">{{avanco.aviso}}</p>{{/if}}
     {{#unless avanco.motivo}}
     <div class="desordem-pre__avanco is-oculta" data-avanco-detalhes>
       {{#if avanco.hasBreath}}

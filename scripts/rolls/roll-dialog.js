@@ -96,6 +96,7 @@ export function buildRollModel({
   const avanco = chase
     ? {
         blocked: chase.blocked ?? null,
+        warning: chase.warning ?? null,
         breathMax: breathLimit(chase.folego),
         effortDice: chase.effortDice,
         dt: normalizeChaseDt(chase.dt),

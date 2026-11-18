@@ -213,16 +213,22 @@ export function advanceDtField({ on, current, saved, dt = ADVANCE_DT }) {
 }
 
 /**
- * Por que o teste não pode ser usado como avanço agora (ou `null` se pode):
- * `inativa` (perseguição não está em andamento), `agiu` (já agiu nesta rodada; o jogador desmarca
- * "já agiu" na janela da perseguição para refazer) ou `pericia` (perícia, que não é Atletismo, já
- * usada).
+ * Por que o teste não pode ser usado como avanço agora (ou `null` se pode): `inativa` (perseguição
+ * não está em andamento) ou `agiu` (já agiu nesta rodada; o jogador desmarca "já agiu" na janela
+ * da perseguição para refazer). Perícia já usada NÃO bloqueia mais (veja `advanceWarning`).
  */
-export function advanceBlockReason({ ativa, rodadaAtual, participant, skillKey }) {
+export function advanceBlockReason({ ativa, rodadaAtual, participant }) {
   if (!ativa || rodadaAtual < 1) return 'inativa';
   if (!canAdvance({ ativa, rodadaAtual, participant })) return 'agiu';
-  if (!skillAllowed(skillKey, participant.periciasUsadas)) return 'pericia';
   return null;
+}
+
+/**
+ * Lembrete (não bloqueia) mostrado na janela pré-teste: `pericia` se a perícia, que não é Atletismo,
+ * já foi usada para avançar nesta perseguição. Pela regra só vale uma vez, mas o mestre decide.
+ */
+export function advanceWarning({ participant, skillKey }) {
+  return skillAllowed(skillKey, participant.periciasUsadas) ? null : 'pericia';
 }
 
 /**
@@ -305,16 +311,90 @@ export function advanceBarView(flag, result, { canApply, now }) {
   };
 }
 
+// ---------------------------------------------------------------------------------------------
+// Esforço extra: o PV só é descontado quando o jogador clica no cartão do chat (0.16.6)
+// ---------------------------------------------------------------------------------------------
+
+/** Registro de um esforço extra recém-rolado: o PV ainda não foi descontado. */
+export function createEffortFlag({ actorUuid, loss, dice }) {
+  return {
+    actorUuid,
+    perda: Math.max(0, Math.trunc(loss)),
+    dados: Math.max(1, Math.trunc(dice)),
+    estado: 'pendente',
+    aplicado: null,
+    zerou: false,
+  };
+}
+
+/** Conclui o clique: guarda quantos PV saíram de fato (nunca abaixo de 0) e se chegou a 0. */
+export function finishEffortFlag(flag, { applied, reachedZero }) {
+  return { ...flag, estado: 'aplicado', aplicado: applied, zerou: reachedZero, reservadoEm: null };
+}
+
+/**
+ * O que a barra do esforço extra mostra. O botão é de uso único (a reserva contra o duplo clique é
+ * a mesma do botão dos PA).
+ * @param {object} flag Registro do esforço (`createEffortFlag`).
+ * @param {{canApply: boolean, now: number}} viewer
+ */
+export function effortBarView(flag, { canApply, now }) {
+  return {
+    loss: flag.perda,
+    applied: flag.estado === 'aplicado',
+    appliedLoss: flag.aplicado,
+    reachedZero: Boolean(flag.zerou),
+    busy: flag.estado === 'aplicando' && !isStaleClaim(flag, now),
+    showButton: canApply && isAdvanceClaimable(flag, now),
+  };
+}
+
 /** PV depois do esforço extra (nunca abaixo de 0) e se chegou a 0 (o jogador faz o teste de lesão). */
 export function applyEffortLoss(pv, loss) {
   const next = Math.max(0, pv - loss);
   return { pv: next, reachedZero: loss > 0 && next === 0 };
 }
 
-/** Valor de um campo ajustado à mão (nunca abaixo de 0; fôlego nunca acima do máximo). */
+/** Valor de um campo ajustado à mão (nunca abaixo de 0; fôlego e PA têm um máximo). */
 export function adjustField(field, value, delta) {
   const next = Math.max(0, Math.trunc(value + delta));
-  return field === 'folego' ? Math.min(MAX_BREATH, next) : next;
+  return Math.min(field === 'folego' ? MAX_BREATH : MAX_POINTS, next);
+}
+
+/** Maior PA que a janela aceita (o mesmo limite que o socket aceita de um jogador). */
+export const MAX_POINTS = 10_000;
+
+/**
+ * Valida um valor digitado na janela da perseguição (campos `pa`, `folego` ou `dt`).
+ * Vazio, texto ou número com vírgula/decimal inválido não valem (`valid: false`: o campo volta ao
+ * valor anterior). Decimais são cortados (4,7 vira 4); os limites são os mesmos dos botões −/+:
+ * PA de 0 a 10 000, fôlego de 0 a 6 e DT de 1 a 40.
+ * @param {'pa'|'folego'|'dt'} field
+ * @param {string|number} raw O que a pessoa digitou.
+ * @returns {{valid: boolean, value?: number}}
+ */
+export function parseTypedValue(field, raw) {
+  if (raw === null || raw === undefined || String(raw).trim() === '') return { valid: false };
+  const number = Number(String(raw).trim().replace(',', '.'));
+  if (!Number.isFinite(number)) return { valid: false };
+  const whole = Math.trunc(number);
+  if (field === 'dt') return { valid: true, value: normalizeChaseDt(whole) };
+  if (field === 'folego') return { valid: true, value: Math.min(MAX_BREATH, Math.max(0, whole)) };
+  if (field === 'pa') return { valid: true, value: Math.min(MAX_POINTS, Math.max(0, whole)) };
+  return { valid: false };
+}
+
+/** Papel (role) mínimo de um jogador "confiável" no Foundry (CONST.USER_ROLES.TRUSTED). */
+export const TRUSTED_ROLE = 2;
+
+/**
+ * Quem pode digitar ou ajustar PA e fôlego de um participante: o mestre (de qualquer um) e o
+ * jogador confiável (Trusted Player do Foundry), só do próprio personagem. Jogador comum não edita.
+ * @param {{isGM: boolean, role: number, isOwner: boolean}} user `role` é `game.user.role`.
+ */
+export function canEditChaseNumbers({ isGM, role, isOwner }) {
+  if (isGM) return true;
+  return Boolean(isOwner) && Number(role) >= TRUSTED_ROLE;
 }
 
 /** Estado ao passar para a próxima rodada. */

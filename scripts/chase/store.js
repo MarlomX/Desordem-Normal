@@ -9,6 +9,8 @@ import {
   CHASE_COMBATANT_TYPE,
   adjustField,
   advanceBlockReason,
+  advanceWarning,
+  canEditChaseNumbers,
   chaseAccess,
   effortDiceCount,
   hasActed,
@@ -16,6 +18,7 @@ import {
   isAdjustableField,
   nextRoundState,
   normalizeChaseDt,
+  parseTypedValue,
   participantReset,
   participantStart,
   startState,
@@ -53,6 +56,15 @@ export function userOwnsParticipant(chase) {
 /** Faces do dado de Vigor de um ator (o fôlego inicial depende dele). */
 const vigorOf = (actor) => actor?.system?.pericias?.vigor ?? 4;
 
+/** O usuário atual pode digitar ou ajustar PA e fôlego deste participante? */
+export function canEditParticipant(combatant) {
+  return canEditChaseNumbers({
+    isGM: game.user.isGM,
+    role: game.user.role,
+    isOwner: Boolean(combatant?.actor?.isOwner),
+  });
+}
+
 /** Dados de um participante prontos para os templates. */
 function participantView(chase, combatant) {
   const { ativa, rodadaAtual } = chase.system;
@@ -67,6 +79,8 @@ function participantView(chase, combatant) {
     agiu: acted,
     // Só quem é dono do personagem (e o mestre) marca ou desmarca "já agiu"
     podeMarcar: Boolean(combatant.actor?.isOwner),
+    // PA e fôlego: o mestre edita todos; só o jogador confiável edita o próprio personagem
+    podeEditar: canEditParticipant(combatant),
   };
 }
 
@@ -116,7 +130,8 @@ export function chaseCardFor(actor) {
 /**
  * Dados para a janela pré-teste oferecer "usar como teste de avanço", ou `null` se a opção não
  * deve aparecer (sem perseguição em andamento, personagem fora dela ou sem permissão).
- * `blocked` diz por que o teste ainda não pode valer como avanço (já agiu, perícia já usada).
+ * `blocked` diz por que o teste ainda não pode valer como avanço (só o `agiu`); `warning` é um
+ * lembrete que não bloqueia (perícia que não é Atletismo e já foi usada).
  */
 export function chaseInfoFor(actor, skillKey) {
   const chase = findChase();
@@ -134,8 +149,8 @@ export function chaseInfoFor(actor, skillKey) {
       ativa: true,
       rodadaAtual: chase.system.rodadaAtual,
       participant,
-      skillKey,
     }),
+    warning: advanceWarning({ participant, skillKey }),
   };
 }
 
@@ -185,7 +200,10 @@ export async function endChase(chase) {
   await chase.update({ system: endState() });
 }
 
-/** Muda a DT padrão do avanço desta perseguição (só o mestre). */
+/**
+ * Muda a DT padrão do avanço desta perseguição (só o mestre). Aceita o valor já tratado (botões
+ * −/+) ou o que foi digitado; a DT sempre fica entre 1 e 40.
+ */
 export async function setChaseDt(chase, dt) {
   if (!game.user.isGM) return;
   await chase.update({ system: { dt: normalizeChaseDt(dt) } });
@@ -207,13 +225,34 @@ export async function setActed(chase, combatantId, acted) {
   await updateParticipant(combatant, { ultimaRodada: acted ? chase.system.rodadaAtual : 0 });
 }
 
-/** Ajuste manual (mestre) de PA ou fôlego de um participante. */
+/**
+ * Ajuste manual de PA ou fôlego pelos botões −/+. O mestre ajusta qualquer participante; o jogador
+ * confiável, só o próprio personagem.
+ */
 export async function adjustParticipant(chase, combatantId, field, delta) {
-  if (!game.user.isGM || !isAdjustableField(field)) return;
+  if (!isAdjustableField(field)) return;
   const combatant = chase.combatants.get(combatantId);
-  if (!combatant) return;
+  if (!combatant || !canEditParticipant(combatant)) return;
   const next = adjustField(field, combatant.system[field], delta);
-  await combatant.update({ system: { [field]: next } });
+  await updateParticipant(combatant, { [field]: next });
+}
+
+/**
+ * Grava PA ou fôlego digitados na janela (mesma regra de quem pode editar dos botões). Se o valor
+ * digitado não vale (vazio, texto), não grava nada e devolve `false`, para a janela devolver o
+ * campo ao valor anterior.
+ * @returns {Promise<boolean>} `true` se gravou um valor válido.
+ */
+export async function setParticipantField(chase, combatantId, field, raw) {
+  if (!isAdjustableField(field)) return false;
+  const combatant = chase.combatants.get(combatantId);
+  if (!combatant || !canEditParticipant(combatant)) return false;
+  const typed = parseTypedValue(field, raw);
+  if (!typed.valid) return false;
+  if (typed.value !== combatant.system[field]) {
+    await updateParticipant(combatant, { [field]: typed.value });
+  }
+  return true;
 }
 
 /**
