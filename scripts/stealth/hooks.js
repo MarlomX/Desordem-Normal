@@ -9,13 +9,16 @@ import { STEALTH_COMBAT_TYPE } from '../rolls/stealth.js';
 import FurtividadeApp from './app.js';
 import { HIDE_TEST_SOCKET_ACTION, handleHideTestSocket } from './hide-test.js';
 import { ProcuraApp, SEARCH_SOCKET_ACTION, handleSearchSocket } from './search.js';
+import { ACTION_SOCKET_ACTION, countActionUse, handleActionSocket } from './action.js';
 import {
   HIDE_SOCKET_ACTION,
   SOCKET,
+  USES_SOCKET_ACTION,
   createStealth,
   currentStealthAccess,
   findStealth,
   handleHideSocket,
+  handleUsesSocket,
   hideRevealed,
 } from './store.js';
 
@@ -27,10 +30,14 @@ function isStealthDocument(doc) {
   return combat?.type === STEALTH_COMBAT_TYPE;
 }
 
-/** Redesenha só o cartão de furtividade das fichas abertas. */
+/**
+ * Redesenha o cartão de furtividade e a aba Condição (contador de esconder-se) das fichas abertas.
+ */
 function refreshSheets() {
   for (const app of foundry.applications.instances.values()) {
-    if (app.rendered && app.constructor.PARTS?.furtividade) app.render({ parts: ['furtividade'] });
+    if (app.rendered && app.constructor.PARTS?.furtividade) {
+      app.render({ parts: ['furtividade', 'condicao'] });
+    }
   }
 }
 
@@ -127,6 +134,9 @@ export function registerStealthHooks() {
   });
 
   Hooks.on('renderCombatTracker', (app, html) => injectTrackerBar(html));
+
+  // Esconder-se e distrair: o mestre ativo conta o uso quando a mensagem do teste chega
+  Hooks.on('createChatMessage', (message) => countActionUse(message));
 }
 
 /** Socket: só o mestre ativo atende os pedidos dos jogadores sobre os dados de esconderijo. */
@@ -138,6 +148,10 @@ export function registerStealthSocket() {
     if (data?.action === HIDE_TEST_SOCKET_ACTION) await handleHideTestSocket(data, userId);
     // Botão «Conferir meus dados» do cartão da procura (só ids)
     if (data?.action === SEARCH_SOCKET_ACTION) await handleSearchSocket(data, userId);
+    // Botão «Guardar dado» do esconder-se e do distrair (só o id da mensagem e o índice)
+    if (data?.action === ACTION_SOCKET_ACTION) await handleActionSocket(data, userId);
+    // Contador de esconder-se ajustado na aba Condição (só ids e ±1)
+    if (data?.action === USES_SOCKET_ACTION) await handleUsesSocket(data, userId);
   });
 }
 

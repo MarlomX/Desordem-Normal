@@ -765,7 +765,9 @@
         "encontrado": "{nome} perdeu o último dado de esconderijo e foi encontrado!",
         "revelou": "{mestre} viu os valores dos dados de esconderijo de {nome}.",
         "escondeu": "{nome} se escondeu com {n} dados de esconderijo.",
-        "zerou": "O mestre zerou o esconderijo de {nome}, que pode refazer o teste."
+        "zerou": "O mestre zerou o esconderijo de {nome}, que pode refazer o teste.",
+        "distraiu": "{nome} distraiu as criaturas: {alvo} ganhou 1 dado de esconderijo ({n} no total).",
+        "escondeuDeNovo": "{nome} se escondeu melhor: +1 dado de esconderijo ({n} no total)."
       },
       "Cartao": {
         "Titulo": "Furtividade",
@@ -776,14 +778,22 @@
         "JaExiste": "Já existe uma cena de furtividade. Exclua-a antes de criar outra.",
         "Operacao": "Não foi possível alterar os dados de esconderijo (dado inválido ou limite de 12).",
         "SemMestre": "Não há mestre online para gravar os dados de esconderijo.",
-        "TesteBloqueado": "O teste não vale mais como teste de esconderijo. Ele foi feito como um teste comum."
+        "TesteBloqueado": "O teste não vale mais como teste de esconderijo. Ele foi feito como um teste comum.",
+        "AcaoBloqueada": "A ação de furtividade não vale mais (cena encerrada ou destino fora da cena). O teste foi feito como um teste comum."
       },
       "Zerar": "Zerar esconderijo",
       "ZerarConfirmar": "Zerar o esconderijo de {nome}? Os dados são apagados e ele volta a ficar sem esconderijo, podendo refazer o teste.",
       "Pre": {
         "Titulo": "Furtividade",
         "Usar": "Usar como teste de esconderijo",
-        "Regra": "Sem DT e sem dado de pavor. Os dados não são somados: viram dados de esconderijo. A rolagem é privada (só você vê)."
+        "Regra": "Sem DT e sem dado de pavor. Os dados não são somados: viram dados de esconderijo. A rolagem é privada (só você vê).",
+        "Comum": "Teste comum",
+        "Esconder": "Esconder-se (DT {dt})",
+        "EsconderRegra": "Não avança nesta rodada. Se passar, um dos dados rolados vira dado de esconderijo. Rolagem privada.",
+        "Distrair": "Distrair (DT {dt})",
+        "DistrairRegra": "Se passar, um dos dados rolados vira dado de esconderijo para você ou um aliado. Rolagem privada.",
+        "Destino": "Quem recebe o dado",
+        "Voce": "{nome} (você)"
       },
       "Barra": {
         "Titulo": "Teste de esconderijo",
@@ -878,7 +888,24 @@
         "SorteadoEscalonado": "Alvo sorteado: {nome} (faixa {faixa}).",
         "Recolher": "Recolher a tabela",
         "Expandir": "Mostrar a tabela"
-      }
+      },
+      "Acao": {
+        "esconder": "Esconder-se",
+        "distrair": "Distrair",
+        "Guardado": "{acao}: 1 dado de esconderijo guardado para {alvo}:",
+        "Falhou": "{acao}: falhou (DT {dt}). Nenhum dado.",
+        "Passou": "{acao}: passou! Escolha o dado que vai para {alvo}.",
+        "SemDestino": "{alvo} não pode mais receber o dado (fora da cena ou sem esconderijo).",
+        "Escolher": "Clique no dado escolhido (com 4 dados, o que ficou de fora não é opção).",
+        "Guardar": "Guardar 1 dado ({alvo})"
+      },
+      "Condicao": {
+        "Esconder": "Usos de esconder-se nesta cena",
+        "Dica": "Próximo esconder-se: DT {dt}. O uso conta ao rolar; ajuste aqui se algo der errado."
+      },
+      "DistrairUsos": "Distrair",
+      "DistrairDica": "Usos de distrair na cena, por qualquer personagem. A DT sobe 3 a cada uso.",
+      "ProximaDt": "próx. DT {dt}"
     }
   },
   "TYPES.Item.arma": "Arma",

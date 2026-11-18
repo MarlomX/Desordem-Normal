@@ -51,6 +51,21 @@
   </label>
 
 </section>
+{{#if furtividade.ativa}}
+{{! Só durante uma cena de furtividade em que o personagem participa }}
+<section class="desordem-ficha__secao desordem-ficha__furtividade">
+  <h3><i class="fa-solid fa-user-secret" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Titulo"}}</h3>
+  <div class="desordem-ficha__campo">
+    <span>{{localize "DESORDEM.Furtividade.Condicao.Esconder"}}</span>
+    <span class="desordem-perseguicao__valor">
+      {{#if furtividade.podeAjustar}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustHideUses" data-combatant-id="{{furtividade.combatantId}}" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>{{/if}}
+      <strong>{{furtividade.esconderUsos}}</strong>
+      {{#if furtividade.podeAjustar}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustHideUses" data-combatant-id="{{furtividade.combatantId}}" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>{{/if}}
+    </span>
+  </div>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Condicao.Dica" dt=furtividade.esconderDt}}</p>
+</section>
+{{/if}}
 <section class="desordem-ficha__secao desordem-ficha__efeitos">
   <h3><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Efeitos"}}</h3>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaEfeitos"}}</p>

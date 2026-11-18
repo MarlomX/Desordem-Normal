@@ -15,6 +15,7 @@ import { FurtividadeModel, FurtivoModel } from './stealth/models.js';
 import { registerStealthHooks, registerStealthSocket, stealthApi } from './stealth/hooks.js';
 import { renderHideBar } from './stealth/hide-test.js';
 import { renderSearchBar } from './stealth/search.js';
+import { renderActionBar } from './stealth/action.js';
 import { registerCreatureTables } from './stealth/tables.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
@@ -129,6 +130,7 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderPenaltyBar(message, html);
   renderHideBar(message, html);
   renderSearchBar(message, html);
+  renderActionBar(message, html);
   renderTableCard(message, html);
   renderFearDice(message, html);
 });

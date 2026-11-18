@@ -15,6 +15,8 @@ export class FurtividadeModel extends foundry.abstract.TypeDataModel {
       // false = em preparação (o mestre monta a lista); true = em andamento
       ativa: new f.BooleanField({ required: true, initial: false }),
       rodadaAtual: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
+      // Usos de «distrair» na cena, por qualquer personagem (a DT é 7 + 3 por uso)
+      distrairUsos: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
     };
   }
 }
@@ -33,6 +35,8 @@ export class FurtivoModel extends foundry.abstract.TypeDataModel {
       ),
       // Já registrou dados nesta cena? Separa "ainda não se escondeu" de "encontrado" (0 dados)
       escondeu: new f.BooleanField({ required: true, initial: false }),
+      // Usos de «esconder-se» deste personagem na cena (a DT é 7 + 3 por uso)
+      esconderUsos: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
     };
   }
 }

@@ -52,7 +52,7 @@ test('a escolha vazia começa com o esconderijo desmarcado', () => {
 });
 
 test('teste de esconderijo: sem DT e sem pavor (nem custo de controlar ou abraçar)', () => {
-  const model = buildRollModel({ ...baseInput, stealth: {} });
+  const model = buildRollModel({ ...baseInput, stealth: { teste: true } });
   assert.deepEqual(model.esconderijo, {});
   const evaluated = evaluateSelection(
     model,
@@ -73,7 +73,7 @@ test('teste de esconderijo: sem DT e sem pavor (nem custo de controlar ou abraç
 });
 
 test('desmarcado, o pavor e a DT continuam valendo', () => {
-  const model = buildRollModel({ ...baseInput, stealth: {} });
+  const model = buildRollModel({ ...baseInput, stealth: { teste: true } });
   const evaluated = evaluateSelection(model, withHide(false));
   assert.equal(evaluated.esconderijo.on, false);
   assert.equal(evaluated.dt, 7);
@@ -83,7 +83,7 @@ test('desmarcado, o pavor e a DT continuam valendo', () => {
 test('o esconderijo não vale ao mesmo tempo como avanço da perseguição', () => {
   const model = buildRollModel({
     ...baseInput,
-    stealth: {},
+    stealth: { teste: true },
     chase: { blocked: null, folego: 3, effortDice: 1, dt: 10 },
   });
   const evaluated = evaluateSelection(
@@ -98,7 +98,7 @@ test('o esconderijo não vale ao mesmo tempo como avanço da perseguição', () 
 test('bônus manuais e Sorrateiro continuam entrando no teste de esconderijo', () => {
   const model = buildRollModel({
     ...baseInput,
-    stealth: {},
+    stealth: { teste: true },
     has: { sorrateiro: true },
   });
   const evaluated = evaluateSelection(

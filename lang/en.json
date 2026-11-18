@@ -765,7 +765,9 @@
         "encontrado": "{nome} lost the last hiding die and was found!",
         "revelou": "{mestre} saw the values of {nome}'s hiding dice.",
         "escondeu": "{nome} hid with {n} hiding dice.",
-        "zerou": "The GM reset {nome}'s hiding; they can redo the test."
+        "zerou": "The GM reset {nome}'s hiding; they can redo the test.",
+        "distraiu": "{nome} distracted the creatures: {alvo} gained 1 hiding die ({n} in total).",
+        "escondeuDeNovo": "{nome} hid better: +1 hiding die ({n} in total)."
       },
       "Cartao": {
         "Titulo": "Stealth",
@@ -776,14 +778,22 @@
         "JaExiste": "A stealth scene already exists. Delete it before creating another.",
         "Operacao": "Could not change the hiding dice (invalid die or limit of 12).",
         "SemMestre": "There is no GM online to save the hiding dice.",
-        "TesteBloqueado": "The test no longer counts as a hiding test. It was rolled as a normal test."
+        "TesteBloqueado": "The test no longer counts as a hiding test. It was rolled as a normal test.",
+        "AcaoBloqueada": "The stealth action no longer applies (scene ended or target left the scene). It was rolled as a normal test."
       },
       "Zerar": "Reset hiding",
       "ZerarConfirmar": "Reset {nome}'s hiding? The dice are erased and the character goes back to not hidden, able to redo the test.",
       "Pre": {
         "Titulo": "Stealth",
         "Usar": "Use as hiding test",
-        "Regra": "No DC and no fear die. The dice are not added: they become hiding dice. The roll is private (only you see it)."
+        "Regra": "No DC and no fear die. The dice are not added: they become hiding dice. The roll is private (only you see it).",
+        "Comum": "Normal test",
+        "Esconder": "Hide (DC {dt})",
+        "EsconderRegra": "No advancing this round. On a success, one of the rolled dice becomes a hiding die. Private roll.",
+        "Distrair": "Distract (DC {dt})",
+        "DistrairRegra": "On a success, one of the rolled dice becomes a hiding die for you or an ally. Private roll.",
+        "Destino": "Who gets the die",
+        "Voce": "{nome} (you)"
       },
       "Barra": {
         "Titulo": "Hiding test",
@@ -878,7 +888,24 @@
         "SorteadoEscalonado": "Drawn target: {nome} (tier {faixa}).",
         "Recolher": "Collapse the table",
         "Expandir": "Show the table"
-      }
+      },
+      "Acao": {
+        "esconder": "Hide",
+        "distrair": "Distract",
+        "Guardado": "{acao}: 1 hiding die kept for {alvo}:",
+        "Falhou": "{acao}: failed (DC {dt}). No die.",
+        "Passou": "{acao}: success! Choose the die that goes to {alvo}.",
+        "SemDestino": "{alvo} can no longer receive the die (out of the scene or not hidden).",
+        "Escolher": "Click the chosen die (with 4 dice, the one left out is not an option).",
+        "Guardar": "Keep 1 die ({alvo})"
+      },
+      "Condicao": {
+        "Esconder": "Hide uses in this scene",
+        "Dica": "Next hide: DC {dt}. A use counts when rolled; adjust here if something goes wrong."
+      },
+      "DistrairUsos": "Distract",
+      "DistrairDica": "Distract uses in the scene, by any character. The DC goes up by 3 each use.",
+      "ProximaDt": "next DC {dt}"
     }
   },
   "TYPES.Item.arma": "Weapon",

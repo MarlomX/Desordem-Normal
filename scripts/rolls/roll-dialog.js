@@ -8,6 +8,7 @@ import { BONUS_SLOTS, bonusDice, normalizeBonus } from './bonus.js';
 import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } from './fear.js';
 import { DEFAULT_DT, MAX_COUNTED, planDice } from './test.js';
 import { breathLimit, normalizeChaseDt } from './chase.js';
+import { STEALTH_TEST_ACTIONS } from './stealth.js';
 
 /** Espaços de dado extra de um teste: o limite de 4 dados rolados menos atributo e perícia. */
 export const EXTRA_SLOTS = BONUS_SLOTS;
@@ -39,8 +40,9 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  *   Com uma perseguição em andamento: se o teste pode valer como avanço (`blocked` diz por que
  *   não), quanto fôlego o personagem tem, quantos d4 de PV o esforço extra custaria e a DT da
  *   perseguição.
- * @param {object|null} [input.stealth] Com uma cena de furtividade em andamento e o personagem
- *   ainda sem esconderijo: oferece «usar como teste de esconderijo». Sem isso, a opção não aparece.
+ * @param {object|null} [input.stealth] Com uma cena de furtividade em andamento, o que a seção de
+ *   furtividade oferece (veja `stealthOptions` em stealth.js): `teste` (teste de esconderijo),
+ *   `esconder` ({dt}) e `distrair` ({dt, recipients}). Sem isso, a seção não aparece.
  */
 export function buildRollModel({
   skillKey,
@@ -117,7 +119,12 @@ export function buildRollModel({
     showDt,
     avanco,
     // Teste de esconderijo: sem DT, sem pavor, rolagem privada (veja a ficha e stealth.js)
-    esconderijo: stealth ? {} : null,
+    esconderijo: stealth?.teste ? {} : null,
+    // Esconder-se e distrair: testes com DT própria, rolagem privada e pavor normal
+    furtiva:
+      stealth && (stealth.esconder || stealth.distrair)
+        ? { esconder: stealth.esconder ?? null, distrair: stealth.distrair ?? null }
+        : null,
   };
 }
 
@@ -131,6 +138,7 @@ export function emptySelection(dt) {
     dt,
     avanco: { on: false, breath: 0, effort: false },
     esconderijo: { on: false },
+    furtiva: { acao: '', destino: '' },
   };
 }
 
@@ -155,10 +163,21 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
 
   // Dados que ocupam espaço sem escolha manual, em ordem
   const locked = model.baseExtraDice.map((sides) => ({ kind: 'base', sides, locked: true }));
+  // Esconder-se ou distrair (só se a opção existe para o personagem)
+  const wantedAction = selection.furtiva?.acao;
+  const action =
+    model.furtiva && STEALTH_TEST_ACTIONS.includes(wantedAction) && model.furtiva[wantedAction]
+      ? wantedAction
+      : '';
+  const recipients = model.furtiva?.distrair?.recipients ?? [];
+  const destino =
+    action === 'distrair'
+      ? ((recipients.find((r) => r.id === selection.furtiva?.destino) ?? recipients[0])?.id ?? '')
+      : '';
   // Teste de esconderijo: o teste não tem DT nem sofre pavor, e não vale ao mesmo tempo como avanço
-  const hide = Boolean(model.esconderijo && selection.esconderijo?.on);
+  const hide = !action && Boolean(model.esconderijo && selection.esconderijo?.on);
   // Avanço na perseguição: o fôlego gasto vira dados d6 fixos e o esforço extra sobe um passo
-  const advance = !hide && model.avanco && !model.avanco.blocked && selection.avanco?.on;
+  const advance = !hide && !action && model.avanco && !model.avanco.blocked && selection.avanco?.on;
   let breath = 0;
   if (advance) {
     breath = Math.max(
@@ -231,8 +250,14 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
   if (pdCost > model.resources.pd) errors.push('pd');
   if (impetoCost > model.resources.impeto) errors.push('impeto');
 
-  // Sem DT no teste de esconderijo (o campo some da janela enquanto a opção está marcada)
-  const testDt = model.showDt && !hide ? normalizeDt(selection.dt, model.dt) : null;
+  // Sem DT no teste de esconderijo (o campo some da janela enquanto a opção está marcada); no
+  // esconder-se e no distrair, a DT é a da ação (7 + 3 por uso), e não a do campo
+  const testDt = action
+    ? model.furtiva[action].dt
+    : model.showDt && !hide
+      ? normalizeDt(selection.dt, model.dt)
+      : null;
+  const furtiva = { acao: action, destino, dt: action ? model.furtiva[action].dt : null };
   return {
     selection: {
       bonus: normalizeBonus(manual),
@@ -242,6 +267,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       dt: testDt,
       avanco: { on: Boolean(advance), breath, effort, dt: advanceDt },
       esconderijo: { on: hide },
+      furtiva: { acao: action, destino },
     },
     dt: testDt,
     pdCost,
@@ -257,6 +283,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     rolledSides: plan.rolledSides,
     avanco: { on: Boolean(advance), breath, effort, dt: advanceDt },
     esconderijo: { on: hide },
+    furtiva,
     summedDice: Math.min(plan.rolledSides.length, MAX_COUNTED),
     errors,
     valid: errors.length === 0,
@@ -280,5 +307,7 @@ export function selectionToOptions(model, selection) {
   if (evaluated.avanco.on) options.avanco = evaluated.avanco;
   // Teste de esconderijo: quem chama (a ficha) tira o pavor, a DT e torna a rolagem privada
   if (evaluated.esconderijo.on) options.esconderijo = true;
+  // Esconder-se ou distrair: quem chama (a ficha) torna a rolagem privada e guarda a ação
+  if (evaluated.furtiva.acao) options.furtiva = evaluated.furtiva;
   return options;
 }

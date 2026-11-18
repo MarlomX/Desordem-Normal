@@ -9,6 +9,7 @@ import {
   STEALTH_COMBATANT_TYPE,
   applyHideOp,
   canOfferHideTest,
+  distractRecipients,
   hideDiceView,
   hideOpMessage,
   hideOpPatch,
@@ -17,6 +18,9 @@ import {
   stealthEndState,
   stealthNextRound,
   stealthParticipantReset,
+  normalizeUses,
+  stealthActionDt,
+  stealthOptions,
   stealthRoundChange,
   stealthStartState,
 } from '../rolls/stealth.js';
@@ -28,6 +32,9 @@ export const SOCKET = `system.${SYSTEM_ID}`;
 
 /** Nome da ação de socket dos dados de esconderijo. */
 export const HIDE_SOCKET_ACTION = 'stealthHideDice';
+
+/** Nome da ação de socket do contador de esconder-se (ajuste à mão na aba Condição). */
+export const USES_SOCKET_ACTION = 'stealthHideUses';
 
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const renderTemplate = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
@@ -109,6 +116,9 @@ export function stealthView(stealth) {
     id: stealth.id,
     ativa: stealth.system.ativa,
     rodadaAtual: stealth.system.rodadaAtual,
+    // Distrair: usos na cena (de qualquer personagem) e a DT do próximo uso
+    distrairUsos: normalizeUses(stealth.system.distrairUsos),
+    distrairDt: stealthActionDt(stealth.system.distrairUsos),
     participantes: stealth.combatants.map((combatant) => participantView(stealth, combatant)),
   };
 }
@@ -134,6 +144,11 @@ export function stealthCardFor(actor) {
     count: view.count,
     status: view.status,
     statusLabel: view.statusLabel,
+    // Aba Condição: usos de esconder-se (o dono e o mestre ajustam à mão) e a DT do próximo uso
+    combatantId: combatant.id,
+    esconderUsos: normalizeUses(combatant.system.esconderUsos),
+    esconderDt: stealthActionDt(combatant.system.esconderUsos),
+    podeAjustar: Boolean(combatant.actor?.isOwner),
   };
 }
 
@@ -248,6 +263,73 @@ export function hideTestInfoFor(actor) {
     escondeu: Boolean(combatant?.system.escondeu),
   });
   return offer ? { combatantId: combatant.id } : null;
+}
+
+/**
+ * O que a seção de furtividade da janela pré-teste oferece a este personagem (teste de
+ * esconderijo, esconder-se, distrair), com o id do participante; `null` se nada.
+ */
+export function stealthInfoFor(actor) {
+  const stealth = findStealth();
+  if (!stealth) return null;
+  const combatant = combatantOf(stealth, actor);
+  const participants = stealthView(stealth).participantes;
+  const options = stealthOptions({
+    ativa: stealth.system.ativa,
+    isParticipant: Boolean(combatant),
+    isOwner: Boolean(actor?.isOwner),
+    escondeu: Boolean(combatant?.system.escondeu),
+    esconderUsos: combatant?.system.esconderUsos,
+    distrairUsos: stealth.system.distrairUsos,
+    recipients: combatant ? distractRecipients(participants, combatant.id) : [],
+  });
+  return options ? { ...options, combatantId: combatant.id } : null;
+}
+
+/** Muda o contador de distrair da cena (só o mestre, pelos botões −/+ da janela). */
+export async function adjustDistractUses(stealth, delta) {
+  if (!game.user.isGM || !stealth?.system.ativa) return;
+  const next = normalizeUses(normalizeUses(stealth.system.distrairUsos) + Number(delta));
+  await stealth.update({ system: { distrairUsos: next } });
+}
+
+/**
+ * Muda o contador de esconder-se de um participante (o dono ou o mestre, pela aba Condição).
+ * Quem não pode editar o participante pede ao mestre ativo pelo socket (só ids e ±1).
+ */
+export async function adjustHideUses(combatant, delta) {
+  if (!combatant?.parent?.system.ativa || !combatant.actor?.isOwner) return;
+  const step = Math.sign(Number(delta));
+  if (!step) return;
+  if (combatant.canUserModify(game.user, 'update')) {
+    const next = normalizeUses(normalizeUses(combatant.system.esconderUsos) + step);
+    await combatant.update({ system: { esconderUsos: next } });
+    return;
+  }
+  if (!game.users.activeGM) {
+    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.SemMestre'));
+    return;
+  }
+  game.socket.emit(SOCKET, {
+    action: USES_SOCKET_ACTION,
+    combatId: combatant.parent.id,
+    combatantId: combatant.id,
+    delta: step,
+  });
+}
+
+/** Socket (só no mestre ativo): ajuste do contador de esconder-se pedido por um dono. */
+export async function handleUsesSocket(data, userId) {
+  const stealth = game.combats.get(data?.combatId);
+  if (stealth?.type !== STEALTH_COMBAT_TYPE || !stealth.system.ativa) return;
+  const combatant = stealth.combatants.get(data.combatantId);
+  const requester = game.users.get(userId);
+  if (!combatant?.actor || !requester) return;
+  if (!combatant.actor.testUserPermission(requester, 'OWNER')) return;
+  const step = Math.sign(Number(data.delta)) || 0;
+  if (!step) return;
+  const next = normalizeUses(normalizeUses(combatant.system.esconderUsos) + step);
+  await combatant.update({ system: { esconderUsos: next } });
 }
 
 /**

@@ -16,6 +16,7 @@ import {
   findStealth,
   hideRevealed,
   nextStealthRound,
+  adjustDistractUses,
   removeStealthParticipant,
   requestHideOp,
   resetHide,
@@ -72,6 +73,7 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
       removeHideDie: FurtividadeApp.#onRemoveHideDie,
       resetHide: FurtividadeApp.#onResetHide,
       openSearch: FurtividadeApp.#onOpenSearch,
+      adjustDistract: FurtividadeApp.#onAdjustDistract,
     },
   };
 
@@ -180,6 +182,11 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
     if (await confirm('DESORDEM.Furtividade.Excluir', 'DESORDEM.Furtividade.ExcluirConfirmar')) {
       await deleteStealth(stealth);
     }
+  }
+
+  /** Contador de distrair da cena, pelos botões −/+ (só o mestre). */
+  static async #onAdjustDistract(event, target) {
+    await adjustDistractUses(findStealth(), Number(target.dataset.delta));
   }
 
   /** Abre a janela de procura das criaturas (só o mestre). */

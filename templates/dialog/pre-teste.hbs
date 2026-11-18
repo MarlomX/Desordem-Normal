@@ -14,14 +14,41 @@
   </div>
   {{/if}}
 
-  {{#if esconderijo}}
+  {{#if temFurtividade}}
+  {{! Seção de furtividade: uma opção por vez. «Teste comum» desmarca as demais. }}
   <fieldset class="desordem-pre__grupo" data-esconderijo>
     <legend><i class="fa-solid fa-user-secret" aria-hidden="true"></i> {{localize "DESORDEM.Furtividade.Pre.Titulo"}}</legend>
     <label class="desordem-pre__opcao">
-      <input type="checkbox" name="esconderijoOn">
+      <input type="radio" name="furtivaAcao" value="" checked>
+      <span class="desordem-pre__nome">{{localize "DESORDEM.Furtividade.Pre.Comum"}}</span>
+    </label>
+    {{#if esconderijo}}
+    <label class="desordem-pre__opcao">
+      <input type="radio" name="furtivaAcao" value="teste">
       <span class="desordem-pre__nome">{{localize "DESORDEM.Furtividade.Pre.Usar"}}</span>
       <span class="desordem-pre__custo">{{localize "DESORDEM.Furtividade.Pre.Regra"}}</span>
     </label>
+    {{/if}}
+    {{#if furtiva.esconderTexto}}
+    <label class="desordem-pre__opcao">
+      <input type="radio" name="furtivaAcao" value="esconder">
+      <span class="desordem-pre__nome">{{furtiva.esconderTexto}}</span>
+      <span class="desordem-pre__custo">{{localize "DESORDEM.Furtividade.Pre.EsconderRegra"}}</span>
+    </label>
+    {{/if}}
+    {{#if furtiva.distrairTexto}}
+    <label class="desordem-pre__opcao">
+      <input type="radio" name="furtivaAcao" value="distrair">
+      <span class="desordem-pre__nome">{{furtiva.distrairTexto}}</span>
+      <span class="desordem-pre__custo">{{localize "DESORDEM.Furtividade.Pre.DistrairRegra"}}</span>
+    </label>
+    <label class="desordem-pre__avanco-campo is-oculta" data-furtiva-destino>
+      <span>{{localize "DESORDEM.Furtividade.Pre.Destino"}}</span>
+      <select name="furtivaDestino">
+        {{#each furtiva.destinos}}<option value="{{id}}">{{name}}</option>{{/each}}
+      </select>
+    </label>
+    {{/if}}
   </fieldset>
   {{/if}}
 

@@ -13,6 +13,14 @@
     {{else}}
     <span class="desordem-perseguicao__rodada">{{localize "DESORDEM.Perseguicao.Rodada" rodada=view.rodadaAtual}}</span>
     {{/if}}
+    {{! Distrair: usos na cena (de qualquer um) e a DT do próximo; só o mestre ajusta }}
+    <span class="desordem-perseguicao__valor" title="{{localize "DESORDEM.Furtividade.DistrairDica"}}">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Furtividade.DistrairUsos"}}</span>
+      {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustDistract" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>{{/if}}
+      <strong>{{view.distrairUsos}}</strong>
+      {{#if @root.isGM}}<button type="button" class="desordem-perseguicao__passo" data-action="adjustDistract" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>{{/if}}
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Furtividade.ProximaDt" dt=view.distrairDt}}</span>
+    </span>
     {{/if}}
   </header>
 

@@ -29,24 +29,27 @@ export const MAX_HIDE_DICE = 12;
 /** Rodada máxima aceita ao mudar a rodada na mão. */
 export const STEALTH_MAX_ROUND = 99;
 
-/** Estado de uma cena recém-criada: em preparação, sem rodada. */
+/** Estado de uma cena recém-criada: em preparação, sem rodada, sem usos de distrair. */
 export function initialStealthState() {
-  return { ativa: false, rodadaAtual: 0 };
+  return { ativa: false, rodadaAtual: 0, distrairUsos: 0 };
 }
 
-/** Estado ao iniciar a cena: ativa, na rodada 1. */
+/** Estado ao iniciar a cena: ativa, na rodada 1, contador de distrair zerado. */
 export function stealthStartState() {
-  return { ativa: true, rodadaAtual: 1 };
+  return { ativa: true, rodadaAtual: 1, distrairUsos: 0 };
 }
 
 /** Estado ao encerrar a cena: volta à preparação. */
 export function stealthEndState() {
-  return { ativa: false, rodadaAtual: 0 };
+  return { ativa: false, rodadaAtual: 0, distrairUsos: 0 };
 }
 
-/** Situação de um participante ao iniciar ou encerrar a cena: sem dados e sem teste feito. */
+/**
+ * Situação de um participante ao iniciar ou encerrar a cena: sem dados, sem teste feito e sem
+ * usos de esconder-se.
+ */
 export function stealthParticipantReset() {
-  return { esconderijo: [], escondeu: false };
+  return { esconderijo: [], escondeu: false, esconderUsos: 0 };
 }
 
 /** Próxima rodada (sem passar do teto). */
@@ -506,4 +509,133 @@ export function resolveSearchTarget(flag, combatantId, { perdeu, restam, resulta
         : target,
     ),
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Esconder-se e distrair (0.17.6)
+//
+// Os dois são testes com DT (7, mais 3 a cada uso). O contador do esconder-se é de cada
+// personagem; o do distrair é da cena (qualquer personagem conta). O contador sobe ao ROLAR,
+// passando ou não. Se passar, um dos dados rolados vira dado de esconderijo: de quem rolou
+// (esconder-se) ou de quem foi escolhido antes de rolar (distrair: o próprio ou um aliado,
+// escondido ou encontrado). Vão como rolagem privada e sofrem o dado de pavor normalmente.
+// ---------------------------------------------------------------------------------------------
+
+/** DT base das ações especiais e quanto ela sobe a cada uso. */
+export const STEALTH_ACTION_DT = 7;
+export const STEALTH_ACTION_STEP = 3;
+
+/** Teto técnico dos contadores de uso. */
+export const STEALTH_MAX_USES = 30;
+
+/** Ações especiais que são testes (a vaga da janela pré-teste). */
+export const STEALTH_TEST_ACTIONS = Object.freeze(['esconder', 'distrair']);
+
+/** Contador de usos válido (inteiro de 0 a 30). */
+export function normalizeUses(value) {
+  const n = Math.trunc(Number(value));
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(n, STEALTH_MAX_USES);
+}
+
+/** DT da próxima vez que a ação for usada: 7, 10, 13... */
+export function stealthActionDt(uses) {
+  return STEALTH_ACTION_DT + STEALTH_ACTION_STEP * normalizeUses(uses);
+}
+
+/**
+ * O que a seção de furtividade da janela pré-teste oferece a um personagem:
+ * - `teste`: o teste de esconderijo (só para quem ainda não se escondeu);
+ * - `esconder`: esconder-se (para quem já se escondeu: escondido ou encontrado), com a DT;
+ * - `distrair`: distrair (para qualquer participante), com a DT e os destinos possíveis.
+ * Devolve `null` se nada deve aparecer.
+ * @param {{ativa: boolean, isParticipant: boolean, isOwner: boolean, escondeu: boolean,
+ *   esconderUsos: number, distrairUsos: number, recipients: {id: string, name: string}[]}} p
+ */
+export function stealthOptions({
+  ativa,
+  isParticipant,
+  isOwner,
+  escondeu,
+  esconderUsos,
+  distrairUsos,
+  recipients = [],
+}) {
+  if (!ativa || !isParticipant || !isOwner) return null;
+  return {
+    teste: !escondeu,
+    esconder: escondeu ? { dt: stealthActionDt(esconderUsos) } : null,
+    distrair: recipients.length ? { dt: stealthActionDt(distrairUsos), recipients } : null,
+  };
+}
+
+/**
+ * Quem pode receber o dado do distrair: participantes já escondidos ou encontrados (quem ainda
+ * não fez o teste de esconderijo não recebe). O próprio personagem vem primeiro.
+ * @param {{id: string, name: string, status: string}[]} participants
+ * @param {string} selfId Participante de quem rola.
+ */
+export function distractRecipients(participants, selfId) {
+  const ok = participants.filter((p) => p.status === 'escondido' || p.status === 'encontrado');
+  const self = ok.filter((p) => p.id === selfId);
+  const others = ok.filter((p) => p.id !== selfId);
+  return [...self, ...others].map(({ id, name }) => ({ id, name, self: id === selfId }));
+}
+
+/**
+ * Dados do teste que podem virar dado de esconderijo: os 3 maiores (com 4 dados rolados, o que
+ * ficou de fora não é opção). Os dados anulados pelo pavor continuam valendo aqui.
+ */
+export function actionEligibleDice(values) {
+  return defaultHideKeep(values);
+}
+
+/** Dado escolhido por padrão: o de maior valor entre os possíveis. */
+export function defaultActionDie(values) {
+  const eligible = actionEligibleDice(values);
+  return eligible.reduce(
+    (best, index) => (values[index] > values[best] ? index : best),
+    eligible[0],
+  );
+}
+
+/** Registro guardado na mensagem do esconder-se ou do distrair (flag `acaoFurtiva`). */
+export function createActionFlag({ kind, combatantId, recipientId, dt }) {
+  return {
+    kind,
+    combatantId,
+    recipientId: kind === 'distrair' ? recipientId : combatantId,
+    dt,
+    estado: 'pendente',
+    reservadoEm: null,
+    dados: null,
+    extra: null,
+    contado: false,
+  };
+}
+
+/**
+ * O que a barra do cartão da ação mostra.
+ * @param {object} flag Registro da ação.
+ * @param {{sides: number[], values: number[], success: boolean}} test Dados como estão agora.
+ * @param {{canApply: boolean, recipientOk: boolean, now: number}} viewer
+ */
+export function actionBarView(flag, { values, success }, { canApply, recipientOk, now }) {
+  const applied = flag?.estado === 'aplicado';
+  return {
+    applied,
+    success: Boolean(success),
+    eligible: actionEligibleDice(values),
+    chosen: values.length ? defaultActionDie(values) : null,
+    busy: flag?.estado === 'aplicando' && now - (flag.reservadoEm ?? 0) <= HIDE_CLAIM_TIMEOUT_MS,
+    recipientOk: Boolean(recipientOk),
+    showButton:
+      Boolean(canApply) && Boolean(success) && Boolean(recipientOk) && isHideClaimable(flag, now),
+  };
+}
+
+/** O dado escolhido vale? (precisa estar entre os possíveis) */
+export function validActionChoice(values, index) {
+  if (index === null || index === undefined || index === '') return false;
+  return actionEligibleDice(values).includes(Number(index));
 }

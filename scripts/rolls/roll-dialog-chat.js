@@ -19,6 +19,10 @@ const TEMPLATE = `systems/${SYSTEM_ID}/templates/dialog/pre-teste.hbs`;
 
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
+/** Opção marcada na seção de furtividade ('' = teste comum). */
+const stealthChoice = (form) =>
+  form.querySelector('input[name="furtivaAcao"]:checked')?.value ?? '';
+
 /** Lê a escolha atual dos campos da janela. */
 function readSelection(form) {
   const fields = form.elements;
@@ -33,7 +37,12 @@ function readSelection(form) {
       breath: Number(fields.avancoBreath?.value ?? 0),
       effort: Boolean(fields.avancoEffort?.checked),
     },
-    esconderijo: { on: Boolean(fields.esconderijoOn?.checked) },
+    // Seção de furtividade: uma opção por vez (rádio): '', 'teste', 'esconder' ou 'distrair'
+    esconderijo: { on: stealthChoice(form) === 'teste' },
+    furtiva: {
+      acao: ['esconder', 'distrair'].includes(stealthChoice(form)) ? stealthChoice(form) : '',
+      destino: fields.furtivaDestino?.value ?? '',
+    },
   };
 }
 
@@ -169,10 +178,16 @@ function refresh(form, root, model) {
     }
   }
 
-  // Teste de esconderijo: sem DT e sem pavor enquanto a opção está marcada; não vale como avanço
-  const hiding = evaluation.esconderijo.on;
+  // Teste de esconderijo: sem DT e sem pavor enquanto a opção está marcada; não vale como avanço.
+  // Esconder-se e distrair: a DT é a da ação (o campo some), o pavor continua valendo.
+  const hiding = evaluation.esconderijo.on || Boolean(evaluation.furtiva.acao);
   root.querySelector('[data-dt-bloco]')?.classList.toggle('is-oculta', hiding);
-  root.querySelector('[data-pavor-bloco]')?.classList.toggle('is-oculta', hiding);
+  root
+    .querySelector('[data-pavor-bloco]')
+    ?.classList.toggle('is-oculta', evaluation.esconderijo.on);
+  root
+    .querySelector('[data-furtiva-destino]')
+    ?.classList.toggle('is-oculta', evaluation.furtiva.acao !== 'distrair');
   const advanceBox = form.elements.avancoOn;
   if (advanceBox && !root.querySelector('[data-avanco]')?.dataset.bloqueado) {
     advanceBox.disabled = hiding;
@@ -229,8 +244,8 @@ function refresh(form, root, model) {
  * @param {boolean} [config.allowNonLethal=false] Oferece "dano não letal" (só no teste de lesão).
  * @param {object|null} [config.chase] Com perseguição em andamento, os dados do participante para
  *   oferecer "usar como teste de avanço" (veja `buildRollModel`). Sem isso, a opção não aparece.
- * @param {object|null} [config.stealth] Com cena de furtividade e o personagem sem esconderijo,
- *   oferece «usar como teste de esconderijo». Sem isso, a opção não aparece.
+ * @param {object|null} [config.stealth] Com cena de furtividade, o que a seção oferece (teste de
+ *   esconderijo, esconder-se, distrair; veja `stealthOptions`). Sem isso, a seção não aparece.
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
  */
 export async function askRollChoices(
@@ -281,6 +296,19 @@ export async function askRollChoices(
     showDt,
     dt,
     esconderijo: Boolean(model.esconderijo),
+    temFurtividade: Boolean(model.esconderijo || model.furtiva),
+    furtiva: model.furtiva && {
+      esconderTexto: model.furtiva.esconder
+        ? t('DESORDEM.Furtividade.Pre.Esconder', { dt: model.furtiva.esconder.dt })
+        : '',
+      distrairTexto: model.furtiva.distrair
+        ? t('DESORDEM.Furtividade.Pre.Distrair', { dt: model.furtiva.distrair.dt })
+        : '',
+      destinos: (model.furtiva.distrair?.recipients ?? []).map((r) => ({
+        id: r.id,
+        name: r.self ? t('DESORDEM.Furtividade.Pre.Voce', { nome: r.name }) : r.name,
+      })),
+    },
     avanco: model.avanco && {
       motivo: model.avanco.blocked
         ? t(`DESORDEM.Perseguicao.Pre.Bloqueio.${model.avanco.blocked}`, {

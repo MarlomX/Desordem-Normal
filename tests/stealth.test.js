@@ -33,10 +33,14 @@ test('os subtipos da furtividade estão registrados no system.json', () => {
 });
 
 test('ciclo de vida: preparação, início e encerramento', () => {
-  assert.deepEqual(initialStealthState(), { ativa: false, rodadaAtual: 0 });
-  assert.deepEqual(stealthStartState(), { ativa: true, rodadaAtual: 1 });
-  assert.deepEqual(stealthEndState(), { ativa: false, rodadaAtual: 0 });
-  assert.deepEqual(stealthParticipantReset(), { esconderijo: [], escondeu: false });
+  assert.deepEqual(initialStealthState(), { ativa: false, rodadaAtual: 0, distrairUsos: 0 });
+  assert.deepEqual(stealthStartState(), { ativa: true, rodadaAtual: 1, distrairUsos: 0 });
+  assert.deepEqual(stealthEndState(), { ativa: false, rodadaAtual: 0, distrairUsos: 0 });
+  assert.deepEqual(stealthParticipantReset(), {
+    esconderijo: [],
+    escondeu: false,
+    esconderUsos: 0,
+  });
 });
 
 test('próxima rodada soma 1 sem passar de 99', () => {

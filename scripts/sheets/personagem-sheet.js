@@ -38,8 +38,9 @@ import { withChaseAdvance } from '../chase/advance.js';
 import { recoverBreath } from '../chase/breath.js';
 import { chaseCardFor, chaseInfoFor } from '../chase/store.js';
 import FurtividadeApp from '../stealth/app.js';
-import { hideTestInfoFor, stealthCardFor } from '../stealth/store.js';
+import { adjustHideUses, findStealth, stealthCardFor, stealthInfoFor } from '../stealth/store.js';
 import { withHideTest } from '../stealth/hide-test.js';
+import { withStealthAction } from '../stealth/action.js';
 import {
   buildAttributeRows,
   buildSkillRows,
@@ -121,6 +122,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       openChase: PersonagemSheet.#onOpenChase,
       recoverBreath: PersonagemSheet.#onRecoverBreath,
       openStealth: PersonagemSheet.#onOpenStealth,
+      adjustHideUses: PersonagemSheet.#onAdjustHideUses,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
@@ -329,7 +331,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   async #rollWithChoices(event, config, run) {
     const { chase: offerAdvance = true, stealth: offerHide = false, ...rest } = config;
     const chase = offerAdvance ? chaseInfoFor(this.document, config.skillKey) : null;
-    const stealth = offerHide ? hideTestInfoFor(this.document) : null;
+    const stealth = offerHide ? stealthInfoFor(this.document) : null;
     const options = await askRollChoices(this.document, {
       ...rest,
       chase,
@@ -339,6 +341,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     if (!options) return;
     if (options.esconderijo) {
       await run(withHideTest(this.document, options));
+      return;
+    }
+    if (options.furtiva) {
+      await run(withStealthAction(this.document, options));
       return;
     }
     await run(options.avanco ? withChaseAdvance(this.document, options, config.skillKey) : options);
@@ -777,6 +783,12 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Abre a janela da cena de furtividade (cartão da ficha). */
   static async #onOpenStealth() {
     await FurtividadeApp.open();
+  }
+
+  /** Ajuste à mão do contador de esconder-se (aba Condição, só durante a cena de furtividade). */
+  static async #onAdjustHideUses(event, target) {
+    const combatant = findStealth()?.combatants.get(target.dataset.combatantId);
+    if (combatant) await adjustHideUses(combatant, Number(target.dataset.delta));
   }
 
   /** Nova cena: reinicia contadores, recursos e efeitos de cena deste personagem. */

@@ -2445,3 +2445,16 @@
   flex-direction: column;
   gap: 6px;
 }
+
+/* ===== Furtividade: esconder-se e distrair (v0.17.6) ===== */
+/* Destino do distrair: só aparece com «Distrair» marcado */
+.desordem-pre [data-furtiva-destino].is-oculta {
+  display: none;
+}
+
+.desordem-ficha__furtividade .desordem-ficha__campo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
