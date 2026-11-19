@@ -99,6 +99,26 @@
   </fieldset>
   {{/if}}
 
+  {{#if estendido}}
+  {{! Teste estendido (guia de desafios): o teste soma pontos ao desafio escolhido, pelo botão do cartão }}
+  <fieldset class="desordem-pre__grupo" data-estendido>
+    <legend><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Pre.Titulo"}}</legend>
+    <label class="desordem-pre__opcao">
+      <input type="checkbox" name="estendidoOn">
+      <span class="desordem-pre__nome">{{localize "DESORDEM.Desafio.Pre.Usar"}}</span>
+      <span class="desordem-pre__custo">{{localize "DESORDEM.Desafio.Pre.Regra"}}</span>
+    </label>
+    <div class="desordem-pre__avanco is-oculta" data-estendido-detalhes>
+      <label class="desordem-pre__avanco-campo">
+        <span>{{localize "DESORDEM.Desafio.Pre.Qual"}}</span>
+        <select name="estendidoId">
+          {{#each estendido.desafios}}<option value="{{id}}" data-dt="{{dt}}">{{label}}</option>{{/each}}
+        </select>
+      </label>
+    </div>
+  </fieldset>
+  {{/if}}
+
   <fieldset class="desordem-pre__grupo">
     <legend><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Bonus.Titulo"}}</legend>
     <div class="desordem-bonus__slots" data-slots></div>

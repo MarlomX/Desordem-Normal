@@ -42,6 +42,7 @@ import { adjustHideUses, findStealth, stealthCardFor, stealthInfoFor } from '../
 import { challengeCardFor } from '../challenges/store.js';
 import DesafioApp from '../challenges/app.js';
 import { showChallengeList } from '../challenges/sidebar.js';
+import { challengeChoicesFor, withExtendedTest } from '../challenges/test-card.js';
 import { withHideTest } from '../stealth/hide-test.js';
 import { withFlashyAction, withStealthAction } from '../stealth/action.js';
 import {
@@ -330,7 +331,9 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
    * Shift+clique rola direto, sem a janela. Se o jogador cancelar, não rola. Com uma perseguição
    * em andamento, a janela oferece "usar como teste de avanço" (menos com `chase: false`). Com
    * `stealth: true` (testes de perícia, aptidão e ofício) e uma cena de furtividade em andamento,
-   * oferece «usar como teste de esconderijo» a quem ainda não se escondeu.
+   * oferece «usar como teste de esconderijo» a quem ainda não se escondeu. Se o personagem participa
+   * de um teste estendido ativo (guia de desafios), oferece «usar no teste estendido» (também
+   * menos com `chase: false`, como nos testes de lesão e de trauma).
    * @param {MouseEvent} event
    * @param {Object} config Veja `askRollChoices`.
    * @param {(options: object) => Promise<*>} run Faz a rolagem com as opções escolhidas.
@@ -339,15 +342,19 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const { chase: offerAdvance = true, stealth: offerHide = false, ...rest } = config;
     const chase = offerAdvance ? chaseInfoFor(this.document, config.skillKey) : null;
     const stealth = offerHide ? stealthInfoFor(this.document) : null;
+    const challenges = offerAdvance ? challengeChoicesFor(this.document) : [];
     let options = await askRollChoices(this.document, {
       ...rest,
       chase,
       stealth,
+      challenges,
       shift: event?.shiftKey,
     });
     if (!options) return;
     // Ação chamativa: o dado é descartado quando o teste rolar (combina com o avanço, se houver)
     if (options.chamativa) options = withFlashyAction(this.document, options);
+    // Teste estendido: guarda o registro do botão «somar pontos» (não combina com o avanço)
+    if (options.estendido) options = withExtendedTest(this.document, options);
     if (options.esconderijo) {
       await run(withHideTest(this.document, options));
       return;

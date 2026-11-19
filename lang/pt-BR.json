@@ -981,7 +981,7 @@
         "Novo": "Novo teste estendido",
         "NomePadrao": "Teste estendido",
         "SemNome": "Teste estendido sem nome",
-        "Dica": "Individual: cada participante tem a sua pontuação. Em grupo: todos enchem a mesma pontuação, cada um tentando uma vez por rodada. Ajuste os pontos com −/+ ou digitando (Enter confirma)."
+        "Dica": "Individual: cada participante tem a sua pontuação. Em grupo: todos enchem a mesma pontuação, cada um tentando uma vez por rodada. Ajuste os pontos com −/+ ou digitando (Enter confirma). No teste, o jogador marca «Usar no teste estendido» na janela pré-teste e soma pelo botão do cartão."
       },
       "Cartao": {
         "Titulo": "Desafios",
@@ -998,6 +998,26 @@
         "Escolher": "Quem leva a penalidade",
         "SemAlvos": "Marque pelo menos um participante para levar a penalidade.",
         "SemParticipantes": "Este desafio ainda não tem participantes."
+      },
+      "Pre": {
+        "Titulo": "Teste estendido",
+        "Usar": "Usar no teste estendido",
+        "Regra": "Os pontos são somados pelo botão do cartão",
+        "Qual": "Desafio",
+        "Opcao": "{nome} (DT {dt})"
+      },
+      "Teste": {
+        "Indisponivel": "O teste estendido não está mais ativo para este personagem: o teste foi rolado como um teste comum."
+      },
+      "Barra": {
+        "Titulo": "{nome} (DT {dt})",
+        "passou": "passou, +{pontos}",
+        "falhou": "falhou, +{pontos}",
+        "crit": "sucesso crítico, +{pontos}",
+        "falhaCritica": "falha crítica, +{pontos}",
+        "Somar": "Somar {pontos} pontos",
+        "Somado": "{pontos} pontos somados a {nome}.",
+        "Fechado": "Teste estendido encerrado (ou o personagem saiu dele): nada a somar."
       }
     }
   },

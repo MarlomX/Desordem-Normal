@@ -47,6 +47,11 @@ function readSelection(form) {
       on: Boolean(fields.chamativaOn?.checked),
       index: fields.chamativaDado?.value ?? null,
     },
+    // Teste estendido (guia de desafios): a caixa e o desafio escolhido
+    estendido: {
+      on: Boolean(fields.estendidoOn?.checked),
+      id: fields.estendidoId?.value ?? '',
+    },
   };
 }
 
@@ -142,6 +147,28 @@ function syncAdvanceDt(form, on) {
   else field.dataset.dtAntes = String(next.saved);
 }
 
+/**
+ * Marcar «usar no teste estendido» muda a DT do campo para a do desafio escolhido; trocar de
+ * desafio com a caixa marcada troca a DT; desmarcar volta à DT de antes. Usa o mesmo lugar de
+ * guardar a DT anterior que o avanço (por isso o avanço é desmarcado antes, veja o `change`).
+ */
+function syncExtendedDt(form, on) {
+  const field = form.elements.dt;
+  if (!field) return;
+  const saved = field.dataset.dtAntes ? Number(field.dataset.dtAntes) : null;
+  const select = form.elements.estendidoId;
+  const challengeDt = Number(select?.selectedOptions?.[0]?.dataset.dt);
+  const next = advanceDtField({
+    on,
+    current: Number(field.value),
+    saved,
+    dt: Number.isFinite(challengeDt) && challengeDt > 0 ? challengeDt : undefined,
+  });
+  field.value = String(next.value);
+  if (next.saved === null) delete field.dataset.dtAntes;
+  else field.dataset.dtAntes = String(next.saved);
+}
+
 /** Atualiza prévia, espaços, bloqueios, custos e o botão de rolar conforme as escolhas. */
 function refresh(form, root, model) {
   const evaluation = evaluateSelection(model, readSelection(form));
@@ -205,9 +232,23 @@ function refresh(form, root, model) {
       }
     }
   }
+  // Teste estendido marcado: o teste não pode valer como esconderijo, esconder-se, distrair ou
+  // avanço (a ação chamativa continua valendo). Mostra a escolha do desafio só com a caixa marcada.
+  const extended = evaluation.estendido.on;
+  root.querySelector('[data-estendido-detalhes]')?.classList.toggle('is-oculta', !extended);
+  for (const radio of root.querySelectorAll('input[name="furtivaAcao"]')) {
+    if (radio.value === '') continue;
+    // A ação chamativa já desliga esconder-se e distrair (acima); aqui desliga todas as três
+    radio.disabled = extended || (flashy && radio.value !== 'teste');
+    if (extended && radio.checked) {
+      radio.checked = false;
+      const plain = root.querySelector('input[name="furtivaAcao"][value=""]');
+      if (plain) plain.checked = true;
+    }
+  }
   const advanceBox = form.elements.avancoOn;
   if (advanceBox && !root.querySelector('[data-avanco]')?.dataset.bloqueado) {
-    advanceBox.disabled = hiding;
+    advanceBox.disabled = hiding || extended;
     if (hiding && advanceBox.checked) {
       // Desmarcar o avanço devolve a DT que estava no campo antes dele
       advanceBox.checked = false;
@@ -263,6 +304,8 @@ function refresh(form, root, model) {
  *   oferecer "usar como teste de avanço" (veja `buildRollModel`). Sem isso, a opção não aparece.
  * @param {object|null} [config.stealth] Com cena de furtividade, o que a seção oferece (teste de
  *   esconderijo, esconder-se, distrair; veja `stealthOptions`). Sem isso, a seção não aparece.
+ * @param {{id: string, nome: string, dt: number}[]} [config.challenges] Testes estendidos ativos
+ *   de que o personagem participa: com algum, a janela oferece «usar no teste estendido».
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
  */
 export async function askRollChoices(
@@ -277,6 +320,7 @@ export async function askRollChoices(
     allowNonLethal = false,
     chase = null,
     stealth = null,
+    challenges = [],
     shift = false,
   },
 ) {
@@ -299,6 +343,7 @@ export async function askRollChoices(
     showDt,
     chase,
     stealth,
+    challenges,
   });
 
   const costText = (cost) =>
@@ -348,6 +393,14 @@ export async function askRollChoices(
       breathOptions: Array.from({ length: model.avanco.breathMax + 1 }, (_, n) => ({ n })),
       esforcoTexto: t('DESORDEM.Perseguicao.Pre.Esforco', { dados: model.avanco.effortDice }),
     },
+    // Teste estendido: os desafios do personagem, com a DT de cada um (lida ao marcar a caixa)
+    estendido: model.estendido && {
+      desafios: model.estendido.desafios.map((entry) => ({
+        id: entry.id,
+        dt: entry.dt,
+        label: t('DESORDEM.Desafio.Pre.Opcao', { nome: entry.nome, dt: entry.dt }),
+      })),
+    },
     abilities: model.abilities.map((ability) => ({
       ...ability,
       label: t(`DESORDEM.Teste.Pre.Hab.${ability.key}`, { die: ability.die }),
@@ -378,6 +431,22 @@ export async function askRollChoices(
       const form = root.closest('form') ?? dialog.element.querySelector('form');
       form.addEventListener('change', (event) => {
         if (event.target.name === 'avancoOn') syncAdvanceDt(form, event.target.checked);
+        if (event.target.name === 'estendidoOn') {
+          // Desmarca o avanço antes (devolve a DT dele), para as duas não guardarem a DT juntas
+          if (event.target.checked && form.elements.avancoOn?.checked) {
+            form.elements.avancoOn.checked = false;
+            syncAdvanceDt(form, false);
+          }
+          syncExtendedDt(form, event.target.checked);
+        }
+        if (event.target.name === 'estendidoId' && form.elements.estendidoOn?.checked) {
+          // Troca de desafio: a DT passa a ser a do novo (a DT de antes continua guardada)
+          const field = form.elements.dt;
+          const challengeDt = Number(event.target.selectedOptions?.[0]?.dataset.dt);
+          if (field && Number.isFinite(challengeDt) && challengeDt > 0) {
+            field.value = String(challengeDt);
+          }
+        }
         refresh(form, root, model);
       });
       form.addEventListener('input', (event) => {

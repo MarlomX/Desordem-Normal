@@ -340,3 +340,120 @@ export function sidebarOrder(keys, newKey, after = 'scenes') {
   }
   return [...rest.slice(0, index), newKey, ...rest.slice(index)];
 }
+
+// ---------------------------------------------------------------------------------------------
+// Teste estendido pela janela pré-teste (0.18.1). O teste marcado como «usar no teste estendido»
+// guarda na mensagem do chat um registro (flag `desafio`). O valor do botão não fica guardado: é
+// recalculado dos dados atuais do cartão a cada vez (a Análise e a Prontidão mudam o resultado até
+// o clique). O que somar ao passar e ao falhar é guardado na hora da rolagem, para uma mudança na
+// configuração do desafio não mudar um teste já rolado. O botão é de uso único (a reserva contra
+// o duplo clique é a mesma do avanço da perseguição: reserveAdvance/finishAdvanceFlag).
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Desafios que a janela pré-teste oferece ao personagem: os testes estendidos ativos de que ele
+ * participa, na ordem da guia.
+ * @returns {{id: string, nome: string, dt: number}[]}
+ */
+export function challengeTestChoices(data, actorId) {
+  if (!actorId) return [];
+  return data.desafios
+    .filter(
+      (challenge) =>
+        challenge.ativo &&
+        challenge.tipo === 'estendido' &&
+        challenge.participantes.some((entry) => entry.actorId === actorId),
+    )
+    .map((challenge) => ({ id: challenge.id, nome: challenge.nome, dt: challenge.dt }));
+}
+
+/** Registro de um teste estendido recém-rolado: nada somado ainda. */
+export function createChallengeTestFlag({ challenge, actorId, dt }) {
+  return {
+    desafioId: challenge.id,
+    actorId,
+    dt: storedInt(dt, MIN_DT, MAX_DT, challenge.dt),
+    somaPassar: challenge.somaPassar,
+    somaFalhar: challenge.somaFalhar,
+    estado: 'pendente',
+    ganho: null,
+  };
+}
+
+/**
+ * O teste passou no desafio? Sucesso crítico passa sempre e falha crítica falha sempre (p. 11);
+ * no resto, o total contra a DT guardada no registro.
+ * @param {{total: number, criticalSuccess: boolean, criticalFailure: boolean}} result
+ */
+export function challengeTestSuccess(result, dt) {
+  if (result.criticalFailure) return false;
+  if (result.criticalSuccess) return true;
+  return result.total >= dt;
+}
+
+/** Valor de uma rolagem pelo nome guardado ('ra', 'rb' ou 'nada'). */
+function rollPart(result, part) {
+  if (part === 'ra') return result.highRoll;
+  if (part === 'rb') return result.lowRoll;
+  return 0;
+}
+
+/**
+ * Pontos que o teste soma ao desafio.
+ * - Sucesso crítico: as duas rolagens mais altas (`highSum`), qualquer que seja o «ao passar».
+ * - Passou: a RA ou a RB, como o desafio manda.
+ * - Falhou (e falha crítica): nada, a RB ou a RA, como o desafio manda. O efeito da falha crítica
+ *   (tabela d8) continua no cartão, como em qualquer teste.
+ * @param {{total: number, highRoll: number, lowRoll: number, highSum: number,
+ *   criticalSuccess: boolean, criticalFailure: boolean}} result Resultado de `resolveTest`.
+ * @param {{dt: number, somaPassar: string, somaFalhar: string}} flag Registro do teste.
+ */
+export function challengeTestGain(result, flag) {
+  if (!challengeTestSuccess(result, flag.dt)) {
+    return Math.max(0, rollPart(result, pick(flag.somaFalhar, ON_FAIL, 'nada')));
+  }
+  if (result.criticalSuccess) return Math.max(0, result.highSum);
+  return Math.max(0, rollPart(result, pick(flag.somaPassar, ON_PASS, 'ra')));
+}
+
+/**
+ * Soma os pontos de um teste ao desafio (o mestre, ao clicar no botão). Só vale se o desafio está
+ * ativo e o personagem ainda participa; senão devolve `null` (o botão não soma nada).
+ */
+export function applyChallengeTest(challenge, actorId, gain) {
+  if (!challenge?.ativo) return null;
+  if (!challenge.participantes.some((entry) => entry.actorId === actorId)) return null;
+  return adjustPoints(challenge, actorId, gain);
+}
+
+/**
+ * O que a barra do cartão do teste mostra. `kind` diz como o valor foi obtido (para o texto):
+ * `crit`, `passou`, `falhou` ou `falhaCritica`. `fechado` quando o desafio foi encerrado,
+ * excluído, ou o personagem saiu dele (o botão some).
+ * @param {object} flag Registro do teste (`createChallengeTestFlag`).
+ * @param {object} result Resultado atual do teste (com os dados que o cartão mostra agora).
+ * @param {{canApply: boolean, claimable: boolean, busy: boolean, challenge: object|null}} viewer
+ *   `claimable` e `busy` vêm da reserva do botão (veja `isAdvanceClaimable` em chase.js).
+ */
+export function challengeBarView(flag, result, { canApply, claimable, busy, challenge }) {
+  const pontos = challengeTestGain(result, flag);
+  let kind = 'passou';
+  if (result.criticalFailure) kind = 'falhaCritica';
+  else if (result.criticalSuccess) kind = 'crit';
+  else if (!challengeTestSuccess(result, flag.dt)) kind = 'falhou';
+  const applied = flag.estado === 'aplicado';
+  const fechado =
+    !applied &&
+    (!challenge?.ativo || !challenge.participantes.some((entry) => entry.actorId === flag.actorId));
+  return {
+    dt: flag.dt,
+    kind,
+    pontos,
+    nome: challenge?.nome ?? '',
+    applied,
+    appliedPontos: flag.ganho,
+    busy: !applied && busy,
+    fechado,
+    showButton: canApply && claimable && !fechado,
+  };
+}

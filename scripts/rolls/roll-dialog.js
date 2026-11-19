@@ -43,6 +43,9 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  * @param {object|null} [input.stealth] Com uma cena de furtividade em andamento, o que a seção de
  *   furtividade oferece (veja `stealthOptions` em stealth.js): `teste` (teste de esconderijo),
  *   `esconder` ({dt}) e `distrair` ({dt, recipients}). Sem isso, a seção não aparece.
+ * @param {{id: string, nome: string, dt: number}[]} [input.challenges] Testes estendidos ativos de
+ *   que o personagem participa (guia de desafios). Com algum, a janela oferece «usar no teste
+ *   estendido»; marcada, a opção desliga o avanço e a seção de furtividade (menos a chamativa).
  */
 export function buildRollModel({
   skillKey,
@@ -57,6 +60,7 @@ export function buildRollModel({
   showDt = true,
   chase = null,
   stealth = null,
+  challenges = [],
 }) {
   const abilities = [];
   if (has.impeto) {
@@ -127,6 +131,17 @@ export function buildRollModel({
         : null,
     // Ação chamativa: sacrificar um dado de esconderijo escolhido (veja `flashyOption`)
     chamativa: stealth?.chamativa ?? null,
+    // Teste estendido (guia de desafios): o teste soma pontos a um desafio escolhido
+    estendido:
+      Array.isArray(challenges) && challenges.length
+        ? {
+            desafios: challenges.map((entry) => ({
+              id: entry.id,
+              nome: entry.nome,
+              dt: normalizeDt(entry.dt),
+            })),
+          }
+        : null,
   };
 }
 
@@ -142,6 +157,7 @@ export function emptySelection(dt) {
     esconderijo: { on: false },
     furtiva: { acao: '', destino: '' },
     chamativa: { on: false, index: null },
+    estendido: { on: false, id: '' },
   };
 }
 
@@ -175,8 +191,13 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
   const chamativa = flashyDie
     ? { on: true, index: flashyDie.index, lados: flashyDie.lados, valor: flashyDie.valor }
     : { on: false, index: null };
+  // Teste estendido: marcado, o teste não vale como avanço, esconderijo, esconder-se ou distrair
+  const extendedList = model.estendido?.desafios ?? [];
+  const extendedChoice = Boolean(model.estendido && selection.estendido?.on)
+    ? (extendedList.find((entry) => entry.id === selection.estendido?.id) ?? extendedList[0])
+    : null;
   // Esconder-se ou distrair (só se a opção existe para o personagem)
-  const wantedAction = chamativa.on ? '' : selection.furtiva?.acao;
+  const wantedAction = chamativa.on || extendedChoice ? '' : selection.furtiva?.acao;
   const action =
     model.furtiva && STEALTH_TEST_ACTIONS.includes(wantedAction) && model.furtiva[wantedAction]
       ? wantedAction
@@ -187,9 +208,19 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       ? ((recipients.find((r) => r.id === selection.furtiva?.destino) ?? recipients[0])?.id ?? '')
       : '';
   // Teste de esconderijo: o teste não tem DT nem sofre pavor, e não vale ao mesmo tempo como avanço
-  const hide = !action && !chamativa.on && Boolean(model.esconderijo && selection.esconderijo?.on);
+  const hide =
+    !action &&
+    !chamativa.on &&
+    !extendedChoice &&
+    Boolean(model.esconderijo && selection.esconderijo?.on);
   // Avanço na perseguição: o fôlego gasto vira dados d6 fixos e o esforço extra sobe um passo
-  const advance = !hide && !action && model.avanco && !model.avanco.blocked && selection.avanco?.on;
+  const advance =
+    !hide &&
+    !action &&
+    !extendedChoice &&
+    model.avanco &&
+    !model.avanco.blocked &&
+    selection.avanco?.on;
   let breath = 0;
   if (advance) {
     breath = Math.max(
@@ -270,6 +301,14 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       ? normalizeDt(selection.dt, model.dt)
       : null;
   const furtiva = { acao: action, destino, dt: action ? model.furtiva[action].dt : null };
+  // DT do teste estendido: a do campo da janela; sem campo (teste oposto), a do desafio
+  const estendido = extendedChoice
+    ? {
+        on: true,
+        id: extendedChoice.id,
+        dt: model.showDt ? normalizeDt(selection.dt, model.dt) : extendedChoice.dt,
+      }
+    : { on: false, id: '', dt: null };
   return {
     selection: {
       bonus: normalizeBonus(manual),
@@ -281,6 +320,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       esconderijo: { on: hide },
       furtiva: { acao: action, destino },
       chamativa: { on: chamativa.on, index: chamativa.index },
+      estendido: { on: estendido.on, id: estendido.id },
     },
     dt: testDt,
     pdCost,
@@ -298,6 +338,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     esconderijo: { on: hide },
     furtiva,
     chamativa,
+    estendido,
     summedDice: Math.min(plan.rolledSides.length, MAX_COUNTED),
     errors,
     valid: errors.length === 0,
@@ -325,5 +366,7 @@ export function selectionToOptions(model, selection) {
   if (evaluated.furtiva.acao) options.furtiva = evaluated.furtiva;
   // Ação chamativa: a ficha descarta o dado escolhido quando o teste é rolado
   if (evaluated.chamativa.on) options.chamativa = evaluated.chamativa;
+  // Teste estendido: a ficha guarda na mensagem o registro do botão «somar pontos»
+  if (evaluated.estendido.on) options.estendido = evaluated.estendido;
   return options;
 }

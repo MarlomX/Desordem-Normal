@@ -981,7 +981,7 @@
         "Novo": "New extended test",
         "NomePadrao": "Extended test",
         "SemNome": "Unnamed extended test",
-        "Dica": "Individual: each participant has their own score. Group: everyone fills the same score, each one trying once per round. Adjust the points with −/+ or by typing (Enter confirms)."
+        "Dica": "Individual: each participant has their own score. Group: everyone fills the same score, each one trying once per round. Adjust the points with −/+ or by typing (Enter confirms). On a test, the player ticks “Use in the extended test” in the pre-test window and adds through the card's button."
       },
       "Cartao": {
         "Titulo": "Challenges",
@@ -998,6 +998,26 @@
         "Escolher": "Who takes the penalty",
         "SemAlvos": "Mark at least one participant to take the penalty.",
         "SemParticipantes": "This challenge has no participants yet."
+      },
+      "Pre": {
+        "Titulo": "Extended test",
+        "Usar": "Use in the extended test",
+        "Regra": "Points are added through the card's button",
+        "Qual": "Challenge",
+        "Opcao": "{nome} (DT {dt})"
+      },
+      "Teste": {
+        "Indisponivel": "The extended test is no longer active for this character: it was rolled as a regular test."
+      },
+      "Barra": {
+        "Titulo": "{nome} (DT {dt})",
+        "passou": "passed, +{pontos}",
+        "falhou": "failed, +{pontos}",
+        "crit": "critical success, +{pontos}",
+        "falhaCritica": "critical failure, +{pontos}",
+        "Somar": "Add {pontos} points",
+        "Somado": "{pontos} points added to {nome}.",
+        "Fechado": "Extended test ended (or the character left it): nothing to add."
       }
     }
   },

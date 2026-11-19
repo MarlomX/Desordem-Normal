@@ -226,6 +226,8 @@ async function settleAbilities(actor, options, result) {
  *   na mensagem (flag `esconderijo`) para o botão do cartão.
  * @param {string} [opts.rollMode] Modo de rolagem forçado (o esconderijo usa 'selfroll').
  * @param {object} [opts.acaoFlag] Registro do esconder-se ou do distrair (flag `acaoFurtiva`).
+ * @param {object} [opts.desafioFlag] Registro do teste estendido da guia de desafios (flag
+ *   `desafio`), para o botão «somar pontos» do cartão.
  */
 export async function rollTest({
   attrLabel = game.i18n.localize('DESORDEM.Teste.Atributo'),
@@ -235,6 +237,7 @@ export async function rollTest({
   avancoFlag,
   esconderijoFlag,
   acaoFlag,
+  desafioFlag,
   rollMode,
   ...options
 }) {
@@ -248,6 +251,7 @@ export async function rollTest({
   if (flags && avancoFlag) flags.avanco = avancoFlag;
   if (flags && esconderijoFlag) flags.esconderijo = esconderijoFlag;
   if (flags && acaoFlag) flags.acaoFurtiva = acaoFlag;
+  if (flags && desafioFlag) flags.desafio = desafioFlag;
   // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js). O teste de
   // esconderijo não tem efeito de falha crítica (a regra não traz nenhum).
   if (flags && result.criticalFailure && !esconderijoFlag) {

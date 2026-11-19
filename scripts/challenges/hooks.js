@@ -3,6 +3,7 @@
  * o redesenho das janelas e das fichas quando os desafios mudam, e a interface para macros.
  */
 import DesafioApp from './app.js';
+import { registerChallengeSocket } from './test-card.js';
 import {
   DesafiosListaApp,
   injectFallbackBar,
@@ -48,6 +49,8 @@ export function registerChallenges() {
 
 /** Depois que o mundo carregou (ready): cria e desenha a guia. */
 export async function readyChallenges() {
+  // Botão «somar pontos» do cartão do teste estendido (o mestre ativo atende os jogadores)
+  registerChallengeSocket();
   await startChallengeTab();
 }
 
