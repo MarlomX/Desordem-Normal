@@ -1,0 +1,49 @@
+<section class="desordem-perseguicao desordem-quadro">
+  {{#if existe}}
+  <header class="desordem-quadro__topo">
+    <span>{{composicao}}</span>
+    <span>{{localize "DESORDEM.Desafio.Fechadura.TentativasCurto"}} <strong>{{usadas}}{{#if maximo}}/{{maximo}}{{/if}}</strong></span>
+    {{#if destrancada}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
+    {{#if estragada}}<span class="desordem-perseguicao__selo">{{localize "DESORDEM.Desafio.Fechadura.Estragada"}}</span>{{/if}}
+  </header>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.Quadro.Dica"}}</p>
+
+  {{#if linhas.length}}
+  <ol class="desordem-quadro__linhas">
+    {{#each linhas}}
+    <li class="desordem-quadro__linha{{#unless tentativa}} is-teoria{{/unless}}">
+      <div class="desordem-quadro__cabeca">
+        <span class="desordem-quadro__nome">{{#if tentativa}}{{localize "DESORDEM.Desafio.Quadro.Tentativa" n=numero}}{{else}}{{localize "DESORDEM.Desafio.Quadro.Teoria" n=numero}}{{/if}}</span>
+        {{#if @root.editar}}<button type="button" class="desordem-quadro__apagar" data-action="removeRow" data-row-id="{{id}}" title="{{localize "DESORDEM.Desafio.Quadro.Apagar"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>{{/if}}
+      </div>
+      <div class="desordem-quadro__dados">
+        {{#each dados}}
+        {{! Um dado: ▲ em cima, o número (digitável nas linhas de teoria), = e ▼ embaixo }}
+        <div class="desordem-quadro__dado">
+          <button type="button" class="desordem-quadro__marca is-cima{{#if cima}} is-ligada{{/if}}" data-action="toggleMark" data-row-id="{{../id}}" data-index="{{index}}" data-mark="cima" title="{{localize "DESORDEM.Desafio.Quadro.Cima"}}" aria-pressed="{{#if cima}}true{{else}}false{{/if}}"{{#unless @root.editar}} disabled{{/unless}}><i class="fa-solid fa-chevron-up" aria-hidden="true"></i></button>
+          {{#if editavel}}
+          <input type="number" class="desordem-quadro__valor" data-campo="valor" data-row-id="{{../id}}" data-index="{{index}}" value="{{valor}}" min="1" max="{{lados}}" step="1" inputmode="numeric" placeholder="d{{lados}}" aria-label="d{{lados}}"{{#unless @root.editar}} disabled{{/unless}}>
+          {{else}}
+          <span class="desordem-quadro__valor" title="d{{lados}}">{{valor}}</span>
+          {{/if}}
+          <button type="button" class="desordem-quadro__marca is-igual{{#if igual}} is-ligada{{/if}}" data-action="toggleMark" data-row-id="{{../id}}" data-index="{{index}}" data-mark="igual" title="{{localize "DESORDEM.Desafio.Quadro.Igual"}}" aria-pressed="{{#if igual}}true{{else}}false{{/if}}"{{#unless @root.editar}} disabled{{/unless}}>=</button>
+          <button type="button" class="desordem-quadro__marca is-baixo{{#if baixo}} is-ligada{{/if}}" data-action="toggleMark" data-row-id="{{../id}}" data-index="{{index}}" data-mark="baixo" title="{{localize "DESORDEM.Desafio.Quadro.Baixo"}}" aria-pressed="{{#if baixo}}true{{else}}false{{/if}}"{{#unless @root.editar}} disabled{{/unless}}><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
+        </div>
+        {{/each}}
+      </div>
+    </li>
+    {{/each}}
+  </ol>
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{localize "DESORDEM.Desafio.Quadro.Vazio"}}</p>
+  {{/if}}
+
+  {{#if editar}}
+  <div class="desordem-perseguicao__acoes">
+    <button type="button" data-action="newRow"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Quadro.NovaLinha"}}</button>
+  </div>
+  {{/if}}
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{localize "DESORDEM.Desafio.NaoExiste"}}</p>
+  {{/if}}
+</section>

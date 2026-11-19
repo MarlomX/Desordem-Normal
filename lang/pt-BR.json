@@ -1159,6 +1159,20 @@
         "MaximoDica": "0 = tentativas infinitas",
         "MostrarMaximo": "Mostrar o máximo de tentativas aos jogadores",
         "ContagemSemMaximo": "Tentativas: {usadas}."
+      },
+      "Quadro": {
+        "Titulo": "Quadro da fechadura",
+        "TituloNome": "Fechadura: {nome}",
+        "Dica": "Rascunho do grupo: cada tentativa entra aqui sozinha, e «Nova linha» cria uma linha de teoria. Use ▲, = e ▼ do jeito que fizer sentido para vocês; nada aqui é conferido com a senha.",
+        "Tentativa": "Tentativa {n}",
+        "Teoria": "Teoria {n}",
+        "Apagar": "Apagar linha",
+        "Cima": "Marca ▲",
+        "Igual": "Marca =",
+        "Baixo": "Marca ▼",
+        "Vazio": "Nenhuma linha ainda: tente uma senha ou crie uma linha de teoria.",
+        "NovaLinha": "Nova linha",
+        "AbrirDica": "Abre o quadro de teoria da fechadura"
       }
     }
   },

@@ -12,6 +12,8 @@
  * infinitas; o mestre pode esconder o máximo dos jogadores (`mostrarMaximo`).
  */
 
+import { normalizeBoard } from './lock-board.js';
+
 /** Faces possíveis dos dados da fechadura. */
 export const LOCK_FACES = Object.freeze([4, 6, 8, 10, 12, 20]);
 
@@ -78,6 +80,8 @@ export function normalizeLock(raw) {
     auto: raw?.auto === true,
     senhaMsg: typeof raw?.senhaMsg === 'string' ? raw.senhaMsg : '',
     destrancou: raw?.destrancou === true,
+    // Quadro de teoria dos jogadores (veja lock-board.js)
+    quadro: normalizeBoard(raw?.quadro, resizeSides(listed, dados, fallback)),
   };
 }
 
@@ -164,8 +168,14 @@ export const markUnlocked = (lock) => ({ ...lock, destrancou: true });
 /** Guarda o id da mensagem sussurrada com a senha (vazio = sem senha). */
 export const setSecretMessage = (lock, id) => ({ ...lock, senhaMsg: String(id ?? '') });
 
-/** Nova fechadura: zera as tentativas, tira o «destrancou» e esquece a senha. */
-export const resetLock = (lock) => ({ ...lock, usadas: 0, destrancou: false, senhaMsg: '' });
+/** Nova fechadura: zera as tentativas, tira o «destrancou», esquece a senha e limpa o quadro. */
+export const resetLock = (lock) => ({
+  ...lock,
+  usadas: 0,
+  destrancou: false,
+  senhaMsg: '',
+  quadro: [],
+});
 
 /**
  * Edita um campo da fechadura (janela do mestre). Mudar a quantidade de dados ou algum dado esquece

@@ -45,6 +45,7 @@ import { showChallengeList } from '../challenges/sidebar.js';
 import { challengeChoicesFor, withExtendedTest } from '../challenges/test-card.js';
 import { rollBalance } from '../challenges/balance-card.js';
 import { attemptLock } from '../challenges/lock-card.js';
+import QuadroApp from '../challenges/board-app.js';
 import { withHideTest } from '../stealth/hide-test.js';
 import { withFlashyAction, withStealthAction } from '../stealth/action.js';
 import {
@@ -132,6 +133,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       openChallenge: PersonagemSheet.#onOpenChallenge,
       rollBalance: PersonagemSheet.#onRollBalance,
       attemptLock: PersonagemSheet.#onAttemptLock,
+      openLockBoard: PersonagemSheet.#onOpenLockBoard,
       adjustHideUses: PersonagemSheet.#onAdjustHideUses,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
@@ -818,6 +820,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Destrancar: o jogador tenta uma senha (botão do cartão de desafios da ficha). */
   static async #onAttemptLock(event, target) {
     await attemptLock(this.document, target.dataset.challengeId);
+  }
+
+  /** Destrancar: abre o quadro de teoria da fechadura (cartão de desafios da ficha). */
+  static async #onOpenLockBoard(event, target) {
+    await QuadroApp.open(target.dataset.challengeId);
   }
 
   /** O mestre abre a janela de um desafio pelo nome no cartão da ficha. */

@@ -25,6 +25,7 @@
         {{/if}}
         {{#if concluido}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
         {{#unless ativo}}<span class="desordem-perseguicao__selo">{{localize "DESORDEM.Desafio.Encerrado"}}</span>{{/unless}}
+        {{#if destrancar}}<button type="button" class="desordem-desafios__quadro" data-action="openLockBoard" data-challenge-id="{{id}}" title="{{localize "DESORDEM.Desafio.Quadro.AbrirDica"}}"><i class="fa-solid fa-table-list" aria-hidden="true"></i></button>{{/if}}
         {{#if estragada}}<span class="desordem-perseguicao__selo">{{localize "DESORDEM.Desafio.Fechadura.Estragada"}}</span>{{/if}}
       </div>
       <div class="desordem-desafios__info">

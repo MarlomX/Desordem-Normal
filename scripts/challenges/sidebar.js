@@ -26,6 +26,7 @@ import {
 } from '../rolls/challenge.js';
 import { lockStatus } from '../rolls/lock.js';
 import DesafioApp, { confirmDeleteChallenge } from './app.js';
+import QuadroApp from './board-app.js';
 import { actorInfo, createChallenge, mutateChallenge, readChallenges } from './store.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
@@ -89,6 +90,10 @@ const LIST_ACTIONS = {
     await mutateChallenge(target.dataset.challengeId, (challenge) =>
       updateChallengeField(challenge, 'ativo', !challenge.ativo),
     );
+  },
+  /** Destrancar: o quadro de teoria (qualquer um pode olhar; participantes e mestre editam). */
+  async openLockBoard(event, target) {
+    await QuadroApp.open(target.dataset.challengeId);
   },
   async deleteChallenge(event, target) {
     await confirmDeleteChallenge(target.dataset.challengeId);

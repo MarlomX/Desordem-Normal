@@ -29,6 +29,13 @@ import {
   setSecretMessage,
   validSequence,
 } from '../rolls/lock.js';
+import {
+  addAttemptRow,
+  addManualRow,
+  removeBoardRow,
+  setBoardValue,
+  toggleBoardMark,
+} from '../rolls/lock-board.js';
 import { SOCKET } from '../chase/store.js';
 import { createChallenge, getChallenge, mutateChallenge, worldActorId } from './store.js';
 
@@ -189,6 +196,11 @@ function respondFromCard(message) {
 const inFlight = new Set();
 
 async function handleRequest(payload, userId) {
+  // O quadro não tem trava local: cada mudança é pequena e passa pela fila de gravação do mestre
+  if (payload.action === 'lockBoard') {
+    await applyBoardChange(payload, userId);
+    return;
+  }
   const key = payload.messageId ?? `${payload.challengeId}:${payload.actorId}`;
   if (inFlight.has(key)) return;
   inFlight.add(key);
@@ -198,6 +210,47 @@ async function handleRequest(payload, userId) {
   } finally {
     inFlight.delete(key);
   }
+}
+
+// ---------- Quadro de teoria ----------
+
+/** Quem pode mexer no quadro: o mestre ou o dono de algum participante do desafio. */
+export function canEditBoard(challenge, user = game.user) {
+  if (!challenge || !user) return false;
+  if (user.isGM) return true;
+  return challenge.participantes.some((entry) =>
+    game.actors.get(entry.actorId)?.testUserPermission(user, 'OWNER'),
+  );
+}
+
+/** Operações do quadro: nova linha, número de uma linha de teoria, marca e apagar linha. */
+const BOARD_OPS = new Set(['nova', 'valor', 'marca', 'apagar']);
+
+/**
+ * Pede uma mudança no quadro (janela do quadro). O mestre aplica direto; o jogador pede ao mestre.
+ * @param {string} challengeId
+ * @param {{op: string, rowId?: string, index?: number, value?: string, mark?: string}} change
+ */
+export function requestBoardChange(challengeId, change) {
+  return request({ action: 'lockBoard', challengeId, ...change });
+}
+
+/** Aplica uma mudança no quadro (mestre ativo), conferindo quem pediu. */
+async function applyBoardChange({ challengeId, op, rowId, index, value, mark }, userId) {
+  if (!BOARD_OPS.has(op)) return;
+  const requester = game.users.get(userId);
+  const challenge = getChallenge(challengeId);
+  if (challenge?.tipo !== 'destrancar' || !canEditBoard(challenge, requester)) return;
+  const newId = foundry.utils.randomID();
+  const position = Number(index);
+  await mutateChallenge(challengeId, (current) =>
+    withLock(current, (lock) => {
+      if (op === 'nova') return addManualRow(lock, newId);
+      if (op === 'valor') return setBoardValue(lock, String(rowId), position, value) ?? lock;
+      if (op === 'marca') return toggleBoardMark(lock, String(rowId), position, mark) ?? lock;
+      return removeBoardRow(lock, String(rowId)) ?? lock;
+    }),
+  );
 }
 
 /** Conta a tentativa (mestre), responde se a verificação automática estiver ligada e posta. */
@@ -212,12 +265,15 @@ async function applyAttempt({ challengeId, actorId, values }, userId) {
   if (!validSequence(guess, before.fechadura)) return;
 
   const secret = before.fechadura.auto ? readSecret(before) : null;
+  const rowId = foundry.utils.randomID();
   let outcome = null;
   await mutateChallenge(challengeId, (challenge) => {
     const counted = registerAttempt(challenge.fechadura);
     if (!counted) return challenge;
     const answers = secret ? lockAnswers(secret, guess) : null;
-    const lock = allCorrect(answers) ? markUnlocked(counted) : counted;
+    // A tentativa também entra no quadro de teoria (números travados)
+    const withRow = addAttemptRow(counted, rowId, guess);
+    const lock = allCorrect(answers) ? markUnlocked(withRow) : withRow;
     // O cartão do chat é público: só leva o máximo se os jogadores podem vê-lo
     outcome = {
       answers,
@@ -279,6 +335,15 @@ async function applyResponse({ messageId }, userId) {
 export function registerLockSocket() {
   game.socket.on(SOCKET, async (data, userId) => {
     if (game.users.activeGM?.id !== game.user.id) return;
+    if (data?.action === 'lockBoard') {
+      // Só os campos conhecidos (o resto do pedido é ignorado)
+      const { challengeId, op, rowId, index, value, mark } = data;
+      await handleRequest(
+        { action: 'lockBoard', challengeId, op, rowId, index, value, mark },
+        userId,
+      );
+      return;
+    }
     if (data?.action !== 'lockAttempt') return;
     await handleRequest(
       {

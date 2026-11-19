@@ -2791,6 +2791,7 @@ button.desordem-desafios-cartao__nome:hover {
 .desordem-desafios-cartao .desordem-desafios-cartao__selo {
   display: flex;
   justify-content: center;
+  gap: 4px;
 }
 
 /* ===== Equilíbrio: cartão do chat e reserva na janela do desafio (v0.18.5) ===== */
@@ -2898,4 +2899,120 @@ button.desordem-desafios-cartao__nome:hover {
   flex: 0 0 auto;
   width: auto;
   min-width: 4.5em;
+}
+
+/* ===== Destrancar: quadro de teoria da fechadura (v0.18.8) ===== */
+
+.desordem-quadro__topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.desordem-quadro__linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-quadro__linha {
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 4px;
+  padding: 4px 8px 6px;
+}
+
+/* Linha de teoria: borda tracejada (rascunho) */
+.desordem-quadro__linha.is-teoria {
+  border-style: dashed;
+}
+
+.desordem-quadro__cabeca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.desordem-quadro__nome {
+  font-weight: 700;
+}
+
+.desordem-quadro__apagar {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-quadro__dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.desordem-quadro__dado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 3.2em;
+}
+
+.desordem-quadro__valor {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 1.9em;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 4px;
+  font-size: 1.2em;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.desordem-quadro__marca {
+  box-sizing: border-box;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  padding: 0;
+  background: none;
+  font-size: 0.75em;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+/* Marca ligada: ▲ e = em verde, ▼ em vermelho (só anotação do jogador) */
+.desordem-quadro__marca.is-ligada {
+  opacity: 1;
+  color: #fff;
+}
+
+.desordem-quadro__marca.is-cima.is-ligada,
+.desordem-quadro__marca.is-igual.is-ligada {
+  border-color: #3f8f46;
+  background: #3f8f46;
+}
+
+.desordem-quadro__marca.is-baixo.is-ligada {
+  border-color: var(--dn-pv, #b03a2e);
+  background: var(--dn-pv, #b03a2e);
+}
+
+/* Guia: botão do quadro ao lado do nome do desafio */
+.desordem-desafios__quadro {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
 }

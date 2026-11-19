@@ -3,6 +3,7 @@
  * o redesenho das janelas e das fichas quando os desafios mudam, e a interface para macros.
  */
 import DesafioApp from './app.js';
+import QuadroApp from './board-app.js';
 import { registerChallengeSocket } from './test-card.js';
 import { registerBalanceSocket } from './balance-card.js';
 import { registerLockSocket } from './lock-card.js';
@@ -35,6 +36,7 @@ export function registerChallenges() {
   onChallengesChange(() => {
     refreshChallengeList();
     DesafioApp.refreshAll();
+    QuadroApp.refreshAll();
     refreshSheets();
   });
   // Um ator renomeado (ou com outra imagem) ou apagado muda o que a lista mostra
@@ -66,5 +68,6 @@ export const challengeApi = {
   janela: () => DesafiosListaApp.open(),
   criar: (nome, tipo) => createChallenge(nome, tipo),
   editar: (id) => DesafioApp.open(id),
+  quadro: (id) => QuadroApp.open(id),
   listar: () => readChallenges().desafios,
 };

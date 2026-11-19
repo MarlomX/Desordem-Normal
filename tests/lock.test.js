@@ -51,6 +51,7 @@ test('fechadura: padrões e limites (1 a 10 dados, d4 a d20)', () => {
     auto: false,
     senhaMsg: '',
     destrancou: false,
+    quadro: [],
   });
   const odd = normalizeLock({ dados: 99, faces: 7, maximo: -1, usadas: -2, auto: 'sim' });
   assert.deepEqual(
