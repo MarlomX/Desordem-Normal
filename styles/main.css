@@ -2792,3 +2792,52 @@ button.desordem-desafios-cartao__nome:hover {
   display: flex;
   justify-content: center;
 }
+
+/* ===== Equilíbrio: cartão do chat e reserva na janela do desafio (v0.18.5) ===== */
+
+/* Os dois d10 lado a lado, com os d4 somados */
+.desordem-equilibrio__dados {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 4px 0;
+}
+
+.desordem-equilibrio__dado {
+  min-width: 3em;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.desordem-equilibrio__situacao {
+  margin: 2px 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+.desordem-equilibrio__situacao.is-caindo {
+  color: var(--dn-pv, #c0392b);
+}
+
+.desordem-equilibrio__acoes {
+  flex-wrap: wrap;
+}
+
+/* Janela do desafio: a reserva de d4 ao lado dos pontos */
+.desordem-desafio__reserva {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Cartão da ficha: o botão de rolar o equilíbrio na coluna do selo */
+.desordem-desafios-cartao .desordem-desafios-cartao__rolar {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 0 6px;
+  line-height: 1.6;
+}

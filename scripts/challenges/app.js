@@ -16,6 +16,7 @@ import {
   challengeView,
   removeParticipant,
   typePoints,
+  typeReserve,
   updateChallengeField,
 } from '../rolls/challenge.js';
 import { askAndPostPenalty } from '../chase/penalty-card.js';
@@ -43,6 +44,7 @@ const TYPE_HINTS = {
   escalar: 'Escalar',
   alcancar: 'Alcancar',
   sustentar: 'Sustentar',
+  equilibrio: 'Equilibrio',
 };
 
 /** Campos de configuração que a janela grava pelo `change` (os demais são pontos). */
@@ -228,6 +230,7 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       if (CONFIG_FIELDS.has(campo)) return updateChallengeField(challenge, campo, value);
       if (campo === 'pontos') return typePoints(challenge, actorId, value);
       if (campo === 'total') return typePoints(challenge, null, value);
+      if (campo === 'reserva') return typeReserve(challenge, actorId, value);
       return challenge;
     });
     // Valor inválido não grava nada: redesenhar devolve o campo ao valor guardado

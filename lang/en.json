@@ -1054,7 +1054,8 @@
         "arrombar": "Force open",
         "escalar": "Climb",
         "alcancar": "Reach",
-        "sustentar": "Hold up"
+        "sustentar": "Hold up",
+        "equilibrio": "Balance"
       },
       "Novo": "New",
       "Custo": "Cost per test (HP)",
@@ -1077,7 +1078,8 @@
         "arrombar": "points",
         "escalar": "points",
         "alcancar": "actions",
-        "sustentar": "rounds held"
+        "sustentar": "rounds held",
+        "equilibrio": "rounds"
       },
       "DtSegura": "Environment DT (safe)",
       "DtArriscada": "Risky DT (+3)",
@@ -1087,6 +1089,29 @@
       },
       "Sustentar": {
         "Dica": "One character per challenge (the others help through the pre-test window's help). The first test costs the HP to start; each round held lowers both dice of the next test by one step. Failing drops the object and resets the rounds."
+      },
+      "Equilibrio": {
+        "Titulo": "{nome}: balance ({desafio})",
+        "Equilibrado": "Difference {diff}: balanced.",
+        "Caindo": "Difference {diff}: starting to fall!",
+        "DadosUsados": "Balance dice used: {dados}.",
+        "Atravessou": "Crossed!",
+        "Registrado": "Balanced round ({n} so far).",
+        "Caiu": "Fell! The crossing starts over; the consequence comes through the GM's Penalty.",
+        "BotaoAtravessar": "Cross",
+        "BotaoRegistrar": "Record round",
+        "Pendente": "Balance die: {valor}. Which d10 should it add to?",
+        "Somar": "Add to d10 #{n} ({de} → {para})",
+        "BotaoDado": "Use a balance die ({n} left)",
+        "BotaoCair": "Fall",
+        "SemDados": "No balance dice left: the only option is to fall.",
+        "Rolar": "Roll",
+        "RolarDica": "Rolls the 2d10 of the balance",
+        "Rodadas": "Rounds to cross",
+        "Reserva": "d4",
+        "ReservaDica": "Balance dice left (empty = full pool: half of Acrobatics)",
+        "Cheia": "full",
+        "Dica": "Always individual. The player rolls 2d10 through the button on the sheet's challenge card: a difference of 0 or 1 balances; 2 or more starts a fall, and they may spend balance dice (d4, half of Acrobatics) adding to either d10. Each balanced round adds 1; when crossing or falling, the pool refills. The fall's consequence goes through the Penalty."
       }
     }
   },

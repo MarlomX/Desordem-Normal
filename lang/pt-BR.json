@@ -1054,7 +1054,8 @@
         "arrombar": "Arrombar",
         "escalar": "Escalar",
         "alcancar": "Alcançar",
-        "sustentar": "Sustentar"
+        "sustentar": "Sustentar",
+        "equilibrio": "Equilíbrio"
       },
       "Novo": "Novo",
       "Custo": "Custo por teste (PV)",
@@ -1077,7 +1078,8 @@
         "arrombar": "pontos",
         "escalar": "pontos",
         "alcancar": "ações",
-        "sustentar": "rodadas sustentadas"
+        "sustentar": "rodadas sustentadas",
+        "equilibrio": "rodadas"
       },
       "DtSegura": "DT do ambiente (segura)",
       "DtArriscada": "DT arriscada (+3)",
@@ -1087,6 +1089,29 @@
       },
       "Sustentar": {
         "Dica": "Um personagem por desafio (os outros ajudam pela ajuda da janela pré-teste). O primeiro teste custa o PV para começar; cada rodada sustentada reduz um passo dos dois dados do próximo teste. Falhar solta o objeto e zera as rodadas."
+      },
+      "Equilibrio": {
+        "Titulo": "{nome}: equilíbrio ({desafio})",
+        "Equilibrado": "Diferença {diff}: equilibrado.",
+        "Caindo": "Diferença {diff}: começando a cair!",
+        "DadosUsados": "Dados de equilíbrio usados: {dados}.",
+        "Atravessou": "Atravessou!",
+        "Registrado": "Rodada equilibrada ({n} até agora).",
+        "Caiu": "Caiu! A travessia recomeça; a consequência vem pela Penalidade do mestre.",
+        "BotaoAtravessar": "Atravessar",
+        "BotaoRegistrar": "Registrar rodada",
+        "Pendente": "Dado de equilíbrio: {valor}. Em qual d10 somar?",
+        "Somar": "Somar ao {n}º ({de} → {para})",
+        "BotaoDado": "Usar dado de equilíbrio (restam {n})",
+        "BotaoCair": "Cair",
+        "SemDados": "Sem dados de equilíbrio: resta cair.",
+        "Rolar": "Rolar",
+        "RolarDica": "Rola os 2d10 do equilíbrio",
+        "Rodadas": "Rodadas para atravessar",
+        "Reserva": "d4",
+        "ReservaDica": "Dados de equilíbrio que restam (vazio = reserva cheia: metade da Acrobacia)",
+        "Cheia": "cheia",
+        "Dica": "Sempre individual. O jogador rola 2d10 pelo botão do cartão de desafios da ficha: diferença de 0 ou 1 equilibra; de 2 ou mais começa a cair, e ele pode gastar dados de equilíbrio (d4, metade da Acrobacia) somando a qualquer d10. Cada rodada equilibrada soma 1; ao atravessar ou cair, a reserva recarrega. A consequência da queda vai pela Penalidade."
       }
     }
   },

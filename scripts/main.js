@@ -19,6 +19,7 @@ import { renderActionBar } from './stealth/action.js';
 import { registerCreatureTables } from './stealth/tables.js';
 import { challengeApi, readyChallenges, registerChallenges } from './challenges/hooks.js';
 import { renderChallengeBar } from './challenges/test-card.js';
+import { renderBalanceCard } from './challenges/balance-card.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
@@ -132,6 +133,7 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderTestButtons(message, html);
   renderAdvanceBar(message, html);
   renderChallengeBar(message, html);
+  renderBalanceCard(message, html);
   renderEffortBar(message, html);
   renderPenaltyBar(message, html);
   renderHideBar(message, html);

@@ -43,6 +43,7 @@ import { challengeCardFor } from '../challenges/store.js';
 import DesafioApp from '../challenges/app.js';
 import { showChallengeList } from '../challenges/sidebar.js';
 import { challengeChoicesFor, withExtendedTest } from '../challenges/test-card.js';
+import { rollBalance } from '../challenges/balance-card.js';
 import { withHideTest } from '../stealth/hide-test.js';
 import { withFlashyAction, withStealthAction } from '../stealth/action.js';
 import {
@@ -128,6 +129,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       openStealth: PersonagemSheet.#onOpenStealth,
       openChallenges: PersonagemSheet.#onOpenChallenges,
       openChallenge: PersonagemSheet.#onOpenChallenge,
+      rollBalance: PersonagemSheet.#onRollBalance,
       adjustHideUses: PersonagemSheet.#onAdjustHideUses,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
@@ -804,6 +806,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Mostra a lista de desafios (guia da barra lateral ou janela flutuante): cartão da ficha. */
   static async #onOpenChallenges() {
     await showChallengeList();
+  }
+
+  /** Equilíbrio: rola os 2d10 do desafio (botão do cartão de desafios da ficha). */
+  static async #onRollBalance(event, target) {
+    await rollBalance(this.document, target.dataset.challengeId);
   }
 
   /** O mestre abre a janela de um desafio pelo nome no cartão da ficha. */

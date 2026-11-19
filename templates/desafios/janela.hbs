@@ -14,7 +14,7 @@
     </label>
     {{#if view.temPa}}
     <label class="desordem-desafio__campo">
-      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.PAAlvo"}}</span>
+      <span class="desordem-perseguicao__rotulo">{{#if view.equilibrio}}{{localize "DESORDEM.Desafio.Equilibrio.Rodadas"}}{{else}}{{localize "DESORDEM.Desafio.PAAlvo"}}{{/if}}</span>
       <input type="number" class="desordem-perseguicao__campo" data-campo="pa" value="{{view.pa}}" min="1" max="999" step="1" inputmode="numeric">
     </label>
     {{/if}}
@@ -99,6 +99,13 @@
         </span>
         <span class="desordem-perseguicao__rotulo">{{@root.pontosRotulo}}</span>
         {{/unless}}
+        {{#if ../view.equilibrio}}
+        {{! Equilíbrio: d4 que restam (vazio = reserva cheia, metade da Acrobacia) }}
+        <label class="desordem-desafio__reserva" title="{{localize "DESORDEM.Desafio.Equilibrio.ReservaDica"}}">
+          <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Equilibrio.Reserva"}}</span>
+          <input type="number" class="desordem-perseguicao__campo" data-campo="reserva" data-actor-id="{{actorId}}" value="{{#unless reservaCheia}}{{reserva}}{{/unless}}" min="0" max="20" step="1" inputmode="numeric" placeholder="{{localize "DESORDEM.Desafio.Equilibrio.Cheia"}}">
+        </label>
+        {{/if}}
         <button type="button" class="desordem-perseguicao__remover" data-action="removeParticipant" data-actor-id="{{actorId}}" title="{{localize "DESORDEM.Desafio.Remover"}}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
       </div>
     </li>

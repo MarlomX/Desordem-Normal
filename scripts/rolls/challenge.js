@@ -21,6 +21,7 @@ export const CHALLENGE_TYPES = Object.freeze([
   'escalar',
   'alcancar',
   'sustentar',
+  'equilibrio',
 ]);
 
 /**
@@ -28,7 +29,11 @@ export const CHALLENGE_TYPES = Object.freeze([
  * fixa em 2 (as duas ações da forma segura); no sustentar os pontos contam as rodadas sustentadas
  * e só cabe um participante (os outros ajudam pela ajuda da janela pré-teste).
  */
-export const INDIVIDUAL_TYPES = Object.freeze(['escalar', 'alcancar', 'sustentar']);
+export const INDIVIDUAL_TYPES = Object.freeze(['escalar', 'alcancar', 'sustentar', 'equilibrio']);
+
+/** Equilíbrio: rodadas para atravessar (a PA) e o limite da reserva de dados de equilíbrio. */
+export const DEFAULT_BALANCE_ROUNDS = 3;
+export const MAX_BALANCE_DICE = 20;
 
 /** Ações da forma segura do alcançar (a forma arriscada chega direto). */
 export const REACH_TARGET = 2;
@@ -46,6 +51,7 @@ export const TYPE_ICONS = Object.freeze({
   escalar: 'fa-mountain',
   alcancar: 'fa-hand',
   sustentar: 'fa-dumbbell',
+  equilibrio: 'fa-scale-balanced',
 });
 
 /** Abordagens da escalada. */
@@ -109,7 +115,13 @@ function normalizeParticipants(list) {
     const actorId = typeof entry?.actorId === 'string' ? entry.actorId.trim() : '';
     if (!actorId || seen.has(actorId) || result.length >= MAX_PARTICIPANTS) continue;
     seen.add(actorId);
-    result.push({ actorId, pontos: storedInt(entry.pontos, 0, MAX_POINTS, 0) });
+    // Equilíbrio: d4 que ainda restam na travessia (sem o campo = reserva cheia, ainda não usada)
+    const reserva = storedInt(entry.reserva, 0, MAX_BALANCE_DICE, null);
+    result.push({
+      actorId,
+      pontos: storedInt(entry.pontos, 0, MAX_POINTS, 0),
+      ...(reserva === null ? {} : { reserva }),
+    });
   }
   return result;
 }
@@ -168,12 +180,14 @@ const TYPE_PRESETS = {
   escalar: { modo: 'individual', pa: DEFAULT_TARGET },
   alcancar: { modo: 'individual', pa: REACH_TARGET },
   sustentar: { modo: 'individual', custoPv: 1 },
+  equilibrio: { modo: 'individual', pa: DEFAULT_BALANCE_ROUNDS },
 };
 
 /**
  * Um desafio novo com os padrões do tipo. Teste estendido: PA 10, DT 7, individual, RA ao passar.
  * Arrombar: o mesmo, com 1 PV por teste. Escalar: PA 10, rápida DT 8 e cautelosa DT 6.
- * Alcançar: DT 7 (a arriscada, 10). Sustentar: DT 7 e 1 PV para começar.
+ * Alcançar: DT 7 (a arriscada, 10). Sustentar: DT 7 e 1 PV para começar. Equilíbrio: 3 rodadas
+ * para atravessar.
  */
 export function newChallenge(id, nome, tipo = 'estendido') {
   const kind = pick(tipo, CHALLENGE_TYPES, 'estendido');
@@ -352,6 +366,7 @@ export function challengeView(challenge, { isGM, actorInfo }) {
     escalar: challenge.tipo === 'escalar',
     alcancar: challenge.tipo === 'alcancar',
     sustentar: challenge.tipo === 'sustentar',
+    equilibrio: challenge.tipo === 'equilibrio',
     // A janela mostra a PA editável (não no alcançar, fixa em 2, nem no sustentar, sem PA) e os
     // campos livres de modo e soma (só no teste estendido e no arrombar)
     temPa: !['alcancar', 'sustentar'].includes(challenge.tipo),
@@ -383,6 +398,9 @@ export function challengeView(challenge, { isGM, actorInfo }) {
         img: info?.img ?? '',
         missing: !info,
         pontos: entry.pontos,
+        // Equilíbrio: d4 que restam (`null` = reserva cheia, calculada da Acrobacia ao usar)
+        reserva: entry.reserva ?? null,
+        reservaCheia: entry.reserva === undefined,
         chegou:
           showTarget && !grupo && challenge.tipo !== 'sustentar' && entry.pontos >= challenge.pa,
       };
@@ -415,6 +433,7 @@ export function sheetChallenges(data, actorId, { isGM }) {
         semNome: challenge.nome === '',
         tipo: challenge.tipo,
         alcancar: challenge.tipo === 'alcancar',
+        equilibrio: challenge.tipo === 'equilibrio',
         sustentar,
         grupo: challenge.modo === 'grupo',
         pontos,
@@ -785,4 +804,71 @@ export function costBarView(custo, { canApply, claimable, busy }) {
     busy: !applied && busy,
     showButton: canApply && claimable,
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Equilíbrio (0.18.5): a reserva de dados de equilíbrio de cada participante e o fim de cada
+// rodada (equilibrou: soma uma; caiu: zera e recarrega). O cartão do chat está em balance.js.
+// ---------------------------------------------------------------------------------------------
+
+/** Tamanho da reserva: metade da Acrobacia (d4: 2, d6: 3, d8: 4, d10: 5, d12: 6). */
+export function balanceReserveSize(acrobaciaDie) {
+  const sides = Math.trunc(Number(acrobaciaDie) || 0);
+  return clampInt(Math.floor(sides / 2), 0, MAX_BALANCE_DICE);
+}
+
+/** d4 que restam ao participante (a reserva cheia, se ele ainda não gastou nenhum). */
+export function participantReserve(challenge, actorId, acrobaciaDie) {
+  const entry = challenge?.participantes.find((item) => item.actorId === actorId);
+  if (!entry) return 0;
+  return entry.reserva ?? balanceReserveSize(acrobaciaDie);
+}
+
+/** Grava a reserva (`null` = volta a ficar cheia). */
+export function setReserve(challenge, actorId, value) {
+  return {
+    ...challenge,
+    participantes: challenge.participantes.map((entry) => {
+      if (entry.actorId !== actorId) return entry;
+      const rest = { actorId: entry.actorId, pontos: entry.pontos };
+      return value === null ? rest : { ...rest, reserva: clampInt(value, 0, MAX_BALANCE_DICE) };
+    }),
+  };
+}
+
+/** Reserva digitada pelo mestre: número, ou vazio para voltar a ficar cheia. */
+export function typeReserve(challenge, actorId, raw) {
+  if (String(raw ?? '').trim() === '') return setReserve(challenge, actorId, null);
+  const value = parseInteger(raw);
+  return value === null ? challenge : setReserve(challenge, actorId, value);
+}
+
+/** Gasta um d4 da reserva (o mestre, ao atender o botão). `null` se não há d4 ou participante. */
+export function spendBalanceDie(challenge, actorId, acrobaciaDie) {
+  if (!challenge?.ativo) return null;
+  if (!challenge.participantes.some((entry) => entry.actorId === actorId)) return null;
+  const left = participantReserve(challenge, actorId, acrobaciaDie);
+  if (left <= 0) return null;
+  return setReserve(challenge, actorId, left - 1);
+}
+
+/**
+ * Rodada equilibrada: soma uma rodada. Ao completar a travessia, a reserva volta a ficar cheia
+ * (para a próxima). `null` se o desafio não está ativo ou o personagem saiu dele.
+ * @returns {{challenge: object, depois: number, atravessou: boolean}|null}
+ */
+export function registerBalanceRound(challenge, actorId) {
+  if (!challenge?.ativo) return null;
+  if (!challenge.participantes.some((entry) => entry.actorId === actorId)) return null;
+  const next = adjustPoints(challenge, actorId, 1);
+  const depois = currentPoints(next, actorId);
+  const atravessou = depois >= challenge.pa;
+  return { challenge: atravessou ? setReserve(next, actorId, null) : next, depois, atravessou };
+}
+
+/** Caiu: as rodadas zeram e a reserva volta a ficar cheia (a travessia recomeça). */
+export function applyBalanceFall(challenge, actorId) {
+  if (!challenge?.ativo) return null;
+  if (!challenge.participantes.some((entry) => entry.actorId === actorId)) return null;
+  return setReserve(setPoints(challenge, actorId, 0), actorId, null);
 }

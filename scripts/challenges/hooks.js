@@ -4,6 +4,7 @@
  */
 import DesafioApp from './app.js';
 import { registerChallengeSocket } from './test-card.js';
+import { registerBalanceSocket } from './balance-card.js';
 import {
   DesafiosListaApp,
   injectFallbackBar,
@@ -51,6 +52,8 @@ export function registerChallenges() {
 export async function readyChallenges() {
   // Botão «somar pontos» do cartão do teste estendido (o mestre ativo atende os jogadores)
   registerChallengeSocket();
+  // Botões do cartão de equilíbrio (dado de equilíbrio, registrar, cair, Análise, Prontidão)
+  registerBalanceSocket();
   await startChallengeTab();
 }
 
