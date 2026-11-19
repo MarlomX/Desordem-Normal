@@ -1,4 +1,11 @@
-import { lockStatus, normalizeLock } from './lock.js';
+import {
+  attemptsLeft,
+  lockComposition,
+  lockStatus,
+  maximumVisible,
+  normalizeLock,
+  unlimitedAttempts,
+} from './lock.js';
 
 /**
  * Desafios (lógica pura, sem Foundry): o teste estendido e, nas próximas versões, os desafios de
@@ -432,8 +439,12 @@ export function challengeView(challenge, { isGM, actorInfo }) {
         ? {
             ...challenge.fechadura,
             status: lockStatus(challenge.fechadura),
-            restantes: Math.max(0, challenge.fechadura.maximo - challenge.fechadura.usadas),
+            restantes: attemptsLeft(challenge.fechadura),
             temSenha: challenge.fechadura.senhaMsg !== '',
+            composicao: lockComposition(challenge.fechadura),
+            infinito: unlimitedAttempts(challenge.fechadura),
+            // Máximo escondido dos jogadores (ou infinito): só as tentativas usadas aparecem
+            maximoVisivel: maximumVisible(challenge.fechadura, { isGM }),
           }
         : null,
   };
@@ -473,7 +484,7 @@ export function sheetChallenges(data, actorId, { isGM }) {
         return {
           ...base,
           pontos: challenge.fechadura.usadas,
-          pa: challenge.fechadura.maximo,
+          pa: maximumVisible(challenge.fechadura, { isGM }) ? challenge.fechadura.maximo : null,
           chegou: status === 'destrancada',
           estragou: status === 'estragada',
           podeTentar: status === 'aberta',

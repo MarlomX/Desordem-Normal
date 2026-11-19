@@ -203,9 +203,12 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       // Destrancar: faces possíveis, a senha guardada (lida do sussurro) e se a fechadura estragou
       ...(challenge.tipo === 'destrancar'
         ? {
-            faces: LOCK_FACES.map((value) => ({
-              value,
-              selected: value === challenge.fechadura.faces,
+            // «Aplicar a todos» e um seletor por posição
+            faces: LOCK_FACES,
+            lados: challenge.fechadura.lados.map((sides, index) => ({
+              index,
+              label: t('DESORDEM.Desafio.Fechadura.Posicao', { n: index + 1 }),
+              opcoes: LOCK_FACES.map((value) => ({ value, selected: value === sides })),
             })),
             senhaTexto: secretText(challenge),
             mostrarSenha: this.#showSecret,
@@ -261,7 +264,8 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       if (campo === 'pontos') return typePoints(challenge, actorId, value);
       if (campo === 'total') return typePoints(challenge, null, value);
       if (campo === 'reserva') return typeReserve(challenge, actorId, value);
-      // Destrancar: campos da fechadura (lock.dados, lock.faces, lock.maximo, lock.usadas, lock.auto)
+      // Destrancar: campos da fechadura (lock.dados, lock.faces, lock.lado.N, lock.maximo,
+      // lock.usadas, lock.auto, lock.mostrarMaximo)
       if (campo?.startsWith('lock.')) {
         return withLock(challenge, (lock) => updateLockField(lock, campo.slice(5), value));
       }

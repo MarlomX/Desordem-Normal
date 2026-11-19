@@ -2886,3 +2886,16 @@ button.desordem-desafios-cartao__nome:hover {
   font-weight: 700;
   text-align: center;
 }
+
+/* ===== Destrancar: um dado por posição na janela do mestre (v0.18.7) ===== */
+.desordem-fechadura__lados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.desordem-fechadura__lados select {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 4.5em;
+}

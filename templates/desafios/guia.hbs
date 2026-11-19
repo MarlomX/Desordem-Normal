@@ -30,8 +30,8 @@
       <div class="desordem-desafios__info">
         {{#if destrancar}}
         {{! Destrancar: dados da fechadura e tentativas do grupo }}
-        <span>{{fechadura.dados}}d{{fechadura.faces}}</span>
-        <span>{{localize "DESORDEM.Desafio.Fechadura.TentativasCurto"}} <strong>{{fechadura.usadas}}/{{fechadura.maximo}}</strong></span>
+        <span>{{fechadura.composicao}}</span>
+        <span>{{localize "DESORDEM.Desafio.Fechadura.TentativasCurto"}} <strong>{{fechadura.usadas}}{{#if fechadura.maximoVisivel}}/{{fechadura.maximo}}{{/if}}{{#if fechadura.infinito}}/∞{{/if}}</strong></span>
         {{else}}
         <span>{{#if grupo}}{{localize "DESORDEM.Desafio.Modo.grupo"}}{{else}}{{localize "DESORDEM.Desafio.Modo.individual"}}{{/if}}</span>
         {{#if escalar}}

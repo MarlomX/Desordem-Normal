@@ -1117,7 +1117,7 @@
       },
       "Fechadura": {
         "SenhaTitulo": "Lock code “{nome}”",
-        "Invalida": "Type numbers from 1 to {faces} in every field.",
+        "Invalida": "Type in each field a number from 1 to that die's faces.",
         "Definir": "Set code",
         "DefinirDica": "Type the code in the order the dice were rolled.",
         "Tentar": "Try a code",
@@ -1138,8 +1138,8 @@
           "certo": "Correct"
         },
         "Complexidade": "Complexity (dice)",
-        "Faces": "Dice step",
-        "Maximo": "Maximum attempts",
+        "Faces": "Apply to all",
+        "Maximo": "Maximum attempts (0 = unlimited)",
         "Usadas": "Attempts used",
         "Auto": "Automatic check (answers from the stored code)",
         "Senha": "Code:",
@@ -1153,7 +1153,12 @@
         "Dica": "The code lives in a whisper to the GMs only. Players try through the sheet's challenge card, and each attempt shows up in the chat. Changing the complexity or the step forgets the code.",
         "CriarArrombar": "Create force open",
         "Estragada": "Broken",
-        "TentativasCurto": "Attempts"
+        "TentativasCurto": "Attempts",
+        "DadosPosicao": "Die of each position",
+        "Posicao": "Die of position {n}",
+        "MaximoDica": "0 = unlimited attempts",
+        "MostrarMaximo": "Show the maximum attempts to players",
+        "ContagemSemMaximo": "Attempts: {usadas}."
       }
     }
   },

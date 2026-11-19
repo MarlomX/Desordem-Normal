@@ -1117,7 +1117,7 @@
       },
       "Fechadura": {
         "SenhaTitulo": "Senha da fechadura «{nome}»",
-        "Invalida": "Digite números de 1 a {faces} em todos os campos.",
+        "Invalida": "Digite em cada campo um número de 1 até as faces daquele dado.",
         "Definir": "Definir senha",
         "DefinirDica": "Digite a senha na ordem em que os dados foram rolados.",
         "Tentar": "Tentar senha",
@@ -1138,8 +1138,8 @@
           "certo": "Certo"
         },
         "Complexidade": "Complexidade (dados)",
-        "Faces": "Passo dos dados",
-        "Maximo": "Máximo de tentativas",
+        "Faces": "Aplicar a todos",
+        "Maximo": "Máximo de tentativas (0 = infinitas)",
         "Usadas": "Tentativas usadas",
         "Auto": "Verificação automática (responde pela senha guardada)",
         "Senha": "Senha:",
@@ -1153,7 +1153,12 @@
         "Dica": "A senha fica num sussurro só para os mestres. Os jogadores tentam pelo cartão de desafios da ficha, e cada tentativa aparece no chat. Mudar a complexidade ou o passo esquece a senha.",
         "CriarArrombar": "Criar arrombar",
         "Estragada": "Estragou",
-        "TentativasCurto": "Tentativas"
+        "TentativasCurto": "Tentativas",
+        "DadosPosicao": "Dado de cada posição",
+        "Posicao": "Dado da {n}ª posição",
+        "MaximoDica": "0 = tentativas infinitas",
+        "MostrarMaximo": "Mostrar o máximo de tentativas aos jogadores",
+        "ContagemSemMaximo": "Tentativas: {usadas}."
       }
     }
   },

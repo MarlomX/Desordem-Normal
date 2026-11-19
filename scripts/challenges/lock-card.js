@@ -18,7 +18,9 @@ import {
   allCorrect,
   crimeAttemptsPerRound,
   lockAnswers,
+  lockRollFormula,
   lockStatus,
+  maximumVisible,
   markUnlocked,
   parseSequence,
   registerAttempt,
@@ -74,9 +76,9 @@ async function storeSecret(challenge, values, rolls = []) {
 export async function generateSecret(challengeId) {
   const challenge = getChallenge(challengeId);
   if (!game.user.isGM || challenge?.tipo !== 'destrancar') return;
-  const { dados, faces } = challenge.fechadura;
-  const roll = await new Roll(`${dados}d${faces}`).evaluate();
-  const values = roll.dice[0].results.map((result) => result.result);
+  // Um termo por posição («1d8 + 1d8 + 1d4 + 1d12»), para a ordem dos dados ser a da senha
+  const roll = await new Roll(lockRollFormula(challenge.fechadura)).evaluate();
+  const values = roll.dice.map((die) => die.results[0].result);
   await storeSecret(challenge, values, [roll]);
 }
 
@@ -85,7 +87,7 @@ async function askSequence({ title, hint, lock }) {
   const fields = Array.from(
     { length: lock.dados },
     (_, i) =>
-      `<label class="desordem-ficha__campo"><span>${i + 1}º d${lock.faces}</span><input type="number" name="n${i}" min="1" max="${lock.faces}" step="1" inputmode="numeric"></label>`,
+      `<label class="desordem-ficha__campo"><span>${i + 1}º d${lock.lados[i]}</span><input type="number" name="n${i}" min="1" max="${lock.lados[i]}" step="1" inputmode="numeric"></label>`,
   ).join('');
   const raws = await foundry.applications.api.DialogV2.prompt({
     window: { title },
@@ -100,7 +102,7 @@ async function askSequence({ title, hint, lock }) {
   });
   if (!raws) return null;
   const values = parseSequence(raws, lock);
-  if (!values) warn('DESORDEM.Desafio.Fechadura.Invalida', { faces: lock.faces });
+  if (!values) warn('DESORDEM.Desafio.Fechadura.Invalida');
   return values;
 }
 
@@ -164,7 +166,10 @@ export async function attemptLock(actor, challengeId) {
   const values = await askSequence({
     title: t('DESORDEM.Desafio.Fechadura.Tentar'),
     hint: [
-      t('DESORDEM.Desafio.Fechadura.Restam', { n: lock.maximo - lock.usadas }),
+      // Máximo escondido ou infinito: não diz quantas restam
+      maximumVisible(lock, { isGM: game.user.isGM })
+        ? t('DESORDEM.Desafio.Fechadura.Restam', { n: lock.maximo - lock.usadas })
+        : '',
       perRound ? t('DESORDEM.Desafio.Fechadura.PorRodada', { n: perRound, dado: crime }) : '',
     ]
       .filter(Boolean)
@@ -213,7 +218,13 @@ async function applyAttempt({ challengeId, actorId, values }, userId) {
     if (!counted) return challenge;
     const answers = secret ? lockAnswers(secret, guess) : null;
     const lock = allCorrect(answers) ? markUnlocked(counted) : counted;
-    outcome = { answers, status: lockStatus(lock), usadas: lock.usadas, maximo: lock.maximo };
+    // O cartão do chat é público: só leva o máximo se os jogadores podem vê-lo
+    outcome = {
+      answers,
+      status: lockStatus(lock),
+      usadas: lock.usadas,
+      maximo: maximumVisible(lock, { isGM: false }) ? lock.maximo : null,
+    };
     return { ...challenge, fechadura: lock };
   });
   if (!outcome) return;
@@ -304,7 +315,9 @@ export function renderLockAttempt(message, html) {
   if (flag.respostas) line('desordem-fechadura__resposta', answersText(flag.respostas));
   line(
     'desordem-ficha__dica',
-    t('DESORDEM.Desafio.Fechadura.Contagem', { usadas: flag.usadas, maximo: flag.maximo }),
+    flag.maximo
+      ? t('DESORDEM.Desafio.Fechadura.Contagem', { usadas: flag.usadas, maximo: flag.maximo })
+      : t('DESORDEM.Desafio.Fechadura.ContagemSemMaximo', { usadas: flag.usadas }),
   );
   if (flag.status === 'destrancada')
     line('desordem-teste__avanco-texto', t('DESORDEM.Desafio.Fechadura.Abriu'));

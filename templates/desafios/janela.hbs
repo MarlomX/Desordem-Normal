@@ -18,17 +18,31 @@
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.Complexidade"}}</span>
       <input type="number" class="desordem-perseguicao__campo" data-campo="lock.dados" value="{{view.fechadura.dados}}" min="1" max="10" step="1" inputmode="numeric">
     </label>
+    {{! Aplicar a todos: deixa todos os dados iguais de uma vez (a opção vazia não muda nada) }}
     <label class="desordem-desafio__campo">
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.Faces"}}</span>
-      <select data-campo="lock.faces">{{#each faces}}<option value="{{value}}"{{#if selected}} selected{{/if}}>d{{value}}</option>{{/each}}</select>
+      <select data-campo="lock.faces"><option value="" selected>—</option>{{#each faces}}<option value="{{this}}">d{{this}}</option>{{/each}}</select>
     </label>
+    {{! Um dado por posição (ex.: d8 d8 d4 d12) }}
+    <div class="desordem-desafio__campo desordem-desafio__campo--largo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.DadosPosicao"}}</span>
+      <div class="desordem-fechadura__lados">
+        {{#each lados}}
+        <select data-campo="lock.lado.{{index}}" aria-label="{{label}}" title="{{label}}">{{#each opcoes}}<option value="{{value}}"{{#if selected}} selected{{/if}}>d{{value}}</option>{{/each}}</select>
+        {{/each}}
+      </div>
+    </div>
     <label class="desordem-desafio__campo">
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.Maximo"}}</span>
-      <input type="number" class="desordem-perseguicao__campo" data-campo="lock.maximo" value="{{view.fechadura.maximo}}" min="1" max="99" step="1" inputmode="numeric">
+      <input type="number" class="desordem-perseguicao__campo" data-campo="lock.maximo" value="{{view.fechadura.maximo}}" min="0" max="99" step="1" inputmode="numeric" title="{{localize "DESORDEM.Desafio.Fechadura.MaximoDica"}}">
     </label>
     <label class="desordem-desafio__campo">
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.Usadas"}}</span>
       <input type="number" class="desordem-perseguicao__campo" data-campo="lock.usadas" value="{{view.fechadura.usadas}}" min="0" max="99" step="1" inputmode="numeric">
+    </label>
+    <label class="desordem-desafio__marcar desordem-desafio__campo--largo">
+      <input type="checkbox" data-campo="lock.mostrarMaximo"{{#if view.fechadura.mostrarMaximo}} checked{{/if}}>
+      <span>{{localize "DESORDEM.Desafio.Fechadura.MostrarMaximo"}}</span>
     </label>
     <label class="desordem-desafio__marcar desordem-desafio__campo--largo">
       <input type="checkbox" data-campo="lock.auto"{{#if view.fechadura.auto}} checked{{/if}}>
