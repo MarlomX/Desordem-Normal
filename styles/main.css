@@ -3219,14 +3219,21 @@ button.desordem-desafios-cartao__nome:hover {
 
 .desordem-fases-barra {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
+  flex-direction: column;
+  gap: 4px;
   margin: 4px 8px;
   padding: 4px 8px;
   border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
   border-radius: 6px;
   background: var(--dn-surface, rgba(128, 128, 128, 0.08));
+}
+
+.desordem-fases-barra__linha {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 
 .desordem-fases-barra__info {
@@ -3246,6 +3253,7 @@ button.desordem-desafios-cartao__nome:hover {
 
 .desordem-fases-barra__passos {
   display: flex;
+  flex: 0 0 auto;
   gap: 4px;
   margin: 0;
   padding: 0;
@@ -3283,7 +3291,6 @@ button.desordem-desafios-cartao__nome:hover {
 }
 
 .desordem-fases-barra__dica {
-  flex: 1 0 100%;
   margin: 0;
   font-size: 0.8em;
   opacity: 0.75;
@@ -3337,15 +3344,18 @@ button.desordem-desafios-cartao__nome:hover {
   display: none !important;
 }
 
+/* Botões do mestre em grade 2 × 2 (cabem na linha estreita da barra lateral) */
 .desordem-fases-ctl {
-  display: flex;
+  display: grid;
   flex: 0 0 auto;
+  grid-template-columns: repeat(2, 20px);
   gap: 2px;
+  margin-left: 4px;
 }
 
 .desordem-fases-ctl__botao {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   margin: 0;
   padding: 0;
   font-size: 0.75em;
@@ -3359,10 +3369,28 @@ button.desordem-desafios-cartao__nome:hover {
 }
 
 .desordem-fases-selo {
+  display: inline-flex;
   flex: 0 0 auto;
-  padding: 0 6px;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dn-gold, #d4a017) 30%, transparent);
   font-size: 0.7em;
+}
+
+/* ===== Combate por fases: linha do combatente (v0.19.2) ===== */
+/* O nome do combatente encolhe; selo e botões do mestre nunca saem da linha */
+.desordem-fases__lista > [data-combatant-id] {
+  min-width: 0;
+}
+
+.desordem-fases__lista > [data-combatant-id] > :not(.desordem-fases-ctl, .desordem-fases-selo) {
+  min-width: 0;
+}
+
+.desordem-fases-barra__fase {
+  overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }

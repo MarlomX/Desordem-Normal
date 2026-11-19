@@ -111,6 +111,8 @@ function buildPhaseBar(combat) {
     steps.append(item);
   }
 
+  // Linha que não quebra (setas sempre nas pontas); a dica do combate não iniciado fica embaixo
+  const row = el('div', 'desordem-fases-barra__linha');
   if (game.user.isGM) {
     const back = el('button', 'desordem-fases-barra__botao');
     back.type = 'button';
@@ -124,10 +126,11 @@ function buildPhaseBar(combat) {
     next.append(icon('fa-caret-right'));
     next.disabled = phase === PHASES[PHASES.length - 1];
     next.addEventListener('click', () => stepCombatPhase(combat, 1));
-    bar.append(back, info, steps, next);
+    row.append(back, info, steps, next);
   } else {
-    bar.append(info, steps);
+    row.append(info, steps);
   }
+  bar.append(row);
   if (combat.round === 0) {
     bar.append(el('p', 'desordem-fases-barra__dica', t('DESORDEM.Combate.DicaIniciar')));
   }
@@ -155,14 +158,15 @@ function buildRowControls(combatant, area) {
   return box;
 }
 
-/** Selo «também agiu na fase geral» de quem agiu em mais de uma fase. */
+/**
+ * Selo de quem agiu em mais de uma fase: só os ícones das fases anteriores (a linha do Foundry é
+ * estreita); o texto «também: Fase geral» fica na dica do mouse.
+ */
 function earlierBadge(phases) {
   const names = phases.map((phase) => t(`DESORDEM.Combate.Fase.${phase}`)).join(', ');
-  const badge = el(
-    'span',
-    'desordem-fases-selo',
-    t('DESORDEM.Combate.TambemAgiu', { fases: names }),
-  );
+  const badge = el('span', 'desordem-fases-selo');
+  badge.title = t('DESORDEM.Combate.TambemAgiu', { fases: names });
+  for (const phase of phases) badge.append(icon(AREA_ICONS[phase]));
   return badge;
 }
 
