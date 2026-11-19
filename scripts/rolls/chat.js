@@ -231,6 +231,8 @@ async function settleAbilities(actor, options, result) {
  * @param {object} [opts.acaoFlag] Registro do esconder-se ou do distrair (flag `acaoFurtiva`).
  * @param {object} [opts.desafioFlag] Registro do teste estendido da guia de desafios (flag
  *   `desafio`), para o botão «somar pontos» do cartão.
+ * @param {object} [opts.opostoFlag] Lado de um teste oposto iniciado pela ficha (flag
+ *   `respostaOposto`: cartão, lado, ator e perícia); o mestre registra o teste no cartão.
  */
 export async function rollTest({
   attrLabel = game.i18n.localize('DESORDEM.Teste.Atributo'),
@@ -241,6 +243,7 @@ export async function rollTest({
   esconderijoFlag,
   acaoFlag,
   desafioFlag,
+  opostoFlag,
   rollMode,
   ...options
 }) {
@@ -255,6 +258,7 @@ export async function rollTest({
   if (flags && esconderijoFlag) flags.esconderijo = esconderijoFlag;
   if (flags && acaoFlag) flags.acaoFurtiva = acaoFlag;
   if (flags && desafioFlag) flags.desafio = desafioFlag;
+  if (flags && opostoFlag) flags.respostaOposto = opostoFlag;
   // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js). O teste de
   // esconderijo não tem efeito de falha crítica (a regra não traz nenhum). Nas criaturas o mestre
   // decide a penalidade (a tabela fala de PD e de itens carregados, que elas não têm).

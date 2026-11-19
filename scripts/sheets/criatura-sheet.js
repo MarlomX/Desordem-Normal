@@ -11,6 +11,7 @@ import { rollSkill, rollExtraSkill, testDicePreview } from '../rolls/chat.js';
 import { attackWithWeapon } from '../rolls/equipment-chat.js';
 import { weaponSkill } from '../rolls/equipment.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
+import { proposeOpposed } from '../opposed/opposed-chat.js';
 import { attributeChoiceUpdate } from '../rolls/attribute.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
@@ -70,6 +71,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     form: { submitOnChange: true },
     actions: {
       setTab: CriaturaSheet.#onSetTab,
+      proposeOpposed: CriaturaSheet.#onProposeOpposed,
       rollSkill: CriaturaSheet.#onRollSkill,
       rollExtraSkill: CriaturaSheet.#onRollExtraSkill,
       toggleAllSkills: CriaturaSheet.#onToggleAllSkills,
@@ -300,6 +302,11 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       target.dataset.elemento,
     );
     await this.document.update({ 'system.elementos': next });
+  }
+
+  /** Propõe um teste oposto: escolhe a perícia e publica o cartão (o token mirado é o oponente). */
+  static async #onProposeOpposed() {
+    await proposeOpposed(this.document);
   }
 
   /** Clique em uma aba. */

@@ -10,6 +10,7 @@ import { weaponSkill } from '../rolls/equipment.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
+import { proposeOpposed } from '../opposed/opposed-chat.js';
 import { attributeChoiceUpdate } from '../rolls/attribute.js';
 import {
   EXTRA_GROUPS,
@@ -136,6 +137,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       openLockBoard: PersonagemSheet.#onOpenLockBoard,
       adjustHideUses: PersonagemSheet.#onAdjustHideUses,
       setTab: PersonagemSheet.#onSetTab,
+      proposeOpposed: PersonagemSheet.#onProposeOpposed,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
       setPip: PersonagemSheet.#onSetPip,
@@ -559,6 +561,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       modal: true,
     });
     if (confirmed === true) await this.#saveExtras(group, removeExtra(this.#extras(group), id));
+  }
+
+  /** Propõe um teste oposto: escolhe a perícia e publica o cartão (o token mirado é o oponente). */
+  static async #onProposeOpposed() {
+    await proposeOpposed(this.document);
   }
 
   /** Clique em uma aba. */

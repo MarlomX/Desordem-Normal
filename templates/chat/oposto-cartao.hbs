@@ -1,0 +1,29 @@
+<div class="desordem-oposto desordem-oposto--cartao desordem-oposto--{{estado}}">
+  <h3 class="desordem-oposto__titulo">{{localize "DESORDEM.Oposto.Titulo"}}</h3>
+  {{#if descricao}}<p class="desordem-oposto__descricao">{{descricao}}</p>{{/if}}
+
+  {{#each lados}}
+  <div class="desordem-oposto__linha{{#if vencedor}} is-vencedor{{/if}}{{#if perdedor}} is-perdedor{{/if}}">
+    <div class="desordem-oposto__quem">
+      <strong>{{#if aberto}}{{localize "DESORDEM.Oposto.QuemAceitar"}}{{else}}{{nome}}{{/if}}</strong>
+      <span class="desordem-oposto__pericia">{{#if skillLabel}}{{skillLabel}}{{else}}{{localize "DESORDEM.Oposto.PericiaLivre"}}{{/if}}</span>
+    </div>
+    <div class="desordem-oposto__total">
+      {{#if temTotal}}<strong>{{total}}</strong>{{else}}{{#if rolou}}<span class="desordem-oposto__estado">{{localize "DESORDEM.Oposto.Rolou"}}</span>{{else}}<span class="desordem-oposto__estado">{{localize "DESORDEM.Oposto.Aguardando"}}</span>{{/if}}{{/if}}
+      {{#if criticalSuccess}}<span class="desordem-oposto__critico">{{localize "DESORDEM.Teste.SucessoCritico"}}</span>{{/if}}
+      {{#if criticalFailure}}<span class="desordem-oposto__critico desordem-oposto__critico--falha">{{localize "DESORDEM.Teste.FalhaCritica"}}</span>{{/if}}
+    </div>
+    <div class="desordem-oposto__acoes" data-oposto-acoes="{{key}}"></div>
+  </div>
+  {{/each}}
+
+  <p class="desordem-oposto__veredito">
+    {{#if resolvido}}{{localize "DESORDEM.Oposto.Vence" nome=vencedorNome}}{{#if temMargem}} · {{localize "DESORDEM.Oposto.Margem"}}: {{margem}}{{/if}}{{/if}}
+    {{#if empate}}{{localize "DESORDEM.Oposto.EmpateRepetir"}}{{/if}}
+    {{#if cancelado}}{{localize "DESORDEM.Oposto.Cancelado"}}{{/if}}
+    {{#if repetido}}{{localize "DESORDEM.Oposto.Repetido"}}{{/if}}
+    {{#if aberto}}{{localize "DESORDEM.Oposto.DicaAberto"}}{{/if}}
+  </p>
+  {{#if porCritico}}<p class="desordem-teste__nota">{{localize "DESORDEM.Oposto.PorCritico"}}</p>{{/if}}
+  <div class="desordem-oposto__rodape" data-oposto-rodape></div>
+</div>

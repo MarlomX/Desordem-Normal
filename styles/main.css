@@ -3394,3 +3394,95 @@ button.desordem-desafios-cartao__nome:hover {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* ===== Teste oposto pela ficha (v0.19.3) ===== */
+.desordem-oposto__descricao {
+  margin: 0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.desordem-oposto__linha {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 4px 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 4px;
+}
+
+.desordem-oposto__linha.is-vencedor {
+  border-color: rgba(212, 160, 23, 0.9);
+  box-shadow: 0 0 0 1px rgba(212, 160, 23, 0.6);
+}
+
+.desordem-oposto__linha.is-perdedor {
+  opacity: 0.7;
+}
+
+.desordem-oposto__quem {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.desordem-oposto__pericia {
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
+.desordem-oposto__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.desordem-oposto__total strong {
+  font-size: 1.6em;
+  line-height: 1;
+}
+
+.desordem-oposto__estado {
+  font-size: 0.8em;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.desordem-oposto__critico {
+  font-size: 0.75em;
+  color: rgba(46, 160, 67, 1);
+}
+
+.desordem-oposto__critico--falha {
+  color: rgba(200, 60, 60, 1);
+}
+
+.desordem-oposto__acoes,
+.desordem-oposto__rodape {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 4px;
+}
+
+.desordem-oposto__acoes:empty,
+.desordem-oposto__rodape:empty {
+  display: none;
+}
+
+.desordem-oposto__botao {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.desordem-oposto__propor {
+  width: auto;
+  margin-bottom: 6px;
+}
+
+.desordem-oposto-escolha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

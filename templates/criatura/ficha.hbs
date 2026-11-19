@@ -25,6 +25,7 @@
 </section>
 <section class="desordem-ficha__secao">
   <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Pericias"}}</h3>
+  {{#if editable}}<button type="button" class="desordem-oposto__propor" data-action="proposeOpposed" title="{{localize "DESORDEM.Oposto.ProporDica"}}"><i class="fa-solid fa-people-arrows" aria-hidden="true"></i> {{localize "DESORDEM.Oposto.ProporTitulo"}}</button>{{/if}}
   <div class="desordem-passos-geral{{#if skillStep.net}} is-passo is-passo--{{skillStep.direction}}{{/if}}">
     <span class="desordem-passos-geral__nome">{{localize "DESORDEM.Ficha.Passos.Pericias"}}</span>
     <span class="desordem-passos-ctl">

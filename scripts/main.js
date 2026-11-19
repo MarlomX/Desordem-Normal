@@ -20,6 +20,7 @@ import { renderSearchBar } from './stealth/search.js';
 import { renderActionBar } from './stealth/action.js';
 import { registerCreatureTables } from './stealth/tables.js';
 import { registerPhaseTracker } from './combat/phases-tracker.js';
+import { proposeOpposed, registerOpposedHooks, renderOpposedCard } from './opposed/opposed-chat.js';
 import { challengeApi, readyChallenges, registerChallenges } from './challenges/hooks.js';
 import { renderChallengeBar } from './challenges/test-card.js';
 import { renderBalanceCard } from './challenges/balance-card.js';
@@ -101,6 +102,8 @@ Hooks.once('init', () => {
   registerStealthHooks();
   // Combate por fases: barra da fase e áreas na aba de combate (só combates comuns)
   registerPhaseTracker();
+  // Teste oposto pela ficha: o mestre registra os testes nos cartões
+  registerOpposedHooks();
   // Tabelas de ações das criaturas: configuração do mundo, editada pelo mestre
   registerCreatureTables();
   // Desafios (teste estendido): configuração do mundo e a guia nova da barra lateral
@@ -131,6 +134,7 @@ Hooks.once('init', () => {
     rollCraft,
     rollExtraSkill,
     rollOpposed,
+    proposeOpposed,
     damageActor,
     rollInjuryTest,
     computeDamage,
@@ -162,6 +166,7 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderSearchBar(message, html);
   renderActionBar(message, html);
   renderTableCard(message, html);
+  renderOpposedCard(message, html);
   renderFearDice(message, html);
 });
 
