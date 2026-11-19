@@ -10,7 +10,8 @@
       <span class="desordem-desafios-cartao__nome">{{#if semNome}}{{localize "DESORDEM.Desafio.Estendido.SemNome"}}{{else}}{{nome}}{{/if}}</span>
       {{/if}}
       <span class="desordem-perseguicao-cartao__estado">{{#if grupo}}{{localize "DESORDEM.Desafio.Cartao.Grupo"}} · {{/if}}{{pontos}}{{#if pa}} / {{pa}}{{/if}} {{unidade}}</span>
-      {{#if chegou}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
+      {{! A coluna do selo existe sempre (vazia sem selo), para as linhas ficarem alinhadas }}
+      <span class="desordem-desafios-cartao__selo">{{#if chegou}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}</span>
     </li>
     {{/each}}
   </ul>

@@ -448,7 +448,7 @@ export function sidebarOrder(keys, newKey, after = 'scenes') {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Teste estendido pela janela pré-teste (0.18.1). O teste marcado como «usar no teste estendido»
+// Teste estendido pela janela pré-teste (0.18.1). O teste marcado como «usar no desafio»
 // guarda na mensagem do chat um registro (flag `desafio`). O valor do botão não fica guardado: é
 // recalculado dos dados atuais do cartão a cada vez (a Análise e a Prontidão mudam o resultado até
 // o clique). O que somar ao passar e ao falhar é guardado na hora da rolagem, para uma mudança na
@@ -479,6 +479,44 @@ export function challengeTestChoices(data, actorId) {
       // Sustentar: uma redução de passo (nos dois dados) por rodada já sustentada
       passos: sustainSteps(challenge, actorId),
     }));
+}
+
+/** Escada dos dados base para a redução do sustentar (o d20 paranormal fica acima do d12). */
+const SUSTAIN_LADDER = [4, 6, 8, 10, 12, 20];
+
+/**
+ * Como as reduções do sustentar se dividem entre os dois dados: uma de cada vez, sempre no dado
+ * mais forte naquele momento (no empate, o do atributo), até os dois chegarem a d4.
+ * Ex.: d8 + d10 com 3 reduções → d8 + d8 → d6 + d8 → d6 + d6 (atributo 2, perícia 1).
+ * @param {number} attrDie Dado do atributo (já com os passos da ficha).
+ * @param {number} skillDie Dado da perícia (já com os passos da ficha).
+ * @param {number} passos Rodadas já sustentadas.
+ * @returns {{attribute: number, skill: number}} Reduções de passo em cada dado.
+ */
+export function sustainReduction(attrDie, skillDie, passos) {
+  const rank = (sides) => Math.max(0, SUSTAIN_LADDER.indexOf(sides));
+  let attr = rank(attrDie);
+  let skill = rank(skillDie);
+  const result = { attribute: 0, skill: 0 };
+  for (let i = 0; i < Math.max(0, Math.trunc(passos) || 0); i += 1) {
+    if (attr === 0 && skill === 0) break;
+    if (attr >= skill) {
+      attr -= 1;
+      result.attribute += 1;
+    } else {
+      skill -= 1;
+      result.skill += 1;
+    }
+  }
+  return result;
+}
+
+/** Passos do `planDice` para uma redução do sustentar (sem entradas zeradas). */
+export function sustainStepMods(reduction) {
+  const mods = [];
+  if (reduction?.attribute > 0) mods.push({ target: 'attribute', steps: -reduction.attribute });
+  if (reduction?.skill > 0) mods.push({ target: 'skill', steps: -reduction.skill });
+  return mods;
 }
 
 /** Reduções de passo do próximo teste de sustentar (rodadas já sustentadas); 0 nos outros. */

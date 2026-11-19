@@ -979,7 +979,7 @@
       "Estendido": {
         "Titulo": "Teste estendido",
         "SemNome": "Teste estendido sem nome",
-        "Dica": "Individual: cada participante tem a sua pontuação. Em grupo: todos enchem a mesma pontuação, cada um tentando uma vez por rodada. Ajuste os pontos com −/+ ou digitando (Enter confirma). No teste, o jogador marca «Usar no teste estendido» na janela pré-teste e soma pelo botão do cartão."
+        "Dica": "Individual: cada participante tem a sua pontuação. Em grupo: todos enchem a mesma pontuação, cada um tentando uma vez por rodada. Ajuste os pontos com −/+ ou digitando (Enter confirma). No teste, o jogador marca «Usar no desafio» na janela pré-teste e soma pelo botão do cartão."
       },
       "Cartao": {
         "Titulo": "Desafios",
@@ -998,8 +998,8 @@
         "SemParticipantes": "Este desafio ainda não tem participantes."
       },
       "Pre": {
-        "Titulo": "Teste estendido",
-        "Usar": "Usar no teste estendido",
+        "Titulo": "Desafio de acesso",
+        "Usar": "Usar no desafio",
         "Regra": "Os pontos são somados pelo botão do cartão",
         "Qual": "Desafio",
         "Opcao": "{nome} (DT {dt})",
@@ -1012,7 +1012,7 @@
         "SustentarDica": "Cada rodada já sustentada reduz um passo dos dois dados (a prévia já mostra)."
       },
       "Teste": {
-        "Indisponivel": "O teste estendido não está mais ativo para este personagem: o teste foi rolado como um teste comum."
+        "Indisponivel": "O desafio não está mais ativo para este personagem: o teste foi rolado como um teste comum."
       },
       "Barra": {
         "Titulo": "{nome} (DT {dt})",

@@ -9,7 +9,7 @@ import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } fro
 import { DEFAULT_DT, MAX_COUNTED, planDice } from './test.js';
 import { breathLimit, normalizeChaseDt } from './chase.js';
 import { STEALTH_TEST_ACTIONS } from './stealth.js';
-import { approachFor, challengeDtFor } from './challenge.js';
+import { approachFor, challengeDtFor, sustainReduction, sustainStepMods } from './challenge.js';
 
 /** Espaços de dado extra de um teste: o limite de 4 dados rolados menos atributo e perícia. */
 export const EXTRA_SLOTS = BONUS_SLOTS;
@@ -46,7 +46,7 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  *   `esconder` ({dt}) e `distrair` ({dt, recipients}). Sem isso, a seção não aparece.
  * @param {{id: string, nome: string, tipo?: string, dt: number, dtRapida?: number,
  *   dtCautelosa?: number}[]} [input.challenges] Desafios ativos de que o personagem participa
- *   (guia de desafios). Com algum, a janela oferece «usar no teste estendido»; marcada, a opção
+ *   (guia de desafios). Com algum, a janela oferece «usar no desafio»; marcada, a opção
  *   desliga o avanço e a seção de furtividade (menos a chamativa). Na escalada, o teste escolhe a
  *   abordagem (rápida ou cautelosa), cada uma com a sua DT.
  */
@@ -287,6 +287,11 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
   }
 
   const lockedSides = (kinds) => locked.filter((d) => kinds(d.kind)).map((d) => d.sides);
+  // Sustentar: como as rodadas já sustentadas se dividem entre o atributo e a perícia
+  const reduction =
+    extendedChoice?.tipo === 'sustentar' && extendedChoice.passos > 0
+      ? sustainReduction(model.attrDie, model.skillDie, extendedChoice.passos)
+      : null;
   const plan = planDice({
     attrDie: model.attrDie,
     skillDie: model.skillDie,
@@ -297,10 +302,8 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     ],
     stepMods: [
       ...(effort ? [{ target: 'skill', steps: 1 }] : []),
-      // Sustentar: a prévia já mostra os dados reduzidos (a ficha aplica a redução de verdade)
-      ...(extendedChoice?.tipo === 'sustentar' && extendedChoice.passos > 0
-        ? [{ target: 'both', steps: -extendedChoice.passos }]
-        : []),
+      // Sustentar: reduz o dado mais forte a cada rodada já sustentada (veja `sustainReduction`)
+      ...sustainStepMods(reduction),
     ],
   });
   const errors = [];
@@ -335,6 +338,8 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
           : challengeDtFor(extendedChoice, abordagem),
         abordagem,
         passos: extendedChoice.tipo === 'sustentar' ? extendedChoice.passos : 0,
+        // A ficha aplica estas reduções na rolagem (as mesmas da prévia)
+        ...(reduction ? { reducao: reduction } : {}),
       }
     : { on: false, id: '', dt: null, abordagem: null, passos: 0 };
   return {

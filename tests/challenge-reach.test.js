@@ -15,6 +15,8 @@ import {
   newChallenge,
   normalizeChallenge,
   sheetChallenges,
+  sustainReduction,
+  sustainStepMods,
   sustainSteps,
   typePoints,
   updateChallengeField,
@@ -217,10 +219,50 @@ test('janela pré-teste: sustentar mostra os dados reduzidos', () => {
   assert.equal(hold.estendido.passos, 2);
   // d8 + d8 com duas reduções viram d4 + d4
   assert.deepEqual(plain.rolledSides, [8, 8]);
-  assert.deepEqual(hold.rolledSides, [4, 4]);
+  // Duas reduções em d8 + d8: uma em cada dado (no empate, primeiro o atributo)
+  assert.deepEqual(hold.rolledSides, [6, 6]);
+  assert.deepEqual(hold.estendido.reducao, { attribute: 1, skill: 1 });
   assert.equal(
     evaluateSelection(m, { ...emptySelection(7), estendido: { on: true, id: 'r' } }).estendido
       .passos,
     0,
   );
+});
+
+test('sustentar: cada redução cai no dado mais forte daquele momento', () => {
+  // d8 + d10 → d8 + d8 → d6 + d8 → d6 + d6
+  assert.deepEqual(sustainReduction(8, 10, 1), { attribute: 0, skill: 1 });
+  assert.deepEqual(sustainReduction(8, 10, 2), { attribute: 1, skill: 1 });
+  assert.deepEqual(sustainReduction(8, 10, 3), { attribute: 1, skill: 2 });
+  // d10 + d6 → d8 + d6 → d6 + d6
+  assert.deepEqual(sustainReduction(10, 6, 1), { attribute: 1, skill: 0 });
+  assert.deepEqual(sustainReduction(10, 6, 2), { attribute: 2, skill: 0 });
+  // Empate em d6 + d6: primeiro o atributo (d4 + d6)
+  assert.deepEqual(sustainReduction(10, 6, 3), { attribute: 3, skill: 0 });
+  assert.deepEqual(sustainReduction(10, 6, 4), { attribute: 3, skill: 1 });
+  // Para em d4 + d4
+  assert.deepEqual(sustainReduction(6, 4, 9), { attribute: 1, skill: 0 });
+  assert.deepEqual(sustainReduction(4, 4, 3), { attribute: 0, skill: 0 });
+  assert.deepEqual(sustainReduction(12, 8, 0), { attribute: 0, skill: 0 });
+  // d20 (paranormal) cai primeiro
+  assert.deepEqual(sustainReduction(20, 12, 1), { attribute: 1, skill: 0 });
+  assert.deepEqual(sustainStepMods({ attribute: 1, skill: 2 }), [
+    { target: 'attribute', steps: -1 },
+    { target: 'skill', steps: -2 },
+  ]);
+  assert.deepEqual(sustainStepMods({ attribute: 0, skill: 0 }), []);
+  assert.deepEqual(sustainStepMods(undefined), []);
+});
+
+test('janela pré-teste: os dados do exemplo d10 + d6 com duas rodadas viram d6 + d6', () => {
+  const m = buildRollModel({
+    skillKey: 'atletismo',
+    attrDie: 10,
+    skillDie: 6,
+    has: {},
+    resources: { impeto: 0, pd: 10 },
+    challenges: [{ id: 's', nome: 'Rocha', tipo: 'sustentar', dt: 7, passos: 2 }],
+  });
+  const hold = evaluateSelection(m, { ...emptySelection(7), estendido: { on: true, id: 's' } });
+  assert.deepEqual(hold.rolledSides, [6, 6]);
 });

@@ -2705,12 +2705,7 @@ button.desordem-desafios-cartao__nome:hover {
   margin: 0;
 }
 
-/* Cartão da ficha: um desafio por linha */
-.desordem-desafios-cartao .desordem-desafios-cartao__lista {
-  flex: 1 1 100%;
-  order: 2;
-}
-
+/* Cartão da ficha: um desafio por linha (a grade está no bloco da v0.18.4, no fim) */
 .desordem-desafios-cartao__item {
   display: flex;
   flex-wrap: wrap;
@@ -2767,4 +2762,33 @@ button.desordem-desafios-cartao__nome:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* ===== Cartão de desafios da ficha: colunas alinhadas e centralizadas (v0.18.4) =====
+   A lista vira uma grade de três colunas (nome, progresso, selo); cada linha usa
+   display: contents para as células entrarem direto na grade. A coluna do selo tem largura
+   própria e existe mesmo vazia, então «Concluído» não empurra o progresso das outras linhas. */
+.desordem-desafios-cartao .desordem-desafios-cartao__lista {
+  flex: 1 1 100%;
+  order: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(6.5em, auto);
+  align-items: center;
+  justify-items: center;
+  column-gap: 10px;
+  row-gap: 4px;
+}
+
+.desordem-desafios-cartao .desordem-desafios-cartao__item {
+  display: contents;
+}
+
+.desordem-desafios-cartao .desordem-desafios-cartao__nome {
+  justify-self: stretch;
+  text-align: center;
+}
+
+.desordem-desafios-cartao .desordem-desafios-cartao__selo {
+  display: flex;
+  justify-content: center;
 }

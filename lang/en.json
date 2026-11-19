@@ -979,7 +979,7 @@
       "Estendido": {
         "Titulo": "Extended test",
         "SemNome": "Unnamed extended test",
-        "Dica": "Individual: each participant has their own score. Group: everyone fills the same score, each one trying once per round. Adjust the points with −/+ or by typing (Enter confirms). On a test, the player ticks “Use in the extended test” in the pre-test window and adds through the card's button."
+        "Dica": "Individual: each participant has their own score. Group: everyone fills the same score, each one trying once per round. Adjust the points with −/+ or by typing (Enter confirms). On a test, the player ticks “Use in the challenge” in the pre-test window and adds through the card's button."
       },
       "Cartao": {
         "Titulo": "Challenges",
@@ -998,8 +998,8 @@
         "SemParticipantes": "This challenge has no participants yet."
       },
       "Pre": {
-        "Titulo": "Extended test",
-        "Usar": "Use in the extended test",
+        "Titulo": "Access challenge",
+        "Usar": "Use in the challenge",
         "Regra": "Points are added through the card's button",
         "Qual": "Challenge",
         "Opcao": "{nome} (DT {dt})",
@@ -1012,7 +1012,7 @@
         "SustentarDica": "Each round already held lowers both dice by one step (the preview already shows it)."
       },
       "Teste": {
-        "Indisponivel": "The extended test is no longer active for this character: it was rolled as a regular test."
+        "Indisponivel": "The challenge is no longer active for this character: it was rolled as a regular test."
       },
       "Barra": {
         "Titulo": "{nome} (DT {dt})",

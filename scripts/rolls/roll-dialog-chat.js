@@ -169,7 +169,7 @@ function selectedChallengeDt(form) {
 }
 
 /**
- * Marcar «usar no teste estendido» muda a DT do campo para a do desafio escolhido; trocar de
+ * Marcar «usar no desafio» muda a DT do campo para a do desafio escolhido; trocar de
  * desafio com a caixa marcada troca a DT; desmarcar volta à DT de antes. Usa o mesmo lugar de
  * guardar a DT anterior que o avanço (por isso o avanço é desmarcado antes, veja o `change`).
  */
@@ -331,7 +331,7 @@ function refresh(form, root, model) {
  * @param {object|null} [config.stealth] Com cena de furtividade, o que a seção oferece (teste de
  *   esconderijo, esconder-se, distrair; veja `stealthOptions`). Sem isso, a seção não aparece.
  * @param {{id: string, nome: string, dt: number}[]} [config.challenges] Testes estendidos ativos
- *   de que o personagem participa: com algum, a janela oferece «usar no teste estendido».
+ *   de que o personagem participa: com algum, a janela oferece «usar no desafio».
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
  */
 export async function askRollChoices(

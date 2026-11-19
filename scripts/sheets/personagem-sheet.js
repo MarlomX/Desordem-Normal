@@ -332,7 +332,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
    * em andamento, a janela oferece "usar como teste de avanço" (menos com `chase: false`). Com
    * `stealth: true` (testes de perícia, aptidão e ofício) e uma cena de furtividade em andamento,
    * oferece «usar como teste de esconderijo» a quem ainda não se escondeu. Se o personagem participa
-   * de um teste estendido ativo (guia de desafios), oferece «usar no teste estendido» (também
+   * de um teste estendido ativo (guia de desafios), oferece «usar no desafio» (também
    * menos com `chase: false`, como nos testes de lesão e de trauma).
    * @param {MouseEvent} event
    * @param {Object} config Veja `askRollChoices`.

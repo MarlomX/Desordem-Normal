@@ -1,6 +1,6 @@
 /**
  * Teste estendido pela janela pré-teste (Foundry). Como o avanço da perseguição, o teste estendido
- * não tem janela própria: é uma opção da janela pré-teste («usar no teste estendido»).
+ * não tem janela própria: é uma opção da janela pré-teste («usar no desafio»).
  *   - Antes da rolagem (`withExtendedTest`): confere que o desafio ainda está ativo e que o
  *     personagem participa, e guarda na mensagem o registro do teste (flag `desafio`).
  *   - No cartão do chat (`renderChallengeBar`, hook renderChatMessageHTML): mostra quanto o teste
@@ -35,6 +35,7 @@ import {
   currentPoints,
   failureKind,
   loseHitPoints,
+  sustainStepMods,
 } from '../rolls/challenge.js';
 import { SOCKET } from '../chase/store.js';
 import { getChallenge, mutateChallenge, readChallenges, worldActorId } from './store.js';
@@ -79,10 +80,10 @@ export function withExtendedTest(actor, options) {
     dt: estendido.dt,
     abordagem: estendido.abordagem,
   });
-  // Sustentar: uma redução de passo nos dois dados por rodada já sustentada (lida agora)
-  const stepMods = desafioFlag.passos
-    ? [...(rest.stepMods ?? []), { target: 'both', steps: -desafioFlag.passos }]
-    : rest.stepMods;
+  // Sustentar: as reduções que a janela pré-teste calculou (uma por rodada já sustentada, sempre
+  // no dado mais forte), as mesmas que a prévia mostrou
+  const reductions = desafioFlag.tipo === 'sustentar' ? sustainStepMods(estendido.reducao) : [];
+  const stepMods = reductions.length ? [...(rest.stepMods ?? []), ...reductions] : rest.stepMods;
   return { ...rest, ...(stepMods ? { stepMods } : {}), desafioFlag };
 }
 
