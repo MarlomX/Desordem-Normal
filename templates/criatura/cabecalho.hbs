@@ -10,15 +10,22 @@
             {{#each elements}}<option value="{{key}}" {{#if principal}}selected{{/if}}>{{label}}</option>{{/each}}
           </select>
         </label>
-        <fieldset class="desordem-elementos__secundarios">
-          <legend>{{localize "DESORDEM.Criatura.ElementosSecundarios"}}</legend>
-          {{#each elements}}
-          <label class="desordem-elemento desordem-elemento--{{key}}{{#if principal}} is-principal{{/if}}{{#if secundario}} is-secundario{{/if}}">
-            <input type="checkbox" data-elemento-secundario="{{key}}" {{#if secundario}}checked{{/if}} {{#if principal}}disabled{{/if}} {{#unless ../editable}}disabled{{/unless}}>
-            <span>{{label}}</span>
-          </label>
+        <div class="desordem-elementos__secundarios">
+          <span class="desordem-elementos__rotulo">{{localize "DESORDEM.Criatura.ElementosSecundarios"}}</span>
+          {{#each secondary.tags}}
+          <span class="desordem-elemento desordem-elemento--{{key}} is-secundario">{{label}}{{#if ../editable}}<button type="button" class="desordem-elemento__remover" data-action="removeSecondaryElement" data-elemento="{{key}}" title="{{localize "DESORDEM.Criatura.RemoverElemento" elemento=label}}">×</button>{{/if}}</span>
+          {{else}}
+          <span class="desordem-elementos__nenhum">{{localize "DESORDEM.Criatura.SemSecundarios"}}</span>
           {{/each}}
-        </fieldset>
+          {{#if editable}}{{#if secondary.options.length}}
+          <span class="desordem-elementos__adicionar">
+            <button type="button" class="desordem-elementos__mais" data-action="toggleElementPicker" title="{{localize "DESORDEM.Criatura.AdicionarElemento"}}" aria-expanded="false"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+            <span class="desordem-elementos__opcoes is-oculta" data-elemento-opcoes>
+              {{#each secondary.options}}<button type="button" class="desordem-elemento desordem-elemento--{{key}}" data-action="addSecondaryElement" data-elemento="{{key}}">{{label}}</button>{{/each}}
+            </span>
+          </span>
+          {{/if}}{{/if}}
+        </div>
       </div>
     </div>
   </div>

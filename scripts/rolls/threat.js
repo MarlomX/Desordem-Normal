@@ -120,3 +120,19 @@ export function buildElementRows(elementos, label) {
     secundario: secundarios.includes(key),
   }));
 }
+
+/**
+ * Elementos secundários para a ficha: as etiquetas dos que a criatura já tem e as opções do botão
+ * «+» (os que ainda podem ser acrescentados: nem o principal, nem os que já estão lá).
+ * @param {{principal?: string, secundarios?: string[]}} elementos
+ * @param {(key: string) => string} label Nome traduzido do elemento.
+ * @returns {{tags: {key: string, label: string}[], options: {key: string, label: string}[]}}
+ */
+export function secondaryElementChoices(elementos, label) {
+  const { principal, secundarios } = normalizeElements(elementos);
+  const entry = (key) => ({ key, label: label(key) });
+  return {
+    tags: secundarios.map(entry),
+    options: ELEMENTOS.filter((key) => key !== principal && !secundarios.includes(key)).map(entry),
+  };
+}

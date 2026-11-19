@@ -18,6 +18,7 @@ import { addExtra, canAddExtra, removeExtra, updateExtra } from '../rolls/extras
 import {
   MAX_THREAT_SKILLS,
   buildElementRows,
+  secondaryElementChoices,
   setPrimaryElement,
   toggleSecondaryElement,
 } from '../rolls/threat.js';
@@ -83,6 +84,9 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       deleteItem: CriaturaSheet.#onDeleteItem,
       attackWeapon: CriaturaSheet.#onAttackWeapon,
       toggleAbilities: CriaturaSheet.#onToggleAbilities,
+      toggleElementPicker: CriaturaSheet.#onToggleElementPicker,
+      addSecondaryElement: CriaturaSheet.#onSecondaryElement,
+      removeSecondaryElement: CriaturaSheet.#onSecondaryElement,
     },
     // Itens podem ser arrastados da barra lateral ou de outra ficha para esta
     dragDrop: [{ dragSelector: '[data-item-id]', dropSelector: null }],
@@ -140,6 +144,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       pvLow: isResourceLow(system.pv.value, system.pv.max),
       statusTags: creatureStatusTags(system, (key) => t(`DESORDEM.Criatura.Estado.${key}`)),
       elements: buildElementRows(system.elementos, (key) => t(`DESORDEM.Elementos.${key}`)),
+      secondary: secondaryElementChoices(system.elementos, (key) => t(`DESORDEM.Elementos.${key}`)),
       attributes: buildAttributeRows(
         system.atributos,
         ATRIBUTOS,
@@ -190,7 +195,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     bind('[data-extra-campo]', this.#onExtraField);
     bind('[data-efeito-campo]', this.#onEffectField);
     bind('[data-elemento-principal]', this.#onPrimaryElement);
-    bind('[data-elemento-secundario]', this.#onSecondaryElement);
     for (const details of this.element.querySelectorAll('details[data-habilidade]')) {
       details.addEventListener('toggle', () => this.#rememberAbility(details));
     }
@@ -278,11 +282,22 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     await this.document.update({ 'system.elementos': next });
   }
 
-  /** Caixa de um elemento secundário. */
-  async #onSecondaryElement(field) {
+  /**
+   * Botão «+» dos elementos secundários: mostra ou esconde as opções (só troca a classe, sem
+   * redesenhar a ficha).
+   */
+  static #onToggleElementPicker(event, target) {
+    const options = target.parentElement?.querySelector('[data-elemento-opcoes]');
+    if (!options) return;
+    const open = options.classList.toggle('is-oculta') === false;
+    target.setAttribute('aria-expanded', String(open));
+  }
+
+  /** Acrescenta (opção do «+») ou tira (× da etiqueta) um elemento secundário. */
+  static async #onSecondaryElement(event, target) {
     const next = toggleSecondaryElement(
       this.document.toObject().system.elementos,
-      field.dataset.elementoSecundario,
+      target.dataset.elemento,
     );
     await this.document.update({ 'system.elementos': next });
   }

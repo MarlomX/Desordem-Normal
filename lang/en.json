@@ -1232,7 +1232,36 @@
       "SemHabilidades": "No special abilities.",
       "Estrategia": "Strategy",
       "DicaEstrategia": "The creature’s default behaviour in combat (GM notes).",
-      "Descricao": "Description"
+      "Descricao": "Description",
+      "RemoverElemento": "Remove {elemento}",
+      "AdicionarElemento": "Add secondary element",
+      "SemSecundarios": "none"
+    },
+    "Combate": {
+      "Rodada": "Round {n}",
+      "Fase": {
+        "geral": "General phase",
+        "distancia": "Ranged attacks",
+        "corpo": "Melee"
+      },
+      "Area": {
+        "geral": "General phase",
+        "distancia": "Ranged attacks",
+        "corpo": "Melee",
+        "nenhuma": "Has not acted"
+      },
+      "Mover": {
+        "geral": "Acted in the general phase (Shift: also acted)",
+        "distancia": "Acted in ranged attacks (Shift: also acted)",
+        "corpo": "Acted in melee (Shift: also acted)"
+      },
+      "Limpar": "Has not acted this round yet",
+      "FaseAnterior": "Previous phase",
+      "ProximaFase": "Next phase",
+      "DicaIniciar": "Start the combat to count rounds: on each “Next round”, everyone goes back to “Has not acted”.",
+      "SegundaFase": "{nome} already acted in an earlier phase this round (only with an effect such as Readiness).",
+      "TambemAgiu": "also: {fases}",
+      "Vazia": "nobody"
     }
   },
   "TYPES.Item.arma": "Weapon",

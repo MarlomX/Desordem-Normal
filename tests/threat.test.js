@@ -5,6 +5,7 @@ import {
   buildElementRows,
   isThreat,
   normalizeElements,
+  secondaryElementChoices,
   setPrimaryElement,
   testResources,
   threatDamage,
@@ -144,4 +145,21 @@ test('perícia própria usa Mente por padrão e aceita outro atributo escolhido'
   assert.equal(resolveSkillAttribute(system, 'pericia:p1'), 'mente');
   system.periciasExtras[0].atributo = 'fisico';
   assert.equal(resolveSkillAttribute(system, 'pericia:p1'), 'fisico');
+});
+
+test('secondaryElementChoices: etiquetas dos secundários e opções do «+» sem o principal', () => {
+  const { tags, options } = secondaryElementChoices(
+    { principal: 'morte', secundarios: ['medo'] },
+    (key) => key.toUpperCase(),
+  );
+  assert.deepEqual(tags, [{ key: 'medo', label: 'MEDO' }]);
+  assert.deepEqual(
+    options.map((o) => o.key),
+    ['sangue', 'energia', 'conhecimento'],
+  );
+  const cheio = secondaryElementChoices(
+    { principal: 'morte', secundarios: ['sangue', 'energia', 'conhecimento', 'medo'] },
+    (key) => key,
+  );
+  assert.deepEqual(cheio.options, []);
 });

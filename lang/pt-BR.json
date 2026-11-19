@@ -1232,7 +1232,36 @@
       "SemHabilidades": "Nenhuma habilidade especial.",
       "Estrategia": "Estratégia",
       "DicaEstrategia": "Comportamento padrão da criatura em combate (notas do mestre).",
-      "Descricao": "Descrição"
+      "Descricao": "Descrição",
+      "RemoverElemento": "Tirar {elemento}",
+      "AdicionarElemento": "Adicionar elemento secundário",
+      "SemSecundarios": "nenhum"
+    },
+    "Combate": {
+      "Rodada": "Rodada {n}",
+      "Fase": {
+        "geral": "Fase geral",
+        "distancia": "Ataques à distância",
+        "corpo": "Corpo a corpo"
+      },
+      "Area": {
+        "geral": "Fase geral",
+        "distancia": "Ataques à distância",
+        "corpo": "Corpo a corpo",
+        "nenhuma": "Não agiu"
+      },
+      "Mover": {
+        "geral": "Agiu na fase geral (Shift: também agiu)",
+        "distancia": "Agiu nos ataques à distância (Shift: também agiu)",
+        "corpo": "Agiu no corpo a corpo (Shift: também agiu)"
+      },
+      "Limpar": "Ainda não agiu nesta rodada",
+      "FaseAnterior": "Fase anterior",
+      "ProximaFase": "Próxima fase",
+      "DicaIniciar": "Inicie o combate para contar as rodadas: a cada «Próxima rodada», todos voltam para «Não agiu».",
+      "SegundaFase": "{nome} já agiu numa fase anterior nesta rodada (só com um efeito como Prontidão).",
+      "TambemAgiu": "também: {fases}",
+      "Vazia": "ninguém"
     }
   },
   "TYPES.Item.arma": "Arma",

@@ -3065,34 +3065,74 @@ button.desordem-desafios-cartao__nome:hover {
 .desordem-elementos__secundarios {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 2px 6px;
   margin: 0;
   padding: 0;
-  border: none;
   font-size: 0.8em;
 }
 
-.desordem-elementos__secundarios legend {
-  float: left;
-  margin-right: 4px;
-  padding: 0;
+.desordem-elementos__rotulo {
   opacity: 0.7;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.desordem-elementos__nenhum {
+  font-style: italic;
+  opacity: 0.55;
+}
+
+.desordem-elementos__adicionar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+}
+
+.desordem-elementos__mais {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 0.85em;
+  line-height: 1;
+}
+
+.desordem-elementos__opcoes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+}
+
+.desordem-elementos__opcoes.is-oculta {
+  display: none;
 }
 
 .desordem-elemento {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 0 6px 0 2px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0 6px;
+  line-height: 1.6;
   border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
   border-radius: 999px;
   --desordem-elemento: var(--dn-accent, #3fa7b5);
 }
 
-.desordem-elemento input {
-  margin: 0;
+.desordem-elemento__remover {
+  width: auto;
+  height: auto;
+  margin: 0 -2px 0 2px;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  line-height: 1;
+  opacity: 0.7;
 }
 
 .desordem-elemento.is-secundario {
@@ -3157,4 +3197,172 @@ button.desordem-desafios-cartao__nome:hover {
 .desordem-dano__derrota {
   margin: 4px 0 0;
   color: var(--dn-pv, #b03a2e);
+}
+
+/* ===== Combate por fases (v0.19.1) ===== */
+/* Sem iniciativa nem ordem de turnos: esconde o que o Foundry mostra para isso */
+.desordem-combate-fases .token-initiative,
+.desordem-combate-fases [data-action='rollInitiative'],
+.desordem-combate-fases [data-action='rollAll'],
+.desordem-combate-fases [data-action='rollNPC'],
+.desordem-combate-fases [data-action='resetAll'],
+.desordem-combate-fases [data-action='previousTurn'],
+.desordem-combate-fases [data-action='nextTurn'],
+.desordem-combate-fases [data-control='rollInitiative'],
+.desordem-combate-fases [data-control='rollAll'],
+.desordem-combate-fases [data-control='rollNPC'],
+.desordem-combate-fases [data-control='resetAll'],
+.desordem-combate-fases [data-control='previousTurn'],
+.desordem-combate-fases [data-control='nextTurn'] {
+  display: none !important;
+}
+
+.desordem-fases-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 4px 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 6px;
+  background: var(--dn-surface, rgba(128, 128, 128, 0.08));
+}
+
+.desordem-fases-barra__info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.desordem-fases-barra__rodada {
+  font-size: 0.8em;
+  opacity: 0.75;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-fases-barra__passos {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-fases-barra__passo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.desordem-fases-barra__passo.is-passada {
+  opacity: 0.3;
+}
+
+.desordem-fases-barra__passo.is-atual {
+  border-color: var(--dn-accent, #3fa7b5);
+  background: color-mix(in srgb, var(--dn-accent, #3fa7b5) 35%, transparent);
+  opacity: 1;
+}
+
+.desordem-fases-barra__botao {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-fases-barra__dica {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+.desordem-fases {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desordem-fases__area {
+  border-left: 3px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+}
+
+.desordem-fases__area.is-atual {
+  border-left-color: var(--dn-accent, #3fa7b5);
+}
+
+.desordem-fases__titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 8px;
+  border: none;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-fases__contagem {
+  margin-left: auto;
+  opacity: 0.6;
+}
+
+.desordem-fases__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-fases__vazia {
+  padding: 2px 12px 4px;
+  font-size: 0.8em;
+  font-style: italic;
+  opacity: 0.55;
+}
+
+.desordem-fases__original {
+  display: none !important;
+}
+
+.desordem-fases-ctl {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.desordem-fases-ctl__botao {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.75em;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.desordem-fases-ctl__botao.is-atual {
+  border-color: var(--dn-accent, #3fa7b5);
+  opacity: 1;
+}
+
+.desordem-fases-selo {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dn-gold, #d4a017) 30%, transparent);
+  font-size: 0.7em;
+  white-space: nowrap;
 }
