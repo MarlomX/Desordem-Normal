@@ -8,6 +8,7 @@ import { hasAbility } from './abilities.js';
 import { advanceDtField } from './chase.js';
 import { render, testDicePreview } from './chat.js';
 import { buildFearDie } from '../sheets/dado-pavor.js';
+import { testResources } from './threat.js';
 import {
   buildRollModel,
   emptySelection,
@@ -352,6 +353,8 @@ export async function askRollChoices(
 ) {
   if (shift) return {};
   const dice = testDicePreview(actor, skillKey, attribute);
+  // PD, ímpeto e pavor (0 numa criatura: a janela não mostra pavor nem custos)
+  const resources = testResources(actor.system);
   const model = buildRollModel({
     skillKey,
     attrDie: dice.attrDie,
@@ -362,8 +365,8 @@ export async function askRollChoices(
       sorrateiro: hasAbility(actor, 'sorrateiro'),
       naoLetal: allowNonLethal,
     },
-    resources: { impeto: actor.system.recursos.impeto, pd: actor.system.pd.value },
-    fearDie: actor.system.estado.pavor,
+    resources: { impeto: resources.impeto, pd: resources.pd },
+    fearDie: resources.fearDie,
     ignoreFear,
     dt,
     showDt,

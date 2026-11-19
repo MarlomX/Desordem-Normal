@@ -1,0 +1,53 @@
+<header class="desordem-cab desordem-cab--criatura">
+  <div class="desordem-cab__topo">
+    <img class="desordem-ficha__retrato" src="{{actor.img}}" alt="{{actor.name}}" data-edit="img" data-action="editImage">
+    <div class="desordem-cab__identidade">
+      <input class="desordem-ficha__nome" type="text" name="name" value="{{actor.name}}" {{#unless editable}}disabled{{/unless}}>
+      <div class="desordem-elementos">
+        <label class="desordem-cab__campo"><span>{{localize "DESORDEM.Criatura.ElementoPrincipal"}}</span>
+          <select data-elemento-principal {{#unless editable}}disabled{{/unless}}>
+            <option value="">{{localize "DESORDEM.Criatura.SemElemento"}}</option>
+            {{#each elements}}<option value="{{key}}" {{#if principal}}selected{{/if}}>{{label}}</option>{{/each}}
+          </select>
+        </label>
+        <fieldset class="desordem-elementos__secundarios">
+          <legend>{{localize "DESORDEM.Criatura.ElementosSecundarios"}}</legend>
+          {{#each elements}}
+          <label class="desordem-elemento desordem-elemento--{{key}}{{#if principal}} is-principal{{/if}}{{#if secundario}} is-secundario{{/if}}">
+            <input type="checkbox" data-elemento-secundario="{{key}}" {{#if secundario}}checked{{/if}} {{#if principal}}disabled{{/if}} {{#unless ../editable}}disabled{{/unless}}>
+            <span>{{label}}</span>
+          </label>
+          {{/each}}
+        </fieldset>
+      </div>
+    </div>
+  </div>
+
+  <div class="desordem-cab__recursos">
+    <div class="desordem-recurso desordem-recurso--pv">
+      <div class="desordem-recurso__linha">
+        <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}" {{#unless editable}}disabled{{/unless}}>−</button>
+        <div class="desordem-barra{{#if pvLow}} is-baixo{{/if}}" style="--pct: {{pvPercent}}%">
+          <span class="desordem-barra__nome"><i class="fa-solid fa-heart" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.PV"}}</span>
+          <span class="desordem-barra__valores">
+            <input type="number" name="system.pv.value" value="{{system.pv.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
+            <span>/</span>
+            <input type="number" name="system.pv.max" value="{{system.pv.max}}" min="0" {{#unless editable}}disabled{{/unless}}>
+          </span>
+        </div>
+        <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}" {{#unless editable}}disabled{{/unless}}>+</button>
+      </div>
+    </div>
+    <label class="desordem-rd" title="{{localize "DESORDEM.Criatura.RDDica"}}">
+      <i class="fa-solid fa-shield" aria-hidden="true"></i>
+      <span>{{localize "DESORDEM.Criatura.RD"}}</span>
+      <input type="number" name="system.rd" value="{{system.rd}}" min="0" max="99" {{#unless editable}}disabled{{/unless}}>
+    </label>
+  </div>
+
+  {{#if statusTags.length}}
+  <div class="desordem-cab__rodape">
+    {{#each statusTags}}<span class="desordem-etiqueta desordem-etiqueta--{{tone}}">{{label}}</span>{{/each}}
+  </div>
+  {{/if}}
+</header>

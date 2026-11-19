@@ -1,5 +1,6 @@
 {
   "TYPES.Actor.personagem": "Character",
+  "TYPES.Actor.criatura": "Creature",
   "TYPES.Combat.perseguicao": "Chase",
   "TYPES.Combatant.participante": "Participant",
   "TYPES.Combat.furtividade": "Stealth",
@@ -141,15 +142,18 @@
       "AdicionarOficio": "Add craft",
       "ExtraNome": {
         "aptidao": "Aptitude name",
-        "oficio": "Craft name"
+        "oficio": "Craft name",
+        "pericia": "Skill name"
       },
       "ExtraSemNome": {
         "aptidao": "Unnamed aptitude",
-        "oficio": "Unnamed craft"
+        "oficio": "Unnamed craft",
+        "pericia": "Unnamed skill"
       },
       "RemoverExtra": {
         "aptidao": "Remove aptitude",
-        "oficio": "Remove craft"
+        "oficio": "Remove craft",
+        "pericia": "Remove skill"
       },
       "ConfirmarRemoverExtra": "Remove this area? Its die will be lost.",
       "LimiteExtras": "Limit of {max} extra areas reached.",
@@ -542,7 +546,9 @@
         "companheiro": "Animal companion (+d6 in melee)",
         "curandeiro": "Heal ally (Medicine, 2 DP)",
         "sorrateiro": "Extra die on Crime or Stealth (3 DP)"
-      }
+      },
+      "Natural": "Natural weapon",
+      "DicaNatural": "Natural weapon (claws, bite, kick): takes no hands and does not need to be wielded. Creature attacks are natural weapons by default."
     },
     "Armadura": {
       "Titulo": "Armor points",
@@ -1180,6 +1186,53 @@
         "mestre": "GM only"
       },
       "VisibilidadeRotulo": "Visible to"
+    },
+    "Elementos": {
+      "morte": "Death",
+      "sangue": "Blood",
+      "energia": "Energy",
+      "conhecimento": "Knowledge",
+      "medo": "Fear"
+    },
+    "Criatura": {
+      "Ficha": "Creature sheet",
+      "Abas": {
+        "ficha": "Sheet",
+        "acoes": "Actions",
+        "notas": "Notes"
+      },
+      "Estado": {
+        "derrotada": "Defeated"
+      },
+      "ElementoPrincipal": "Element",
+      "SemElemento": "— choose —",
+      "ElementosSecundarios": "Secondary",
+      "RD": "DR",
+      "RDDica": "Damage reduction: subtracted from each physical damage before HP goes down.",
+      "RDUsada": "Damage reduction absorbed {rd} of {bruto}.",
+      "Derrotada": "Creature defeated: {nome} (0 HP).",
+      "SemPD": "{nome} is a creature and has no DP.",
+      "ItemRecusado": "Creatures only take attacks (weapons) and abilities.",
+      "DicaPericiasTreinadas": "Showing only trained skills (d6 or higher). Click a name to roll.",
+      "DicaTodasPericias": "Showing every skill. Click a name to roll.",
+      "MostrarTodas": "Show all (+{n})",
+      "SoTreinadas": "Trained only",
+      "SemTreinadas": "No trained skills. Use “Show all” to set the dice.",
+      "PericiasProprias": "Own skills",
+      "DicaPericiasProprias": "Freely named skills (instead of Aptitude and Craft), up to {max}. Default base attribute: Mind; change it with the tag.",
+      "AdicionarPericia": "Add skill",
+      "DicaEfeitos": "Temporary conditions (prone, stunned, grabbed...) with steps on an attribute, if you want.",
+      "Ataques": "Attacks",
+      "DicaAtaques": "Each attack is one of the creature’s weapons: the test uses the attack’s attribute and skill (DC 7) and the damage is the high roll plus the bonus.",
+      "Teste": "test",
+      "SemAtaques": "No attacks yet.",
+      "NovoAtaque": "New attack",
+      "Habilidades": "Special abilities",
+      "DicaHabilidades": "Free text: the GM applies the effect. Contests between the creature and a character can be rolled with skill tests.",
+      "SemHabilidades": "No special abilities.",
+      "Estrategia": "Strategy",
+      "DicaEstrategia": "The creature’s default behaviour in combat (GM notes).",
+      "Descricao": "Description"
     }
   },
   "TYPES.Item.arma": "Weapon",

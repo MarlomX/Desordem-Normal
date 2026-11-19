@@ -9,7 +9,10 @@ const texto = () => new f.StringField({ required: true, blank: true, initial: ''
 const contagem = (inicial) =>
   new f.NumberField({ required: true, integer: true, min: 0, initial: inicial });
 
-/** Arma: corpo a corpo ou à distância, de uma ou duas mãos; dano = RA + modificador. */
+/**
+ * Arma: corpo a corpo ou à distância, de uma ou duas mãos (ou natural, sem mãos); dano = RA +
+ * modificador. Os ataques das criaturas também são armas (normalmente naturais).
+ */
 export class ArmaModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
@@ -31,6 +34,8 @@ export class ArmaModel extends foundry.abstract.TypeDataModel {
       pericia: texto(),
       naoLetal: new f.BooleanField({ initial: false }),
       empunhada: new f.BooleanField({ initial: false }),
+      // Arma natural (garras, mordida, coice): não ocupa mãos e não precisa ser empunhada
+      natural: new f.BooleanField({ initial: false }),
     };
   }
 }

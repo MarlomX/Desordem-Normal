@@ -132,6 +132,11 @@ async function applyRecoveryFromMessage(message) {
     return false;
   }
   const resource = actor.system[data.recurso];
+  // Criaturas não têm PD: o recurso do cartão não existe na ficha delas
+  if (!resource) {
+    ui.notifications.warn(t('DESORDEM.Recuperacao.SemAlvo'));
+    return false;
+  }
   const { before, after, recovered } = applyRecovery({
     current: resource.value,
     max: resource.max,

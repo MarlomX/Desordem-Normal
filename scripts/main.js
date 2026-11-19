@@ -1,7 +1,9 @@
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from './config.js';
 import PersonagemModel from './data/personagem.js';
+import { CriaturaModel } from './data/ameaca.js';
 import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel } from './data/items.js';
 import PersonagemSheet from './sheets/personagem-sheet.js';
+import CriaturaSheet from './sheets/criatura-sheet.js';
 import { fearDieHelper } from './sheets/dado-pavor.js';
 import { dieFaceHelper } from './rolls/die-face.js';
 import { renderFearDice } from './rolls/fear-chat.js';
@@ -21,7 +23,14 @@ import { challengeApi, readyChallenges, registerChallenges } from './challenges/
 import { renderChallengeBar } from './challenges/test-card.js';
 import { renderBalanceCard } from './challenges/balance-card.js';
 import { renderLockAttempt } from './challenges/lock-card.js';
-import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
+import {
+  rollTest,
+  rollSkill,
+  rollAptitude,
+  rollCraft,
+  rollExtraSkill,
+  rollOpposed,
+} from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
 import { registerEquipmentGuards } from './rolls/equipment-guard.js';
@@ -62,6 +71,8 @@ Hooks.once('init', () => {
 
   CONFIG.DESORDEM = { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS };
   CONFIG.Actor.dataModels.personagem = PersonagemModel;
+  // Criatura: o primeiro tipo de ameaça (modelo comum em data/ameaca.js)
+  CONFIG.Actor.dataModels.criatura = CriaturaModel;
   CONFIG.Item.dataModels = {
     arma: ArmaModel,
     armadura: ArmaduraModel,
@@ -98,6 +109,11 @@ Hooks.once('init', () => {
     makeDefault: true,
     label: 'DESORDEM.Ficha.Personagem',
   });
+  foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, CriaturaSheet, {
+    types: ['criatura'],
+    makeDefault: true,
+    label: 'DESORDEM.Criatura.Ficha',
+  });
   foundry.documents.collections.Items.registerSheet(SYSTEM_ID, ItemSheet, {
     types: ['arma', 'armadura', 'item', 'habilidade'],
     makeDefault: true,
@@ -110,6 +126,7 @@ Hooks.once('init', () => {
     rollSkill,
     rollAptitude,
     rollCraft,
+    rollExtraSkill,
     rollOpposed,
     damageActor,
     rollInjuryTest,

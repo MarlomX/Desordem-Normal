@@ -2,6 +2,7 @@ import { SYSTEM_ID, PERICIAS } from '../config.js';
 import { WEAPON_KINDS } from '../rolls/equipment.js';
 import { AUTOMATIONS } from '../rolls/abilities.js';
 import { buildChoices } from './context.js';
+import { isThreat } from '../rolls/threat.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
@@ -37,6 +38,8 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       isArmor: item.type === 'armadura',
       isOther: item.type === 'item',
       isAbility: item.type === 'habilidade',
+      // Habilidade de uma criatura: só nome e texto (sem perfil nem automação)
+      ownerIsThreat: isThreat(item.parent),
       automationChoices: [
         {
           value: '',

@@ -1,5 +1,7 @@
 /**
  * Áreas extras de Aptidão e de Ofício: lista de áreas criadas pelo jogador, além das do livro.
+ * As criaturas usam o mesmo mecanismo para as perícias próprias (grupo `pericia`), no lugar das
+ * áreas de Aptidão e de Ofício.
  * Lógica pura, sem dependência do Foundry. Cada área tem `id` (fixo), `nome` (livre), `dado` e `atributo` ('' = padrão, Mente).
  * As funções devolvem listas novas e nunca alteram a lista recebida.
  */
@@ -13,6 +15,7 @@ export const MAX_EXTRA_NAME = 40; // tamanho máximo do nome digitado
 export const EXTRA_GROUPS = Object.freeze({
   aptidao: 'aptidoesExtras',
   oficio: 'oficiosExtras',
+  pericia: 'periciasExtras',
 });
 
 /** Chave de teste de uma área extra, por exemplo `oficio:k3j9x` (não colide com as do livro). */
@@ -44,20 +47,25 @@ export function findExtra(system, key) {
   return extra ? { group: parsed.group, extra } : null;
 }
 
-/** Diz se ainda cabe uma área extra na lista. */
-export function canAddExtra(list) {
-  return list.length < MAX_EXTRAS;
+/**
+ * Diz se ainda cabe uma área extra na lista.
+ * @param {object[]} list
+ * @param {number} [max=MAX_EXTRAS] Limite do grupo (as perícias próprias da criatura usam 10).
+ */
+export function canAddExtra(list, max = MAX_EXTRAS) {
+  return list.length < max;
 }
 
 /**
  * Acrescenta uma área extra (dado d4, destreinado) ao fim da lista.
  * @param {object[]} list
  * @param {{id: string, nome?: string}} input O id deve ser novo e não vazio.
+ * @param {number} [max=MAX_EXTRAS] Limite do grupo.
  */
-export function addExtra(list, { id, nome = '' }) {
+export function addExtra(list, { id, nome = '' }, max = MAX_EXTRAS) {
   if (!id || typeof id !== 'string') throw new RangeError('Área extra sem id');
   if (list.some((item) => item.id === id)) throw new RangeError(`Id repetido: ${id}`);
-  if (!canAddExtra(list)) throw new RangeError(`Limite de ${MAX_EXTRAS} áreas extras atingido`);
+  if (!canAddExtra(list, max)) throw new RangeError(`Limite de ${max} áreas extras atingido`);
   return [
     ...list.map((item) => ({ ...item })),
     { id, nome: cleanName(nome), dado: 4, atributo: '' },

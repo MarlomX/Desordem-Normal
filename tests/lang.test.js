@@ -34,6 +34,7 @@ test('as chaves fixas usadas nos templates existem no idioma', () => {
     'templates/perseguicao',
     'templates/furtividade',
     'templates/desafios',
+    'templates/criatura',
   ]) {
     for (const file of readdirSync(new URL(`../${dir}`, import.meta.url))) {
       const text = readFileSync(new URL(`../${dir}/${file}`, import.meta.url), 'utf8');

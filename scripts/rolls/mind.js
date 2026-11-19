@@ -14,6 +14,7 @@ import {
 } from './emotional.js';
 import { buildTraumaContext, buildTableResultContext } from './presenter.js';
 import { createPending } from './pending-table.js';
+import { isThreat } from './threat.js';
 
 const TEMPLATE_TRAUMA = `systems/${SYSTEM_ID}/templates/chat/trauma.hbs`;
 const TEMPLATE_TABELA = `systems/${SYSTEM_ID}/templates/chat/tabela.hbs`;
@@ -146,6 +147,11 @@ export async function rollTraumaTest(actor, { extraDice = [], active = [], dt } 
  * @param {number} amount Dano emocional já calculado.
  */
 export async function emotionalDamage(actor, amount) {
+  // Criaturas não têm PD: nada a perder
+  if (isThreat(actor)) {
+    ui.notifications.warn(game.i18n.format('DESORDEM.Criatura.SemPD', { nome: actor.name }));
+    return null;
+  }
   const base = Math.trunc(amount);
   const {
     before,

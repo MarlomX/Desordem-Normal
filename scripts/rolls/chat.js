@@ -22,6 +22,7 @@ import {
 } from './abilities.js';
 import { resolveFearOptions } from './fear.js';
 import { createPending } from './pending-table.js';
+import { isThreat, testResources } from './threat.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
 const TEMPLATE_OPOSTO = `systems/${SYSTEM_ID}/templates/chat/oposto.hbs`;
@@ -196,6 +197,8 @@ export async function runTest(actor, options) {
  * enche a barra de ímpeto se o teste com DT falhou.
  */
 async function settleAbilities(actor, options, result) {
+  // Ameaças (criaturas) não têm barra de ímpeto
+  if (!actor.system.recursos) return;
   const updates = {};
   const before = actor.system.recursos.impeto;
   let impeto = before - (options.impetoCost ?? 0);
@@ -253,8 +256,9 @@ export async function rollTest({
   if (flags && acaoFlag) flags.acaoFurtiva = acaoFlag;
   if (flags && desafioFlag) flags.desafio = desafioFlag;
   // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js). O teste de
-  // esconderijo não tem efeito de falha crítica (a regra não traz nenhum).
-  if (flags && result.criticalFailure && !esconderijoFlag) {
+  // esconderijo não tem efeito de falha crítica (a regra não traz nenhum). Nas criaturas o mestre
+  // decide a penalidade (a tabela fala de PD e de itens carregados, que elas não têm).
+  if (flags && result.criticalFailure && !esconderijoFlag && !isThreat(actor)) {
     flags.tabela = createPending({ kind: 'disaster', actorUuid: actor.uuid });
   }
   await postMessage({ actor, content: card, rolls, flags, rollMode });
@@ -291,6 +295,8 @@ export function testDicePreview(actor, skillKey, attribute) {
 export function skillTestOptions(actor, skillKey, attribute, options) {
   const attrKey = resolveSkillAttribute(actor.system, skillKey, attribute);
   const { system } = actor;
+  // PD, ímpeto e pavor (0 nos campos que a ficha não tem, como numa criatura)
+  const resources = testResources(system);
 
   // Dado de pavor (ignoreFear: testes que não sofrem pavor), com controlar/abraçar só neste teste
   const {
@@ -304,11 +310,11 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   let fear;
   try {
     fear = resolveFearOptions({
-      fearDie: system.estado.pavor,
+      fearDie: resources.fearDie,
       ignore: ignoreFear,
       control: controlFear,
       embrace: embraceFear,
-      pd: system.pd.value,
+      pd: resources.pd,
     });
   } catch (error) {
     ui.notifications.warn(game.i18n.localize('DESORDEM.Pavor.PDInsuficiente'));
@@ -318,8 +324,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   // Habilidades escolhidas na janela pré-teste (dado extra de ímpeto, dado furtivo)
   const boosts = activeBoosts(active, {
     skillKey,
-    impeto: system.recursos.impeto,
-    pd: system.pd.value - fear.pdCost,
+    impeto: resources.impeto,
+    pd: resources.pd - fear.pdCost,
     allowNonLethal,
   });
 
@@ -386,6 +392,20 @@ export function rollCraft(actor, areaKey, { attribute, ...options } = {}) {
     throw new Error(`${SYSTEM_ID} | área de ofício desconhecida: ${areaKey}`);
   }
   return rollTest({ ...skillTestOptions(actor, areaKey, attribute, options), actor });
+}
+
+/**
+ * Teste de uma perícia própria de uma criatura (chave `pericia:<id>`; Mente é o atributo-base,
+ * salvo se outro for escolhido na ficha ou informado).
+ * @param {Actor} actor
+ * @param {string} key Chave da perícia própria.
+ * @param {Object} [options] Aceita dt, extraDice, stepMods, helpers e attribute (chave do atributo).
+ */
+export function rollExtraSkill(actor, key, { attribute, ...options } = {}) {
+  if (findExtra(actor.system, key)?.group !== 'pericia') {
+    throw new Error(`${SYSTEM_ID} | perícia própria desconhecida: ${key}`);
+  }
+  return rollTest({ ...skillTestOptions(actor, key, attribute, options), actor });
 }
 
 /**

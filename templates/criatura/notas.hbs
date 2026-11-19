@@ -1,0 +1,9 @@
+<section class="desordem-aba{{#if tabState.notas}} is-active{{/if}}" data-tab-panel="notas">
+<section class="desordem-ficha__secao desordem-criatura__notas">
+  <h3><i class="fa-solid fa-chess" aria-hidden="true"></i> {{localize "DESORDEM.Criatura.Estrategia"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Criatura.DicaEstrategia"}}</p>
+  <textarea name="system.estrategia" rows="6" {{#unless editable}}disabled{{/unless}}>{{system.estrategia}}</textarea>
+  <h3><i class="fa-solid fa-eye" aria-hidden="true"></i> {{localize "DESORDEM.Criatura.Descricao"}}</h3>
+  <textarea name="system.descricao" rows="8" {{#unless editable}}disabled{{/unless}}>{{system.descricao}}</textarea>
+</section>
+</section>

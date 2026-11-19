@@ -21,6 +21,7 @@ import {
 } from './injury.js';
 import { buildInjuryContext, buildTableResultContext } from './presenter.js';
 import { createPending } from './pending-table.js';
+import { isThreat, threatDamage } from './threat.js';
 
 const TEMPLATE_LESAO = `systems/${SYSTEM_ID}/templates/chat/lesao.hbs`;
 const TEMPLATE_TABELA = `systems/${SYSTEM_ID}/templates/chat/tabela.hbs`;
@@ -187,6 +188,7 @@ export async function rollInjuryTest(
  *   sem valor, pergunta ao jogador quando houver pontos.
  */
 export async function damageActor(actor, amount, { nonLethal = false, spendArmor } = {}) {
+  if (isThreat(actor)) return damageThreat(actor, amount, { nonLethal });
   const rawAmount = Math.trunc(amount);
   let finalAmount = rawAmount;
   let armorUsed = false;
@@ -217,4 +219,41 @@ export async function damageActor(actor, amount, { nonLethal = false, spendArmor
   });
   if (needsInjuryTest) await rollInjuryTest(actor, { nonLethal });
   return { before, after, needsInjuryTest, armorUsed };
+}
+
+/**
+ * Dano físico numa ameaça (criatura): desconta a redução de dano (RD) e diminui o PV. Não há
+ * pontos de armadura nem teste de lesão; com 0 PV o cartão avisa que ela foi derrotada.
+ * @param {Actor} actor
+ * @param {number} amount Dano já calculado (ex.: RA + modificador da arma).
+ * @param {{nonLethal?: boolean}} [options] Só muda o texto do cartão.
+ */
+async function damageThreat(actor, amount, { nonLethal = false } = {}) {
+  const outcome = threatDamage({
+    current: actor.system.pv.value,
+    amount: Math.trunc(amount),
+    rd: actor.system.rd,
+  });
+  await actor.update({ 'system.pv.value': outcome.after });
+  await postMessage({
+    actor,
+    content: await render(TEMPLATE_DANO, {
+      name: actor.name,
+      amount: outcome.amount,
+      before: outcome.before,
+      after: outcome.after,
+      nonLethal,
+      rdUsed: outcome.reduced > 0,
+      rd: outcome.reduced,
+      rawAmount: outcome.rawAmount,
+      defeated: outcome.newlyDefeated,
+    }),
+  });
+  return {
+    before: outcome.before,
+    after: outcome.after,
+    needsInjuryTest: false,
+    armorUsed: false,
+    defeated: outcome.defeated,
+  };
 }

@@ -29,3 +29,6 @@ export const APTIDOES = ['artes', 'erudicao', 'folclore', 'guerra', 'nobreza', '
 
 // Ofício (atributo-base: mente) também possui áreas próprias; cada uma tem seu dado
 export const OFICIOS = ['alquimia', 'carpintaria', 'metalurgia'];
+
+// Elementos do paranormal: toda criatura tem um principal e pode ter secundários
+export const ELEMENTOS = ['morte', 'sangue', 'energia', 'conhecimento', 'medo'];

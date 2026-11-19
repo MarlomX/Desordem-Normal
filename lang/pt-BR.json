@@ -1,5 +1,6 @@
 {
   "TYPES.Actor.personagem": "Personagem",
+  "TYPES.Actor.criatura": "Criatura",
   "TYPES.Combat.perseguicao": "Perseguição",
   "TYPES.Combatant.participante": "Participante",
   "TYPES.Combat.furtividade": "Furtividade",
@@ -141,15 +142,18 @@
       "AdicionarOficio": "Adicionar ofício",
       "ExtraNome": {
         "aptidao": "Nome da aptidão",
-        "oficio": "Nome do ofício"
+        "oficio": "Nome do ofício",
+        "pericia": "Nome da perícia"
       },
       "ExtraSemNome": {
         "aptidao": "Aptidão sem nome",
-        "oficio": "Ofício sem nome"
+        "oficio": "Ofício sem nome",
+        "pericia": "Perícia sem nome"
       },
       "RemoverExtra": {
         "aptidao": "Remover aptidão",
-        "oficio": "Remover ofício"
+        "oficio": "Remover ofício",
+        "pericia": "Remover perícia"
       },
       "ConfirmarRemoverExtra": "Remover esta área? O dado dela será perdido.",
       "LimiteExtras": "Limite de {max} áreas extras atingido.",
@@ -542,7 +546,9 @@
         "companheiro": "Companheiro animal (+d6 corpo a corpo)",
         "curandeiro": "Curar aliado (Medicina, 2 PD)",
         "sorrateiro": "Dado extra em Crime ou Furtividade (3 PD)"
-      }
+      },
+      "Natural": "Arma natural",
+      "DicaNatural": "Arma natural (garras, mordida, coice): não ocupa as mãos e não precisa ser empunhada. Os ataques das criaturas são armas naturais por padrão."
     },
     "Armadura": {
       "Titulo": "Pontos de armadura",
@@ -1180,6 +1186,53 @@
         "mestre": "Só o mestre"
       },
       "VisibilidadeRotulo": "Visível para"
+    },
+    "Elementos": {
+      "morte": "Morte",
+      "sangue": "Sangue",
+      "energia": "Energia",
+      "conhecimento": "Conhecimento",
+      "medo": "Medo"
+    },
+    "Criatura": {
+      "Ficha": "Ficha de criatura",
+      "Abas": {
+        "ficha": "Ficha",
+        "acoes": "Ações",
+        "notas": "Notas"
+      },
+      "Estado": {
+        "derrotada": "Derrotada"
+      },
+      "ElementoPrincipal": "Elemento",
+      "SemElemento": "— escolha —",
+      "ElementosSecundarios": "Secundários",
+      "RD": "RD",
+      "RDDica": "Redução de dano: descontada de cada dano físico antes de diminuir o PV.",
+      "RDUsada": "A redução de dano absorveu {rd} de {bruto}.",
+      "Derrotada": "Criatura derrotada: {nome} (0 PV).",
+      "SemPD": "{nome} é uma criatura e não tem PD.",
+      "ItemRecusado": "Criaturas só recebem ataques (armas) e habilidades.",
+      "DicaPericiasTreinadas": "Mostrando só as perícias treinadas (d6 ou mais). Clique no nome para rolar.",
+      "DicaTodasPericias": "Mostrando todas as perícias. Clique no nome para rolar.",
+      "MostrarTodas": "Mostrar todas (+{n})",
+      "SoTreinadas": "Só as treinadas",
+      "SemTreinadas": "Nenhuma perícia treinada. Use «Mostrar todas» para definir os dados.",
+      "PericiasProprias": "Perícias próprias",
+      "DicaPericiasProprias": "Perícias com nome livre (no lugar de Aptidão e Ofício), até {max}. Atributo-base padrão: Mente; troque pela etiqueta.",
+      "AdicionarPericia": "Adicionar perícia",
+      "DicaEfeitos": "Condições temporárias (caído, atordoado, agarrado...) com passos num atributo, se quiser.",
+      "Ataques": "Ataques",
+      "DicaAtaques": "Cada ataque é uma arma da criatura: o teste usa o atributo e a perícia do ataque (DT 7) e o dano é a rolagem alta mais o bônus.",
+      "Teste": "teste",
+      "SemAtaques": "Nenhum ataque ainda.",
+      "NovoAtaque": "Novo ataque",
+      "Habilidades": "Habilidades especiais",
+      "DicaHabilidades": "Texto livre: o mestre aplica o efeito. Disputas entre a criatura e um personagem podem ser feitas com testes das perícias.",
+      "SemHabilidades": "Nenhuma habilidade especial.",
+      "Estrategia": "Estratégia",
+      "DicaEstrategia": "Comportamento padrão da criatura em combate (notas do mestre).",
+      "Descricao": "Descrição"
     }
   },
   "TYPES.Item.arma": "Arma",

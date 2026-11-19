@@ -3048,3 +3048,113 @@ button.desordem-desafios-cartao__nome:hover {
 .desordem-desafio__visibilidade {
   margin-bottom: 6px;
 }
+
+/* ===== Ficha de criatura (v0.19.0) ===== */
+.desordem-cab--criatura .desordem-cab__recursos {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.desordem-elementos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.desordem-elementos__secundarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 0.8em;
+}
+
+.desordem-elementos__secundarios legend {
+  float: left;
+  margin-right: 4px;
+  padding: 0;
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-elemento {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px 0 2px;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 999px;
+  --desordem-elemento: var(--dn-accent, #3fa7b5);
+}
+
+.desordem-elemento input {
+  margin: 0;
+}
+
+.desordem-elemento.is-secundario {
+  border-color: var(--desordem-elemento);
+  background: color-mix(in srgb, var(--desordem-elemento) 18%, transparent);
+}
+
+.desordem-elemento.is-principal {
+  border-color: var(--desordem-elemento);
+  background: color-mix(in srgb, var(--desordem-elemento) 40%, transparent);
+  font-weight: bold;
+}
+
+.desordem-elemento--morte {
+  --desordem-elemento: #6b6f76;
+}
+
+.desordem-elemento--sangue {
+  --desordem-elemento: #b3302a;
+}
+
+.desordem-elemento--energia {
+  --desordem-elemento: #8a67d6;
+}
+
+.desordem-elemento--conhecimento {
+  --desordem-elemento: #d4a017;
+}
+
+.desordem-elemento--medo {
+  --desordem-elemento: #e6e6e6;
+}
+
+.desordem-rd {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-rd input {
+  width: 3.5em;
+  text-align: center;
+}
+
+.desordem-criatura__todas {
+  width: auto;
+  margin-bottom: 6px;
+}
+
+.desordem-criatura__texto {
+  white-space: pre-wrap;
+}
+
+.desordem-criatura__notas textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.desordem-dano__derrota {
+  margin: 4px 0 0;
+  color: var(--dn-pv, #b03a2e);
+}

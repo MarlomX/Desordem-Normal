@@ -9,8 +9,8 @@
   <h4>{{localize "DESORDEM.Ficha.Armas"}}</h4>
   {{#each equipment.weapons}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
-    <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="empunhada" data-item-id="{{id}}" {{#if empunhada}}checked{{/if}} {{#if blocked}}disabled title="{{localize "DESORDEM.Equipamento.Bloqueio.maos"}}"{{/if}}> {{localize "DESORDEM.Item.Empunhada"}}</label>
-    <span class="desordem-item-linha__nome" title="{{descricao}}"><strong>{{name}}</strong> — {{kindLabel}}, {{handsLabel}}, {{localize "DESORDEM.Ficha.Dano"}} {{damageLabel}}{{#if naoLetal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}} · {{skillLabel}}</span>
+    {{#if natural}}<span class="desordem-item-linha__marca">{{localize "DESORDEM.Item.Natural"}}</span>{{else}}<label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="empunhada" data-item-id="{{id}}" {{#if empunhada}}checked{{/if}} {{#if blocked}}disabled title="{{localize "DESORDEM.Equipamento.Bloqueio.maos"}}"{{/if}}> {{localize "DESORDEM.Item.Empunhada"}}</label>{{/if}}
+    <span class="desordem-item-linha__nome" title="{{descricao}}"><strong>{{name}}</strong> — {{kindLabel}}, {{#unless natural}}{{handsLabel}}, {{/unless}}{{localize "DESORDEM.Ficha.Dano"}} {{damageLabel}}{{#if naoLetal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}} · {{skillLabel}}</span>
     <button type="button" data-action="attackWeapon" data-item-id="{{id}}" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Ficha.Atacar"}}</button>
     <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
     {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="deleteItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Remover"}}">×</button>{{/unless}}

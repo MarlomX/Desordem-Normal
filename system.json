@@ -35,7 +35,8 @@
   "download": "https://github.com/MarlomX/desordem-normal/releases/latest/download/system.zip",
   "documentTypes": {
     "Actor": {
-      "personagem": {}
+      "personagem": {},
+      "criatura": {}
     },
     "Combat": {
       "perseguicao": {},

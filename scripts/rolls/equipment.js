@@ -48,11 +48,13 @@ export const HANDS = 2;
 
 /**
  * Mãos ocupadas pelos itens e armas empunhados (cada um usa uma ou duas).
- * @param {{maos: number, empunhada: boolean}[]} held Armas e itens (os não empunhados não contam).
+ * @param {{maos: number, empunhada: boolean, natural?: boolean}[]} held Armas e itens (os não
+ *   empunhados e as armas naturais não contam).
  * @returns {{used: number, over: boolean}} `over` indica mais de duas mãos em uso.
  */
 export function handsInUse(held) {
-  const used = held.filter((h) => h.empunhada).reduce((sum, h) => sum + h.maos, 0);
+  // Armas naturais (garras, mordida) nunca ocupam as mãos
+  const used = held.filter((h) => h.empunhada && !h.natural).reduce((sum, h) => sum + h.maos, 0);
   return { used, over: used > HANDS };
 }
 
@@ -70,7 +72,7 @@ export function checkEquipment(siblings, next) {
       ? { ok: false, reason: 'armadura' }
       : { ok: true, reason: null };
   }
-  if (next.system.empunhada) {
+  if (next.system.empunhada && !next.system.natural) {
     const used = handsInUse(
       siblings.filter((i) => i.type === 'arma' || i.type === 'item').map((i) => i.system),
     ).used;

@@ -1,0 +1,110 @@
+<section class="desordem-aba{{#if tabState.ficha}} is-active{{/if}}" data-tab-panel="ficha">
+<section class="desordem-ficha__secao">
+  <h3><i class="fa-solid fa-user" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Atributos"}}</h3>
+  <div class="desordem-ficha__atributos">
+    {{#each attributes}}
+    <div class="desordem-atributo">
+      <span class="desordem-atributo__nome">{{label}}
+        {{#if stepNet}}<span class="desordem-passo desordem-passo--{{stepDirection}}" title="{{localize "DESORDEM.Ficha.Passos.Efeito" base=die atual=shownDie}}"><i class="fa-solid {{#if stepUp}}fa-arrow-up{{else}}fa-arrow-down{{/if}}" aria-hidden="true"></i>{{#if stepBig}}<sub>{{stepAbs}}</sub>{{/if}}</span>{{/if}}
+      </span>
+      <span class="desordem-forma desordem-forma--grande desordem-d-{{shownDie}}{{#if stepNet}} is-passo is-passo--{{stepDirection}}{{/if}}">
+        <span class="desordem-forma__valor">{{shownDie}}</span>
+        <select class="desordem-forma__select" name="system.atributos.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+          {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      {{#if ../editable}}
+      <span class="desordem-passos-ctl" title="{{localize "DESORDEM.Ficha.Passos.Atributo"}}">
+        <button type="button" data-action="stepSteps" data-key="{{key}}" data-delta="-1" {{#unless canStepDown}}disabled{{/unless}} aria-label="{{localize "DESORDEM.Ficha.Passos.Menos"}}">−</button>
+        <button type="button" data-action="stepSteps" data-key="{{key}}" data-delta="1" {{#unless canStepUp}}disabled{{/unless}} aria-label="{{localize "DESORDEM.Ficha.Passos.Mais"}}">+</button>
+      </span>
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+</section>
+<section class="desordem-ficha__secao">
+  <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Pericias"}}</h3>
+  <div class="desordem-passos-geral{{#if skillStep.net}} is-passo is-passo--{{skillStep.direction}}{{/if}}">
+    <span class="desordem-passos-geral__nome">{{localize "DESORDEM.Ficha.Passos.Pericias"}}</span>
+    <span class="desordem-passos-ctl">
+      <button type="button" data-action="stepSteps" data-key="pericias" data-delta="-1" {{#unless editable}}disabled{{/unless}} aria-label="{{localize "DESORDEM.Ficha.Passos.Menos"}}">−</button>
+      <button type="button" class="desordem-passos-ctl__valor" data-action="stepSteps" data-key="pericias" data-reset="true" {{#unless editable}}disabled{{/unless}} title="{{localize "DESORDEM.Ficha.Passos.Zerar"}}">{{skillStep.net}}</button>
+      <button type="button" data-action="stepSteps" data-key="pericias" data-delta="1" {{#unless editable}}disabled{{/unless}} aria-label="{{localize "DESORDEM.Ficha.Passos.Mais"}}">+</button>
+    </span>
+  </div>
+  <p class="desordem-ficha__dica">{{#if showAllSkills}}{{localize "DESORDEM.Criatura.DicaTodasPericias"}}{{else}}{{localize "DESORDEM.Criatura.DicaPericiasTreinadas"}}{{/if}}</p>
+  <button type="button" class="desordem-criatura__todas" data-action="toggleAllSkills">{{#if showAllSkills}}{{localize "DESORDEM.Criatura.SoTreinadas"}}{{else}}{{localize "DESORDEM.Criatura.MostrarTodas" n=hiddenSkills}}{{/if}}</button>
+  <div class="desordem-ficha__pericias">
+    {{#each skills}}
+    <div class="desordem-ficha__pericia desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{attrShownDie}}">
+      <button type="button" class="desordem-ficha__rolar" data-action="rollSkill" data-skill="{{key}}">
+        <span class="desordem-ficha__pericia-nome">{{label}}</span>
+      </button>
+      <span class="desordem-attr-etiqueta{{#if attrOverridden}} is-alterado{{/if}}" title="{{#if attrOverridden}}{{localize "DESORDEM.Ficha.AtributoAlterado" padrao=attrDefaultLabel}}{{else}}{{localize "DESORDEM.Ficha.AtributoTrocar"}}{{/if}}">
+        <span class="desordem-attr-etiqueta__texto">{{attrLabel}}</span>
+        <select class="desordem-attr-etiqueta__select" data-attr-campo data-key="{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
+      <span class="desordem-ficha__soma">+</span>
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
+        <span class="desordem-forma__valor">{{shownDie}}</span>
+        <select class="desordem-forma__select" name="system.pericias.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+    </div>
+    {{/each}}
+  </div>
+  {{#unless skills.length}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Criatura.SemTreinadas"}}</p>{{/unless}}
+</section>
+<section class="desordem-ficha__secao">
+  <h3><i class="fa-solid fa-paw" aria-hidden="true"></i> {{localize "DESORDEM.Criatura.PericiasProprias"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Criatura.DicaPericiasProprias" max=maxExtraSkills}}</p>
+  <div class="desordem-ficha__pericias">
+    {{#each extraSkills}}
+    <div class="desordem-ficha__pericia desordem-ficha__pericia--extra desordem-d-{{shownDie}}{{#unless trained}} is-destreinada{{/unless}}" data-busca="{{search}}" data-nome="{{label}}" data-dado-final="{{shownDie}}" data-dado-attr="{{attrShownDie}}">
+      <input type="text" class="desordem-extra__nome" data-extra-campo="nome" data-group="pericia" data-id="{{id}}" value="{{nome}}" maxlength="40" placeholder="{{localize "DESORDEM.Ficha.ExtraNome.pericia"}}" {{#unless ../editable}}disabled{{/unless}}>
+      <button type="button" class="desordem-ficha__rolar desordem-ficha__rolar--extra" data-action="rollExtraSkill" data-skill="{{key}}" title="{{label}}">
+        <i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
+      </button>
+      <span class="desordem-attr-etiqueta{{#if attrOverridden}} is-alterado{{/if}}" title="{{#if attrOverridden}}{{localize "DESORDEM.Ficha.AtributoAlterado" padrao=attrDefaultLabel}}{{else}}{{localize "DESORDEM.Ficha.AtributoTrocar"}}{{/if}}">
+        <span class="desordem-attr-etiqueta__texto">{{attrLabel}}</span>
+        <select class="desordem-attr-etiqueta__select" data-attr-campo data-key="{{key}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
+      <span class="desordem-ficha__soma">+</span>
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
+        <span class="desordem-forma__valor">{{shownDie}}</span>
+        <select class="desordem-forma__select" data-extra-campo="dado" data-group="pericia" data-id="{{id}}" {{#unless ../editable}}disabled{{/unless}}>
+        {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+      {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeExtra" data-group="pericia" data-id="{{id}}" title="{{localize "DESORDEM.Ficha.RemoverExtra.pericia"}}">×</button>{{/if}}
+    </div>
+    {{/each}}
+  </div>
+  {{#if editable}}<button type="button" class="desordem-extra__adicionar" data-action="addExtra" {{#unless canAddExtraSkill}}disabled title="{{localize "DESORDEM.Ficha.LimiteExtras" max=maxExtraSkills}}"{{/unless}}><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Criatura.AdicionarPericia"}}</button>{{/if}}
+</section>
+<section class="desordem-ficha__secao desordem-ficha__efeitos">
+  <h3><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Efeitos"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Criatura.DicaEfeitos"}}</p>
+  {{#each effects}}
+  <div class="desordem-efeito">
+    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.efeito"}}</span>
+    <input type="text" class="desordem-efeito__nome" data-efeito-campo="nome" data-index="{{index}}" value="{{nome}}" title="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.EfeitoNome"}}" {{#if locked}}disabled{{/if}}>
+    <select data-efeito-campo="atributo" data-index="{{index}}" {{#if locked}}disabled{{/if}}>{{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    <select data-efeito-campo="passos" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.EfeitoPassos"}}" {{#if locked}}disabled{{/if}}>{{#each stepOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    <label class="desordem-item-linha__marca"><input type="checkbox" data-efeito-campo="fimDeCena" data-index="{{index}}" {{#if fimDeCena}}checked{{/if}} {{#if locked}}disabled{{/if}}> {{localize "DESORDEM.Ficha.EfeitoFimDeCena"}}</label>
+    <input type="text" class="desordem-efeito__descricao" data-efeito-campo="descricao" data-index="{{index}}" value="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.EfeitoDescricao"}}" {{#if locked}}disabled{{/if}}>
+    {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="removeEffect" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.RemoverEfeito"}}">×</button>{{/unless}}
+  </div>
+  {{/each}}
+  {{#unless effects.length}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemEfeitos"}}</p>{{/unless}}
+  {{#if editable}}<button type="button" data-action="addEffect">{{localize "DESORDEM.Ficha.AdicionarEfeito"}}</button>{{/if}}
+</section>
+</section>

@@ -363,8 +363,10 @@ export function buildEquipmentRows(items, { kindLabel, handsLabel, skillLabel, e
       skillLabel: skillLabel(weaponSkill(system)),
       empunhada: system.empunhada,
       naoLetal: system.naoLetal,
+      // Arma natural: sem caixa de empunhar (não ocupa as mãos)
+      natural: Boolean(system.natural),
       locked: !editable,
-      blocked: !editable || cannotHold(system),
+      blocked: !editable || (!system.natural && cannotHold(system)),
     })),
     armors: armors.map(({ id, name, system }) => ({
       id,

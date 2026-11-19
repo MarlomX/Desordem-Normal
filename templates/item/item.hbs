@@ -12,9 +12,11 @@
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.TipoArma"}}</span>
       <select name="system.tipo" {{#unless editable}}disabled{{/unless}}>{{#each kindChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
+    {{#unless system.natural}}
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Maos.Titulo"}}</span>
       <select name="system.maos" {{#unless editable}}disabled{{/unless}}>{{#each handsChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
+    {{/unless}}
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.BonusDano"}}</span>
       <input type="number" name="system.bonusDano" value="{{system.bonusDano}}" min="-10" max="20" {{#unless editable}}disabled{{/unless}}>
     </label>
@@ -22,8 +24,10 @@
       <select name="system.pericia" {{#unless editable}}disabled{{/unless}}>{{#each skillChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
     <label class="desordem-ficha__campo"><input type="checkbox" name="system.naoLetal" {{#if system.naoLetal}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.NaoLetal"}}</span></label>
-    <label class="desordem-ficha__campo"><input type="checkbox" name="system.empunhada" {{#if system.empunhada}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Empunhada"}}</span></label>
+    <label class="desordem-ficha__campo"><input type="checkbox" name="system.natural" {{#if system.natural}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Natural"}}</span></label>
+    {{#unless system.natural}}<label class="desordem-ficha__campo"><input type="checkbox" name="system.empunhada" {{#if system.empunhada}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Empunhada"}}</span></label>{{/unless}}
   </div>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaNatural"}}</p>
   {{/if}}
 
   {{#if isArmor}}
@@ -60,6 +64,7 @@
   {{/if}}
 
   {{#if isAbility}}
+  {{#unless ownerIsThreat}}
   <div class="desordem-item__campos">
     <label class="desordem-ficha__campo"><input type="checkbox" name="system.perfil" {{#if system.perfil}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Perfil"}}</span></label>
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Automacao"}}</span>
@@ -67,6 +72,7 @@
     </label>
   </div>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaAutomacao"}}</p>
+  {{/unless}}
   {{/if}}
 
   <label class="desordem-ficha__campo desordem-item__descricao"><span>{{localize "DESORDEM.Item.Descricao"}}</span>

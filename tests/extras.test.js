@@ -21,7 +21,7 @@ const lista = () => [
 test('extraKey e parseExtraKey são inversas e rejeitam chaves que não são de áreas extras', () => {
   assert.equal(extraKey('oficio', 'k3'), 'oficio:k3');
   assert.deepEqual(parseExtraKey('aptidao:k3'), { group: 'aptidao', id: 'k3' });
-  for (const ruim of ['folclore', 'luta', 'oficio:', ':x', 'pericia:x', '', null, undefined, 7]) {
+  for (const ruim of ['folclore', 'luta', 'oficio:', ':x', 'ritual:x', '', null, undefined, 7]) {
     assert.equal(parseExtraKey(ruim), null, String(ruim));
   }
   assert.equal(parseExtraKey('toString:x'), null);
