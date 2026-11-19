@@ -1,0 +1,58 @@
+<section class="desordem-desafios">
+  <header class="desordem-desafios__topo">
+    <h3 class="desordem-perseguicao__titulo"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Guia"}}</h3>
+    {{#if isGM}}
+    <button type="button" data-action="newChallenge"{{#unless podeCriar}} disabled title="{{localize "DESORDEM.Desafio.Limite"}}"{{/unless}}><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Estendido.Novo"}}</button>
+    {{/if}}
+  </header>
+
+  {{#if desafios.length}}
+  <ul class="desordem-desafios__lista">
+    {{#each desafios}}
+    <li class="desordem-desafios__item{{#unless ativo}} is-encerrado{{/unless}}{{#if concluido}} is-concluido{{/if}}">
+      <div class="desordem-desafios__cabeca">
+        {{#if @root.isGM}}
+        <button type="button" class="desordem-desafios__nome" data-action="openChallenge" data-challenge-id="{{id}}" title="{{localize "DESORDEM.Desafio.Editar"}}">{{#if semNome}}{{localize "DESORDEM.Desafio.Estendido.SemNome"}}{{else}}{{nome}}{{/if}}</button>
+        {{else}}
+        <span class="desordem-desafios__nome">{{#if semNome}}{{localize "DESORDEM.Desafio.Estendido.SemNome"}}{{else}}{{nome}}{{/if}}</span>
+        {{/if}}
+        {{#if concluido}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
+        {{#unless ativo}}<span class="desordem-perseguicao__selo">{{localize "DESORDEM.Desafio.Encerrado"}}</span>{{/unless}}
+      </div>
+      <div class="desordem-desafios__info">
+        <span>{{#if grupo}}{{localize "DESORDEM.Desafio.Modo.grupo"}}{{else}}{{localize "DESORDEM.Desafio.Modo.individual"}}{{/if}}</span>
+        <span>{{localize "DESORDEM.Perseguicao.DT"}} <strong>{{dt}}</strong></span>
+        {{#if mostrarPa}}<span>{{localize "DESORDEM.Desafio.PA"}} <strong>{{pa}}</strong></span>{{/if}}
+      </div>
+      {{#if grupo}}
+      <div class="desordem-desafios__total">
+        <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Total"}}</span>
+        <strong class="desordem-desafios__numero">{{total}}{{#if mostrarPa}} / {{pa}}{{/if}}</strong>
+      </div>
+      {{/if}}
+      {{#if participantes.length}}
+      <ul class="desordem-desafios__pessoas">
+        {{#each participantes}}
+        <li class="desordem-desafios__pessoa{{#if chegou}} is-chegou{{/if}}">
+          <span class="desordem-perseguicao__nome">{{#if missing}}{{localize "DESORDEM.Desafio.AtorSumiu"}}{{else}}{{name}}{{/if}}</span>
+          {{#unless ../grupo}}<span class="desordem-desafios__numero">{{pontos}}{{#if ../mostrarPa}} / {{../pa}}{{/if}}</span>{{/unless}}
+        </li>
+        {{/each}}
+      </ul>
+      {{else}}
+      <p class="desordem-perseguicao__vazio">{{localize "DESORDEM.Desafio.SemParticipantes"}}</p>
+      {{/if}}
+      {{#if @root.isGM}}
+      <div class="desordem-desafios__acoes">
+        <button type="button" data-action="openChallenge" data-challenge-id="{{id}}" title="{{localize "DESORDEM.Desafio.Editar"}}"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
+        <button type="button" data-action="toggleActive" data-challenge-id="{{id}}" title="{{#if ativo}}{{localize "DESORDEM.Desafio.Encerrar"}}{{else}}{{localize "DESORDEM.Desafio.Reabrir"}}{{/if}}"><i class="fa-solid {{#if ativo}}fa-stop{{else}}fa-rotate-left{{/if}}" aria-hidden="true"></i></button>
+        <button type="button" class="desordem-perseguicao__perigo" data-action="deleteChallenge" data-challenge-id="{{id}}" title="{{localize "DESORDEM.Desafio.Excluir"}}"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+      </div>
+      {{/if}}
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="desordem-perseguicao__vazio">{{#if isGM}}{{localize "DESORDEM.Desafio.VazioMestre"}}{{else}}{{localize "DESORDEM.Desafio.VazioJogador"}}{{/if}}</p>
+  {{/if}}
+</section>

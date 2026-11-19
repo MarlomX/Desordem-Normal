@@ -17,6 +17,7 @@ import { renderHideBar } from './stealth/hide-test.js';
 import { renderSearchBar } from './stealth/search.js';
 import { renderActionBar } from './stealth/action.js';
 import { registerCreatureTables } from './stealth/tables.js';
+import { challengeApi, readyChallenges, registerChallenges } from './challenges/hooks.js';
 import { rollTest, rollSkill, rollAptitude, rollCraft, rollOpposed } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
@@ -85,6 +86,8 @@ Hooks.once('init', () => {
   registerStealthHooks();
   // Tabelas de ações das criaturas: configuração do mundo, editada pelo mestre
   registerCreatureTables();
+  // Desafios (teste estendido): configuração do mundo e a guia nova da barra lateral
+  registerChallenges();
   registerEquipmentGuards();
 
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, PersonagemSheet, {
@@ -118,6 +121,7 @@ Hooks.once('init', () => {
     gainAnalysisMarkers,
     perseguicao: chaseApi,
     furtividade: stealthApi,
+    desafios: challengeApi,
   };
 });
 
@@ -141,5 +145,6 @@ Hooks.once('ready', () => {
   registerTableSocket();
   registerChaseSocket();
   registerStealthSocket();
+  readyChallenges();
   console.log(`${SYSTEM_ID} | pronto`);
 });

@@ -932,6 +932,73 @@
         "Alvos": "Found right now:",
         "Ninguem": "nobody (the card has no buttons)."
       }
+    },
+    "Desafio": {
+      "Guia": "Challenges",
+      "Abrir": "Challenges",
+      "Editar": "Edit challenge",
+      "Excluir": "Delete challenge",
+      "ExcluirConfirmar": "Delete the challenge “{nome}”? Every participant's progress will be lost.",
+      "Encerrar": "End",
+      "Reabrir": "Reopen",
+      "Encerrado": "Ended",
+      "Ativo": "Active",
+      "Concluido": "Done",
+      "Limite": "Challenge limit reached: delete one to create another.",
+      "VazioMestre": "No challenges. Create an extended test to track a target score without taking notes by hand.",
+      "VazioJogador": "No active challenges.",
+      "SemParticipantes": "No participants.",
+      "AtorSumiu": "(deleted character)",
+      "Nome": "Name or goal",
+      "PA": "TS",
+      "PAAlvo": "Target score (TS)",
+      "Pontos": "points",
+      "Total": "Group total",
+      "ModoRotulo": "Mode",
+      "PassarRotulo": "On a pass, add",
+      "FalharRotulo": "On a fail, add",
+      "RevelarPa": "Show the TS to players",
+      "Remover": "Remove from challenge",
+      "AdicionarSelecionados": "Selected tokens",
+      "AdicionarSelecionadosDica": "Adds the characters of the tokens selected on the map.",
+      "SemSelecionados": "No character token is selected on the map.",
+      "NaoExiste": "This challenge no longer exists.",
+      "Modo": {
+        "individual": "Individual",
+        "grupo": "Group"
+      },
+      "Passar": {
+        "ra": "High roll (HR)",
+        "rb": "Low roll (LR)"
+      },
+      "Falhar": {
+        "nada": "Nothing",
+        "rb": "Low roll (LR)",
+        "ra": "High roll (HR)"
+      },
+      "Estendido": {
+        "Titulo": "Extended test",
+        "Novo": "New extended test",
+        "NomePadrao": "Extended test",
+        "SemNome": "Unnamed extended test",
+        "Dica": "Individual: each participant has their own score. Group: everyone fills the same score, each one trying once per round. Adjust the points with −/+ or by typing (Enter confirms)."
+      },
+      "Cartao": {
+        "Titulo": "Challenges",
+        "Grupo": "Group",
+        "AbrirDica": "Shows the list of challenges"
+      },
+      "Penalidade": {
+        "Abrir": "Penalty",
+        "Titulo": "Challenge penalty",
+        "TituloCartao": "Challenge penalty",
+        "Fixa": "The chosen ones lose {valor} {tipo}.",
+        "Rolada": "Rolled {formula}: the chosen ones lose {valor} {tipo}.",
+        "Dica": "With dice, the GM rolls once and everyone takes the same value. Only the marked ones get the button on the card.",
+        "Escolher": "Who takes the penalty",
+        "SemAlvos": "Mark at least one participant to take the penalty.",
+        "SemParticipantes": "This challenge has no participants yet."
+      }
     }
   },
   "TYPES.Item.arma": "Weapon",

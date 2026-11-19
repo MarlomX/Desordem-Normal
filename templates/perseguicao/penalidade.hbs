@@ -11,6 +11,17 @@
       <label class="desordem-tipo-botoes__opcao desordem-tipo-botoes__opcao--pd"><input type="radio" name="tipo" value="pd"><span>{{localize "DESORDEM.Perseguicao.Penalidade.PD"}}</span></label>
     </div>
   </div>
+  {{! Desafio: o mestre marca quem leva a penalidade (só eles recebem o botão no cartão) }}
+  {{#if escolhas.length}}
+  <div class="desordem-perseguicao-penalidade__campo">
+    <span>{{localize "DESORDEM.Desafio.Penalidade.Escolher"}}</span>
+    <ul class="desordem-perseguicao-adicionar__lista">
+      {{#each escolhas}}
+      <li><label><input type="checkbox" name="alvo" value="{{id}}"> <span>{{name}}</span></label></li>
+      {{/each}}
+    </ul>
+  </div>
+  {{/if}}
   {{#if alvos}}<p class="desordem-ficha__dica"><strong>{{localize "DESORDEM.Furtividade.Consequencia.Alvos"}}</strong> {{alvos}}</p>{{/if}}
   <p class="desordem-ficha__dica">{{dica}}</p>
 </div>

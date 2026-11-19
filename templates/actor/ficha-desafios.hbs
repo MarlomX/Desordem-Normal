@@ -1,0 +1,19 @@
+<section class="desordem-perseguicao-cartao desordem-desafios-cartao{{#unless desafios}} is-oculta{{/unless}}">
+  <span class="desordem-perseguicao-cartao__titulo"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Cartao.Titulo"}}</span>
+  {{#if desafios}}
+  <ul class="desordem-desafios-cartao__lista">
+    {{#each desafios.lista}}
+    <li class="desordem-desafios-cartao__item{{#if chegou}} is-chegou{{/if}}">
+      {{#if @root.desafios.isGM}}
+      <button type="button" class="desordem-desafios-cartao__nome" data-action="openChallenge" data-challenge-id="{{id}}" title="{{localize "DESORDEM.Desafio.Editar"}}">{{#if semNome}}{{localize "DESORDEM.Desafio.Estendido.SemNome"}}{{else}}{{nome}}{{/if}}</button>
+      {{else}}
+      <span class="desordem-desafios-cartao__nome">{{#if semNome}}{{localize "DESORDEM.Desafio.Estendido.SemNome"}}{{else}}{{nome}}{{/if}}</span>
+      {{/if}}
+      <span class="desordem-perseguicao-cartao__estado">{{#if grupo}}{{localize "DESORDEM.Desafio.Cartao.Grupo"}} · {{/if}}{{pontos}}{{#if pa}} / {{pa}}{{/if}} {{localize "DESORDEM.Desafio.Pontos"}}</span>
+      {{#if chegou}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
+    </li>
+    {{/each}}
+  </ul>
+  {{/if}}
+  <button type="button" class="desordem-perseguicao-cartao__abrir" data-action="openChallenges" title="{{localize "DESORDEM.Desafio.Cartao.AbrirDica"}}">{{localize "DESORDEM.Perseguicao.Cartao.Abrir"}}</button>
+</section>

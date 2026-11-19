@@ -598,7 +598,8 @@ export function parsePenaltyValue(raw) {
  * Registro de uma penalidade postada no chat: quem já aplicou fica em `aplicados`.
  * A mesma penalidade serve à cena de furtividade (consequência de estar encontrado): nesse caso o
  * registro guarda `cena: 'furtividade'` e `alvos` (os encontrados quando ela foi postada), e só
- * eles têm o botão. Na perseguição o registro continua igual ao de antes.
+ * eles têm o botão. Na perseguição o registro continua igual ao de antes. Num desafio (guia de
+ * desafios) o registro guarda `cena: 'desafio'` e `alvos` com os ids dos atores escolhidos.
  */
 export function createPenaltyFlag({ tipo, valor, formula = '', cena, alvos }) {
   const flag = {
@@ -607,8 +608,9 @@ export function createPenaltyFlag({ tipo, valor, formula = '', cena, alvos }) {
     formula: String(formula),
     aplicados: [],
   };
-  if (cena === 'furtividade') {
-    flag.cena = 'furtividade';
+  // Furtividade: ids dos participantes encontrados. Desafio (0.18.0): ids dos atores escolhidos.
+  if (cena === 'furtividade' || cena === 'desafio') {
+    flag.cena = cena;
     flag.alvos = (Array.isArray(alvos) ? alvos : []).map(String);
   }
   return flag;
@@ -616,7 +618,7 @@ export function createPenaltyFlag({ tipo, valor, formula = '', cena, alvos }) {
 
 /** De qual cena é a penalidade ('perseguicao' para os registros antigos, sem `cena`). */
 export const penaltyScene = (flag) =>
-  flag?.cena === 'furtividade' ? 'furtividade' : 'perseguicao';
+  flag?.cena === 'furtividade' || flag?.cena === 'desafio' ? flag.cena : 'perseguicao';
 
 /** Esse participante pode aplicar a penalidade? (com `alvos`, só quem está na lista) */
 export const penaltyAllows = (flag, combatantId) =>

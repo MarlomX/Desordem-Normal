@@ -7,6 +7,9 @@
  * participante), e o mestre confere que o pedido vem de um dono do personagem, reserva o clique
  * (contra o duplo clique), marca na mensagem quem já aplicou e só então desconta. Se o recurso
  * chegar a 0, o cartão avisa; o teste de lesão ou de trauma é do jogador.
+ *
+ * A mesma penalidade serve à furtividade (consequência de estar encontrado) e aos desafios da
+ * guia de desafios (o mestre marca os participantes que levam a perda; ali o id é o do ator).
  */
 import { SYSTEM_ID } from '../config.js';
 import {
@@ -54,14 +57,24 @@ const TEXTS = {
     rolada: 'DESORDEM.Furtividade.Consequencia.Rolada',
     dica: 'DESORDEM.Furtividade.Consequencia.Dica',
   },
+  // Desafios (guia de desafios, 0.18.0): o mestre escolhe na janela quem leva a penalidade
+  desafio: {
+    titulo: 'DESORDEM.Desafio.Penalidade.Titulo',
+    cartao: 'DESORDEM.Desafio.Penalidade.TituloCartao',
+    fixa: 'DESORDEM.Desafio.Penalidade.Fixa',
+    rolada: 'DESORDEM.Desafio.Penalidade.Rolada',
+    dica: 'DESORDEM.Desafio.Penalidade.Dica',
+  },
 };
 
 /**
  * Janela do mestre: pergunta o valor e o tipo e posta a penalidade no chat.
- * @param {{cena?: 'perseguicao'|'furtividade', alvos?: {id: string, name: string}[]}} [options]
+ * @param {{cena?: 'perseguicao'|'furtividade'|'desafio', alvos?: {id: string, name: string}[],
+ *   escolhas?: {id: string, name: string}[]}} [options]
  *   Na furtividade, `alvos` são os encontrados agora: só eles recebem o botão.
+ *   No desafio, `escolhas` são os participantes: o mestre marca na janela quem leva a penalidade.
  */
-export async function askAndPostPenalty({ cena = 'perseguicao', alvos } = {}) {
+export async function askAndPostPenalty({ cena = 'perseguicao', alvos, escolhas } = {}) {
   if (!game.user.isGM) return;
   const texts = TEXTS[cena] ?? TEXTS.perseguicao;
   const content = await render(`systems/${SYSTEM_ID}/templates/perseguicao/penalidade.hbs`, {
@@ -70,6 +83,7 @@ export async function askAndPostPenalty({ cena = 'perseguicao', alvos } = {}) {
     alvos: alvos
       ? alvos.map((alvo) => alvo.name).join(', ') || t('DESORDEM.Furtividade.Consequencia.Ninguem')
       : '',
+    escolhas: escolhas ?? [],
   });
   const answer = await DialogV2.wait({
     window: { title: t(texts.titulo) },
@@ -88,6 +102,10 @@ export async function askAndPostPenalty({ cena = 'perseguicao', alvos } = {}) {
           valor: dialog.element.querySelector('[name="valor"]')?.value ?? '',
           // Dois botões que se excluem (PV ou PD): vale o marcado
           tipo: dialog.element.querySelector('[name="tipo"]:checked')?.value ?? 'pv',
+          // Desafio: participantes marcados para levar a penalidade
+          escolhidos: [...dialog.element.querySelectorAll('[name="alvo"]:checked')].map(
+            (input) => input.value,
+          ),
         }),
       },
       { action: 'cancel', label: t('DESORDEM.Teste.Pre.Cancelar') },
@@ -95,7 +113,27 @@ export async function askAndPostPenalty({ cena = 'perseguicao', alvos } = {}) {
   });
   // Só {confirmed: true} confirma: fechar no X ou cancelar devolve outra coisa.
   if (answer?.confirmed !== true) return;
+  if (escolhas) {
+    // Nunca confia no que veio da janela: só vale quem estava na lista oferecida.
+    const marked = new Set(answer.escolhidos);
+    const chosen = escolhas.filter((entry) => marked.has(entry.id));
+    if (chosen.length === 0) {
+      ui.notifications.warn(t('DESORDEM.Desafio.Penalidade.SemAlvos'));
+      return;
+    }
+    await postPenalty(answer.valor, answer.tipo, { cena, alvos: chosen });
+    return;
+  }
   await postPenalty(answer.valor, answer.tipo, { cena, alvos });
+}
+
+/**
+ * Ator alvo de uma linha da penalidade. No desafio o id já é o do ator do mundo; nas cenas é o
+ * id do participante (Combatant) do encontro.
+ */
+function targetActor(flag, id) {
+  if (penaltyScene(flag) === 'desafio') return game.actors.get(id) ?? null;
+  return sceneOf(flag)?.combatants.get(id)?.actor ?? null;
 }
 
 /** Rola (se for fórmula) uma única vez e posta a mensagem da penalidade. */
@@ -143,17 +181,16 @@ async function postPenalty(raw, tipo, { cena = 'perseguicao', alvos } = {}) {
 export async function applyPenalty(message, combatantId, userId) {
   const flag = message?.flags?.[SYSTEM_ID]?.penalidade;
   if (!flag || !penaltyAllows(flag, combatantId)) return;
-  const combatant = sceneOf(flag)?.combatants.get(combatantId);
+  const actor = targetActor(flag, combatantId);
   const requester = game.users.get(userId);
-  if (!combatant?.actor || !requester) return;
+  if (!actor || !requester) return;
   // Nunca confia no pedido: só um dono do personagem (ou o mestre) aplica a penalidade dele.
-  if (!combatant.actor.testUserPermission(requester, 'OWNER')) return;
+  if (!actor.testUserPermission(requester, 'OWNER')) return;
 
   const key = `${message.id}:${combatantId}`;
   if (inFlight.has(key)) return;
   inFlight.add(key);
   try {
-    const actor = combatant.actor;
     // Usa o PV (ou PD) de agora, que pode ter mudado desde a mensagem
     const result = applyPenaltyTo(flag, combatantId, actor.system[flag.tipo].value);
     if (!result) return;
@@ -182,6 +219,13 @@ function requestApply(message, combatantId) {
 
 /** Participantes da cena da penalidade que a pessoa controla (o mestre controla todos). */
 function myRows(flag) {
+  // Desafio: os alvos já são atores do mundo (não depende do desafio ainda existir)
+  if (penaltyScene(flag) === 'desafio') {
+    return (flag.alvos ?? [])
+      .map((id) => game.actors.get(id))
+      .filter((actor) => actor?.isOwner)
+      .map((actor) => ({ combatantId: actor.id, name: actor.name }));
+  }
   const scene = sceneOf(flag);
   if (!scene) return [];
   return scene.combatants

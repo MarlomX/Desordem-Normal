@@ -39,6 +39,9 @@ import { recoverBreath } from '../chase/breath.js';
 import { chaseCardFor, chaseInfoFor } from '../chase/store.js';
 import FurtividadeApp from '../stealth/app.js';
 import { adjustHideUses, findStealth, stealthCardFor, stealthInfoFor } from '../stealth/store.js';
+import { challengeCardFor } from '../challenges/store.js';
+import DesafioApp from '../challenges/app.js';
+import { showChallengeList } from '../challenges/sidebar.js';
 import { withHideTest } from '../stealth/hide-test.js';
 import { withFlashyAction, withStealthAction } from '../stealth/action.js';
 import {
@@ -122,6 +125,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       openChase: PersonagemSheet.#onOpenChase,
       recoverBreath: PersonagemSheet.#onRecoverBreath,
       openStealth: PersonagemSheet.#onOpenStealth,
+      openChallenges: PersonagemSheet.#onOpenChallenges,
+      openChallenge: PersonagemSheet.#onOpenChallenge,
       adjustHideUses: PersonagemSheet.#onAdjustHideUses,
       setTab: PersonagemSheet.#onSetTab,
       adjustResource: PersonagemSheet.#onAdjustResource,
@@ -139,6 +144,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     cabecalho: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-cabecalho.hbs` },
     perseguicao: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-perseguicao.hbs` },
     furtividade: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-furtividade.hbs` },
+    desafios: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-desafios.hbs` },
     abas: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-abas.hbs` },
     testes: { template: `systems/${SYSTEM_ID}/templates/actor/ficha-testes.hbs`, scrollable: [''] },
     habilidades: {
@@ -187,6 +193,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       ...context,
       perseguicao: chaseCardFor(this.document),
       furtividade: stealthCardFor(this.document),
+      desafios: challengeCardFor(this.document),
       sheetTabs: tabs.list,
       tabState: tabs.state,
       pvPercent: resourcePercent(system.pv.value, system.pv.max),
@@ -785,6 +792,16 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Abre a janela da cena de furtividade (cartão da ficha). */
   static async #onOpenStealth() {
     await FurtividadeApp.open();
+  }
+
+  /** Mostra a lista de desafios (guia da barra lateral ou janela flutuante): cartão da ficha. */
+  static async #onOpenChallenges() {
+    await showChallengeList();
+  }
+
+  /** O mestre abre a janela de um desafio pelo nome no cartão da ficha. */
+  static async #onOpenChallenge(event, target) {
+    await DesafioApp.open(target.dataset.challengeId);
   }
 
   /** Ajuste à mão do contador de esconder-se (aba Condição, só durante a cena de furtividade). */

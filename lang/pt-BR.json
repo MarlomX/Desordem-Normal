@@ -932,6 +932,73 @@
         "Alvos": "Encontrados agora:",
         "Ninguem": "ninguém (o cartão sai sem botões)."
       }
+    },
+    "Desafio": {
+      "Guia": "Desafios",
+      "Abrir": "Desafios",
+      "Editar": "Editar desafio",
+      "Excluir": "Excluir desafio",
+      "ExcluirConfirmar": "Excluir o desafio «{nome}»? O progresso de todos os participantes se perde.",
+      "Encerrar": "Encerrar",
+      "Reabrir": "Reabrir",
+      "Encerrado": "Encerrado",
+      "Ativo": "Ativo",
+      "Concluido": "Concluído",
+      "Limite": "Limite de desafios atingido: exclua algum para criar outro.",
+      "VazioMestre": "Nenhum desafio. Crie um teste estendido para acompanhar uma pontuação alvo sem anotar à mão.",
+      "VazioJogador": "Nenhum desafio ativo.",
+      "SemParticipantes": "Sem participantes.",
+      "AtorSumiu": "(personagem excluído)",
+      "Nome": "Nome ou objetivo",
+      "PA": "PA",
+      "PAAlvo": "Pontuação alvo (PA)",
+      "Pontos": "pontos",
+      "Total": "Total do grupo",
+      "ModoRotulo": "Modo",
+      "PassarRotulo": "Ao passar, soma",
+      "FalharRotulo": "Ao falhar, soma",
+      "RevelarPa": "Mostrar a PA aos jogadores",
+      "Remover": "Tirar do desafio",
+      "AdicionarSelecionados": "Tokens selecionados",
+      "AdicionarSelecionadosDica": "Acrescenta os personagens dos tokens selecionados no mapa.",
+      "SemSelecionados": "Nenhum token de personagem selecionado no mapa.",
+      "NaoExiste": "Este desafio não existe mais.",
+      "Modo": {
+        "individual": "Individual",
+        "grupo": "Em grupo"
+      },
+      "Passar": {
+        "ra": "Rolagem alta (RA)",
+        "rb": "Rolagem baixa (RB)"
+      },
+      "Falhar": {
+        "nada": "Nada",
+        "rb": "Rolagem baixa (RB)",
+        "ra": "Rolagem alta (RA)"
+      },
+      "Estendido": {
+        "Titulo": "Teste estendido",
+        "Novo": "Novo teste estendido",
+        "NomePadrao": "Teste estendido",
+        "SemNome": "Teste estendido sem nome",
+        "Dica": "Individual: cada participante tem a sua pontuação. Em grupo: todos enchem a mesma pontuação, cada um tentando uma vez por rodada. Ajuste os pontos com −/+ ou digitando (Enter confirma)."
+      },
+      "Cartao": {
+        "Titulo": "Desafios",
+        "Grupo": "Grupo",
+        "AbrirDica": "Mostra a lista de desafios"
+      },
+      "Penalidade": {
+        "Abrir": "Penalidade",
+        "Titulo": "Penalidade do desafio",
+        "TituloCartao": "Penalidade do desafio",
+        "Fixa": "Quem foi escolhido perde {valor} {tipo}.",
+        "Rolada": "Rolou {formula}: quem foi escolhido perde {valor} {tipo}.",
+        "Dica": "Com dados, o mestre rola uma vez e todos levam o mesmo valor. Só os marcados recebem o botão no cartão.",
+        "Escolher": "Quem leva a penalidade",
+        "SemAlvos": "Marque pelo menos um participante para levar a penalidade.",
+        "SemParticipantes": "Este desafio ainda não tem participantes."
+      }
     }
   },
   "TYPES.Item.arma": "Arma",
