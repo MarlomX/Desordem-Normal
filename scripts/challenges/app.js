@@ -36,6 +36,15 @@ const renderTemplate = (path, data) => foundry.applications.handlebars.renderTem
 export const challengeName = (challenge) =>
   challenge?.nome || t('DESORDEM.Desafio.Estendido.SemNome');
 
+/** Grupo de chaves da dica de cada tipo (o arrombar usa a do teste estendido). */
+const TYPE_HINTS = {
+  estendido: 'Estendido',
+  arrombar: 'Estendido',
+  escalar: 'Escalar',
+  alcancar: 'Alcancar',
+  sustentar: 'Sustentar',
+};
+
 /** Campos de configuração que a janela grava pelo `change` (os demais são pontos). */
 const CONFIG_FIELDS = new Set([
   'nome',
@@ -168,6 +177,9 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       icone: TYPE_ICONS[challenge.tipo] ?? TYPE_ICONS.estendido,
       // Chave montada (conferida à mão): DESORDEM.Desafio.Tipo.{estendido,arrombar,escalar}
       tipoRotulo: t(`DESORDEM.Desafio.Tipo.${challenge.tipo}`),
+      // Dica e unidade dos pontos de cada tipo (chaves montadas, conferidas à mão)
+      dica: t(`DESORDEM.Desafio.${TYPE_HINTS[challenge.tipo] ?? 'Estendido'}.Dica`),
+      pontosRotulo: t(`DESORDEM.Desafio.Unidade.${challenge.tipo}`),
       // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Modo.*, .Passar.*, .Falhar.*
       modos: CHALLENGE_MODES.map(option('DESORDEM.Desafio.Modo', challenge.modo)),
       passar: ON_PASS.map(option('DESORDEM.Desafio.Passar', challenge.somaPassar)),

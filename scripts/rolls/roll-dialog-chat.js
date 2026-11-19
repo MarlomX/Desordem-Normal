@@ -53,6 +53,8 @@ function readSelection(form) {
       id: fields.estendidoId?.value ?? '',
       // Escalada: rápida ou cautelosa (dois botões que se excluem)
       abordagem: form.querySelector('input[name="estendidoAbordagem"]:checked')?.value ?? 'rapida',
+      // Alcançar: segura ou arriscada (outro par de botões)
+      alcance: form.querySelector('input[name="estendidoAlcance"]:checked')?.value ?? 'segura',
     },
   };
 }
@@ -156,6 +158,11 @@ function syncAdvanceDt(form, on) {
 function selectedChallengeDt(form) {
   const option = form.elements.estendidoId?.selectedOptions?.[0];
   if (!option) return Number.NaN;
+  if (option.dataset.tipo === 'alcancar') {
+    // Arriscada: a DT da segura (do ambiente) +3
+    const risky = form.querySelector('input[name="estendidoAlcance"]:checked')?.value === 'arriscada';
+    return Math.min(40, Number(option.dataset.dt) + (risky ? 3 : 0));
+  }
   if (option.dataset.tipo !== 'escalar') return Number(option.dataset.dt);
   const approach = form.querySelector('input[name="estendidoAbordagem"]:checked')?.value;
   return Number(approach === 'cautelosa' ? option.dataset.dtCautelosa : option.dataset.dtRapida);
@@ -250,8 +257,11 @@ function refresh(form, root, model) {
   const extended = evaluation.estendido.on;
   root.querySelector('[data-estendido-detalhes]')?.classList.toggle('is-oculta', !extended);
   // Escalada: rápida ou cautelosa só aparece com um desafio de escalada escolhido
-  const climbing = form.elements.estendidoId?.selectedOptions?.[0]?.dataset.tipo === 'escalar';
-  root.querySelector('[data-estendido-escalar]')?.classList.toggle('is-oculta', !climbing);
+  const kind = form.elements.estendidoId?.selectedOptions?.[0]?.dataset.tipo;
+  root.querySelector('[data-estendido-escalar]')?.classList.toggle('is-oculta', kind !== 'escalar');
+  // Alcançar: segura ou arriscada; sustentar: o aviso das reduções de passo
+  root.querySelector('[data-estendido-alcancar]')?.classList.toggle('is-oculta', kind !== 'alcancar');
+  root.querySelector('[data-estendido-sustentar]')?.classList.toggle('is-oculta', kind !== 'sustentar');
   for (const radio of root.querySelectorAll('input[name="furtivaAcao"]')) {
     if (radio.value === '') continue;
     // A ação chamativa já desliga esconder-se e distrair (acima); aqui desliga todas as três
@@ -417,11 +427,11 @@ export async function askRollChoices(
         dt: entry.dt,
         dtRapida: entry.dtRapida,
         dtCautelosa: entry.dtCautelosa,
-        // Na escalada a DT depende da abordagem (mostrada nos botões rápida e cautelosa)
-        label:
-          entry.tipo === 'escalar'
-            ? entry.nome
-            : t('DESORDEM.Desafio.Pre.Opcao', { nome: entry.nome, dt: entry.dt }),
+        passos: entry.passos,
+        // Na escalada e no alcançar a DT depende da abordagem (mostrada nos botões)
+        label: ['escalar', 'alcancar'].includes(entry.tipo)
+          ? entry.nome
+          : t('DESORDEM.Desafio.Pre.Opcao', { nome: entry.nome, dt: entry.dt }),
       })),
     },
     abilities: model.abilities.map((ability) => ({
@@ -462,7 +472,9 @@ export async function askRollChoices(
           }
           syncExtendedDt(form, event.target.checked);
         }
-        const changesDt = ['estendidoId', 'estendidoAbordagem'].includes(event.target.name);
+        const changesDt = ['estendidoId', 'estendidoAbordagem', 'estendidoAlcance'].includes(
+          event.target.name,
+        );
         if (changesDt && form.elements.estendidoOn?.checked) {
           // Troca de desafio ou de abordagem: a DT passa a ser a nova (a de antes fica guardada)
           const field = form.elements.dt;

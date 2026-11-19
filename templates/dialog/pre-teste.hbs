@@ -112,7 +112,7 @@
       <label class="desordem-pre__avanco-campo">
         <span>{{localize "DESORDEM.Desafio.Pre.Qual"}}</span>
         <select name="estendidoId">
-          {{#each estendido.desafios}}<option value="{{id}}" data-tipo="{{tipo}}" data-dt="{{dt}}" data-dt-rapida="{{dtRapida}}" data-dt-cautelosa="{{dtCautelosa}}">{{label}}</option>{{/each}}
+          {{#each estendido.desafios}}<option value="{{id}}" data-tipo="{{tipo}}" data-dt="{{dt}}" data-dt-rapida="{{dtRapida}}" data-dt-cautelosa="{{dtCautelosa}}" data-passos="{{passos}}">{{label}}</option>{{/each}}
         </select>
       </label>
       {{! Escalada: rápida (soma a RA) ou cautelosa (soma a RB), cada uma com a sua DT }}
@@ -129,6 +129,22 @@
         </div>
         <p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.Pre.EscalarDica"}}</p>
       </div>
+      {{! Alcançar: segura (duas ações seguidas) ou arriscada (uma ação, DT +3) }}
+      <div class="is-oculta" data-estendido-alcancar>
+        <div class="desordem-tipo-botoes">
+          <label class="desordem-tipo-botoes__opcao">
+            <input type="radio" name="estendidoAlcance" value="segura" checked>
+            <span>{{localize "DESORDEM.Desafio.Pre.Segura"}}</span>
+          </label>
+          <label class="desordem-tipo-botoes__opcao">
+            <input type="radio" name="estendidoAlcance" value="arriscada">
+            <span>{{localize "DESORDEM.Desafio.Pre.Arriscada"}}</span>
+          </label>
+        </div>
+        <p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.Pre.AlcancarDica"}}</p>
+      </div>
+      {{! Sustentar: a prévia dos dados já mostra as reduções de passo }}
+      <p class="desordem-ficha__dica is-oculta" data-estendido-sustentar>{{localize "DESORDEM.Desafio.Pre.SustentarDica"}}</p>
     </div>
   </fieldset>
   {{/if}}

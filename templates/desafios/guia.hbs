@@ -47,7 +47,7 @@
         {{#each participantes}}
         <li class="desordem-desafios__pessoa{{#if chegou}} is-chegou{{/if}}">
           <span class="desordem-perseguicao__nome">{{#if missing}}{{localize "DESORDEM.Desafio.AtorSumiu"}}{{else}}{{name}}{{/if}}</span>
-          {{#unless ../grupo}}<span class="desordem-desafios__numero">{{pontos}}{{#if ../mostrarPa}} / {{../pa}}{{/if}}</span>{{/unless}}
+          {{#unless ../grupo}}<span class="desordem-desafios__numero">{{pontos}}{{#if ../mostrarPa}} / {{../pa}}{{/if}} {{../unidade}}</span>{{/unless}}
         </li>
         {{/each}}
       </ul>

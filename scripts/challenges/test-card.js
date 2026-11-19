@@ -24,14 +24,16 @@ import {
   reserveAdvance,
 } from '../rolls/chase.js';
 import {
+  applyChallengeFailure,
   applyChallengeTest,
-  applyFall,
   challengeBarView,
   challengeTestChoices,
   challengeTestGain,
   challengeTestSuccess,
   costBarView,
   createChallengeTestFlag,
+  currentPoints,
+  failureKind,
   loseHitPoints,
 } from '../rolls/challenge.js';
 import { SOCKET } from '../chase/store.js';
@@ -71,15 +73,17 @@ export function withExtendedTest(actor, options) {
     ui.notifications.warn(t('DESORDEM.Desafio.Teste.Indisponivel'));
     return rest;
   }
-  return {
-    ...rest,
-    desafioFlag: createChallengeTestFlag({
-      challenge,
-      actorId,
-      dt: estendido.dt,
-      abordagem: estendido.abordagem,
-    }),
-  };
+  const desafioFlag = createChallengeTestFlag({
+    challenge,
+    actorId,
+    dt: estendido.dt,
+    abordagem: estendido.abordagem,
+  });
+  // Sustentar: uma redução de passo nos dois dados por rodada já sustentada (lida agora)
+  const stepMods = desafioFlag.passos
+    ? [...(rest.stepMods ?? []), { target: 'both', steps: -desafioFlag.passos }]
+    : rest.stepMods;
+  return { ...rest, ...(stepMods ? { stepMods } : {}), desafioFlag };
 }
 
 /** Resultado do teste do cartão com os dados como estão agora (depois de Análise ou Prontidão). */
@@ -124,21 +128,24 @@ async function applyNow(message, userId) {
   try {
     // O valor vem dos dados que o cartão tem agora, e não de algo enviado pelo jogador.
     const result = currentResult(test);
-    if (flag.queda && !challengeTestSuccess(result, flag.dt)) {
-      await applyFallNow(message, reserved, actor);
+    if (failureKind(flag) && !challengeTestSuccess(result, flag.dt)) {
+      await applyFailureNow(message, reserved, actor, result);
       return;
     }
     const gain = challengeTestGain(result, flag);
-    let applied = false;
+    let depois = null;
     await mutateChallenge(flag.desafioId, (challenge) => {
       const next = applyChallengeTest(challenge, flag.actorId, gain);
       if (!next) return challenge;
-      applied = true;
+      depois = currentPoints(next, flag.actorId);
       return next;
     });
     // Desafio encerrado, excluído ou sem o personagem: nada somado (a barra mostra o motivo)
     await message.update({
-      [FLAG]: applied ? finishAdvanceFlag(reserved, gain) : releaseAdvance(reserved),
+      [FLAG]:
+        depois === null
+          ? releaseAdvance(reserved)
+          : { ...finishAdvanceFlag(reserved, gain), depois },
     });
   } catch (error) {
     console.error(`${SYSTEM_ID} | falha ao somar os pontos do teste estendido`, error);
@@ -147,27 +154,35 @@ async function applyNow(message, userId) {
 }
 
 /**
- * Queda da escalada: zera os pontos do personagem e tira dele o dano igual aos pontos que ele
- * tinha (lidos agora, não na rolagem). Chegando a 0 PV, o cartão avisa; o teste de lesão é do
- * jogador.
+ * Falha com consequência, aplicada pelo botão do cartão:
+ * - queda (escalar): dano igual aos pontos acumulados (lidos agora, não na rolagem), que zeram;
+ * - dano (alcançar): dano igual à RB (segura, e as ações zeram) ou à RA (arriscada);
+ * - soltar (sustentar): sem dano; as rodadas zeram.
+ * Chegando a 0 PV, o cartão avisa; o teste de lesão é do jogador.
  */
-async function applyFallNow(message, reserved, actor) {
-  let dano = null;
+async function applyFailureNow(message, reserved, actor, result) {
+  let outcome = null;
   await mutateChallenge(reserved.desafioId, (challenge) => {
-    const fall = applyFall(challenge, reserved.actorId);
-    if (!fall) return challenge;
-    dano = fall.dano;
-    return fall.challenge;
+    const failure = applyChallengeFailure(challenge, reserved, result);
+    if (!failure) return challenge;
+    outcome = { ...failure, depois: currentPoints(failure.challenge, reserved.actorId) };
+    return failure.challenge;
   });
-  if (dano === null) {
+  if (!outcome) {
     await message.update({ [FLAG]: releaseAdvance(reserved) });
     return;
   }
-  const loss = loseHitPoints(actor.system.pv.value, dano);
+  const loss = loseHitPoints(actor.system.pv.value, outcome.dano);
   if (loss.applied > 0) await actor.update({ 'system.pv.value': loss.pv });
   await message.update({
-    // Guarda o dano da queda (os pontos que tinha), mesmo que o PV tenha parado em 0
-    [FLAG]: { ...finishAdvanceFlag(reserved, 0), dano, zerou: loss.reachedZero },
+    // Guarda o dano da regra (mesmo que o PV tenha parado em 0) e qual falha foi aplicada
+    [FLAG]: {
+      ...finishAdvanceFlag(reserved, 0),
+      dano: outcome.dano,
+      zerou: loss.reachedZero,
+      falhaAplicada: outcome.kind,
+      depois: outcome.depois,
+    },
   });
   if (loss.reachedZero) ui.notifications.warn(t('DESORDEM.Desafio.Barra.ZeroPv'));
 }
@@ -260,19 +275,56 @@ function busyNote(doc) {
   return busy;
 }
 
-/** Texto da barra principal (somar pontos ou queda). */
+/** Texto de um resultado já aplicado (pontos somados, queda, dano ou soltar). */
+function appliedText(view, nome) {
+  const withZero = (text) =>
+    view.appliedZerou ? `${text} ${t('DESORDEM.Desafio.Barra.ZeroPv')}` : text;
+  if (view.appliedFalha === 'queda') {
+    return withZero(t('DESORDEM.Desafio.Barra.QuedaAplicada', { dano: view.appliedDano, nome }));
+  }
+  if (view.appliedFalha === 'dano') {
+    return withZero(t('DESORDEM.Desafio.Barra.DanoAplicado', { dano: view.appliedDano, nome }));
+  }
+  if (view.appliedFalha === 'soltar') return t('DESORDEM.Desafio.Barra.Soltou', { nome });
+  if (view.tipo === 'alcancar') {
+    return view.appliedDepois >= 2
+      ? t('DESORDEM.Desafio.Barra.Alcancou', { nome })
+      : t('DESORDEM.Desafio.Barra.AcaoRegistrada', { nome, n: view.appliedDepois ?? 1 });
+  }
+  if (view.tipo === 'sustentar') {
+    return t('DESORDEM.Desafio.Barra.Sustentando', { nome, n: view.appliedDepois ?? 1 });
+  }
+  return t('DESORDEM.Desafio.Barra.Somado', { pontos: view.appliedPontos, nome });
+}
+
+/** O que o teste vale, antes do clique (o detalhe depois de «Nome (DT x):»). */
+function pendingDetail(view) {
+  if (view.falha === 'queda') return t('DESORDEM.Desafio.Barra.Queda', { dano: view.dano });
+  if (view.falha === 'dano') {
+    return t(view.zera ? 'DESORDEM.Desafio.Barra.DanoZera' : 'DESORDEM.Desafio.Barra.Dano', {
+      dano: view.dano,
+    });
+  }
+  if (view.falha === 'soltar') return t('DESORDEM.Desafio.Barra.Solta');
+  if (view.tipo === 'alcancar') {
+    return t(
+      view.abordagem === 'arriscada'
+        ? 'DESORDEM.Desafio.Barra.PassouAlcanca'
+        : 'DESORDEM.Desafio.Barra.PassouAcao',
+    );
+  }
+  if (view.tipo === 'sustentar') return t('DESORDEM.Desafio.Barra.PassouSustenta');
+  // Chaves montadas (conferidas à mão): DESORDEM.Desafio.Barra.{passou,falhou,crit,falhaCritica}
+  return t(`DESORDEM.Desafio.Barra.${view.kind}`, { pontos: view.pontos });
+}
+
+/** Texto da barra principal. */
 function mainText(view) {
   const nome = shownName(view.nome);
-  if (view.appliedQueda) {
-    const text = t('DESORDEM.Desafio.Barra.QuedaAplicada', { dano: view.appliedDano, nome });
-    return view.appliedZerou ? `${text} ${t('DESORDEM.Desafio.Barra.ZeroPv')}` : text;
-  }
-  if (view.applied) {
-    return t('DESORDEM.Desafio.Barra.Somado', { pontos: view.appliedPontos, nome });
-  }
+  if (view.applied) return appliedText(view, nome);
   if (view.fechado) return t('DESORDEM.Desafio.Barra.Fechado');
-  // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Abordagem.{rapida,cautelosa} e
-  // DESORDEM.Desafio.Barra.{passou,falhou,crit,falhaCritica}
+  // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Abordagem.{rapida,cautelosa,
+  // segura,arriscada}
   const titulo = view.abordagem
     ? t('DESORDEM.Desafio.Barra.TituloEscalar', {
         nome,
@@ -280,10 +332,24 @@ function mainText(view) {
         dt: view.dt,
       })
     : t('DESORDEM.Desafio.Barra.Titulo', { nome, dt: view.dt });
-  const detalhe = view.queda
-    ? t('DESORDEM.Desafio.Barra.Queda', { dano: view.dano })
-    : t(`DESORDEM.Desafio.Barra.${view.kind}`, { pontos: view.pontos });
-  return `${titulo}: ${detalhe}`;
+  const passos = view.passos ? ` ${t('DESORDEM.Desafio.Barra.Passos', { n: view.passos })}` : '';
+  return `${titulo}: ${pendingDetail(view)}${passos}`;
+}
+
+/** Rótulo do botão principal (o que o clique faz). */
+function buttonLabel(view) {
+  if (view.falha === 'queda') return t('DESORDEM.Desafio.Barra.AplicarQueda', { dano: view.dano });
+  if (view.falha === 'dano') return t('DESORDEM.Desafio.Barra.AplicarDano', { dano: view.dano });
+  if (view.falha === 'soltar') return t('DESORDEM.Desafio.Barra.BotaoSoltar');
+  if (view.tipo === 'alcancar') {
+    return t(
+      view.abordagem === 'arriscada'
+        ? 'DESORDEM.Desafio.Barra.BotaoAlcancou'
+        : 'DESORDEM.Desafio.Barra.BotaoAcao',
+    );
+  }
+  if (view.tipo === 'sustentar') return t('DESORDEM.Desafio.Barra.BotaoContinuar');
+  return t('DESORDEM.Desafio.Barra.Somar', { pontos: view.pontos });
 }
 
 /** Barra principal: quanto o teste vale e o botão «somar» (ou «aplicar queda»). */
@@ -303,12 +369,7 @@ function mainBar(message, flag, test, doc) {
   text.textContent = mainText(view);
   bar.append(text);
   if (view.busy) bar.append(busyNote(doc));
-  if (view.showButton) {
-    const label = view.queda
-      ? t('DESORDEM.Desafio.Barra.AplicarQueda', { dano: view.dano })
-      : t('DESORDEM.Desafio.Barra.Somar', { pontos: view.pontos });
-    bar.append(cardButton(doc, label, () => requestApply(message)));
-  }
+  if (view.showButton) bar.append(cardButton(doc, buttonLabel(view), () => requestApply(message)));
   return bar;
 }
 

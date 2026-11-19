@@ -9,7 +9,7 @@
       {{else}}
       <span class="desordem-desafios-cartao__nome">{{#if semNome}}{{localize "DESORDEM.Desafio.Estendido.SemNome"}}{{else}}{{nome}}{{/if}}</span>
       {{/if}}
-      <span class="desordem-perseguicao-cartao__estado">{{#if grupo}}{{localize "DESORDEM.Desafio.Cartao.Grupo"}} · {{/if}}{{pontos}}{{#if pa}} / {{pa}}{{/if}} {{localize "DESORDEM.Desafio.Pontos"}}</span>
+      <span class="desordem-perseguicao-cartao__estado">{{#if grupo}}{{localize "DESORDEM.Desafio.Cartao.Grupo"}} · {{/if}}{{pontos}}{{#if pa}} / {{pa}}{{/if}} {{unidade}}</span>
       {{#if chegou}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
     </li>
     {{/each}}

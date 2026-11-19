@@ -203,7 +203,13 @@ test('janela pré-teste: escalada escolhe a abordagem', () => {
     dt: 6,
     estendido: { on: true, id: 'e', abordagem: 'cautelosa' },
   });
-  assert.deepEqual(careful.estendido, { on: true, id: 'e', dt: 6, abordagem: 'cautelosa' });
+  assert.deepEqual(careful.estendido, {
+    on: true,
+    id: 'e',
+    dt: 6,
+    abordagem: 'cautelosa',
+    passos: 0,
+  });
   // Sem abordagem: rápida
   const fast = evaluateSelection(m, {
     ...emptySelection(7),
@@ -217,7 +223,7 @@ test('janela pré-teste: escalada escolhe a abordagem', () => {
     dt: 9,
     estendido: { on: true, id: 'd', abordagem: 'cautelosa' },
   });
-  assert.deepEqual(plain.estendido, { on: true, id: 'd', dt: 9, abordagem: null });
+  assert.deepEqual(plain.estendido, { on: true, id: 'd', dt: 9, abordagem: null, passos: 0 });
 });
 
 test('janela pré-teste: sem campo de DT, a DT da abordagem', () => {

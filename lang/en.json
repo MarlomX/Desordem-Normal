@@ -1005,7 +1005,11 @@
         "Opcao": "{nome} (DT {dt})",
         "Rapida": "Fast (adds HR)",
         "Cautelosa": "Careful (adds LR)",
-        "EscalarDica": "The DT follows the approach. Failing is a fall."
+        "EscalarDica": "The DT follows the approach. Failing is a fall.",
+        "Segura": "Safe (two actions)",
+        "Arriscada": "Risky (DT +3)",
+        "AlcancarDica": "The DT follows the approach. Failing deals damage: LR when safe (and starts over), HR when risky.",
+        "SustentarDica": "Each round already held lowers both dice by one step (the preview already shows it)."
       },
       "Teste": {
         "Indisponivel": "The extended test is no longer active for this character: it was rolled as a regular test."
@@ -1026,12 +1030,31 @@
         "ZeroPv": "Reached 0 HP: make the injury test.",
         "Custo": "Test cost: {pv} HP",
         "Pagar": "Pay {pv} HP",
-        "CustoPago": "Cost paid: −{pv} HP."
+        "CustoPago": "Cost paid: −{pv} HP.",
+        "PassouAcao": "passed: +1 action",
+        "PassouAlcanca": "passed: reaches it",
+        "PassouSustenta": "passed: keeps holding",
+        "Dano": "failed: {dano} HP of damage",
+        "DanoZera": "failed: {dano} HP of damage, and the actions go back to 0",
+        "Solta": "failed: the object drops",
+        "Passos": "(−{n} steps on the dice)",
+        "AplicarDano": "Apply damage (−{dano} HP)",
+        "BotaoSoltar": "Drop the object",
+        "BotaoAcao": "Record action",
+        "BotaoAlcancou": "Reached it",
+        "BotaoContinuar": "Keep holding",
+        "DanoAplicado": "Damage on {nome}: −{dano} HP.",
+        "Soltou": "{nome}: the object was dropped (rounds reset).",
+        "Alcancou": "{nome}: reached it!",
+        "AcaoRegistrada": "{nome}: action {n} of 2 recorded.",
+        "Sustentando": "{nome}: holding for {n} rounds."
       },
       "Tipo": {
         "estendido": "Extended test",
         "arrombar": "Force open",
-        "escalar": "Climb"
+        "escalar": "Climb",
+        "alcancar": "Reach",
+        "sustentar": "Hold up"
       },
       "Novo": "New",
       "Custo": "Cost per test (HP)",
@@ -1044,9 +1067,27 @@
       },
       "Abordagem": {
         "rapida": "fast",
-        "cautelosa": "careful"
+        "cautelosa": "careful",
+        "segura": "safe",
+        "arriscada": "risky"
       },
-      "CustoValor": "{pv} HP"
+      "CustoValor": "{pv} HP",
+      "Unidade": {
+        "estendido": "points",
+        "arrombar": "points",
+        "escalar": "points",
+        "alcancar": "actions",
+        "sustentar": "rounds held"
+      },
+      "DtSegura": "Environment DT (safe)",
+      "DtArriscada": "Risky DT (+3)",
+      "CustoInicio": "HP to start",
+      "Alcancar": {
+        "Dica": "Always individual. Safe: two actions in a row, each with a test; failing deals damage equal to the LR and starts over. Risky: one action with DT +3; failing deals damage equal to the HR. If the character does something else between the two safe actions, reset the actions here."
+      },
+      "Sustentar": {
+        "Dica": "One character per challenge (the others help through the pre-test window's help). The first test costs the HP to start; each round held lowers both dice of the next test by one step. Failing drops the object and resets the rounds."
+      }
     }
   },
   "TYPES.Item.arma": "Weapon",

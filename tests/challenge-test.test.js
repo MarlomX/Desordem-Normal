@@ -46,7 +46,7 @@ test('opções da janela: só testes estendidos ativos de que o personagem parti
     ],
   };
   assert.deepEqual(challengeTestChoices(data, 'a'), [
-    { id: 'd1', nome: 'Portão', tipo: 'estendido', dt: 9, dtRapida: 8, dtCautelosa: 6 },
+    { id: 'd1', nome: 'Portão', tipo: 'estendido', dt: 9, dtRapida: 8, dtCautelosa: 6, passos: 0 },
   ]);
   assert.deepEqual(challengeTestChoices(data, ''), []);
 });
@@ -61,7 +61,11 @@ test('registro do teste guarda a DT e as regras de soma da hora da rolagem', () 
     dt: 10,
     somaPassar: 'rb',
     somaFalhar: 'ra',
+    falha: null,
+    danoRolagem: null,
+    zeraAoFalhar: false,
     queda: false,
+    passos: 0,
     estado: 'pendente',
     ganho: null,
     dano: null,
@@ -180,12 +184,13 @@ test('janela pré-teste: marcar escolhe o desafio e usa a DT do campo', () => {
   const m = model();
   const selection = { ...emptySelection(7), dt: 9, estendido: { on: true, id: 'd2' } };
   const evaluated = evaluateSelection(m, selection);
-  assert.deepEqual(evaluated.estendido, { on: true, id: 'd2', dt: 9, abordagem: null });
+  assert.deepEqual(evaluated.estendido, { on: true, id: 'd2', dt: 9, abordagem: null, passos: 0 });
   assert.deepEqual(selectionToOptions(m, selection).estendido, {
     on: true,
     id: 'd2',
     dt: 9,
     abordagem: null,
+    passos: 0,
   });
   // Id desconhecido: o primeiro da lista
   assert.equal(

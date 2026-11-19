@@ -60,6 +60,8 @@ async function listContext() {
       ...challengeView(challenge, { isGM, actorInfo }),
       icone: TYPE_ICONS[challenge.tipo] ?? TYPE_ICONS.estendido,
       tipoRotulo: t(`DESORDEM.Desafio.Tipo.${challenge.tipo}`),
+      // Chave montada (conferida à mão): DESORDEM.Desafio.Unidade.{tipo}
+      unidade: t(`DESORDEM.Desafio.Unidade.${challenge.tipo}`),
     })),
   };
 }

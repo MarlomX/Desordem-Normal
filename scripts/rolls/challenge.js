@@ -15,13 +15,37 @@
  * falhar, 1 PV por teste), tudo editável. «escalar» tem regra própria: é sempre individual, cada
  * teste escolhe rápida (DT 8, soma a RA) ou cautelosa (DT 6, soma a RB) e falhar é uma queda.
  */
-export const CHALLENGE_TYPES = Object.freeze(['estendido', 'arrombar', 'escalar']);
+export const CHALLENGE_TYPES = Object.freeze([
+  'estendido',
+  'arrombar',
+  'escalar',
+  'alcancar',
+  'sustentar',
+]);
+
+/**
+ * Tipos sempre individuais (cada um por si): escalar, alcançar e sustentar. No alcançar a PA é
+ * fixa em 2 (as duas ações da forma segura); no sustentar os pontos contam as rodadas sustentadas
+ * e só cabe um participante (os outros ajudam pela ajuda da janela pré-teste).
+ */
+export const INDIVIDUAL_TYPES = Object.freeze(['escalar', 'alcancar', 'sustentar']);
+
+/** Ações da forma segura do alcançar (a forma arriscada chega direto). */
+export const REACH_TARGET = 2;
+
+/** Formas do alcançar. */
+export const REACH_APPROACHES = Object.freeze(['segura', 'arriscada']);
+
+/** Quanto a forma arriscada aumenta a DT da segura. */
+export const RISKY_DT_BONUS = 3;
 
 /** Ícone de cada tipo de desafio (Font Awesome), na guia e na janela. */
 export const TYPE_ICONS = Object.freeze({
   estendido: 'fa-flag-checkered',
   arrombar: 'fa-hammer',
   escalar: 'fa-mountain',
+  alcancar: 'fa-hand',
+  sustentar: 'fa-dumbbell',
 });
 
 /** Abordagens da escalada. */
@@ -102,10 +126,13 @@ export function normalizeChallenge(entry) {
     id,
     tipo,
     nome: cleanName(entry.nome),
-    pa: storedInt(entry.pa, 1, MAX_TARGET, DEFAULT_TARGET),
+    // Alcançar: a PA é sempre 2 (as duas ações da forma segura)
+    pa: tipo === 'alcancar' ? REACH_TARGET : storedInt(entry.pa, 1, MAX_TARGET, DEFAULT_TARGET),
     dt: storedInt(entry.dt, MIN_DT, MAX_DT, DEFAULT_DT),
-    // A escalada é sempre individual: cada um sobe (e cai) sozinho
-    modo: tipo === 'escalar' ? 'individual' : pick(entry.modo, CHALLENGE_MODES, 'individual'),
+    // Escalar, alcançar e sustentar são sempre individuais: cada um tenta (e falha) sozinho
+    modo: INDIVIDUAL_TYPES.includes(tipo)
+      ? 'individual'
+      : pick(entry.modo, CHALLENGE_MODES, 'individual'),
     dtRapida: storedInt(entry.dtRapida, MIN_DT, MAX_DT, DEFAULT_FAST_DT),
     dtCautelosa: storedInt(entry.dtCautelosa, MIN_DT, MAX_DT, DEFAULT_CAREFUL_DT),
     custoPv: storedInt(entry.custoPv, 0, MAX_COST, 0),
@@ -114,7 +141,10 @@ export function normalizeChallenge(entry) {
     revelarPa: entry.revelarPa !== false,
     ativo: entry.ativo !== false,
     total: storedInt(entry.total, 0, MAX_POINTS, 0),
-    participantes: normalizeParticipants(entry.participantes),
+    participantes: normalizeParticipants(entry.participantes).slice(
+      0,
+      tipo === 'sustentar' ? 1 : MAX_PARTICIPANTS,
+    ),
   };
 }
 
@@ -136,11 +166,14 @@ const TYPE_PRESETS = {
   estendido: {},
   arrombar: { somaPassar: 'ra', somaFalhar: 'nada', custoPv: 1 },
   escalar: { modo: 'individual', pa: DEFAULT_TARGET },
+  alcancar: { modo: 'individual', pa: REACH_TARGET },
+  sustentar: { modo: 'individual', custoPv: 1 },
 };
 
 /**
  * Um desafio novo com os padrões do tipo. Teste estendido: PA 10, DT 7, individual, RA ao passar.
  * Arrombar: o mesmo, com 1 PV por teste. Escalar: PA 10, rápida DT 8 e cautelosa DT 6.
+ * Alcançar: DT 7 (a arriscada, 10). Sustentar: DT 7 e 1 PV para começar.
  */
 export function newChallenge(id, nome, tipo = 'estendido') {
   const kind = pick(tipo, CHALLENGE_TYPES, 'estendido');
@@ -178,6 +211,7 @@ export function updateChallengeField(challenge, campo, raw) {
     case 'nome':
       return { ...challenge, nome: cleanName(raw) };
     case 'pa': {
+      if (challenge.tipo === 'alcancar') return challenge;
       const value = parseInteger(raw);
       return value === null ? challenge : { ...challenge, pa: clampInt(value, 1, MAX_TARGET) };
     }
@@ -197,7 +231,7 @@ export function updateChallengeField(challenge, campo, raw) {
       return value === null ? challenge : { ...challenge, custoPv: clampInt(value, 0, MAX_COST) };
     }
     case 'modo':
-      if (challenge.tipo === 'escalar') return challenge;
+      if (INDIVIDUAL_TYPES.includes(challenge.tipo)) return challenge;
       return CHALLENGE_MODES.includes(raw) ? { ...challenge, modo: raw } : challenge;
     case 'somaPassar':
       return ON_PASS.includes(raw) ? { ...challenge, somaPassar: raw } : challenge;
@@ -218,9 +252,11 @@ export const participantIds = (challenge) => challenge.participantes.map((entry)
 export function addParticipants(challenge, actorIds) {
   const taken = new Set(participantIds(challenge));
   const participantes = [...challenge.participantes];
+  // Sustentar: um só segura o objeto
+  const limit = challenge.tipo === 'sustentar' ? 1 : MAX_PARTICIPANTS;
   for (const raw of Array.isArray(actorIds) ? actorIds : []) {
     const actorId = typeof raw === 'string' ? raw.trim() : '';
-    if (!actorId || taken.has(actorId) || participantes.length >= MAX_PARTICIPANTS) continue;
+    if (!actorId || taken.has(actorId) || participantes.length >= limit) continue;
     taken.add(actorId);
     participantes.push({ actorId, pontos: 0 });
   }
@@ -253,7 +289,8 @@ export function currentPoints(challenge, actorId) {
  */
 export function setPoints(challenge, actorId, value) {
   if (!Number.isFinite(value)) return challenge;
-  const next = clampInt(value, 0, MAX_POINTS);
+  // Alcançar: no máximo 2 (alcançou)
+  const next = clampInt(value, 0, challenge.tipo === 'alcancar' ? REACH_TARGET : MAX_POINTS);
   if (challenge.modo === 'grupo') return { ...challenge, total: next };
   if (!challenge.participantes.some((entry) => entry.actorId === actorId)) return challenge;
   return {
@@ -282,6 +319,8 @@ export function typePoints(challenge, actorId, raw) {
  * os participantes (pelo menos um) chegam.
  */
 export function isCompleted(challenge) {
+  // Sustentar não termina por pontos: dura enquanto o personagem aguentar
+  if (challenge.tipo === 'sustentar') return false;
   if (challenge.modo === 'grupo') return challenge.total >= challenge.pa;
   return (
     challenge.participantes.length > 0 &&
@@ -304,12 +343,19 @@ export const targetVisible = (challenge, { isGM }) => Boolean(isGM || challenge.
  *   `actorInfo` devolve o nome (e a imagem) de um ator, ou `null` se ele não existe mais.
  */
 export function challengeView(challenge, { isGM, actorInfo }) {
-  const showTarget = targetVisible(challenge, { isGM });
+  // Sustentar não tem PA (conta rodadas)
+  const showTarget = challenge.tipo !== 'sustentar' && targetVisible(challenge, { isGM });
   const grupo = challenge.modo === 'grupo';
   return {
     id: challenge.id,
     tipo: challenge.tipo,
     escalar: challenge.tipo === 'escalar',
+    alcancar: challenge.tipo === 'alcancar',
+    sustentar: challenge.tipo === 'sustentar',
+    // A janela mostra a PA editável (não no alcançar, fixa em 2, nem no sustentar, sem PA) e os
+    // campos livres de modo e soma (só no teste estendido e no arrombar)
+    temPa: !['alcancar', 'sustentar'].includes(challenge.tipo),
+    livre: !INDIVIDUAL_TYPES.includes(challenge.tipo),
     nome: challenge.nome,
     semNome: challenge.nome === '',
     pa: showTarget ? challenge.pa : null,
@@ -318,6 +364,7 @@ export function challengeView(challenge, { isGM, actorInfo }) {
     dtRapida: challenge.dtRapida,
     dtCautelosa: challenge.dtCautelosa,
     custoPv: challenge.custoPv,
+    dtArriscada: Math.min(MAX_DT, challenge.dt + RISKY_DT_BONUS),
     modo: challenge.modo,
     grupo,
     somaPassar: challenge.somaPassar,
@@ -336,9 +383,12 @@ export function challengeView(challenge, { isGM, actorInfo }) {
         img: info?.img ?? '',
         missing: !info,
         pontos: entry.pontos,
-        chegou: showTarget && !grupo && entry.pontos >= challenge.pa,
+        chegou:
+          showTarget && !grupo && challenge.tipo !== 'sustentar' && entry.pontos >= challenge.pa,
       };
     }),
+    // Sustentar só tem um participante: o botão de acrescentar some quando ele já está lá
+    lotado: challenge.tipo === 'sustentar' && challenge.participantes.length >= 1,
   };
 }
 
@@ -358,14 +408,18 @@ export function sheetChallenges(data, actorId, { isGM }) {
     .map((challenge) => {
       const showTarget = targetVisible(challenge, { isGM });
       const pontos = currentPoints(challenge, actorId) ?? 0;
+      const sustentar = challenge.tipo === 'sustentar';
       return {
         id: challenge.id,
         nome: challenge.nome,
         semNome: challenge.nome === '',
+        tipo: challenge.tipo,
+        alcancar: challenge.tipo === 'alcancar',
+        sustentar,
         grupo: challenge.modo === 'grupo',
         pontos,
-        pa: showTarget ? challenge.pa : null,
-        chegou: showTarget && pontos >= challenge.pa,
+        pa: showTarget && !sustentar ? challenge.pa : null,
+        chegou: showTarget && !sustentar && pontos >= challenge.pa,
       };
     });
 }
@@ -422,13 +476,39 @@ export function challengeTestChoices(data, actorId) {
       dt: challenge.dt,
       dtRapida: challenge.dtRapida,
       dtCautelosa: challenge.dtCautelosa,
+      // Sustentar: uma redução de passo (nos dois dados) por rodada já sustentada
+      passos: sustainSteps(challenge, actorId),
     }));
 }
 
-/** DT de um desafio para um teste (na escalada, a da abordagem; senão, a DT do desafio). */
+/** Reduções de passo do próximo teste de sustentar (rodadas já sustentadas); 0 nos outros. */
+export function sustainSteps(challenge, actorId) {
+  if (challenge?.tipo !== 'sustentar') return 0;
+  return challenge.participantes.find((entry) => entry.actorId === actorId)?.pontos ?? 0;
+}
+
+/**
+ * DT de um desafio para um teste: na escalada, a da abordagem; no alcançar, a do ambiente (forma
+ * segura) ou ela +3 (forma arriscada); nos demais, a DT do desafio.
+ */
 export function challengeDtFor(challenge, abordagem) {
+  if (challenge.tipo === 'alcancar') {
+    return abordagem === 'arriscada'
+      ? Math.min(MAX_DT, challenge.dt + RISKY_DT_BONUS)
+      : challenge.dt;
+  }
   if (challenge.tipo !== 'escalar') return challenge.dt;
   return abordagem === 'cautelosa' ? challenge.dtCautelosa : challenge.dtRapida;
+}
+
+/** Forma válida do alcançar (segura, se não vier nada). */
+export const reachApproach = (value) => pick(value, REACH_APPROACHES, 'segura');
+
+/** Abordagem guardada para o tipo (escalar: rápida/cautelosa; alcançar: segura/arriscada). */
+export function approachFor(tipo, value) {
+  if (tipo === 'escalar') return climbApproach(value);
+  if (tipo === 'alcancar') return reachApproach(value);
+  return null;
 }
 
 /** Abordagem válida da escalada (rápida, se não vier nada). */
@@ -440,27 +520,61 @@ export const climbApproach = (value) => pick(value, CLIMB_APPROACHES, 'rapida');
  * por teste, o registro leva também `custo` (o botão «pagar PV», que tem a sua própria reserva).
  */
 export function createChallengeTestFlag({ challenge, actorId, dt, abordagem }) {
-  const climb = challenge.tipo === 'escalar';
-  const approach = climb ? climbApproach(abordagem) : null;
+  const tipo = challenge.tipo;
+  const approach = approachFor(tipo, abordagem);
+  const rules = {
+    somaPassar: challenge.somaPassar,
+    somaFalhar: challenge.somaFalhar,
+    falha: null,
+    danoRolagem: null,
+    zeraAoFalhar: false,
+  };
+  if (tipo === 'escalar') {
+    // Rápida soma a RA, cautelosa a RB; falhar é queda (dano = pontos acumulados, e zera)
+    Object.assign(rules, {
+      somaPassar: approach === 'cautelosa' ? 'rb' : 'ra',
+      somaFalhar: 'nada',
+      falha: 'queda',
+    });
+  } else if (tipo === 'alcancar') {
+    // Segura: cada sucesso é uma das duas ações; falhar dá dano = RB e recomeça.
+    // Arriscada: um sucesso alcança; falhar dá dano = RA (sem mexer no progresso).
+    const safe = approach === 'segura';
+    Object.assign(rules, {
+      somaPassar: safe ? 'um' : 'tudo',
+      somaFalhar: 'nada',
+      falha: 'dano',
+      danoRolagem: safe ? 'rb' : 'ra',
+      zeraAoFalhar: safe,
+    });
+  } else if (tipo === 'sustentar') {
+    // Passar: mais uma rodada sustentada. Falhar: solta o objeto (as rodadas zeram)
+    Object.assign(rules, { somaPassar: 'um', somaFalhar: 'nada', falha: 'soltar' });
+  }
+  const passos = sustainSteps(challenge, actorId);
+  // Sustentar: o PV é gasto só para começar (no primeiro teste); nos outros tipos, em todo teste
+  const charge = challenge.custoPv > 0 && (tipo !== 'sustentar' || passos === 0);
   return {
     desafioId: challenge.id,
     actorId,
-    tipo: challenge.tipo,
+    tipo,
     abordagem: approach,
     dt: storedInt(dt, MIN_DT, MAX_DT, challengeDtFor(challenge, approach)),
-    somaPassar: climb ? (approach === 'cautelosa' ? 'rb' : 'ra') : challenge.somaPassar,
-    somaFalhar: climb ? 'nada' : challenge.somaFalhar,
-    queda: climb,
+    ...rules,
+    queda: rules.falha === 'queda',
+    passos,
     estado: 'pendente',
     ganho: null,
     dano: null,
     zerou: false,
-    custo:
-      challenge.custoPv > 0
-        ? { pv: challenge.custoPv, estado: 'pendente', aplicado: null, zerou: false }
-        : null,
+    custo: charge
+      ? { pv: challenge.custoPv, estado: 'pendente', aplicado: null, zerou: false }
+      : null,
   };
 }
+
+/** O que acontece ao falhar: 'queda', 'dano', 'soltar' ou `null` (soma o «ao falhar»). */
+export const failureKind = (flag) => flag?.falha ?? (flag?.queda ? 'queda' : null);
 
 /**
  * O teste passou no desafio? Sucesso crítico passa sempre e falha crítica falha sempre (p. 11);
@@ -480,6 +594,9 @@ function rollPart(result, part) {
   return 0;
 }
 
+/** O que o teste soma ao passar: a RA, a RB, uma ação/rodada ('um') ou alcança ('tudo'). */
+const PASS_PARTS = ['ra', 'rb', 'um', 'tudo'];
+
 /**
  * Pontos que o teste soma ao desafio.
  * - Sucesso crítico: as duas rolagens mais altas (`highSum`), qualquer que seja o «ao passar».
@@ -492,10 +609,38 @@ function rollPart(result, part) {
  */
 export function challengeTestGain(result, flag) {
   if (!challengeTestSuccess(result, flag.dt)) {
+    // Queda, dano ou soltar: o botão trata a falha; não soma pontos
+    if (failureKind(flag)) return 0;
     return Math.max(0, rollPart(result, pick(flag.somaFalhar, ON_FAIL, 'nada')));
   }
+  const part = pick(flag.somaPassar, PASS_PARTS, 'ra');
+  // Alcançar e sustentar contam ações e rodadas: o crítico também vale uma (ou alcança)
+  if (part === 'um') return 1;
+  if (part === 'tudo') return REACH_TARGET;
   if (result.criticalSuccess) return Math.max(0, result.highSum);
-  return Math.max(0, rollPart(result, pick(flag.somaPassar, ON_PASS, 'ra')));
+  return Math.max(0, rollPart(result, part));
+}
+
+/**
+ * Falha com consequência (o mestre, ao clicar no botão do cartão):
+ * - queda (escalar): dano = pontos acumulados, e eles zeram;
+ * - dano (alcançar): dano = RB (segura, e as ações zeram) ou RA (arriscada);
+ * - soltar (sustentar): sem dano, as rodadas zeram.
+ * `null` se o desafio não está ativo ou o personagem saiu dele.
+ * @returns {{challenge: object, dano: number, kind: string}|null}
+ */
+export function applyChallengeFailure(challenge, flag, result) {
+  const kind = failureKind(flag);
+  if (!kind || !challenge?.ativo) return null;
+  const entry = challenge.participantes.find((item) => item.actorId === flag.actorId);
+  if (!entry) return null;
+  if (kind === 'queda') return { ...applyFall(challenge, flag.actorId), kind };
+  if (kind === 'soltar') return { challenge: setPoints(challenge, flag.actorId, 0), dano: 0, kind };
+  return {
+    challenge: flag.zeraAoFalhar ? setPoints(challenge, flag.actorId, 0) : challenge,
+    dano: Math.max(0, rollPart(result, flag.danoRolagem)),
+    kind,
+  };
 }
 
 /**
@@ -540,10 +685,16 @@ export function loseHitPoints(pv, loss) {
  */
 export function challengeBarView(flag, result, { canApply, claimable, busy, challenge }) {
   const pontos = challengeTestGain(result, flag);
-  const queda = Boolean(flag.queda) && !challengeTestSuccess(result, flag.dt);
+  const failed = !challengeTestSuccess(result, flag.dt);
+  const falha = failed ? failureKind(flag) : null;
+  const queda = falha === 'queda';
   const atuais = challenge
     ? (challenge.participantes.find((entry) => entry.actorId === flag.actorId)?.pontos ?? 0)
     : 0;
+  // Dano mostrado antes do clique: na queda, os pontos de agora; no alcançar, a RB ou a RA
+  let dano = 0;
+  if (falha === 'queda') dano = atuais;
+  else if (falha === 'dano') dano = Math.max(0, rollPart(result, flag.danoRolagem));
   let kind = 'passou';
   if (result.criticalFailure) kind = 'falhaCritica';
   else if (result.criticalSuccess) kind = 'crit';
@@ -557,11 +708,18 @@ export function challengeBarView(flag, result, { canApply, claimable, busy, chal
     kind,
     pontos,
     nome: challenge?.nome ?? '',
+    tipo: flag.tipo ?? 'estendido',
     abordagem: flag.abordagem ?? null,
+    falha,
     queda,
-    dano: atuais,
-    // A queda já foi aplicada (o registro guarda o dano no lugar dos pontos)
-    appliedQueda: applied && flag.dano !== null && flag.dano !== undefined,
+    zera: Boolean(flag.zeraAoFalhar),
+    dano,
+    passos: flag.passos ?? 0,
+    // Falha já aplicada: o registro guarda qual (os registros da 0.18.2 só têm o dano da queda)
+    appliedFalha: applied ? (flag.falhaAplicada ?? (flag.dano != null ? 'queda' : null)) : null,
+    appliedQueda:
+      applied && (flag.falhaAplicada ?? (flag.dano != null ? 'queda' : null)) === 'queda',
+    appliedDepois: flag.depois ?? null,
     appliedDano: flag.dano ?? 0,
     appliedZerou: Boolean(flag.zerou),
     applied,

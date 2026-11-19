@@ -2753,3 +2753,18 @@ button.desordem-desafios-cartao__nome:hover {
   flex-direction: column;
   gap: 4px;
 }
+
+/* ===== Desafios: alcançar e sustentar (v0.18.3) ===== */
+
+/* Janela pré-teste: segura ou arriscada só com um desafio de alcançar escolhido; o aviso das
+   reduções de passo só com um desafio de sustentar */
+.desordem-pre [data-estendido-alcancar].is-oculta,
+.desordem-pre [data-estendido-sustentar].is-oculta {
+  display: none;
+}
+
+.desordem-pre [data-estendido-alcancar] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

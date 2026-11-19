@@ -120,6 +120,12 @@ export function actorInfo(id) {
  * `null` se não houver nenhum (o cartão fica escondido).
  */
 export function challengeCardFor(actor) {
-  const list = sheetChallenges(readChallenges(), worldActorId(actor), { isGM: game.user.isGM });
+  const list = sheetChallenges(readChallenges(), worldActorId(actor), {
+    isGM: game.user.isGM,
+  }).map((entry) => ({
+    ...entry,
+    // Chave montada (conferida à mão): DESORDEM.Desafio.Unidade.{tipo}
+    unidade: game.i18n.localize(`DESORDEM.Desafio.Unidade.${entry.tipo}`),
+  }));
   return list.length ? { lista: list, isGM: game.user.isGM } : null;
 }

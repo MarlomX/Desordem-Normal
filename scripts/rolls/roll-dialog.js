@@ -9,7 +9,7 @@ import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } fro
 import { DEFAULT_DT, MAX_COUNTED, planDice } from './test.js';
 import { breathLimit, normalizeChaseDt } from './chase.js';
 import { STEALTH_TEST_ACTIONS } from './stealth.js';
-import { challengeDtFor, climbApproach } from './challenge.js';
+import { approachFor, challengeDtFor } from './challenge.js';
 
 /** Espaços de dado extra de um teste: o limite de 4 dados rolados menos atributo e perícia. */
 export const EXTRA_SLOTS = BONUS_SLOTS;
@@ -145,6 +145,8 @@ export function buildRollModel({
               dt: normalizeDt(entry.dt),
               dtRapida: normalizeDt(entry.dtRapida, 8),
               dtCautelosa: normalizeDt(entry.dtCautelosa, 6),
+              // Sustentar: reduções de passo nos dois dados (rodadas já sustentadas)
+              passos: Math.max(0, Math.trunc(Number(entry.passos) || 0)),
             })),
           }
         : null,
@@ -163,7 +165,7 @@ export function emptySelection(dt) {
     esconderijo: { on: false },
     furtiva: { acao: '', destino: '' },
     chamativa: { on: false, index: null },
-    estendido: { on: false, id: '', abordagem: 'rapida' },
+    estendido: { on: false, id: '', abordagem: 'rapida', alcance: 'segura' },
   };
 }
 
@@ -293,7 +295,13 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       ...manual,
       ...lockedSides((kind) => kind !== 'base' && kind !== 'folego'),
     ],
-    stepMods: effort ? [{ target: 'skill', steps: 1 }] : [],
+    stepMods: [
+      ...(effort ? [{ target: 'skill', steps: 1 }] : []),
+      // Sustentar: a prévia já mostra os dados reduzidos (a ficha aplica a redução de verdade)
+      ...(extendedChoice?.tipo === 'sustentar' && extendedChoice.passos > 0
+        ? [{ target: 'both', steps: -extendedChoice.passos }]
+        : []),
+    ],
   });
   const errors = [];
   if (pdCost > model.resources.pd) errors.push('pd');
@@ -309,8 +317,15 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
   const furtiva = { acao: action, destino, dt: action ? model.furtiva[action].dt : null };
   // DT do teste estendido: a do campo da janela; sem campo (teste oposto), a do desafio (na
   // escalada, a da abordagem escolhida)
-  const abordagem =
-    extendedChoice?.tipo === 'escalar' ? climbApproach(selection.estendido?.abordagem) : null;
+  // Escalada: rápida ou cautelosa; alcançar: segura ou arriscada (cada um com o seu grupo de botões)
+  const abordagem = extendedChoice
+    ? approachFor(
+        extendedChoice.tipo,
+        extendedChoice.tipo === 'alcancar'
+          ? selection.estendido?.alcance
+          : selection.estendido?.abordagem,
+      )
+    : null;
   const estendido = extendedChoice
     ? {
         on: true,
@@ -319,8 +334,9 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
           ? normalizeDt(selection.dt, model.dt)
           : challengeDtFor(extendedChoice, abordagem),
         abordagem,
+        passos: extendedChoice.tipo === 'sustentar' ? extendedChoice.passos : 0,
       }
-    : { on: false, id: '', dt: null, abordagem: null };
+    : { on: false, id: '', dt: null, abordagem: null, passos: 0 };
   return {
     selection: {
       bonus: normalizeBonus(manual),
@@ -332,7 +348,12 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       esconderijo: { on: hide },
       furtiva: { acao: action, destino },
       chamativa: { on: chamativa.on, index: chamativa.index },
-      estendido: { on: estendido.on, id: estendido.id, abordagem: estendido.abordagem },
+      estendido: {
+        on: estendido.on,
+        id: estendido.id,
+        abordagem: selection.estendido?.abordagem ?? 'rapida',
+        alcance: selection.estendido?.alcance ?? 'segura',
+      },
     },
     dt: testDt,
     pdCost,

@@ -1005,7 +1005,11 @@
         "Opcao": "{nome} (DT {dt})",
         "Rapida": "Rápida (soma a RA)",
         "Cautelosa": "Cautelosa (soma a RB)",
-        "EscalarDica": "A DT acompanha a abordagem. Falhar é uma queda."
+        "EscalarDica": "A DT acompanha a abordagem. Falhar é uma queda.",
+        "Segura": "Segura (duas ações)",
+        "Arriscada": "Arriscada (DT +3)",
+        "AlcancarDica": "A DT acompanha a forma. Falhar dá dano: RB na segura (e recomeça), RA na arriscada.",
+        "SustentarDica": "Cada rodada já sustentada reduz um passo dos dois dados (a prévia já mostra)."
       },
       "Teste": {
         "Indisponivel": "O teste estendido não está mais ativo para este personagem: o teste foi rolado como um teste comum."
@@ -1026,12 +1030,31 @@
         "ZeroPv": "Chegou a 0 PV: faça o teste de lesão.",
         "Custo": "Custo do teste: {pv} PV",
         "Pagar": "Pagar {pv} PV",
-        "CustoPago": "Custo pago: −{pv} PV."
+        "CustoPago": "Custo pago: −{pv} PV.",
+        "PassouAcao": "passou: +1 ação",
+        "PassouAlcanca": "passou: alcança",
+        "PassouSustenta": "passou: continua sustentando",
+        "Dano": "falhou: dano de {dano} PV",
+        "DanoZera": "falhou: dano de {dano} PV, e as ações voltam a 0",
+        "Solta": "falhou: o objeto cai",
+        "Passos": "(−{n} passos nos dados)",
+        "AplicarDano": "Aplicar dano (−{dano} PV)",
+        "BotaoSoltar": "Soltar o objeto",
+        "BotaoAcao": "Registrar ação",
+        "BotaoAlcancou": "Alcançou",
+        "BotaoContinuar": "Continuar sustentando",
+        "DanoAplicado": "Dano em {nome}: −{dano} PV.",
+        "Soltou": "{nome}: o objeto foi solto (rodadas zeradas).",
+        "Alcancou": "{nome}: alcançou!",
+        "AcaoRegistrada": "{nome}: ação {n} de 2 registrada.",
+        "Sustentando": "{nome}: sustentando há {n} rodadas."
       },
       "Tipo": {
         "estendido": "Teste estendido",
         "arrombar": "Arrombar",
-        "escalar": "Escalar"
+        "escalar": "Escalar",
+        "alcancar": "Alcançar",
+        "sustentar": "Sustentar"
       },
       "Novo": "Novo",
       "Custo": "Custo por teste (PV)",
@@ -1044,9 +1067,27 @@
       },
       "Abordagem": {
         "rapida": "rápida",
-        "cautelosa": "cautelosa"
+        "cautelosa": "cautelosa",
+        "segura": "segura",
+        "arriscada": "arriscada"
       },
-      "CustoValor": "{pv} PV"
+      "CustoValor": "{pv} PV",
+      "Unidade": {
+        "estendido": "pontos",
+        "arrombar": "pontos",
+        "escalar": "pontos",
+        "alcancar": "ações",
+        "sustentar": "rodadas sustentadas"
+      },
+      "DtSegura": "DT do ambiente (segura)",
+      "DtArriscada": "DT arriscada (+3)",
+      "CustoInicio": "PV para começar",
+      "Alcancar": {
+        "Dica": "Sempre individual. Segura: duas ações seguidas, cada uma com um teste; falhar dá dano igual à RB e recomeça. Arriscada: uma ação com DT +3; falhar dá dano igual à RA. Se o personagem fizer outra coisa entre as duas ações seguras, zere as ações aqui."
+      },
+      "Sustentar": {
+        "Dica": "Um personagem por desafio (os outros ajudam pela ajuda da janela pré-teste). O primeiro teste custa o PV para começar; cada rodada sustentada reduz um passo dos dois dados do próximo teste. Falhar solta o objeto e zera as rodadas."
+      }
     }
   },
   "TYPES.Item.arma": "Arma",
