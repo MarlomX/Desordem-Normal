@@ -5,6 +5,7 @@
 import DesafioApp from './app.js';
 import { registerChallengeSocket } from './test-card.js';
 import { registerBalanceSocket } from './balance-card.js';
+import { registerLockSocket } from './lock-card.js';
 import {
   DesafiosListaApp,
   injectFallbackBar,
@@ -54,6 +55,8 @@ export async function readyChallenges() {
   registerChallengeSocket();
   // Botões do cartão de equilíbrio (dado de equilíbrio, registrar, cair, Análise, Prontidão)
   registerBalanceSocket();
+  // Tentativas de destrancar (o mestre ativo conta e responde)
+  registerLockSocket();
   await startChallengeTab();
 }
 

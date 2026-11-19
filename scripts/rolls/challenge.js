@@ -1,3 +1,5 @@
+import { lockStatus, normalizeLock } from './lock.js';
+
 /**
  * Desafios (lógica pura, sem Foundry): o teste estendido e, nas próximas versões, os desafios de
  * acesso. Os desafios ficam numa configuração do mundo (veja scripts/challenges/store.js) como uma
@@ -22,6 +24,7 @@ export const CHALLENGE_TYPES = Object.freeze([
   'alcancar',
   'sustentar',
   'equilibrio',
+  'destrancar',
 ]);
 
 /**
@@ -29,7 +32,13 @@ export const CHALLENGE_TYPES = Object.freeze([
  * fixa em 2 (as duas ações da forma segura); no sustentar os pontos contam as rodadas sustentadas
  * e só cabe um participante (os outros ajudam pela ajuda da janela pré-teste).
  */
-export const INDIVIDUAL_TYPES = Object.freeze(['escalar', 'alcancar', 'sustentar', 'equilibrio']);
+export const INDIVIDUAL_TYPES = Object.freeze([
+  'escalar',
+  'alcancar',
+  'sustentar',
+  'equilibrio',
+  'destrancar',
+]);
 
 /** Equilíbrio: rodadas para atravessar (a PA) e o limite da reserva de dados de equilíbrio. */
 export const DEFAULT_BALANCE_ROUNDS = 3;
@@ -52,6 +61,7 @@ export const TYPE_ICONS = Object.freeze({
   alcancar: 'fa-hand',
   sustentar: 'fa-dumbbell',
   equilibrio: 'fa-scale-balanced',
+  destrancar: 'fa-key',
 });
 
 /** Abordagens da escalada. */
@@ -157,6 +167,8 @@ export function normalizeChallenge(entry) {
       0,
       tipo === 'sustentar' ? 1 : MAX_PARTICIPANTS,
     ),
+    // Destrancar: a fechadura (dados, faces, tentativas; a senha fica num sussurro ao mestre)
+    ...(tipo === 'destrancar' ? { fechadura: normalizeLock(entry.fechadura) } : {}),
   };
 }
 
@@ -181,6 +193,7 @@ const TYPE_PRESETS = {
   alcancar: { modo: 'individual', pa: REACH_TARGET },
   sustentar: { modo: 'individual', custoPv: 1 },
   equilibrio: { modo: 'individual', pa: DEFAULT_BALANCE_ROUNDS },
+  destrancar: { modo: 'individual' },
 };
 
 /**
@@ -335,6 +348,8 @@ export function typePoints(challenge, actorId, raw) {
 export function isCompleted(challenge) {
   // Sustentar não termina por pontos: dura enquanto o personagem aguentar
   if (challenge.tipo === 'sustentar') return false;
+  // Destrancar: quando a senha certa foi tentada
+  if (challenge.tipo === 'destrancar') return lockStatus(challenge.fechadura) === 'destrancada';
   if (challenge.modo === 'grupo') return challenge.total >= challenge.pa;
   return (
     challenge.participantes.length > 0 &&
@@ -358,7 +373,9 @@ export const targetVisible = (challenge, { isGM }) => Boolean(isGM || challenge.
  */
 export function challengeView(challenge, { isGM, actorInfo }) {
   // Sustentar não tem PA (conta rodadas)
-  const showTarget = challenge.tipo !== 'sustentar' && targetVisible(challenge, { isGM });
+  // Sustentar não tem PA (conta rodadas); destrancar conta tentativas (mostradas à parte)
+  const showTarget =
+    !['sustentar', 'destrancar'].includes(challenge.tipo) && targetVisible(challenge, { isGM });
   const grupo = challenge.modo === 'grupo';
   return {
     id: challenge.id,
@@ -369,7 +386,7 @@ export function challengeView(challenge, { isGM, actorInfo }) {
     equilibrio: challenge.tipo === 'equilibrio',
     // A janela mostra a PA editável (não no alcançar, fixa em 2, nem no sustentar, sem PA) e os
     // campos livres de modo e soma (só no teste estendido e no arrombar)
-    temPa: !['alcancar', 'sustentar'].includes(challenge.tipo),
+    temPa: !['alcancar', 'sustentar', 'destrancar'].includes(challenge.tipo),
     livre: !INDIVIDUAL_TYPES.includes(challenge.tipo),
     nome: challenge.nome,
     semNome: challenge.nome === '',
@@ -407,6 +424,18 @@ export function challengeView(challenge, { isGM, actorInfo }) {
     }),
     // Sustentar só tem um participante: o botão de acrescentar some quando ele já está lá
     lotado: challenge.tipo === 'sustentar' && challenge.participantes.length >= 1,
+    // Destrancar: os participantes não têm pontos (as tentativas são do grupo)
+    semPontos: challenge.tipo === 'destrancar',
+    destrancar: challenge.tipo === 'destrancar',
+    fechadura:
+      challenge.tipo === 'destrancar'
+        ? {
+            ...challenge.fechadura,
+            status: lockStatus(challenge.fechadura),
+            restantes: Math.max(0, challenge.fechadura.maximo - challenge.fechadura.usadas),
+            temSenha: challenge.fechadura.senhaMsg !== '',
+          }
+        : null,
   };
 }
 
@@ -427,15 +456,31 @@ export function sheetChallenges(data, actorId, { isGM }) {
       const showTarget = targetVisible(challenge, { isGM });
       const pontos = currentPoints(challenge, actorId) ?? 0;
       const sustentar = challenge.tipo === 'sustentar';
-      return {
+      const base = {
         id: challenge.id,
         nome: challenge.nome,
         semNome: challenge.nome === '',
         tipo: challenge.tipo,
         alcancar: challenge.tipo === 'alcancar',
         equilibrio: challenge.tipo === 'equilibrio',
+        destrancar: challenge.tipo === 'destrancar',
         sustentar,
         grupo: challenge.modo === 'grupo',
+      };
+      if (challenge.tipo === 'destrancar') {
+        // Destrancar: as tentativas do grupo (usadas / máximo) e o botão de tentar enquanto aberta
+        const status = lockStatus(challenge.fechadura);
+        return {
+          ...base,
+          pontos: challenge.fechadura.usadas,
+          pa: challenge.fechadura.maximo,
+          chegou: status === 'destrancada',
+          estragou: status === 'estragada',
+          podeTentar: status === 'aberta',
+        };
+      }
+      return {
+        ...base,
         pontos,
         pa: showTarget && !sustentar ? challenge.pa : null,
         chegou: showTarget && !sustentar && pontos >= challenge.pa,
@@ -871,4 +916,11 @@ export function applyBalanceFall(challenge, actorId) {
   if (!challenge?.ativo) return null;
   if (!challenge.participantes.some((entry) => entry.actorId === actorId)) return null;
   return setReserve(setPoints(challenge, actorId, 0), actorId, null);
+}
+
+/** Troca a fechadura de um desafio de destrancar (nos outros tipos, nada muda). */
+export function withLock(challenge, change) {
+  if (challenge?.tipo !== 'destrancar') return challenge;
+  const next = change(challenge.fechadura);
+  return next && next !== challenge.fechadura ? { ...challenge, fechadura: next } : challenge;
 }

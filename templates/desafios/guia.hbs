@@ -25,8 +25,14 @@
         {{/if}}
         {{#if concluido}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
         {{#unless ativo}}<span class="desordem-perseguicao__selo">{{localize "DESORDEM.Desafio.Encerrado"}}</span>{{/unless}}
+        {{#if estragada}}<span class="desordem-perseguicao__selo">{{localize "DESORDEM.Desafio.Fechadura.Estragada"}}</span>{{/if}}
       </div>
       <div class="desordem-desafios__info">
+        {{#if destrancar}}
+        {{! Destrancar: dados da fechadura e tentativas do grupo }}
+        <span>{{fechadura.dados}}d{{fechadura.faces}}</span>
+        <span>{{localize "DESORDEM.Desafio.Fechadura.TentativasCurto"}} <strong>{{fechadura.usadas}}/{{fechadura.maximo}}</strong></span>
+        {{else}}
         <span>{{#if grupo}}{{localize "DESORDEM.Desafio.Modo.grupo"}}{{else}}{{localize "DESORDEM.Desafio.Modo.individual"}}{{/if}}</span>
         {{#if escalar}}
         <span>{{localize "DESORDEM.Perseguicao.DT"}} <strong>{{dtRapida}}/{{dtCautelosa}}</strong></span>
@@ -35,6 +41,7 @@
         {{/if}}
         {{#if custoPv}}<span>{{localize "DESORDEM.Desafio.CustoCurto"}} <strong>{{localize "DESORDEM.Desafio.CustoValor" pv=custoPv}}</strong></span>{{/if}}
         {{#if mostrarPa}}<span>{{localize "DESORDEM.Desafio.PA"}} <strong>{{pa}}</strong></span>{{/if}}
+        {{/if}}
       </div>
       {{#if grupo}}
       <div class="desordem-desafios__total">
@@ -47,7 +54,7 @@
         {{#each participantes}}
         <li class="desordem-desafios__pessoa{{#if chegou}} is-chegou{{/if}}">
           <span class="desordem-perseguicao__nome">{{#if missing}}{{localize "DESORDEM.Desafio.AtorSumiu"}}{{else}}{{name}}{{/if}}</span>
-          {{#unless ../grupo}}<span class="desordem-desafios__numero">{{pontos}}{{#if ../mostrarPa}} / {{../pa}}{{/if}} {{../unidade}}</span>{{/unless}}
+          {{#unless ../semPontos}}{{#unless ../grupo}}<span class="desordem-desafios__numero">{{pontos}}{{#if ../mostrarPa}} / {{../pa}}{{/if}} {{../unidade}}</span>{{/unless}}{{/unless}}
         </li>
         {{/each}}
       </ul>

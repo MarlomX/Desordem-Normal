@@ -1055,7 +1055,8 @@
         "escalar": "Climb",
         "alcancar": "Reach",
         "sustentar": "Hold up",
-        "equilibrio": "Balance"
+        "equilibrio": "Balance",
+        "destrancar": "Unlock"
       },
       "Novo": "New",
       "Custo": "Cost per test (HP)",
@@ -1079,7 +1080,8 @@
         "escalar": "points",
         "alcancar": "actions",
         "sustentar": "rounds held",
-        "equilibrio": "rounds"
+        "equilibrio": "rounds",
+        "destrancar": "attempts"
       },
       "DtSegura": "Environment DT (safe)",
       "DtArriscada": "Risky DT (+3)",
@@ -1112,6 +1114,46 @@
         "ReservaDica": "Balance dice left (empty = full pool: half of Acrobatics)",
         "Cheia": "full",
         "Dica": "Always individual. The player rolls 2d10 through the button on the sheet's challenge card: a difference of 0 or 1 balances; 2 or more starts a fall, and they may spend balance dice (d4, half of Acrobatics) adding to either d10. Each balanced round adds 1; when crossing or falling, the pool refills. The fall's consequence goes through the Penalty."
+      },
+      "Fechadura": {
+        "SenhaTitulo": "Lock code “{nome}”",
+        "Invalida": "Type numbers from 1 to {faces} in every field.",
+        "Definir": "Set code",
+        "DefinirDica": "Type the code in the order the dice were rolled.",
+        "Tentar": "Try a code",
+        "TentarCurto": "Try",
+        "TentarDica": "Tries a code on this lock",
+        "Restam": "{n} attempts left.",
+        "PorRodada": "You may try {n} times per round (Crime d{dado}).",
+        "SemSenha": "There is no stored code for this lock (or its message was deleted from the chat).",
+        "CartaoTitulo": "Unlock: {nome}",
+        "Tentou": "{nome} tried {valores}",
+        "Contagem": "Attempts: {usadas} of {maximo}.",
+        "Abriu": "The lock opened!",
+        "Estragou": "The lock broke: now only forcing it open or the key will do.",
+        "Responder": "Answer from the code",
+        "Resposta": {
+          "alto": "Higher",
+          "baixo": "Lower",
+          "certo": "Correct"
+        },
+        "Complexidade": "Complexity (dice)",
+        "Faces": "Dice step",
+        "Maximo": "Maximum attempts",
+        "Usadas": "Attempts used",
+        "Auto": "Automatic check (answers from the stored code)",
+        "Senha": "Code:",
+        "Guardada": "stored",
+        "MostrarDica": "Show or hide the code (only in this window)",
+        "Perdida": "the code's message is gone from the chat: generate or set another",
+        "SemSenhaCurto": "no code (the GM answers at the table)",
+        "Gerar": "Generate code",
+        "Nova": "New lock",
+        "NovaDica": "Resets the attempts and forgets the code",
+        "Dica": "The code lives in a whisper to the GMs only. Players try through the sheet's challenge card, and each attempt shows up in the chat. Changing the complexity or the step forgets the code.",
+        "CriarArrombar": "Create force open",
+        "Estragada": "Broken",
+        "TentativasCurto": "Attempts"
       }
     }
   },

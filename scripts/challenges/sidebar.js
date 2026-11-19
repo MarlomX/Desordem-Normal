@@ -24,6 +24,7 @@ import {
   updateChallengeField,
   visibleChallenges,
 } from '../rolls/challenge.js';
+import { lockStatus } from '../rolls/lock.js';
 import DesafioApp, { confirmDeleteChallenge } from './app.js';
 import { actorInfo, createChallenge, mutateChallenge, readChallenges } from './store.js';
 
@@ -62,6 +63,8 @@ async function listContext() {
       tipoRotulo: t(`DESORDEM.Desafio.Tipo.${challenge.tipo}`),
       // Chave montada (conferida à mão): DESORDEM.Desafio.Unidade.{tipo}
       unidade: t(`DESORDEM.Desafio.Unidade.${challenge.tipo}`),
+      // Destrancar: selo de fechadura estragada (o «concluído» já vem da vista)
+      estragada: challenge.tipo === 'destrancar' && lockStatus(challenge.fechadura) === 'estragada',
     })),
   };
 }

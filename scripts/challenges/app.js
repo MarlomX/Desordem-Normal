@@ -18,6 +18,7 @@ import {
   typePoints,
   typeReserve,
   updateChallengeField,
+  withLock,
 } from '../rolls/challenge.js';
 import { askAndPostPenalty } from '../chase/penalty-card.js';
 import {
@@ -27,6 +28,14 @@ import {
   mutateChallenge,
   worldActorId,
 } from './store.js';
+import { LOCK_FACES, lockStatus, updateLockField } from '../rolls/lock.js';
+import {
+  createForceFromLock,
+  defineSecret,
+  generateSecret,
+  resetChallengeLock,
+  secretText,
+} from './lock-card.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
 
@@ -45,6 +54,7 @@ const TYPE_HINTS = {
   alcancar: 'Alcancar',
   sustentar: 'Sustentar',
   equilibrio: 'Equilibrio',
+  destrancar: 'Fechadura',
 };
 
 /** Campos de configuração que a janela grava pelo `change` (os demais são pontos). */
@@ -99,6 +109,11 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       toggleActive: DesafioApp.#onToggleActive,
       openPenalty: DesafioApp.#onOpenPenalty,
       deleteChallenge: DesafioApp.#onDeleteChallenge,
+      generateSecret: DesafioApp.#onGenerateSecret,
+      defineSecret: DesafioApp.#onDefineSecret,
+      resetLock: DesafioApp.#onResetLock,
+      toggleSecret: DesafioApp.#onToggleSecret,
+      createForce: DesafioApp.#onCreateForce,
     },
   };
 
@@ -117,6 +132,9 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
 
   /** Chegou uma atualização enquanto ela digitava: redesenha quando ela terminar. */
   #renderPending = false;
+
+  /** Destrancar: a senha aparece na janela? (escondida por padrão, para quem olha a tela) */
+  #showSecret = false;
 
   constructor(challengeId, options = {}) {
     // O id da janela precisa ser único: um por desafio
@@ -182,6 +200,18 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       // Dica e unidade dos pontos de cada tipo (chaves montadas, conferidas à mão)
       dica: t(`DESORDEM.Desafio.${TYPE_HINTS[challenge.tipo] ?? 'Estendido'}.Dica`),
       pontosRotulo: t(`DESORDEM.Desafio.Unidade.${challenge.tipo}`),
+      // Destrancar: faces possíveis, a senha guardada (lida do sussurro) e se a fechadura estragou
+      ...(challenge.tipo === 'destrancar'
+        ? {
+            faces: LOCK_FACES.map((value) => ({
+              value,
+              selected: value === challenge.fechadura.faces,
+            })),
+            senhaTexto: secretText(challenge),
+            mostrarSenha: this.#showSecret,
+            fechaduraEstragada: lockStatus(challenge.fechadura) === 'estragada',
+          }
+        : {}),
       // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Modo.*, .Passar.*, .Falhar.*
       modos: CHALLENGE_MODES.map(option('DESORDEM.Desafio.Modo', challenge.modo)),
       passar: ON_PASS.map(option('DESORDEM.Desafio.Passar', challenge.somaPassar)),
@@ -231,6 +261,10 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       if (campo === 'pontos') return typePoints(challenge, actorId, value);
       if (campo === 'total') return typePoints(challenge, null, value);
       if (campo === 'reserva') return typeReserve(challenge, actorId, value);
+      // Destrancar: campos da fechadura (lock.dados, lock.faces, lock.maximo, lock.usadas, lock.auto)
+      if (campo?.startsWith('lock.')) {
+        return withLock(challenge, (lock) => updateLockField(lock, campo.slice(5), value));
+      }
       return challenge;
     });
     // Valor inválido não grava nada: redesenhar devolve o campo ao valor guardado
@@ -334,6 +368,33 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       return;
     }
     await askAndPostPenalty({ cena: 'desafio', escolhas });
+  }
+
+  /** Destrancar: o Foundry rola a senha e a sussurra aos mestres. */
+  static async #onGenerateSecret() {
+    await generateSecret(this.#challengeId);
+  }
+
+  /** Destrancar: o mestre digita a senha (rolou com dados físicos). */
+  static async #onDefineSecret() {
+    await defineSecret(this.#challengeId);
+  }
+
+  /** Destrancar: nova fechadura (zera as tentativas e esquece a senha). */
+  static async #onResetLock() {
+    await resetChallengeLock(this.#challengeId);
+  }
+
+  /** Destrancar: mostra ou esconde a senha na janela. */
+  static #onToggleSecret() {
+    this.#showSecret = !this.#showSecret;
+    this.render();
+  }
+
+  /** Destrancar: a fechadura estragou; cria um arrombar com os mesmos participantes. */
+  static async #onCreateForce() {
+    const id = await createForceFromLock(this.#challengeId);
+    if (id) await DesafioApp.open(id);
   }
 
   static async #onDeleteChallenge() {

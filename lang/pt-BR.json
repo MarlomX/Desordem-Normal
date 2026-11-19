@@ -1055,7 +1055,8 @@
         "escalar": "Escalar",
         "alcancar": "Alcançar",
         "sustentar": "Sustentar",
-        "equilibrio": "Equilíbrio"
+        "equilibrio": "Equilíbrio",
+        "destrancar": "Destrancar"
       },
       "Novo": "Novo",
       "Custo": "Custo por teste (PV)",
@@ -1079,7 +1080,8 @@
         "escalar": "pontos",
         "alcancar": "ações",
         "sustentar": "rodadas sustentadas",
-        "equilibrio": "rodadas"
+        "equilibrio": "rodadas",
+        "destrancar": "tentativas"
       },
       "DtSegura": "DT do ambiente (segura)",
       "DtArriscada": "DT arriscada (+3)",
@@ -1112,6 +1114,46 @@
         "ReservaDica": "Dados de equilíbrio que restam (vazio = reserva cheia: metade da Acrobacia)",
         "Cheia": "cheia",
         "Dica": "Sempre individual. O jogador rola 2d10 pelo botão do cartão de desafios da ficha: diferença de 0 ou 1 equilibra; de 2 ou mais começa a cair, e ele pode gastar dados de equilíbrio (d4, metade da Acrobacia) somando a qualquer d10. Cada rodada equilibrada soma 1; ao atravessar ou cair, a reserva recarrega. A consequência da queda vai pela Penalidade."
+      },
+      "Fechadura": {
+        "SenhaTitulo": "Senha da fechadura «{nome}»",
+        "Invalida": "Digite números de 1 a {faces} em todos os campos.",
+        "Definir": "Definir senha",
+        "DefinirDica": "Digite a senha na ordem em que os dados foram rolados.",
+        "Tentar": "Tentar senha",
+        "TentarCurto": "Tentar",
+        "TentarDica": "Tenta uma senha nesta fechadura",
+        "Restam": "Restam {n} tentativas.",
+        "PorRodada": "Você pode tentar {n} vezes por rodada (Crime d{dado}).",
+        "SemSenha": "Não há senha guardada para esta fechadura (ou a mensagem dela foi apagada do chat).",
+        "CartaoTitulo": "Destrancar: {nome}",
+        "Tentou": "{nome} tentou {valores}",
+        "Contagem": "Tentativas: {usadas} de {maximo}.",
+        "Abriu": "A fechadura abriu!",
+        "Estragou": "A fechadura estragou: agora só arrombando ou com a chave.",
+        "Responder": "Responder pela senha",
+        "Resposta": {
+          "alto": "Alto",
+          "baixo": "Baixo",
+          "certo": "Certo"
+        },
+        "Complexidade": "Complexidade (dados)",
+        "Faces": "Passo dos dados",
+        "Maximo": "Máximo de tentativas",
+        "Usadas": "Tentativas usadas",
+        "Auto": "Verificação automática (responde pela senha guardada)",
+        "Senha": "Senha:",
+        "Guardada": "guardada",
+        "MostrarDica": "Mostrar ou esconder a senha (só nesta janela)",
+        "Perdida": "a mensagem da senha sumiu do chat: gere ou defina outra",
+        "SemSenhaCurto": "sem senha (o mestre responde na mesa)",
+        "Gerar": "Gerar senha",
+        "Nova": "Nova fechadura",
+        "NovaDica": "Zera as tentativas e esquece a senha",
+        "Dica": "A senha fica num sussurro só para os mestres. Os jogadores tentam pelo cartão de desafios da ficha, e cada tentativa aparece no chat. Mudar a complexidade ou o passo esquece a senha.",
+        "CriarArrombar": "Criar arrombar",
+        "Estragada": "Estragou",
+        "TentativasCurto": "Tentativas"
       }
     }
   },

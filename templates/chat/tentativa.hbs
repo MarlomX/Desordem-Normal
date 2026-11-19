@@ -1,0 +1,8 @@
+<div class="desordem-teste desordem-fechadura">
+  <header class="desordem-teste__cabecalho">
+    <h3 class="desordem-teste__titulo"><i class="fa-solid fa-key" aria-hidden="true"></i> {{titulo}}</h3>
+  </header>
+  {{! A tentativa, a resposta e o botão do mestre são desenhados pelo hook renderChatMessageHTML
+      (scripts/challenges/lock-card.js), a partir do registro guardado na mensagem }}
+  <div class="desordem-fechadura__corpo" data-tentativa></div>
+</div>

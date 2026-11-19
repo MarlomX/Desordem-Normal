@@ -7,6 +7,56 @@
     {{#if view.concluido}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
   </header>
 
+  {{#if view.destrancar}}
+  {{! Destrancar: a fechadura (o mestre configura e guarda a senha num sussurro só para os mestres) }}
+  <div class="desordem-desafio__grade">
+    <label class="desordem-desafio__campo desordem-desafio__campo--largo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Nome"}}</span>
+      <input type="text" data-campo="nome" value="{{view.nome}}" maxlength="80" placeholder="{{localize "DESORDEM.Desafio.Estendido.SemNome"}}" autocomplete="off">
+    </label>
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.Complexidade"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="lock.dados" value="{{view.fechadura.dados}}" min="1" max="10" step="1" inputmode="numeric">
+    </label>
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.Faces"}}</span>
+      <select data-campo="lock.faces">{{#each faces}}<option value="{{value}}"{{#if selected}} selected{{/if}}>d{{value}}</option>{{/each}}</select>
+    </label>
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.Maximo"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="lock.maximo" value="{{view.fechadura.maximo}}" min="1" max="99" step="1" inputmode="numeric">
+    </label>
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Fechadura.Usadas"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="lock.usadas" value="{{view.fechadura.usadas}}" min="0" max="99" step="1" inputmode="numeric">
+    </label>
+    <label class="desordem-desafio__marcar desordem-desafio__campo--largo">
+      <input type="checkbox" data-campo="lock.auto"{{#if view.fechadura.auto}} checked{{/if}}>
+      <span>{{localize "DESORDEM.Desafio.Fechadura.Auto"}}</span>
+    </label>
+  </div>
+  <div class="desordem-fechadura__senha">
+    <span class="desordem-perseguicao__rotulo"><i class="fa-solid fa-lock" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Fechadura.Senha"}}</span>
+    {{#if senhaTexto}}
+      {{#if mostrarSenha}}<strong class="desordem-desafios__numero">{{senhaTexto}}</strong>{{else}}<span>{{localize "DESORDEM.Desafio.Fechadura.Guardada"}}</span>{{/if}}
+      <button type="button" data-action="toggleSecret" title="{{localize "DESORDEM.Desafio.Fechadura.MostrarDica"}}"><i class="fa-solid {{#if mostrarSenha}}fa-eye-slash{{else}}fa-eye{{/if}}" aria-hidden="true"></i></button>
+    {{else}}
+      <span>{{#if view.fechadura.temSenha}}{{localize "DESORDEM.Desafio.Fechadura.Perdida"}}{{else}}{{localize "DESORDEM.Desafio.Fechadura.SemSenhaCurto"}}{{/if}}</span>
+    {{/if}}
+  </div>
+  <div class="desordem-perseguicao__acoes">
+    <button type="button" data-action="generateSecret"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Fechadura.Gerar"}}</button>
+    <button type="button" data-action="defineSecret"><i class="fa-solid fa-keyboard" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Fechadura.Definir"}}</button>
+    <button type="button" data-action="resetLock" title="{{localize "DESORDEM.Desafio.Fechadura.NovaDica"}}"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Fechadura.Nova"}}</button>
+  </div>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.Fechadura.Dica"}}</p>
+  {{#if fechaduraEstragada}}
+  <div class="desordem-fechadura__estragou">
+    <span>{{localize "DESORDEM.Desafio.Fechadura.Estragou"}}</span>
+    <button type="button" data-action="createForce"><i class="fa-solid fa-hammer" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Fechadura.CriarArrombar"}}</button>
+  </div>
+  {{/if}}
+  {{else}}
   <div class="desordem-desafio__grade">
     <label class="desordem-desafio__campo desordem-desafio__campo--largo">
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Nome"}}</span>
@@ -69,6 +119,7 @@
   {{! Dica do tipo (chaves: Estendido.Dica, Escalar.Dica, Alcancar.Dica, Sustentar.Dica) }}
   <p class="desordem-ficha__dica">{{dica}}</p>
   {{#unless view.sustentar}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.CustoDica"}}</p>{{/unless}}
+  {{/if}}
 
   {{#if view.grupo}}
   <div class="desordem-desafios__total">
@@ -91,14 +142,14 @@
         {{#if img}}<img class="desordem-perseguicao__retrato" src="{{img}}" alt="">{{/if}}
         <span class="desordem-perseguicao__nome">{{#if missing}}{{localize "DESORDEM.Desafio.AtorSumiu"}}{{else}}{{name}}{{/if}}</span>
         {{#if chegou}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
-        {{#unless ../view.grupo}}
+        {{#unless ../view.semPontos}}{{#unless ../view.grupo}}
         <span class="desordem-perseguicao__valor">
           <button type="button" class="desordem-perseguicao__passo" data-action="adjustPoints" data-actor-id="{{actorId}}" data-delta="-1" title="{{localize "DESORDEM.Ficha.Cab.Diminuir"}}">−</button>
           <input type="number" class="desordem-perseguicao__campo" data-campo="pontos" data-actor-id="{{actorId}}" value="{{pontos}}" min="0" max="9999" step="1" inputmode="numeric" aria-label="{{localize "DESORDEM.Desafio.Pontos"}}">
           <button type="button" class="desordem-perseguicao__passo" data-action="adjustPoints" data-actor-id="{{actorId}}" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}">+</button>
         </span>
         <span class="desordem-perseguicao__rotulo">{{@root.pontosRotulo}}</span>
-        {{/unless}}
+        {{/unless}}{{/unless}}
         {{#if ../view.equilibrio}}
         {{! Equilíbrio: d4 que restam (vazio = reserva cheia, metade da Acrobacia) }}
         <label class="desordem-desafio__reserva" title="{{localize "DESORDEM.Desafio.Equilibrio.ReservaDica"}}">

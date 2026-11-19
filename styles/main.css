@@ -2841,3 +2841,48 @@ button.desordem-desafios-cartao__nome:hover {
   padding: 0 6px;
   line-height: 1.6;
 }
+
+/* ===== Destrancar: janela da fechadura, campos da senha e cartão da tentativa (v0.18.6) ===== */
+
+.desordem-fechadura__senha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.desordem-fechadura__senha button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 0 6px;
+}
+
+.desordem-fechadura__estragou {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.desordem-fechadura__estragou button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}
+
+/* Janela de digitar a senha ou a tentativa: um campo por dado */
+.desordem-fechadura__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5em, 1fr));
+  gap: 6px;
+}
+
+.desordem-fechadura__tentou,
+.desordem-fechadura__resposta {
+  margin: 2px 0;
+  font-weight: 700;
+  text-align: center;
+}
