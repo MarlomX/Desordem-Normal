@@ -71,6 +71,13 @@ export const TYPE_ICONS = Object.freeze({
   destrancar: 'fa-key',
 });
 
+/**
+ * Quem vê o desafio na guia: «todos» os jogadores, «participantes» (só quem controla um
+ * personagem do desafio) ou «mestre» (ninguém além do mestre: para preparar antes da sessão).
+ * Desafios novos começam em «participantes»; os das versões antigas, sem o campo, ficam em «todos».
+ */
+export const CHALLENGE_VISIBILITY = Object.freeze(['todos', 'participantes', 'mestre']);
+
 /** Abordagens da escalada. */
 export const CLIMB_APPROACHES = Object.freeze(['rapida', 'cautelosa']);
 
@@ -168,6 +175,7 @@ export function normalizeChallenge(entry) {
     somaPassar: pick(entry.somaPassar, ON_PASS, 'ra'),
     somaFalhar: pick(entry.somaFalhar, ON_FAIL, 'nada'),
     revelarPa: entry.revelarPa !== false,
+    visibilidade: pick(entry.visibilidade, CHALLENGE_VISIBILITY, 'todos'),
     ativo: entry.ativo !== false,
     total: storedInt(entry.total, 0, MAX_POINTS, 0),
     participantes: normalizeParticipants(entry.participantes).slice(
@@ -211,7 +219,13 @@ const TYPE_PRESETS = {
  */
 export function newChallenge(id, nome, tipo = 'estendido') {
   const kind = pick(tipo, CHALLENGE_TYPES, 'estendido');
-  return normalizeChallenge({ id, nome, tipo: kind, ...TYPE_PRESETS[kind] });
+  return normalizeChallenge({
+    id,
+    nome,
+    tipo: kind,
+    visibilidade: 'participantes',
+    ...TYPE_PRESETS[kind],
+  });
 }
 
 /** Troca um desafio da lista pela versão nova (mesmo id). */
@@ -271,6 +285,8 @@ export function updateChallengeField(challenge, campo, raw) {
       return ON_PASS.includes(raw) ? { ...challenge, somaPassar: raw } : challenge;
     case 'somaFalhar':
       return ON_FAIL.includes(raw) ? { ...challenge, somaFalhar: raw } : challenge;
+    case 'visibilidade':
+      return CHALLENGE_VISIBILITY.includes(raw) ? { ...challenge, visibilidade: raw } : challenge;
     case 'revelarPa':
     case 'ativo':
       return typeof raw === 'boolean' ? { ...challenge, [campo]: raw } : challenge;
@@ -365,8 +381,24 @@ export function isCompleted(challenge) {
 }
 
 /** Desafios que a pessoa vê: o mestre vê todos; o jogador, só os ativos. */
-export function visibleChallenges(data, { isGM }) {
-  return data.desafios.filter((challenge) => isGM || challenge.ativo);
+export function visibleChallenges(data, { isGM, ownedActorIds = [] }) {
+  return data.desafios.filter((challenge) =>
+    challengeVisibleTo(challenge, { isGM, ownedActorIds }),
+  );
+}
+
+/**
+ * O desafio aparece para esta pessoa? O mestre vê todos. O jogador vê só os ativos, e conforme a
+ * visibilidade: «todos»; «participantes», se controla algum personagem do desafio; nunca «mestre».
+ * @param {{isGM: boolean, ownedActorIds?: string[]}} viewer `ownedActorIds`: ids dos atores
+ *   de que o jogador é dono.
+ */
+export function challengeVisibleTo(challenge, { isGM, ownedActorIds = [] }) {
+  if (isGM) return true;
+  if (!challenge?.ativo || challenge.visibilidade === 'mestre') return false;
+  if (challenge.visibilidade !== 'participantes') return true;
+  const owned = new Set(ownedActorIds);
+  return challenge.participantes.some((entry) => owned.has(entry.actorId));
 }
 
 /** A pessoa pode ver a PA alvo? (o mestre sempre; o jogador, se o mestre revelou) */
@@ -409,6 +441,7 @@ export function challengeView(challenge, { isGM, actorInfo }) {
     somaPassar: challenge.somaPassar,
     somaFalhar: challenge.somaFalhar,
     revelarPa: challenge.revelarPa,
+    visibilidade: challenge.visibilidade,
     ativo: challenge.ativo,
     total: challenge.total,
     totalChegou: grupo && challenge.total >= challenge.pa,
@@ -461,7 +494,9 @@ export function sheetChallenges(data, actorId, { isGM }) {
   return data.desafios
     .filter(
       (challenge) =>
-        challenge.ativo && challenge.participantes.some((entry) => entry.actorId === actorId),
+        challenge.ativo &&
+        (isGM || challenge.visibilidade !== 'mestre') &&
+        challenge.participantes.some((entry) => entry.actorId === actorId),
     )
     .map((challenge) => {
       const showTarget = targetVisible(challenge, { isGM });
@@ -537,12 +572,15 @@ export function sidebarOrder(keys, newKey, after = 'scenes') {
  * @returns {{id: string, nome: string, tipo: string, dt: number, dtRapida: number,
  *   dtCautelosa: number}[]}
  */
-export function challengeTestChoices(data, actorId) {
+export function challengeTestChoices(data, actorId, { isGM = false } = {}) {
   if (!actorId) return [];
   return data.desafios
     .filter(
       (challenge) =>
-        challenge.ativo && challenge.participantes.some((entry) => entry.actorId === actorId),
+        challenge.ativo &&
+        // Escondido só para o mestre: o jogador ainda não sabe do desafio
+        (isGM || challenge.visibilidade !== 'mestre') &&
+        challenge.participantes.some((entry) => entry.actorId === actorId),
     )
     .map((challenge) => ({
       id: challenge.id,

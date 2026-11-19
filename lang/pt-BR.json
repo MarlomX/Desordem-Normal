@@ -1173,7 +1173,13 @@
         "Vazio": "Nenhuma linha ainda: tente uma senha ou crie uma linha de teoria.",
         "NovaLinha": "Nova linha",
         "AbrirDica": "Abre o quadro de teoria da fechadura"
-      }
+      },
+      "Visibilidade": {
+        "todos": "Todos",
+        "participantes": "Só os participantes",
+        "mestre": "Só o mestre"
+      },
+      "VisibilidadeRotulo": "Visível para"
     }
   },
   "TYPES.Item.arma": "Arma",

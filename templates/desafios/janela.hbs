@@ -7,6 +7,12 @@
     {{#if view.concluido}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
   </header>
 
+  {{! Quem vê o desafio na guia (vale para todos os tipos) }}
+  <label class="desordem-desafio__campo desordem-desafio__visibilidade">
+    <span class="desordem-perseguicao__rotulo"><i class="fa-solid fa-eye" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.VisibilidadeRotulo"}}</span>
+    <select data-campo="visibilidade">{{#each visibilidades}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select>
+  </label>
+
   {{#if view.destrancar}}
   {{! Destrancar: a fechadura (o mestre configura e guarda a senha num sussurro só para os mestres) }}
   <div class="desordem-desafio__grade">

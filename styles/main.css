@@ -2962,19 +2962,46 @@ button.desordem-desafios-cartao__nome:hover {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  width: 3.2em;
+  width: 3.4em;
 }
 
+/* O desenho do dado da posição fica no fundo (v0.18.9); o número (texto ou campo) vai por cima */
+.desordem-quadro__forma {
+  --dn-forma-tam: 3em;
+}
+
+/* Campo das linhas de teoria: transparente, ocupando o dado inteiro, número branco no meio */
 .desordem-quadro__valor {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   box-sizing: border-box;
   width: 100%;
-  min-height: 1.9em;
-  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
-  border-radius: 4px;
-  font-size: 1.2em;
-  font-weight: 700;
-  line-height: 1.6;
+  height: 100%;
+  margin: 0;
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  font-family: var(--dn-fonte-numeros, inherit);
+  font-size: calc(var(--dn-forma-tam) * 0.36);
+  font-weight: 800;
   text-align: center;
+  text-shadow: 0 0 0.25em var(--dn-contorno-numero, #000);
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Sem as setinhas do campo numérico (atrapalham dentro do dado) */
+.desordem-quadro__valor::-webkit-outer-spin-button,
+.desordem-quadro__valor::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+/* Vazio: o número de faces aparece apagado, lembrando o limite */
+.desordem-quadro__valor::placeholder {
+  color: rgba(255, 255, 255, 0.35);
 }
 
 .desordem-quadro__marca {
@@ -3015,4 +3042,9 @@ button.desordem-desafios-cartao__nome:hover {
   margin: 0;
   padding: 0;
   line-height: 1;
+}
+
+/* ===== Desafios: visibilidade na janela do mestre (v0.18.9) ===== */
+.desordem-desafio__visibilidade {
+  margin-bottom: 6px;
 }

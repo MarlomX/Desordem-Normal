@@ -23,6 +23,8 @@ import {
   typePoints,
   updateChallengeField,
   visibleChallenges,
+  challengeVisibleTo,
+  challengeTestChoices,
 } from '../scripts/rolls/challenge.js';
 import { createPenaltyFlag, penaltyAllows, penaltyScene } from '../scripts/rolls/chase.js';
 
@@ -47,6 +49,7 @@ test('desafio novo vem com os padrões', () => {
     somaPassar: 'ra',
     somaFalhar: 'nada',
     revelarPa: true,
+    visibilidade: 'participantes',
     ativo: true,
     total: 0,
     participantes: [],
@@ -213,7 +216,7 @@ test('visibilidade: jogador só vê os ativos; PA escondida não aparece', () =>
   };
   assert.equal(visibleChallenges(data, { isGM: true }).length, 2);
   assert.deepEqual(
-    visibleChallenges(data, { isGM: false }).map((entry) => entry.id),
+    visibleChallenges(data, { isGM: false, ownedActorIds: ['a'] }).map((entry) => entry.id),
     ['d1'],
   );
 
@@ -313,4 +316,36 @@ test('penalidade do desafio: guarda a cena e os atores escolhidos', () => {
   assert.deepEqual(flag.alvos, ['a']);
   assert.equal(penaltyAllows(flag, 'a'), true);
   assert.equal(penaltyAllows(flag, 'b'), false);
+});
+
+test('visibilidade: todos, só participantes ou só o mestre', () => {
+  const base = addParticipants(newChallenge('d1', 'Portão'), ['a']);
+  assert.equal(base.visibilidade, 'participantes');
+  // Desafios antigos (sem o campo) continuam visíveis para todos
+  assert.equal(normalizeChallenge({ id: 'v' }).visibilidade, 'todos');
+  assert.equal(updateChallengeField(base, 'visibilidade', 'mestre').visibilidade, 'mestre');
+  assert.equal(updateChallengeField(base, 'visibilidade', 'x'), base);
+  const all = { ...base, id: 't', visibilidade: 'todos' };
+  const gm = { ...base, id: 'm', visibilidade: 'mestre' };
+  const data = { desafios: [base, all, gm] };
+  const ids = (viewer) => visibleChallenges(data, viewer).map((entry) => entry.id);
+  assert.deepEqual(ids({ isGM: true }), ['d1', 't', 'm']);
+  // Jogador dono do participante: vê o «participantes» e o «todos»
+  assert.deepEqual(ids({ isGM: false, ownedActorIds: ['a'] }), ['d1', 't']);
+  // Jogador de fora: só o «todos»
+  assert.deepEqual(ids({ isGM: false, ownedActorIds: ['z'] }), ['t']);
+  assert.deepEqual(ids({ isGM: false }), ['t']);
+  // Encerrado continua escondido do jogador
+  assert.equal(challengeVisibleTo({ ...all, ativo: false }, { isGM: false }), false);
+  // Ficha e janela pré-teste: o jogador não vê o desafio «só o mestre»
+  assert.deepEqual(
+    sheetChallenges(data, 'a', { isGM: false }).map((entry) => entry.id),
+    ['d1', 't'],
+  );
+  assert.equal(sheetChallenges(data, 'a', { isGM: true }).length, 3);
+  assert.deepEqual(
+    challengeTestChoices(data, 'a').map((entry) => entry.id),
+    ['d1', 't'],
+  );
+  assert.equal(challengeTestChoices(data, 'a', { isGM: true }).length, 3);
 });

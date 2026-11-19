@@ -53,10 +53,12 @@ const shownName = (nome) => nome || t('DESORDEM.Desafio.Estendido.SemNome');
 
 /** Desafios que a janela pré-teste oferece a este personagem (ativos, de que ele participa). */
 export const challengeChoicesFor = (actor) =>
-  challengeTestChoices(readChallenges(), worldActorId(actor)).map((entry) => ({
-    ...entry,
-    nome: shownName(entry.nome),
-  }));
+  challengeTestChoices(readChallenges(), worldActorId(actor), { isGM: game.user.isGM }).map(
+    (entry) => ({
+      ...entry,
+      nome: shownName(entry.nome),
+    }),
+  );
 
 /**
  * Prepara as opções de um teste que vale para um teste estendido: guarda o registro na mensagem.

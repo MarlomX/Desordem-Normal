@@ -21,11 +21,14 @@
         {{! Um dado: ▲ em cima, o número (digitável nas linhas de teoria), = e ▼ embaixo }}
         <div class="desordem-quadro__dado">
           <button type="button" class="desordem-quadro__marca is-cima{{#if cima}} is-ligada{{/if}}" data-action="toggleMark" data-row-id="{{../id}}" data-index="{{index}}" data-mark="cima" title="{{localize "DESORDEM.Desafio.Quadro.Cima"}}" aria-pressed="{{#if cima}}true{{else}}false{{/if}}"{{#unless @root.editar}} disabled{{/unless}}><i class="fa-solid fa-chevron-up" aria-hidden="true"></i></button>
-          {{#if editavel}}
-          <input type="number" class="desordem-quadro__valor" data-campo="valor" data-row-id="{{../id}}" data-index="{{index}}" value="{{valor}}" min="1" max="{{lados}}" step="1" inputmode="numeric" placeholder="d{{lados}}" aria-label="d{{lados}}"{{#unless @root.editar}} disabled{{/unless}}>
-          {{else}}
-          <span class="desordem-quadro__valor" title="d{{lados}}">{{valor}}</span>
-          {{/if}}
+          {{! O desenho do dado da posição (mesmas formas e cores da ficha) com o número por cima }}
+          <span class="desordem-forma desordem-forma--grande desordem-d-{{lados}} desordem-quadro__forma" title="d{{lados}}">
+            {{#if editavel}}
+            <input type="number" class="desordem-quadro__valor" data-campo="valor" data-row-id="{{../id}}" data-index="{{index}}" value="{{valor}}" min="1" max="{{lados}}" step="1" inputmode="numeric" placeholder="{{lados}}" aria-label="d{{lados}}"{{#unless @root.editar}} disabled{{/unless}}>
+            {{else}}
+            <span class="desordem-forma__valor">{{valor}}</span>
+            {{/if}}
+          </span>
           <button type="button" class="desordem-quadro__marca is-igual{{#if igual}} is-ligada{{/if}}" data-action="toggleMark" data-row-id="{{../id}}" data-index="{{index}}" data-mark="igual" title="{{localize "DESORDEM.Desafio.Quadro.Igual"}}" aria-pressed="{{#if igual}}true{{else}}false{{/if}}"{{#unless @root.editar}} disabled{{/unless}}>=</button>
           <button type="button" class="desordem-quadro__marca is-baixo{{#if baixo}} is-ligada{{/if}}" data-action="toggleMark" data-row-id="{{../id}}" data-index="{{index}}" data-mark="baixo" title="{{localize "DESORDEM.Desafio.Quadro.Baixo"}}" aria-pressed="{{#if baixo}}true{{else}}false{{/if}}"{{#unless @root.editar}} disabled{{/unless}}><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
         </div>

@@ -11,6 +11,7 @@ import { SYSTEM_ID } from '../config.js';
 import { boardView } from '../rolls/lock-board.js';
 import { lockComposition, lockStatus, maximumVisible } from '../rolls/lock.js';
 import { canEditBoard, requestBoardChange } from './lock-card.js';
+import { challengeVisibleTo } from '../rolls/challenge.js';
 import { getChallenge } from './store.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
@@ -60,6 +61,9 @@ export default class QuadroApp extends HandlebarsApplicationMixin(ApplicationV2)
   static async open(challengeId) {
     const challenge = getChallenge(challengeId);
     if (challenge?.tipo !== 'destrancar') return null;
+    // O jogador só abre o quadro de um desafio que ele pode ver na guia
+    const ownedActorIds = game.actors.filter((actor) => actor.isOwner).map((actor) => actor.id);
+    if (!challengeVisibleTo(challenge, { isGM: game.user.isGM, ownedActorIds })) return null;
     let app = QuadroApp.#instances.get(challengeId);
     if (!app) {
       app = new QuadroApp(challengeId);

@@ -58,10 +58,20 @@ async function listContext() {
       icone: TYPE_ICONS[tipo],
       rotulo: t(`DESORDEM.Desafio.Tipo.${tipo}`),
     })),
-    desafios: visibleChallenges(data, { isGM }).map((challenge) => ({
+    // Jogador: vê os desafios «todos» e os «participantes» em que controla algum personagem
+    desafios: visibleChallenges(data, {
+      isGM,
+      ownedActorIds: isGM ? [] : game.actors.filter((actor) => actor.isOwner).map((a) => a.id),
+    }).map((challenge) => ({
       ...challengeView(challenge, { isGM, actorInfo }),
       icone: TYPE_ICONS[challenge.tipo] ?? TYPE_ICONS.estendido,
       tipoRotulo: t(`DESORDEM.Desafio.Tipo.${challenge.tipo}`),
+      // Selo para o mestre: quem mais vê este desafio (chave montada, conferida à mão:
+      // DESORDEM.Desafio.Visibilidade.{participantes,mestre})
+      seloVisibilidade:
+        isGM && challenge.visibilidade !== 'todos'
+          ? t(`DESORDEM.Desafio.Visibilidade.${challenge.visibilidade}`)
+          : '',
       // Chave montada (conferida à mão): DESORDEM.Desafio.Unidade.{tipo}
       unidade: t(`DESORDEM.Desafio.Unidade.${challenge.tipo}`),
       // Destrancar: selo de fechadura estragada (o «concluído» já vem da vista)

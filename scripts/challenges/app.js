@@ -7,6 +7,7 @@
 import { SYSTEM_ID } from '../config.js';
 import {
   CHALLENGE_MODES,
+  CHALLENGE_VISIBILITY,
   ON_FAIL,
   ON_PASS,
   TYPE_ICONS,
@@ -69,6 +70,7 @@ const CONFIG_FIELDS = new Set([
   'somaPassar',
   'somaFalhar',
   'revelarPa',
+  'visibilidade',
 ]);
 
 /**
@@ -219,6 +221,10 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       modos: CHALLENGE_MODES.map(option('DESORDEM.Desafio.Modo', challenge.modo)),
       passar: ON_PASS.map(option('DESORDEM.Desafio.Passar', challenge.somaPassar)),
       falhar: ON_FAIL.map(option('DESORDEM.Desafio.Falhar', challenge.somaFalhar)),
+      // Chaves montadas (conferidas à mão): DESORDEM.Desafio.Visibilidade.{todos,participantes,mestre}
+      visibilidades: CHALLENGE_VISIBILITY.map(
+        option('DESORDEM.Desafio.Visibilidade', challenge.visibilidade),
+      ),
     };
   }
 
