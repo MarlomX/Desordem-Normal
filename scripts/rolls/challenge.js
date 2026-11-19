@@ -10,8 +10,22 @@
  * ferramenta é para o mestre improvisar, não controla quem já tentou.
  */
 
-/** Tipos de desafio (só o teste estendido nesta versão). */
-export const CHALLENGE_TYPES = Object.freeze(['estendido']);
+/**
+ * Tipos de desafio. «arrombar» é um teste estendido com outros padrões (RA ao passar, nada ao
+ * falhar, 1 PV por teste), tudo editável. «escalar» tem regra própria: é sempre individual, cada
+ * teste escolhe rápida (DT 8, soma a RA) ou cautelosa (DT 6, soma a RB) e falhar é uma queda.
+ */
+export const CHALLENGE_TYPES = Object.freeze(['estendido', 'arrombar', 'escalar']);
+
+/** Ícone de cada tipo de desafio (Font Awesome), na guia e na janela. */
+export const TYPE_ICONS = Object.freeze({
+  estendido: 'fa-flag-checkered',
+  arrombar: 'fa-hammer',
+  escalar: 'fa-mountain',
+});
+
+/** Abordagens da escalada. */
+export const CLIMB_APPROACHES = Object.freeze(['rapida', 'cautelosa']);
 
 /** Modos do teste estendido. */
 export const CHALLENGE_MODES = Object.freeze(['individual', 'grupo']);
@@ -34,6 +48,11 @@ export const MAX_DT = 40;
 /** Valores padrão de um desafio novo. */
 export const DEFAULT_TARGET = 10;
 export const DEFAULT_DT = 7;
+export const DEFAULT_FAST_DT = 8;
+export const DEFAULT_CAREFUL_DT = 6;
+
+/** Custo por teste em PV (0 = sem custo), cobrado por botão no cartão do teste. */
+export const MAX_COST = 20;
 
 const clampInt = (value, min, max) => Math.min(max, Math.max(min, Math.trunc(value)));
 
@@ -78,13 +97,18 @@ function normalizeParticipants(list) {
 export function normalizeChallenge(entry) {
   const id = typeof entry?.id === 'string' ? entry.id.trim() : '';
   if (!id) return null;
+  const tipo = pick(entry.tipo, CHALLENGE_TYPES, 'estendido');
   return {
     id,
-    tipo: pick(entry.tipo, CHALLENGE_TYPES, 'estendido'),
+    tipo,
     nome: cleanName(entry.nome),
     pa: storedInt(entry.pa, 1, MAX_TARGET, DEFAULT_TARGET),
     dt: storedInt(entry.dt, MIN_DT, MAX_DT, DEFAULT_DT),
-    modo: pick(entry.modo, CHALLENGE_MODES, 'individual'),
+    // A escalada é sempre individual: cada um sobe (e cai) sozinho
+    modo: tipo === 'escalar' ? 'individual' : pick(entry.modo, CHALLENGE_MODES, 'individual'),
+    dtRapida: storedInt(entry.dtRapida, MIN_DT, MAX_DT, DEFAULT_FAST_DT),
+    dtCautelosa: storedInt(entry.dtCautelosa, MIN_DT, MAX_DT, DEFAULT_CAREFUL_DT),
+    custoPv: storedInt(entry.custoPv, 0, MAX_COST, 0),
     somaPassar: pick(entry.somaPassar, ON_PASS, 'ra'),
     somaFalhar: pick(entry.somaFalhar, ON_FAIL, 'nada'),
     revelarPa: entry.revelarPa !== false,
@@ -107,9 +131,20 @@ export function normalizeChallenges(raw) {
   return { desafios };
 }
 
-/** Um teste estendido novo com os padrões (PA 10, DT 7, individual, RA ao passar). */
-export function newChallenge(id, nome) {
-  return normalizeChallenge({ id, nome, tipo: 'estendido' });
+/** Padrões de cada tipo (o resto vem de `normalizeChallenge`). */
+const TYPE_PRESETS = {
+  estendido: {},
+  arrombar: { somaPassar: 'ra', somaFalhar: 'nada', custoPv: 1 },
+  escalar: { modo: 'individual', pa: DEFAULT_TARGET },
+};
+
+/**
+ * Um desafio novo com os padrões do tipo. Teste estendido: PA 10, DT 7, individual, RA ao passar.
+ * Arrombar: o mesmo, com 1 PV por teste. Escalar: PA 10, rápida DT 8 e cautelosa DT 6.
+ */
+export function newChallenge(id, nome, tipo = 'estendido') {
+  const kind = pick(tipo, CHALLENGE_TYPES, 'estendido');
+  return normalizeChallenge({ id, nome, tipo: kind, ...TYPE_PRESETS[kind] });
 }
 
 /** Troca um desafio da lista pela versão nova (mesmo id). */
@@ -134,7 +169,8 @@ export function appendChallenge(data, challenge) {
  * Edita um campo de configuração digitado ou escolhido pelo mestre. Valor inválido (texto vazio,
  * opção desconhecida) devolve o desafio sem mudança.
  * @param {object} challenge Desafio limpo.
- * @param {string} campo nome, pa, dt, modo, somaPassar, somaFalhar, revelarPa ou ativo.
+ * @param {string} campo nome, pa, dt, dtRapida, dtCautelosa, custoPv, modo, somaPassar, somaFalhar,
+ *   revelarPa ou ativo. Na escalada o modo não muda (é sempre individual).
  * @param {unknown} raw Valor do campo (texto, ou booleano nas caixas de marcar).
  */
 export function updateChallengeField(challenge, campo, raw) {
@@ -149,7 +185,19 @@ export function updateChallengeField(challenge, campo, raw) {
       const value = parseInteger(raw);
       return value === null ? challenge : { ...challenge, dt: clampInt(value, MIN_DT, MAX_DT) };
     }
+    case 'dtRapida':
+    case 'dtCautelosa': {
+      const value = parseInteger(raw);
+      return value === null
+        ? challenge
+        : { ...challenge, [campo]: clampInt(value, MIN_DT, MAX_DT) };
+    }
+    case 'custoPv': {
+      const value = parseInteger(raw);
+      return value === null ? challenge : { ...challenge, custoPv: clampInt(value, 0, MAX_COST) };
+    }
     case 'modo':
+      if (challenge.tipo === 'escalar') return challenge;
       return CHALLENGE_MODES.includes(raw) ? { ...challenge, modo: raw } : challenge;
     case 'somaPassar':
       return ON_PASS.includes(raw) ? { ...challenge, somaPassar: raw } : challenge;
@@ -261,11 +309,15 @@ export function challengeView(challenge, { isGM, actorInfo }) {
   return {
     id: challenge.id,
     tipo: challenge.tipo,
+    escalar: challenge.tipo === 'escalar',
     nome: challenge.nome,
     semNome: challenge.nome === '',
     pa: showTarget ? challenge.pa : null,
     mostrarPa: showTarget,
     dt: challenge.dt,
+    dtRapida: challenge.dtRapida,
+    dtCautelosa: challenge.dtCautelosa,
+    custoPv: challenge.custoPv,
     modo: challenge.modo,
     grupo,
     somaPassar: challenge.somaPassar,
@@ -353,30 +405,60 @@ export function sidebarOrder(keys, newKey, after = 'scenes') {
 /**
  * Desafios que a janela pré-teste oferece ao personagem: os testes estendidos ativos de que ele
  * participa, na ordem da guia.
- * @returns {{id: string, nome: string, dt: number}[]}
+ * @returns {{id: string, nome: string, tipo: string, dt: number, dtRapida: number,
+ *   dtCautelosa: number}[]}
  */
 export function challengeTestChoices(data, actorId) {
   if (!actorId) return [];
   return data.desafios
     .filter(
       (challenge) =>
-        challenge.ativo &&
-        challenge.tipo === 'estendido' &&
-        challenge.participantes.some((entry) => entry.actorId === actorId),
+        challenge.ativo && challenge.participantes.some((entry) => entry.actorId === actorId),
     )
-    .map((challenge) => ({ id: challenge.id, nome: challenge.nome, dt: challenge.dt }));
+    .map((challenge) => ({
+      id: challenge.id,
+      nome: challenge.nome,
+      tipo: challenge.tipo,
+      dt: challenge.dt,
+      dtRapida: challenge.dtRapida,
+      dtCautelosa: challenge.dtCautelosa,
+    }));
 }
 
-/** Registro de um teste estendido recém-rolado: nada somado ainda. */
-export function createChallengeTestFlag({ challenge, actorId, dt }) {
+/** DT de um desafio para um teste (na escalada, a da abordagem; senão, a DT do desafio). */
+export function challengeDtFor(challenge, abordagem) {
+  if (challenge.tipo !== 'escalar') return challenge.dt;
+  return abordagem === 'cautelosa' ? challenge.dtCautelosa : challenge.dtRapida;
+}
+
+/** Abordagem válida da escalada (rápida, se não vier nada). */
+export const climbApproach = (value) => pick(value, CLIMB_APPROACHES, 'rapida');
+
+/**
+ * Registro de um teste estendido recém-rolado: nada somado ainda. Na escalada, a abordagem decide
+ * o que soma ao passar (rápida: RA; cautelosa: RB) e falhar é uma queda (`queda: true`). Com custo
+ * por teste, o registro leva também `custo` (o botão «pagar PV», que tem a sua própria reserva).
+ */
+export function createChallengeTestFlag({ challenge, actorId, dt, abordagem }) {
+  const climb = challenge.tipo === 'escalar';
+  const approach = climb ? climbApproach(abordagem) : null;
   return {
     desafioId: challenge.id,
     actorId,
-    dt: storedInt(dt, MIN_DT, MAX_DT, challenge.dt),
-    somaPassar: challenge.somaPassar,
-    somaFalhar: challenge.somaFalhar,
+    tipo: challenge.tipo,
+    abordagem: approach,
+    dt: storedInt(dt, MIN_DT, MAX_DT, challengeDtFor(challenge, approach)),
+    somaPassar: climb ? (approach === 'cautelosa' ? 'rb' : 'ra') : challenge.somaPassar,
+    somaFalhar: climb ? 'nada' : challenge.somaFalhar,
+    queda: climb,
     estado: 'pendente',
     ganho: null,
+    dano: null,
+    zerou: false,
+    custo:
+      challenge.custoPv > 0
+        ? { pv: challenge.custoPv, estado: 'pendente', aplicado: null, zerou: false }
+        : null,
   };
 }
 
@@ -427,16 +509,41 @@ export function applyChallengeTest(challenge, actorId, gain) {
 }
 
 /**
+ * Queda da escalada (o mestre, ao clicar em «aplicar queda»): o dano é igual aos pontos que o
+ * personagem tinha acumulado, e os pontos voltam a 0. `null` se o desafio não está ativo ou o
+ * personagem saiu dele.
+ * @returns {{challenge: object, dano: number}|null}
+ */
+export function applyFall(challenge, actorId) {
+  if (!challenge?.ativo) return null;
+  const entry = challenge.participantes.find((item) => item.actorId === actorId);
+  if (!entry) return null;
+  return { challenge: setPoints(challenge, actorId, 0), dano: entry.pontos };
+}
+
+/** PV depois de uma perda (nunca abaixo de 0) e se chegou a 0 agora. */
+export function loseHitPoints(pv, loss) {
+  const next = Math.max(0, Math.trunc(pv) - Math.max(0, Math.trunc(loss)));
+  return { pv: next, applied: Math.trunc(pv) - next, reachedZero: loss > 0 && next === 0 };
+}
+
+/**
  * O que a barra do cartão do teste mostra. `kind` diz como o valor foi obtido (para o texto):
  * `crit`, `passou`, `falhou` ou `falhaCritica`. `fechado` quando o desafio foi encerrado,
  * excluído, ou o personagem saiu dele (o botão some).
  * @param {object} flag Registro do teste (`createChallengeTestFlag`).
  * @param {object} result Resultado atual do teste (com os dados que o cartão mostra agora).
+ * Na escalada, um teste que falhou vira «queda» (`queda: true`): o botão aplica o dano igual aos
+ * pontos acumulados (`dano`, os pontos de agora) e zera os pontos.
  * @param {{canApply: boolean, claimable: boolean, busy: boolean, challenge: object|null}} viewer
  *   `claimable` e `busy` vêm da reserva do botão (veja `isAdvanceClaimable` em chase.js).
  */
 export function challengeBarView(flag, result, { canApply, claimable, busy, challenge }) {
   const pontos = challengeTestGain(result, flag);
+  const queda = Boolean(flag.queda) && !challengeTestSuccess(result, flag.dt);
+  const atuais = challenge
+    ? (challenge.participantes.find((entry) => entry.actorId === flag.actorId)?.pontos ?? 0)
+    : 0;
   let kind = 'passou';
   if (result.criticalFailure) kind = 'falhaCritica';
   else if (result.criticalSuccess) kind = 'crit';
@@ -450,10 +557,36 @@ export function challengeBarView(flag, result, { canApply, claimable, busy, chal
     kind,
     pontos,
     nome: challenge?.nome ?? '',
+    abordagem: flag.abordagem ?? null,
+    queda,
+    dano: atuais,
+    // A queda já foi aplicada (o registro guarda o dano no lugar dos pontos)
+    appliedQueda: applied && flag.dano !== null && flag.dano !== undefined,
+    appliedDano: flag.dano ?? 0,
+    appliedZerou: Boolean(flag.zerou),
     applied,
     appliedPontos: flag.ganho,
     busy: !applied && busy,
     fechado,
     showButton: canApply && claimable && !fechado,
+  };
+}
+
+/**
+ * O que a barra do custo por teste mostra (o botão «pagar PV», de uso único). `null` se o teste
+ * não tem custo.
+ * @param {{pv: number, estado: string, aplicado: number|null, zerou: boolean}|null} custo
+ * @param {{canApply: boolean, claimable: boolean, busy: boolean}} viewer
+ */
+export function costBarView(custo, { canApply, claimable, busy }) {
+  if (!custo || !(custo.pv > 0)) return null;
+  const applied = custo.estado === 'aplicado';
+  return {
+    pv: custo.pv,
+    applied,
+    appliedPv: custo.aplicado ?? 0,
+    zerou: Boolean(custo.zerou),
+    busy: !applied && busy,
+    showButton: canApply && claimable,
   };
 }

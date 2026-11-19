@@ -2721,3 +2721,35 @@ button.desordem-desafios-cartao__nome:hover {
 .desordem-desafios-cartao__item .desordem-perseguicao-cartao__estado {
   flex: 0 0 auto;
 }
+
+/* ===== Desafios: tipos, custo por teste e escalada (v0.18.2) ===== */
+
+/* Botões de criar, um por tipo de desafio */
+.desordem-desafios__novos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-desafios__novos button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 2px 8px;
+}
+
+.desordem-desafio__tipo {
+  font-weight: 700;
+}
+
+/* Janela pré-teste: rápida ou cautelosa só com um desafio de escalada escolhido */
+.desordem-pre [data-estendido-escalar].is-oculta {
+  display: none;
+}
+
+.desordem-pre [data-estendido-escalar] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

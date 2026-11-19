@@ -16,7 +16,9 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import {
+  CHALLENGE_TYPES,
   MAX_CHALLENGES,
+  TYPE_ICONS,
   challengeView,
   sidebarOrder,
   updateChallengeField,
@@ -47,18 +49,32 @@ async function listContext() {
   return {
     isGM,
     podeCriar: isGM && data.desafios.length < MAX_CHALLENGES,
-    desafios: visibleChallenges(data, { isGM }).map((challenge) =>
-      challengeView(challenge, { isGM, actorInfo }),
-    ),
+    // Botões de criar: um por tipo de desafio
+    // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Tipo.{estendido,arrombar,escalar}
+    tipos: CHALLENGE_TYPES.map((tipo) => ({
+      tipo,
+      icone: TYPE_ICONS[tipo],
+      rotulo: t(`DESORDEM.Desafio.Tipo.${tipo}`),
+    })),
+    desafios: visibleChallenges(data, { isGM }).map((challenge) => ({
+      ...challengeView(challenge, { isGM, actorInfo }),
+      icone: TYPE_ICONS[challenge.tipo] ?? TYPE_ICONS.estendido,
+      tipoRotulo: t(`DESORDEM.Desafio.Tipo.${challenge.tipo}`),
+    })),
   };
 }
 
 /** Ações dos botões da lista (só o mestre vê os botões; os handlers conferem de novo). */
 const LIST_ACTIONS = {
-  /** Novo teste estendido: cria com os padrões e abre a janela dele. */
-  async newChallenge() {
+  /**
+   * Novo desafio do tipo do botão (teste estendido, arrombar ou escalar): cria com os padrões do
+   * tipo e abre a janela dele. O nome padrão é o nome do tipo.
+   */
+  async newChallenge(event, target) {
     if (!game.user.isGM) return;
-    const id = await createChallenge(t('DESORDEM.Desafio.Estendido.NomePadrao'));
+    const tipo = CHALLENGE_TYPES.includes(target.dataset.tipo) ? target.dataset.tipo : 'estendido';
+    // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Tipo.{estendido,arrombar,escalar}
+    const id = await createChallenge(t(`DESORDEM.Desafio.Tipo.${tipo}`), tipo);
     if (id) await DesafioApp.open(id);
   },
   async openChallenge(event, target) {

@@ -58,7 +58,7 @@ export async function readyChallenges() {
 export const challengeApi = {
   abrir: () => showChallengeList(),
   janela: () => DesafiosListaApp.open(),
-  criar: (nome) => createChallenge(nome),
+  criar: (nome, tipo) => createChallenge(nome, tipo),
   editar: (id) => DesafioApp.open(id),
   listar: () => readChallenges().desafios,
 };

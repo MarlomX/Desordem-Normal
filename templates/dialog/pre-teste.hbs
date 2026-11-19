@@ -112,9 +112,23 @@
       <label class="desordem-pre__avanco-campo">
         <span>{{localize "DESORDEM.Desafio.Pre.Qual"}}</span>
         <select name="estendidoId">
-          {{#each estendido.desafios}}<option value="{{id}}" data-dt="{{dt}}">{{label}}</option>{{/each}}
+          {{#each estendido.desafios}}<option value="{{id}}" data-tipo="{{tipo}}" data-dt="{{dt}}" data-dt-rapida="{{dtRapida}}" data-dt-cautelosa="{{dtCautelosa}}">{{label}}</option>{{/each}}
         </select>
       </label>
+      {{! Escalada: rápida (soma a RA) ou cautelosa (soma a RB), cada uma com a sua DT }}
+      <div class="is-oculta" data-estendido-escalar>
+        <div class="desordem-tipo-botoes">
+          <label class="desordem-tipo-botoes__opcao">
+            <input type="radio" name="estendidoAbordagem" value="rapida" checked>
+            <span>{{localize "DESORDEM.Desafio.Pre.Rapida"}}</span>
+          </label>
+          <label class="desordem-tipo-botoes__opcao">
+            <input type="radio" name="estendidoAbordagem" value="cautelosa">
+            <span>{{localize "DESORDEM.Desafio.Pre.Cautelosa"}}</span>
+          </label>
+        </div>
+        <p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.Pre.EscalarDica"}}</p>
+      </div>
     </div>
   </fieldset>
   {{/if}}

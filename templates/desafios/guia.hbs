@@ -1,16 +1,23 @@
 <section class="desordem-desafios">
   <header class="desordem-desafios__topo">
     <h3 class="desordem-perseguicao__titulo"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Guia"}}</h3>
-    {{#if isGM}}
-    <button type="button" data-action="newChallenge"{{#unless podeCriar}} disabled title="{{localize "DESORDEM.Desafio.Limite"}}"{{/unless}}><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Estendido.Novo"}}</button>
-    {{/if}}
   </header>
+  {{#if isGM}}
+  {{! Um botão por tipo: teste estendido, arrombar e escalar (cada um com os seus padrões) }}
+  <div class="desordem-desafios__novos">
+    <span class="desordem-perseguicao__rotulo"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Novo"}}</span>
+    {{#each tipos}}
+    <button type="button" data-action="newChallenge" data-tipo="{{tipo}}"{{#unless @root.podeCriar}} disabled title="{{localize "DESORDEM.Desafio.Limite"}}"{{/unless}}><i class="fa-solid {{icone}}" aria-hidden="true"></i> {{rotulo}}</button>
+    {{/each}}
+  </div>
+  {{/if}}
 
   {{#if desafios.length}}
   <ul class="desordem-desafios__lista">
     {{#each desafios}}
     <li class="desordem-desafios__item{{#unless ativo}} is-encerrado{{/unless}}{{#if concluido}} is-concluido{{/if}}">
       <div class="desordem-desafios__cabeca">
+        <i class="fa-solid {{icone}}" aria-hidden="true" title="{{tipoRotulo}}"></i>
         {{#if @root.isGM}}
         <button type="button" class="desordem-desafios__nome" data-action="openChallenge" data-challenge-id="{{id}}" title="{{localize "DESORDEM.Desafio.Editar"}}">{{#if semNome}}{{localize "DESORDEM.Desafio.Estendido.SemNome"}}{{else}}{{nome}}{{/if}}</button>
         {{else}}
@@ -21,7 +28,12 @@
       </div>
       <div class="desordem-desafios__info">
         <span>{{#if grupo}}{{localize "DESORDEM.Desafio.Modo.grupo"}}{{else}}{{localize "DESORDEM.Desafio.Modo.individual"}}{{/if}}</span>
+        {{#if escalar}}
+        <span>{{localize "DESORDEM.Perseguicao.DT"}} <strong>{{dtRapida}}/{{dtCautelosa}}</strong></span>
+        {{else}}
         <span>{{localize "DESORDEM.Perseguicao.DT"}} <strong>{{dt}}</strong></span>
+        {{/if}}
+        {{#if custoPv}}<span>{{localize "DESORDEM.Desafio.CustoCurto"}} <strong>{{localize "DESORDEM.Desafio.CustoValor" pv=custoPv}}</strong></span>{{/if}}
         {{#if mostrarPa}}<span>{{localize "DESORDEM.Desafio.PA"}} <strong>{{pa}}</strong></span>{{/if}}
       </div>
       {{#if grupo}}

@@ -94,10 +94,10 @@ export function mutateChallenge(id, change) {
   });
 }
 
-/** Cria um teste estendido com os padrões e devolve o id dele. */
-export async function createChallenge(nome) {
+/** Cria um desafio (teste estendido, arrombar ou escalar) com os padrões e devolve o id dele. */
+export async function createChallenge(nome, tipo = 'estendido') {
   const id = foundry.utils.randomID();
-  await mutateChallenges((data) => appendChallenge(data, newChallenge(id, nome)));
+  await mutateChallenges((data) => appendChallenge(data, newChallenge(id, nome, tipo)));
   return getChallenge(id) ? id : null;
 }
 

@@ -1,6 +1,8 @@
 <section class="desordem-perseguicao desordem-desafio">
   {{#if view}}
   <header class="desordem-perseguicao__topo">
+    {{! Chaves montadas: DESORDEM.Desafio.Tipo.estendido, .arrombar, .escalar }}
+    <span class="desordem-desafio__tipo"><i class="fa-solid {{icone}}" aria-hidden="true"></i> {{tipoRotulo}}</span>
     <span class="desordem-perseguicao__estado{{#if view.ativo}} is-ativa{{/if}}">{{#if view.ativo}}{{localize "DESORDEM.Desafio.Ativo"}}{{else}}{{localize "DESORDEM.Desafio.Encerrado"}}{{/if}}</span>
     {{#if view.concluido}}<span class="desordem-perseguicao__selo is-chegou">{{localize "DESORDEM.Desafio.Concluido"}}</span>{{/if}}
   </header>
@@ -14,6 +16,21 @@
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.PAAlvo"}}</span>
       <input type="number" class="desordem-perseguicao__campo" data-campo="pa" value="{{view.pa}}" min="1" max="999" step="1" inputmode="numeric">
     </label>
+    {{#if view.escalar}}
+    {{! Escalada: sempre individual; rápida soma a RA, cautelosa soma a RB, falhar é queda }}
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Custo"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="custoPv" value="{{view.custoPv}}" min="0" max="20" step="1" inputmode="numeric">
+    </label>
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.DtRapida"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="dtRapida" value="{{view.dtRapida}}" min="1" max="40" step="1" inputmode="numeric">
+    </label>
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.DtCautelosa"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="dtCautelosa" value="{{view.dtCautelosa}}" min="1" max="40" step="1" inputmode="numeric">
+    </label>
+    {{else}}
     <label class="desordem-desafio__campo">
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Perseguicao.DT"}}</span>
       <input type="number" class="desordem-perseguicao__campo" data-campo="dt" value="{{view.dt}}" min="1" max="40" step="1" inputmode="numeric">
@@ -30,12 +47,18 @@
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.FalharRotulo"}}</span>
       <select data-campo="somaFalhar">{{#each falhar}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.Custo"}}</span>
+      <input type="number" class="desordem-perseguicao__campo" data-campo="custoPv" value="{{view.custoPv}}" min="0" max="20" step="1" inputmode="numeric">
+    </label>
+    {{/if}}
     <label class="desordem-desafio__marcar desordem-desafio__campo--largo">
       <input type="checkbox" data-campo="revelarPa"{{#if view.revelarPa}} checked{{/if}}>
       <span>{{localize "DESORDEM.Desafio.RevelarPa"}}</span>
     </label>
   </div>
-  <p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.Estendido.Dica"}}</p>
+  <p class="desordem-ficha__dica">{{#if view.escalar}}{{localize "DESORDEM.Desafio.Escalar.Dica"}}{{else}}{{localize "DESORDEM.Desafio.Estendido.Dica"}}{{/if}}</p>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.CustoDica"}}</p>
 
   {{#if view.grupo}}
   <div class="desordem-desafios__total">

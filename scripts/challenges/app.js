@@ -9,6 +9,7 @@ import {
   CHALLENGE_MODES,
   ON_FAIL,
   ON_PASS,
+  TYPE_ICONS,
   addParticipants,
   addableChallengeActors,
   adjustPoints,
@@ -40,6 +41,9 @@ const CONFIG_FIELDS = new Set([
   'nome',
   'pa',
   'dt',
+  'dtRapida',
+  'dtCautelosa',
+  'custoPv',
   'modo',
   'somaPassar',
   'somaFalhar',
@@ -161,6 +165,9 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
     return {
       ...context,
       view,
+      icone: TYPE_ICONS[challenge.tipo] ?? TYPE_ICONS.estendido,
+      // Chave montada (conferida à mão): DESORDEM.Desafio.Tipo.{estendido,arrombar,escalar}
+      tipoRotulo: t(`DESORDEM.Desafio.Tipo.${challenge.tipo}`),
       // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Modo.*, .Passar.*, .Falhar.*
       modos: CHALLENGE_MODES.map(option('DESORDEM.Desafio.Modo', challenge.modo)),
       passar: ON_PASS.map(option('DESORDEM.Desafio.Passar', challenge.somaPassar)),

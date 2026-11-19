@@ -978,8 +978,6 @@
       },
       "Estendido": {
         "Titulo": "Extended test",
-        "Novo": "New extended test",
-        "NomePadrao": "Extended test",
         "SemNome": "Unnamed extended test",
         "Dica": "Individual: each participant has their own score. Group: everyone fills the same score, each one trying once per round. Adjust the points with −/+ or by typing (Enter confirms). On a test, the player ticks “Use in the extended test” in the pre-test window and adds through the card's button."
       },
@@ -1004,7 +1002,10 @@
         "Usar": "Use in the extended test",
         "Regra": "Points are added through the card's button",
         "Qual": "Challenge",
-        "Opcao": "{nome} (DT {dt})"
+        "Opcao": "{nome} (DT {dt})",
+        "Rapida": "Fast (adds HR)",
+        "Cautelosa": "Careful (adds LR)",
+        "EscalarDica": "The DT follows the approach. Failing is a fall."
       },
       "Teste": {
         "Indisponivel": "The extended test is no longer active for this character: it was rolled as a regular test."
@@ -1017,8 +1018,35 @@
         "falhaCritica": "critical failure, +{pontos}",
         "Somar": "Add {pontos} points",
         "Somado": "{pontos} points added to {nome}.",
-        "Fechado": "Extended test ended (or the character left it): nothing to add."
-      }
+        "Fechado": "Extended test ended (or the character left it): nothing to add.",
+        "TituloEscalar": "{nome}, {abordagem} (DT {dt})",
+        "Queda": "failed: falls for {dano} HP, and the points go back to 0",
+        "AplicarQueda": "Apply fall (−{dano} HP)",
+        "QuedaAplicada": "Fall on {nome}: −{dano} HP, points reset.",
+        "ZeroPv": "Reached 0 HP: make the injury test.",
+        "Custo": "Test cost: {pv} HP",
+        "Pagar": "Pay {pv} HP",
+        "CustoPago": "Cost paid: −{pv} HP."
+      },
+      "Tipo": {
+        "estendido": "Extended test",
+        "arrombar": "Force open",
+        "escalar": "Climb"
+      },
+      "Novo": "New",
+      "Custo": "Cost per test (HP)",
+      "CustoCurto": "Cost",
+      "CustoDica": "With a cost, each test's card gets the “Pay HP” button (pass or fail); 0 = no cost. For a separate damage, use the Penalty.",
+      "DtRapida": "Fast DT (adds HR)",
+      "DtCautelosa": "Careful DT (adds LR)",
+      "Escalar": {
+        "Dica": "Always individual. Each test picks fast or careful in the pre-test window. Failing is a fall: the test's card gets the button that deals damage equal to the accumulated points and resets the points."
+      },
+      "Abordagem": {
+        "rapida": "fast",
+        "cautelosa": "careful"
+      },
+      "CustoValor": "{pv} HP"
     }
   },
   "TYPES.Item.arma": "Weapon",

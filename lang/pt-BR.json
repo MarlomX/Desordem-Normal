@@ -978,8 +978,6 @@
       },
       "Estendido": {
         "Titulo": "Teste estendido",
-        "Novo": "Novo teste estendido",
-        "NomePadrao": "Teste estendido",
         "SemNome": "Teste estendido sem nome",
         "Dica": "Individual: cada participante tem a sua pontuação. Em grupo: todos enchem a mesma pontuação, cada um tentando uma vez por rodada. Ajuste os pontos com −/+ ou digitando (Enter confirma). No teste, o jogador marca «Usar no teste estendido» na janela pré-teste e soma pelo botão do cartão."
       },
@@ -1004,7 +1002,10 @@
         "Usar": "Usar no teste estendido",
         "Regra": "Os pontos são somados pelo botão do cartão",
         "Qual": "Desafio",
-        "Opcao": "{nome} (DT {dt})"
+        "Opcao": "{nome} (DT {dt})",
+        "Rapida": "Rápida (soma a RA)",
+        "Cautelosa": "Cautelosa (soma a RB)",
+        "EscalarDica": "A DT acompanha a abordagem. Falhar é uma queda."
       },
       "Teste": {
         "Indisponivel": "O teste estendido não está mais ativo para este personagem: o teste foi rolado como um teste comum."
@@ -1017,8 +1018,35 @@
         "falhaCritica": "falha crítica, +{pontos}",
         "Somar": "Somar {pontos} pontos",
         "Somado": "{pontos} pontos somados a {nome}.",
-        "Fechado": "Teste estendido encerrado (ou o personagem saiu dele): nada a somar."
-      }
+        "Fechado": "Teste estendido encerrado (ou o personagem saiu dele): nada a somar.",
+        "TituloEscalar": "{nome}, {abordagem} (DT {dt})",
+        "Queda": "falhou: queda de {dano} PV, e os pontos voltam a 0",
+        "AplicarQueda": "Aplicar queda (−{dano} PV)",
+        "QuedaAplicada": "Queda em {nome}: −{dano} PV, pontos zerados.",
+        "ZeroPv": "Chegou a 0 PV: faça o teste de lesão.",
+        "Custo": "Custo do teste: {pv} PV",
+        "Pagar": "Pagar {pv} PV",
+        "CustoPago": "Custo pago: −{pv} PV."
+      },
+      "Tipo": {
+        "estendido": "Teste estendido",
+        "arrombar": "Arrombar",
+        "escalar": "Escalar"
+      },
+      "Novo": "Novo",
+      "Custo": "Custo por teste (PV)",
+      "CustoCurto": "Custo",
+      "CustoDica": "Com custo, o cartão de cada teste ganha o botão «Pagar PV» (passando ou falhando); 0 = sem custo. Para um dano à parte, use a Penalidade.",
+      "DtRapida": "DT rápida (soma a RA)",
+      "DtCautelosa": "DT cautelosa (soma a RB)",
+      "Escalar": {
+        "Dica": "Sempre individual. Cada teste escolhe rápida ou cautelosa na janela pré-teste. Falhar é uma queda: o cartão do teste ganha o botão que aplica o dano igual aos pontos acumulados e zera os pontos."
+      },
+      "Abordagem": {
+        "rapida": "rápida",
+        "cautelosa": "cautelosa"
+      },
+      "CustoValor": "{pv} PV"
     }
   },
   "TYPES.Item.arma": "Arma",

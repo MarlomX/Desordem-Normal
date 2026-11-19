@@ -5,9 +5,15 @@
  *     personagem participa, e guarda na mensagem o registro do teste (flag `desafio`).
  *   - No cartão do chat (`renderChallengeBar`, hook renderChatMessageHTML): mostra quanto o teste
  *     vale e, para o dono do personagem e para o mestre, um botão de uso único que soma os pontos.
- *   - O clique (`applyChallengePoints`): sempre o mestre grava. O jogador pede por socket só com o
- *     id da mensagem; o mestre confere o dono, reserva o clique (contra o duplo clique) e recalcula
- *     o valor dos dados que o cartão tem agora (a Análise pode ter mudado o resultado).
+ *     Na escalada, um teste que falhou mostra «aplicar queda» no lugar de «somar». Com custo por
+ *     teste (o arrombar, por exemplo), uma segunda barra tem o botão «pagar PV».
+ *   - Somar e cair (`applyChallengePoints`): sempre o mestre grava (os desafios são uma
+ *     configuração do mundo). O jogador pede por socket só com o id da mensagem; o mestre confere o
+ *     dono, reserva o clique (contra o duplo clique) e recalcula o valor dos dados que o cartão tem
+ *     agora (a Análise pode ter mudado o resultado).
+ *   - Pagar o custo (`applyCost`): como o esforço extra da perseguição, quem rolou (ou o mestre)
+ *     desconta o PV do próprio personagem, sem passar pelo mestre.
+ * Nada disso é automático: o dano e a perda de PV só acontecem quando alguém clica no cartão.
  */
 import { SYSTEM_ID } from '../config.js';
 import { resolveWithValues } from '../rolls/abilities.js';
@@ -19,10 +25,14 @@ import {
 } from '../rolls/chase.js';
 import {
   applyChallengeTest,
+  applyFall,
   challengeBarView,
   challengeTestChoices,
   challengeTestGain,
+  challengeTestSuccess,
+  costBarView,
   createChallengeTestFlag,
+  loseHitPoints,
 } from '../rolls/challenge.js';
 import { SOCKET } from '../chase/store.js';
 import { getChallenge, mutateChallenge, readChallenges, worldActorId } from './store.js';
@@ -31,6 +41,9 @@ const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localiz
 
 /** Caminho do registro na mensagem (para `message.update`). */
 const FLAG = `flags.${SYSTEM_ID}.desafio`;
+
+/** Caminho do custo por teste dentro do registro (tem a sua própria reserva). */
+const COST_FLAG = `${FLAG}.custo`;
 
 /** Nome mostrado do desafio (o padrão, se o mestre apagou o nome). */
 const shownName = (nome) => nome || t('DESORDEM.Desafio.Estendido.SemNome');
@@ -60,7 +73,12 @@ export function withExtendedTest(actor, options) {
   }
   return {
     ...rest,
-    desafioFlag: createChallengeTestFlag({ challenge, actorId, dt: estendido.dt }),
+    desafioFlag: createChallengeTestFlag({
+      challenge,
+      actorId,
+      dt: estendido.dt,
+      abordagem: estendido.abordagem,
+    }),
   };
 }
 
@@ -74,7 +92,10 @@ const currentResult = (test) => resolveWithValues(test.plan, test.values);
  */
 const inFlight = new Set();
 
-/** Soma os pontos do teste ao desafio (executado pelo mestre ativo, um pedido por mensagem). */
+/**
+ * Soma os pontos do teste ao desafio ou, na escalada que falhou, aplica a queda (executado pelo
+ * mestre ativo, um pedido por mensagem).
+ */
 export async function applyChallengePoints(message, userId) {
   if (!message || inFlight.has(message.id)) return;
   inFlight.add(message.id);
@@ -102,7 +123,12 @@ async function applyNow(message, userId) {
   await message.update({ [FLAG]: reserved });
   try {
     // O valor vem dos dados que o cartão tem agora, e não de algo enviado pelo jogador.
-    const gain = challengeTestGain(currentResult(test), flag);
+    const result = currentResult(test);
+    if (flag.queda && !challengeTestSuccess(result, flag.dt)) {
+      await applyFallNow(message, reserved, actor);
+      return;
+    }
+    const gain = challengeTestGain(result, flag);
     let applied = false;
     await mutateChallenge(flag.desafioId, (challenge) => {
       const next = applyChallengeTest(challenge, flag.actorId, gain);
@@ -120,6 +146,32 @@ async function applyNow(message, userId) {
   }
 }
 
+/**
+ * Queda da escalada: zera os pontos do personagem e tira dele o dano igual aos pontos que ele
+ * tinha (lidos agora, não na rolagem). Chegando a 0 PV, o cartão avisa; o teste de lesão é do
+ * jogador.
+ */
+async function applyFallNow(message, reserved, actor) {
+  let dano = null;
+  await mutateChallenge(reserved.desafioId, (challenge) => {
+    const fall = applyFall(challenge, reserved.actorId);
+    if (!fall) return challenge;
+    dano = fall.dano;
+    return fall.challenge;
+  });
+  if (dano === null) {
+    await message.update({ [FLAG]: releaseAdvance(reserved) });
+    return;
+  }
+  const loss = loseHitPoints(actor.system.pv.value, dano);
+  if (loss.applied > 0) await actor.update({ 'system.pv.value': loss.pv });
+  await message.update({
+    // Guarda o dano da queda (os pontos que tinha), mesmo que o PV tenha parado em 0
+    [FLAG]: { ...finishAdvanceFlag(reserved, 0), dano, zerou: loss.reachedZero },
+  });
+  if (loss.reachedZero) ui.notifications.warn(t('DESORDEM.Desafio.Barra.ZeroPv'));
+}
+
 /** O mestre aplica direto; o jogador pede ao mestre ativo por socket. */
 function requestApply(message) {
   if (game.user.isGM) return applyChallengePoints(message, game.user.id);
@@ -130,7 +182,7 @@ function requestApply(message) {
   return game.socket.emit(SOCKET, { action: 'challengePoints', messageId: message.id });
 }
 
-/** Socket: o mestre ativo atende o botão «somar pontos» dos jogadores. */
+/** Socket: o mestre ativo atende os botões «somar pontos» e «aplicar queda» dos jogadores. */
 export function registerChallengeSocket() {
   game.socket.on(SOCKET, async (data, userId) => {
     if (game.users.activeGM?.id !== game.user.id) return;
@@ -139,15 +191,103 @@ export function registerChallengeSocket() {
   });
 }
 
-/** Hook renderChatMessageHTML: mostra quanto o teste vale e o botão de somar os pontos. */
-export function renderChallengeBar(message, html) {
-  const info = message.flags?.[SYSTEM_ID];
-  const flag = info?.desafio;
-  const test = info?.teste;
-  const container = html.querySelector('.message-content');
-  // Rolagem privada: quem só vê «???» não vê a barra (ela entregaria o resultado)
-  if (!flag || !test || !container || !message.isContentVisible) return;
+/** Ator do registro (sempre um ator do mundo). */
+const actorOfFlag = (flag) => game.actors.get(flag.actorId) ?? null;
 
+/**
+ * Quem pode pagar o custo aqui: o dono do personagem que pode mexer na mensagem (quem rolou, ou o
+ * mestre). Mesmo critério do esforço extra da perseguição.
+ */
+function canPayHere(message, flag) {
+  if (!game.user.isGM && !message.isAuthor) return false;
+  return Boolean(actorOfFlag(flag)?.isOwner);
+}
+
+/** Desconta o custo por teste (feito por quem clicou: quem rolou, ou o mestre). */
+async function applyCost(message) {
+  const flag = message.flags?.[SYSTEM_ID]?.desafio;
+  const custo = flag?.custo;
+  const actor = flag && actorOfFlag(flag);
+  if (!custo || !actor?.isOwner) return;
+
+  const reserved = reserveAdvance(custo, Date.now());
+  if (!reserved) return;
+  await message.update({ [COST_FLAG]: reserved });
+  try {
+    // Usa o PV de agora (ele pode ter mudado desde a rolagem)
+    const loss = loseHitPoints(actor.system.pv.value, custo.pv);
+    if (loss.applied > 0) await actor.update({ 'system.pv.value': loss.pv });
+    await message.update({
+      [COST_FLAG]: {
+        ...reserved,
+        estado: 'aplicado',
+        aplicado: loss.applied,
+        zerou: loss.reachedZero,
+        reservadoEm: null,
+      },
+    });
+    if (loss.reachedZero) ui.notifications.warn(t('DESORDEM.Desafio.Barra.ZeroPv'));
+  } catch (error) {
+    console.error(`${SYSTEM_ID} | falha ao descontar o custo do teste estendido`, error);
+    await message.update({ [COST_FLAG]: releaseAdvance(reserved) });
+  }
+}
+
+/** Botão de uso único dos cartões (desliga ao clicar e volta se o cartão não for redesenhado). */
+function cardButton(doc, label, onClick) {
+  const button = doc.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.addEventListener('click', async (event) => {
+    event.preventDefault();
+    button.disabled = true;
+    try {
+      await onClick();
+    } finally {
+      globalThis.setTimeout(() => {
+        button.disabled = false;
+      }, 5000);
+    }
+  });
+  return button;
+}
+
+/** Aviso «aplicando...» enquanto a reserva está de pé. */
+function busyNote(doc) {
+  const busy = doc.createElement('span');
+  busy.className = 'desordem-ficha__dica';
+  busy.textContent = t('DESORDEM.Perseguicao.Barra.Aplicando');
+  return busy;
+}
+
+/** Texto da barra principal (somar pontos ou queda). */
+function mainText(view) {
+  const nome = shownName(view.nome);
+  if (view.appliedQueda) {
+    const text = t('DESORDEM.Desafio.Barra.QuedaAplicada', { dano: view.appliedDano, nome });
+    return view.appliedZerou ? `${text} ${t('DESORDEM.Desafio.Barra.ZeroPv')}` : text;
+  }
+  if (view.applied) {
+    return t('DESORDEM.Desafio.Barra.Somado', { pontos: view.appliedPontos, nome });
+  }
+  if (view.fechado) return t('DESORDEM.Desafio.Barra.Fechado');
+  // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Abordagem.{rapida,cautelosa} e
+  // DESORDEM.Desafio.Barra.{passou,falhou,crit,falhaCritica}
+  const titulo = view.abordagem
+    ? t('DESORDEM.Desafio.Barra.TituloEscalar', {
+        nome,
+        abordagem: t(`DESORDEM.Desafio.Abordagem.${view.abordagem}`),
+        dt: view.dt,
+      })
+    : t('DESORDEM.Desafio.Barra.Titulo', { nome, dt: view.dt });
+  const detalhe = view.queda
+    ? t('DESORDEM.Desafio.Barra.Queda', { dano: view.dano })
+    : t(`DESORDEM.Desafio.Barra.${view.kind}`, { pontos: view.pontos });
+  return `${titulo}: ${detalhe}`;
+}
+
+/** Barra principal: quanto o teste vale e o botão «somar» (ou «aplicar queda»). */
+function mainBar(message, flag, test, doc) {
   const now = Date.now();
   const claimable = isAdvanceClaimable(flag, now);
   const view = challengeBarView(flag, currentResult(test), {
@@ -156,50 +296,64 @@ export function renderChallengeBar(message, html) {
     busy: flag.estado === 'aplicando' && !claimable,
     challenge: getChallenge(flag.desafioId),
   });
-  const doc = html.ownerDocument;
   const bar = doc.createElement('div');
   bar.className = 'desordem-teste__avanco desordem-teste__desafio';
-
   const text = doc.createElement('span');
   text.className = 'desordem-teste__avanco-texto';
-  const nome = shownName(view.nome);
+  text.textContent = mainText(view);
+  bar.append(text);
+  if (view.busy) bar.append(busyNote(doc));
+  if (view.showButton) {
+    const label = view.queda
+      ? t('DESORDEM.Desafio.Barra.AplicarQueda', { dano: view.dano })
+      : t('DESORDEM.Desafio.Barra.Somar', { pontos: view.pontos });
+    bar.append(cardButton(doc, label, () => requestApply(message)));
+  }
+  return bar;
+}
+
+/** Barra do custo por teste: «pagar N PV» (passando ou falhando). `null` sem custo. */
+function costBar(message, flag, doc) {
+  const custo = flag.custo;
+  if (!custo) return null;
+  const now = Date.now();
+  const claimable = isAdvanceClaimable(custo, now);
+  const view = costBarView(custo, {
+    canApply: canPayHere(message, flag),
+    claimable,
+    busy: custo.estado === 'aplicando' && !claimable,
+  });
+  if (!view) return null;
+  const bar = doc.createElement('div');
+  bar.className = 'desordem-teste__avanco desordem-teste__desafio-custo';
+  const text = doc.createElement('span');
+  text.className = 'desordem-teste__avanco-texto';
   if (view.applied) {
-    text.textContent = t('DESORDEM.Desafio.Barra.Somado', { pontos: view.appliedPontos, nome });
-  } else if (view.fechado) {
-    text.textContent = t('DESORDEM.Desafio.Barra.Fechado');
+    text.textContent = t('DESORDEM.Desafio.Barra.CustoPago', { pv: view.appliedPv });
+    if (view.zerou) text.textContent += ` ${t('DESORDEM.Desafio.Barra.ZeroPv')}`;
   } else {
-    // Chaves montadas aqui (conferidas à mão): DESORDEM.Desafio.Barra.{passou,falhou,crit,falhaCritica}
-    text.textContent = `${t('DESORDEM.Desafio.Barra.Titulo', { nome, dt: view.dt })}: ${t(
-      `DESORDEM.Desafio.Barra.${view.kind}`,
-      { pontos: view.pontos },
-    )}`;
+    text.textContent = t('DESORDEM.Desafio.Barra.Custo', { pv: view.pv });
   }
   bar.append(text);
-
-  if (view.busy) {
-    const busy = doc.createElement('span');
-    busy.className = 'desordem-ficha__dica';
-    busy.textContent = t('DESORDEM.Perseguicao.Barra.Aplicando');
-    bar.append(busy);
-  }
-
+  if (view.busy) bar.append(busyNote(doc));
   if (view.showButton) {
-    const button = doc.createElement('button');
-    button.type = 'button';
-    button.textContent = t('DESORDEM.Desafio.Barra.Somar', { pontos: view.pontos });
-    button.addEventListener('click', async (event) => {
-      event.preventDefault();
-      button.disabled = true;
-      try {
-        await requestApply(message);
-      } finally {
-        // Se o cartão não for redesenhado (mestre ausente, por exemplo), o botão volta
-        globalThis.setTimeout(() => {
-          button.disabled = false;
-        }, 5000);
-      }
-    });
-    bar.append(button);
+    bar.append(
+      cardButton(doc, t('DESORDEM.Desafio.Barra.Pagar', { pv: view.pv }), () => applyCost(message)),
+    );
   }
-  container.append(bar);
+  return bar;
+}
+
+/** Hook renderChatMessageHTML: as barras do teste estendido no cartão do teste. */
+export function renderChallengeBar(message, html) {
+  const info = message.flags?.[SYSTEM_ID];
+  const flag = info?.desafio;
+  const test = info?.teste;
+  const container = html.querySelector('.message-content');
+  // Rolagem privada: quem só vê «???» não vê as barras (elas entregariam o resultado)
+  if (!flag || !test || !container || !message.isContentVisible) return;
+  const doc = html.ownerDocument;
+  container.append(mainBar(message, flag, test, doc));
+  const cost = costBar(message, flag, doc);
+  if (cost) container.append(cost);
 }

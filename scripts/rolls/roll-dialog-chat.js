@@ -51,6 +51,8 @@ function readSelection(form) {
     estendido: {
       on: Boolean(fields.estendidoOn?.checked),
       id: fields.estendidoId?.value ?? '',
+      // Escalada: rápida ou cautelosa (dois botões que se excluem)
+      abordagem: form.querySelector('input[name="estendidoAbordagem"]:checked')?.value ?? 'rapida',
     },
   };
 }
@@ -148,6 +150,18 @@ function syncAdvanceDt(form, on) {
 }
 
 /**
+ * DT do desafio escolhido na seção do teste estendido: na escalada, a da abordagem marcada
+ * (rápida ou cautelosa); nos demais, a DT do desafio. `NaN` se não houver desafio.
+ */
+function selectedChallengeDt(form) {
+  const option = form.elements.estendidoId?.selectedOptions?.[0];
+  if (!option) return Number.NaN;
+  if (option.dataset.tipo !== 'escalar') return Number(option.dataset.dt);
+  const approach = form.querySelector('input[name="estendidoAbordagem"]:checked')?.value;
+  return Number(approach === 'cautelosa' ? option.dataset.dtCautelosa : option.dataset.dtRapida);
+}
+
+/**
  * Marcar «usar no teste estendido» muda a DT do campo para a do desafio escolhido; trocar de
  * desafio com a caixa marcada troca a DT; desmarcar volta à DT de antes. Usa o mesmo lugar de
  * guardar a DT anterior que o avanço (por isso o avanço é desmarcado antes, veja o `change`).
@@ -156,8 +170,7 @@ function syncExtendedDt(form, on) {
   const field = form.elements.dt;
   if (!field) return;
   const saved = field.dataset.dtAntes ? Number(field.dataset.dtAntes) : null;
-  const select = form.elements.estendidoId;
-  const challengeDt = Number(select?.selectedOptions?.[0]?.dataset.dt);
+  const challengeDt = selectedChallengeDt(form);
   const next = advanceDtField({
     on,
     current: Number(field.value),
@@ -236,6 +249,9 @@ function refresh(form, root, model) {
   // avanço (a ação chamativa continua valendo). Mostra a escolha do desafio só com a caixa marcada.
   const extended = evaluation.estendido.on;
   root.querySelector('[data-estendido-detalhes]')?.classList.toggle('is-oculta', !extended);
+  // Escalada: rápida ou cautelosa só aparece com um desafio de escalada escolhido
+  const climbing = form.elements.estendidoId?.selectedOptions?.[0]?.dataset.tipo === 'escalar';
+  root.querySelector('[data-estendido-escalar]')?.classList.toggle('is-oculta', !climbing);
   for (const radio of root.querySelectorAll('input[name="furtivaAcao"]')) {
     if (radio.value === '') continue;
     // A ação chamativa já desliga esconder-se e distrair (acima); aqui desliga todas as três
@@ -397,8 +413,15 @@ export async function askRollChoices(
     estendido: model.estendido && {
       desafios: model.estendido.desafios.map((entry) => ({
         id: entry.id,
+        tipo: entry.tipo,
         dt: entry.dt,
-        label: t('DESORDEM.Desafio.Pre.Opcao', { nome: entry.nome, dt: entry.dt }),
+        dtRapida: entry.dtRapida,
+        dtCautelosa: entry.dtCautelosa,
+        // Na escalada a DT depende da abordagem (mostrada nos botões rápida e cautelosa)
+        label:
+          entry.tipo === 'escalar'
+            ? entry.nome
+            : t('DESORDEM.Desafio.Pre.Opcao', { nome: entry.nome, dt: entry.dt }),
       })),
     },
     abilities: model.abilities.map((ability) => ({
@@ -439,10 +462,11 @@ export async function askRollChoices(
           }
           syncExtendedDt(form, event.target.checked);
         }
-        if (event.target.name === 'estendidoId' && form.elements.estendidoOn?.checked) {
-          // Troca de desafio: a DT passa a ser a do novo (a DT de antes continua guardada)
+        const changesDt = ['estendidoId', 'estendidoAbordagem'].includes(event.target.name);
+        if (changesDt && form.elements.estendidoOn?.checked) {
+          // Troca de desafio ou de abordagem: a DT passa a ser a nova (a de antes fica guardada)
           const field = form.elements.dt;
-          const challengeDt = Number(event.target.selectedOptions?.[0]?.dataset.dt);
+          const challengeDt = selectedChallengeDt(form);
           if (field && Number.isFinite(challengeDt) && challengeDt > 0) {
             field.value = String(challengeDt);
           }

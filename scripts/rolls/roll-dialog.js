@@ -9,6 +9,7 @@ import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } fro
 import { DEFAULT_DT, MAX_COUNTED, planDice } from './test.js';
 import { breathLimit, normalizeChaseDt } from './chase.js';
 import { STEALTH_TEST_ACTIONS } from './stealth.js';
+import { challengeDtFor, climbApproach } from './challenge.js';
 
 /** Espaços de dado extra de um teste: o limite de 4 dados rolados menos atributo e perícia. */
 export const EXTRA_SLOTS = BONUS_SLOTS;
@@ -43,9 +44,11 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  * @param {object|null} [input.stealth] Com uma cena de furtividade em andamento, o que a seção de
  *   furtividade oferece (veja `stealthOptions` em stealth.js): `teste` (teste de esconderijo),
  *   `esconder` ({dt}) e `distrair` ({dt, recipients}). Sem isso, a seção não aparece.
- * @param {{id: string, nome: string, dt: number}[]} [input.challenges] Testes estendidos ativos de
- *   que o personagem participa (guia de desafios). Com algum, a janela oferece «usar no teste
- *   estendido»; marcada, a opção desliga o avanço e a seção de furtividade (menos a chamativa).
+ * @param {{id: string, nome: string, tipo?: string, dt: number, dtRapida?: number,
+ *   dtCautelosa?: number}[]} [input.challenges] Desafios ativos de que o personagem participa
+ *   (guia de desafios). Com algum, a janela oferece «usar no teste estendido»; marcada, a opção
+ *   desliga o avanço e a seção de furtividade (menos a chamativa). Na escalada, o teste escolhe a
+ *   abordagem (rápida ou cautelosa), cada uma com a sua DT.
  */
 export function buildRollModel({
   skillKey,
@@ -138,7 +141,10 @@ export function buildRollModel({
             desafios: challenges.map((entry) => ({
               id: entry.id,
               nome: entry.nome,
+              tipo: entry.tipo ?? 'estendido',
               dt: normalizeDt(entry.dt),
+              dtRapida: normalizeDt(entry.dtRapida, 8),
+              dtCautelosa: normalizeDt(entry.dtCautelosa, 6),
             })),
           }
         : null,
@@ -157,7 +163,7 @@ export function emptySelection(dt) {
     esconderijo: { on: false },
     furtiva: { acao: '', destino: '' },
     chamativa: { on: false, index: null },
-    estendido: { on: false, id: '' },
+    estendido: { on: false, id: '', abordagem: 'rapida' },
   };
 }
 
@@ -301,14 +307,20 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       ? normalizeDt(selection.dt, model.dt)
       : null;
   const furtiva = { acao: action, destino, dt: action ? model.furtiva[action].dt : null };
-  // DT do teste estendido: a do campo da janela; sem campo (teste oposto), a do desafio
+  // DT do teste estendido: a do campo da janela; sem campo (teste oposto), a do desafio (na
+  // escalada, a da abordagem escolhida)
+  const abordagem =
+    extendedChoice?.tipo === 'escalar' ? climbApproach(selection.estendido?.abordagem) : null;
   const estendido = extendedChoice
     ? {
         on: true,
         id: extendedChoice.id,
-        dt: model.showDt ? normalizeDt(selection.dt, model.dt) : extendedChoice.dt,
+        dt: model.showDt
+          ? normalizeDt(selection.dt, model.dt)
+          : challengeDtFor(extendedChoice, abordagem),
+        abordagem,
       }
-    : { on: false, id: '', dt: null };
+    : { on: false, id: '', dt: null, abordagem: null };
   return {
     selection: {
       bonus: normalizeBonus(manual),
@@ -320,7 +332,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       esconderijo: { on: hide },
       furtiva: { acao: action, destino },
       chamativa: { on: chamativa.on, index: chamativa.index },
-      estendido: { on: estendido.on, id: estendido.id },
+      estendido: { on: estendido.on, id: estendido.id, abordagem: estendido.abordagem },
     },
     dt: testDt,
     pdCost,
