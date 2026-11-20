@@ -19,6 +19,7 @@ import {
   actorEffects,
   adjustResource,
   firstEffect,
+  rerollActor,
   resourceUpdates,
   roundUseUpdate,
   usableThisRound,
@@ -359,9 +360,10 @@ export function renderBalanceCard(message, html) {
   const actor = game.actors.get(flag.actorId);
   const challenge = getChallenge(flag.desafioId);
   const entry = challenge?.participantes.find((item) => item.actorId === flag.actorId);
-  const mine = globalThis.canvas?.tokens?.controlled?.[0]?.actor ?? game.user.character;
+  // Repetir dado: token selecionado, quem faz o equilíbrio ou o personagem do usuário
+  const mine = rerollActor(actor);
   const analysis = actor?.isOwner ? adjustResource(actor) : null;
-  const reroll = mine?.isOwner ? firstEffect(mine, 'rerrolar') : null;
+  const reroll = mine ? firstEffect(mine, 'rerrolar') : null;
   const view = balanceView(flag, {
     canAct: Boolean(actor?.isOwner),
     reserve: challenge ? participantReserve(challenge, flag.actorId, acrobaciaOf(actor)) : 0,

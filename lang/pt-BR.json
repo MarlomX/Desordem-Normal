@@ -603,7 +603,7 @@
         "impeto": "Barra de ímpeto (falhas enchem; gasta para bônus)",
         "impetoInicial": "Ímpeto inicial (1 espaço a cada nova cena)",
         "analise": "Marcadores de análise (ajustam os dados depois do teste)",
-        "prontidao": "Repetir dado (2 PD, uma vez por teste)",
+        "prontidao": "Repetir dado (2 PD, uma vez por rodada em combate)",
         "esquiva": "Esquiva livre (Acrobacia oposta ao ataque)",
         "companheiro": "Companheiro animal (+d6 corpo a corpo)",
         "curandeiro": "Curar aliado (Medicina, 2 PD)",

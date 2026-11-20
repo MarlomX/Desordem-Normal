@@ -15,6 +15,7 @@ import {
   resourceUpdates,
   roundUseUpdate,
   triggerUpdates,
+  rerollActor,
   usableThisRound,
   walletOf,
 } from './ability-effects-actor.js';
@@ -419,9 +420,10 @@ export function renderTestButtons(message, html) {
     );
   }
 
-  // Repetir dado: o personagem controlado (ou o do usuário) pode usar no teste de qualquer um
-  const mine = game.canvas?.tokens?.controlled?.[0]?.actor ?? game.user.character;
-  const reroll = mine?.isOwner ? firstEffect(mine, 'rerrolar') : null;
+  // Repetir dado: no teste de qualquer um, por quem tem o efeito (token selecionado, quem fez o
+  // teste ou o personagem do usuário)
+  const mine = rerollActor(owner);
+  const reroll = mine ? firstEffect(mine, 'rerrolar') : null;
   if (
     reroll &&
     usableThisRound(mine, reroll) &&

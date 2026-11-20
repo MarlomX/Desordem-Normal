@@ -603,7 +603,7 @@
         "impeto": "Drive bar (failures fill it; spend it for bonuses)",
         "impetoInicial": "Starting drive (1 space every new scene)",
         "analise": "Analysis markers (adjust the dice after the test)",
-        "prontidao": "Reroll a die (2 DP, once per test)",
+        "prontidao": "Reroll a die (2 DP, once per combat round)",
         "esquiva": "Free dodge (Acrobatics opposed to the attack)",
         "companheiro": "Animal companion (+d6 in melee)",
         "curandeiro": "Heal ally (Medicine, 2 DP)",

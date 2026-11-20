@@ -54,6 +54,23 @@ export function adjustResource(actor) {
   return defs[chave] ? { chave, points: values[chave] } : null;
 }
 
+/**
+ * Quem pode repetir um dado (efeito `rerrolar`, ex.: Prontidão) num cartão de teste: o primeiro,
+ * entre o token selecionado no mapa, quem fez o teste e o personagem atribuído ao usuário, que
+ * seja do usuário e tenha o efeito. Assim o botão aparece no próprio teste mesmo rolando pela
+ * ficha, sem token selecionado.
+ * @param {Actor|null} speaker Ator que fez o teste.
+ * @returns {Actor|null}
+ */
+export function rerollActor(speaker) {
+  const candidates = [
+    globalThis.canvas?.tokens?.controlled?.[0]?.actor,
+    speaker,
+    game.user?.character,
+  ];
+  return candidates.find((actor) => actor?.isOwner && firstEffect(actor, 'rerrolar')) ?? null;
+}
+
 /** O que o ator tem para pagar custos: PD, PV e recursos (`canPay`, `payUpdates`). */
 export function walletOf(actor, entries = actorEffects(actor)) {
   return {
