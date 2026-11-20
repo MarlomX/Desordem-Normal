@@ -389,6 +389,12 @@ export async function askRollChoices(
     ]
       .filter(Boolean)
       .join(' · ');
+  const abilityRows = model.abilities.map((ability) => ({
+    ...ability,
+    label: t(`DESORDEM.Teste.Pre.Hab.${ability.key}`, { die: ability.die }),
+    costText: costText(ability.cost),
+    reasonText: ability.reason ? t(`DESORDEM.Teste.Pre.Indisponivel.${ability.reason}`) : '',
+  }));
   const content = await render(TEMPLATE, {
     titulo: `${dice.attrLabel} + ${dice.skillLabel}`,
     showDt,
@@ -444,12 +450,9 @@ export async function askRollChoices(
           : t('DESORDEM.Desafio.Pre.Opcao', { nome: entry.nome, dt: entry.dt }),
       })),
     },
-    abilities: model.abilities.map((ability) => ({
-      ...ability,
-      label: t(`DESORDEM.Teste.Pre.Hab.${ability.key}`, { die: ability.die }),
-      costText: costText(ability.cost),
-      reasonText: ability.reason ? t(`DESORDEM.Teste.Pre.Indisponivel.${ability.reason}`) : '',
-    })),
+    // Habilidades e ações (ex.: Defender-se) usam o mesmo campo `active`; só a seção muda
+    abilities: abilityRows.filter((ability) => ability.group !== 'acao'),
+    actions: abilityRows.filter((ability) => ability.group === 'acao'),
     fear: model.fear && {
       ...model.fear,
       title: t('DESORDEM.Teste.Pre.Pavor', { die: model.fear.die }),

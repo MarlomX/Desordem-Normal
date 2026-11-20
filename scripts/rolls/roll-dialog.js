@@ -96,6 +96,8 @@ export function buildRollModel({
       available: true,
       reason: null,
       checked: true,
+      // Mostrada na seção «Ações» da janela, não em «Habilidades»
+      group: 'acao',
     });
   }
   if (has.naoLetal) {

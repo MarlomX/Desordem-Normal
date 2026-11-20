@@ -6,12 +6,13 @@
  * reduções de passo; em si mesmo: mais duas. Se passar, o paciente moribundo perde a condição,
  * recupera 1 PV e, se estava inconsciente, acorda.
  */
+import { sustainReduction, sustainStepMods } from './challenge.js';
 
 /** DT básica e aumento por uso no mesmo paciente. */
 export const FIRST_AID_DT = 7;
 export const FIRST_AID_DT_STEP = 3;
 
-/** Reduções de passo (no dado da perícia) sem maleta e em si mesmo. */
+/** Reduções de passo sem maleta e em si mesmo (cada uma tira um passo do maior dado). */
 export const FIRST_AID_PENALTY = 2;
 
 /**
@@ -24,13 +25,17 @@ export function firstAidDt(uses) {
 }
 
 /**
- * Reduções de passo do teste: −2 sem maleta, −2 em si mesmo (as duas se somam).
+ * Reduções de passo do teste: −2 sem maleta, −2 em si mesmo (as duas se somam). Como no
+ * sustentar, cada redução tira um passo do MAIOR dado (atributo ou perícia; no empate, o do
+ * atributo), até os dois chegarem a d4.
  * @param {{kit: boolean, self: boolean}} situation
- * @returns {{target: 'skill', steps: number}[]}
+ * @param {number} attrDie Dado do atributo do curandeiro (já com os passos da ficha).
+ * @param {number} skillDie Dado da Medicina (já com os passos da ficha).
+ * @returns {{target: 'attribute'|'skill', steps: number}[]}
  */
-export function firstAidStepMods({ kit, self }) {
+export function firstAidStepMods({ kit, self }, attrDie, skillDie) {
   const steps = (kit ? 0 : FIRST_AID_PENALTY) + (self ? FIRST_AID_PENALTY : 0);
-  return steps ? [{ target: 'skill', steps: -steps }] : [];
+  return sustainStepMods(sustainReduction(attrDie, skillDie, steps));
 }
 
 /** Tira acentos e caixa (para comparar nomes de itens). */

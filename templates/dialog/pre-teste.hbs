@@ -155,6 +155,19 @@
     <p class="desordem-ficha__dica">{{localize "DESORDEM.Teste.Pre.DicaEspacos"}}</p>
   </fieldset>
 
+  {{#if actions.length}}
+  <fieldset class="desordem-pre__grupo">
+    <legend><i class="fa-solid fa-shield" aria-hidden="true"></i> {{localize "DESORDEM.Teste.Pre.Acoes"}}</legend>
+    {{#each actions}}
+    <label class="desordem-pre__opcao" data-opcao="{{key}}">
+      <input type="checkbox" name="active" value="{{key}}" {{#if checked}}checked{{/if}}>
+      <span class="desordem-pre__nome">{{label}}</span>
+      <span class="desordem-pre__motivo" data-motivo></span>
+    </label>
+    {{/each}}
+  </fieldset>
+  {{/if}}
+
   <fieldset class="desordem-pre__grupo">
     <legend><i class="fa-solid fa-bolt" aria-hidden="true"></i> {{localize "DESORDEM.Teste.Pre.Habilidades"}}</legend>
     {{#each abilities}}

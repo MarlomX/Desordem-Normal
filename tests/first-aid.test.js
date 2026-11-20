@@ -19,11 +19,21 @@ test('firstAidDt: 7, depois +3 a cada uso no mesmo paciente', () => {
   assert.equal(firstAidDt(-1), 7);
 });
 
-test('firstAidStepMods: −2 sem maleta, −2 em si mesmo, somados', () => {
-  assert.deepEqual(firstAidStepMods({ kit: true, self: false }), []);
-  assert.deepEqual(firstAidStepMods({ kit: false, self: false }), [{ target: 'skill', steps: -2 }]);
-  assert.deepEqual(firstAidStepMods({ kit: true, self: true }), [{ target: 'skill', steps: -2 }]);
-  assert.deepEqual(firstAidStepMods({ kit: false, self: true }), [{ target: 'skill', steps: -4 }]);
+test('firstAidStepMods: −2 sem maleta, −2 em si mesmo, sempre no maior dado (até 2d4)', () => {
+  assert.deepEqual(firstAidStepMods({ kit: true, self: false }, 8, 6), []);
+  // Mente d8, Medicina d6: d8→d6 (empate fica no atributo) e d6→d4
+  assert.deepEqual(firstAidStepMods({ kit: false, self: false }, 8, 6), [
+    { target: 'attribute', steps: -2 },
+  ]);
+  assert.deepEqual(firstAidStepMods({ kit: true, self: true }, 6, 10), [
+    { target: 'skill', steps: -2 },
+  ]);
+  // Quatro reduções em d6 + d6: chega a d4 + d4 e para (não passa de 2d4)
+  assert.deepEqual(firstAidStepMods({ kit: false, self: true }, 6, 6), [
+    { target: 'attribute', steps: -1 },
+    { target: 'skill', steps: -1 },
+  ]);
+  assert.deepEqual(firstAidStepMods({ kit: false, self: true }, 4, 4), []);
 });
 
 test('hasMedicalKit reconhece a maleta pelo nome, sem acento nem caixa', () => {

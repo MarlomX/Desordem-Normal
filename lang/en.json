@@ -88,14 +88,16 @@
           "pavor": "Fear",
           "folego": "Breath",
           "manual": "Bonus",
-          "vazio": "Free"
+          "vazio": "Free",
+          "defesa": "Defense"
         },
         "SemEspaco": "no die slot left",
         "Unidade": {
           "pd": "DP",
           "impeto": "drive"
         },
-        "Restam": "{n} left"
+        "Restam": "{n} left",
+        "Acoes": "Actions"
       }
     },
     "Ficha": {
@@ -1336,7 +1338,7 @@
       "Dica": "Saves a dying character: they lose the condition, recover 1 HP and wake up. DC 7, +3 for each use on the same patient in the scene.",
       "Paciente": "Patient",
       "Maleta": "I have a medical kit",
-      "DicaPassos": "Without a kit: two step reductions. On yourself: two more. The next window’s preview already shows the reduced dice.",
+      "DicaPassos": "Without a kit: two step reductions. On yourself: two more. Each reduction lowers the higher die by one step (down to 2d4); the next window’s preview already shows the reduced dice.",
       "Continuar": "Continue",
       "EmSi": "yourself",
       "DT": "DC {dt}",

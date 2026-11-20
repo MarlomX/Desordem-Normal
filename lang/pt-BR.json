@@ -88,14 +88,16 @@
           "pavor": "Pavor",
           "folego": "Fôlego",
           "manual": "Bônus",
-          "vazio": "Livre"
+          "vazio": "Livre",
+          "defesa": "Defesa"
         },
         "SemEspaco": "sem espaço de dado",
         "Unidade": {
           "pd": "PD",
           "impeto": "ímpeto"
         },
-        "Restam": "restam {n}"
+        "Restam": "restam {n}",
+        "Acoes": "Ações"
       }
     },
     "Ficha": {
@@ -1336,7 +1338,7 @@
       "Dica": "Salva um moribundo: perde a condição, recupera 1 PV e acorda. DT 7, +3 a cada uso no mesmo paciente na cena.",
       "Paciente": "Paciente",
       "Maleta": "Tenho maleta de medicamentos",
-      "DicaPassos": "Sem maleta: duas reduções de passo. Em si mesmo: mais duas. A prévia da janela seguinte já mostra os dados reduzidos.",
+      "DicaPassos": "Sem maleta: duas reduções de passo. Em si mesmo: mais duas. Cada redução tira um passo do maior dado (até 2d4); a prévia da janela seguinte já mostra os dados reduzidos.",
       "Continuar": "Continuar",
       "EmSi": "você mesmo",
       "DT": "DT {dt}",

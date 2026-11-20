@@ -11,7 +11,7 @@
  *    próprio teste: o paciente moribundo perde a condição, recupera 1 PV e acorda.
  */
 import { SYSTEM_ID } from '../config.js';
-import { postMessage, render, rollTest, skillTestOptions } from './chat.js';
+import { postMessage, render, rollTest, skillTestOptions, testDicePreview } from './chat.js';
 import { askRollChoices } from './roll-dialog-chat.js';
 import { resolveWithValues } from './abilities.js';
 import { firstAidDt, firstAidOutcome, firstAidStepMods, hasMedicalKit } from './first-aid.js';
@@ -99,7 +99,13 @@ export async function startFirstAid(healer, event) {
   if (!choice) return null;
   const { patient, kit } = choice;
   const dt = firstAidDt(usesOf(patient));
-  const stepMods = firstAidStepMods({ kit, self: patient.uuid === healer.uuid });
+  // As reduções tiram passos do maior dado do teste como ele está agora (com os passos da ficha)
+  const dice = testDicePreview(healer, SKILL);
+  const stepMods = firstAidStepMods(
+    { kit, self: patient.uuid === healer.uuid },
+    dice.attrDie,
+    dice.skillDie,
+  );
   const options = await askRollChoices(healer, {
     skillKey: SKILL,
     dt,
