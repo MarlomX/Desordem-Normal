@@ -671,7 +671,7 @@
       "ProntidaoTitulo": "Repetir um dado",
       "ProntidaoEscolha": "Dado a rolar de novo:",
       "ProntidaoNota": "{nome} gasta PD para rolar de novo o d{dado}: {de} → {para}.",
-      "ProntidaoBotao": "Repetir dado ({custo} PD)",
+      "ProntidaoBotao": "{nome} ({custo} PD)",
       "AnimalFerido": "O companheiro se feriu e não ajuda mais nesta cena.",
       "Impeto": "Ímpeto",
       "ImpetoDado": "+d4 no próximo teste (1 espaço)",
@@ -683,7 +683,9 @@
       "Curar": "Curar aliado",
       "AnimalFeridoMarca": "Animal ferido",
       "Sorrateiro": "+d8 no próximo teste de Crime ou Furtividade (3 PD)",
-      "ProntidaoRodada": "Esta habilidade já foi usada nesta rodada de combate."
+      "ProntidaoRodada": "Esta habilidade já foi usada nesta rodada de combate.",
+      "ProntidaoQuem": "Personagem:",
+      "ProntidaoIndisponivel": "Nenhum personagem seu pode usar esta habilidade agora (já usada nesta rodada ou sem PD)."
     },
     "Perseguicao": {
       "Titulo": "Perseguição",

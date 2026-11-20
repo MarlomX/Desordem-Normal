@@ -4,6 +4,7 @@
  * quem chama.
  */
 import {
+  canPay,
   collectEffects,
   effectKey,
   effectsOfType,
@@ -55,20 +56,31 @@ export function adjustResource(actor) {
 }
 
 /**
- * Quem pode repetir um dado (efeito `rerrolar`, ex.: Prontidão) num cartão de teste: o primeiro,
- * entre o token selecionado no mapa, quem fez o teste e o personagem atribuído ao usuário, que
- * seja do usuário e tenha o efeito. Assim o botão aparece no próprio teste mesmo rolando pela
- * ficha, sem token selecionado.
+ * Quem pode repetir um dado agora (efeito `rerrolar`, ex.: Prontidão): tem o efeito, ainda pode
+ * usar nesta rodada (em combate) e tem como pagar o custo.
+ * - Jogador: todos os personagens dele (fichas de personagem de que é dono) prontos para usar,
+ *   em qualquer cartão de teste, sem precisar selecionar token.
+ * - Mestre (dono de todas as fichas): só o primeiro pronto entre o token selecionado no mapa, quem
+ *   fez o teste e o personagem atribuído a ele.
  * @param {Actor|null} speaker Ator que fez o teste.
- * @returns {Actor|null}
+ * @returns {Actor[]}
  */
-export function rerollActor(speaker) {
-  const candidates = [
-    globalThis.canvas?.tokens?.controlled?.[0]?.actor,
-    speaker,
-    game.user?.character,
-  ];
-  return candidates.find((actor) => actor?.isOwner && firstEffect(actor, 'rerrolar')) ?? null;
+export function rerollActors(speaker) {
+  const ready = (actor) => {
+    const entry = actor?.isOwner ? firstEffect(actor, 'rerrolar') : null;
+    return (
+      Boolean(entry) && usableThisRound(actor, entry) && canPay(entry.params.custo, walletOf(actor))
+    );
+  };
+  if (game.user?.isGM) {
+    const first = [
+      globalThis.canvas?.tokens?.controlled?.[0]?.actor,
+      speaker,
+      game.user.character,
+    ].find(ready);
+    return first ? [first] : [];
+  }
+  return [...(game.actors ?? [])].filter((actor) => actor.type === 'personagem' && ready(actor));
 }
 
 /** O que o ator tem para pagar custos: PD, PV e recursos (`canPay`, `payUpdates`). */

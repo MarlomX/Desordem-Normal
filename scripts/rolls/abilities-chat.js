@@ -15,7 +15,7 @@ import {
   resourceUpdates,
   roundUseUpdate,
   triggerUpdates,
-  rerollActor,
+  rerollActors,
   usableThisRound,
   walletOf,
 } from './ability-effects-actor.js';
@@ -347,27 +347,68 @@ async function useAnalysis(message, actor) {
 }
 
 /**
+ * Janela da repetição de dado: escolhe o dado e, se o usuário tiver mais de um personagem pronto
+ * para usar, qual deles usa. Também serve ao cartão de equilíbrio.
+ * @param {Actor[]} actors Personagens prontos (`rerollActors`), pelo menos um.
+ * @param {{index: number, label: string}[]} dice Dados que podem ser rolados de novo.
+ * @returns {Promise<{actor: Actor, index: number}|null>} `null` se a janela foi fechada.
+ */
+export async function askReroll(actors, dice) {
+  const option = (value, label) => `<option value="${value}">${label}</option>`;
+  const who =
+    actors.length > 1
+      ? `<label>${t('DESORDEM.Habilidade.ProntidaoQuem')} <select name="ator">${actors
+          .map((actor) => option(actor.id, Handlebars.escapeExpression(actor.name)))
+          .join('')}</select></label>`
+      : '';
+  const choice = await ask({
+    title: t('DESORDEM.Habilidade.ProntidaoTitulo'),
+    content: `${who}<label>${t('DESORDEM.Habilidade.ProntidaoEscolha')} <select name="dado">${dice
+      .map((die) => option(die.index, die.label))
+      .join('')}</select></label>`,
+    read: (form) => ({
+      actorId: form.elements.ator?.value ?? actors[0].id,
+      index: Number(form.elements.dado.value),
+    }),
+  });
+  if (!choice) return null;
+  const actor = actors.find((candidate) => candidate.id === choice.actorId);
+  return actor ? { actor, index: choice.index } : null;
+}
+
+/** Rótulo do botão da repetição de dado: nome da habilidade e custo (do primeiro pronto). */
+export function rerollLabel(actor) {
+  const entry = firstEffect(actor, 'rerrolar');
+  return t('DESORDEM.Habilidade.ProntidaoBotao', {
+    nome: entry?.itemName ?? '',
+    custo: entry?.params.custo.valor ?? 0,
+  });
+}
+
+/**
  * Repetir dado (efeito `rerrolar`; na prontidão, 2 PD): rola de novo um dado do teste cujo
  * resultado não seja 1. Em combate, uma vez por rodada; fora de combate, sem limite.
+ * @param {ChatMessage} message Cartão do teste.
+ * @param {Actor|null} speaker Quem fez o teste (para a escolha do mestre).
  */
-async function useReroll(message, actor) {
+async function useReroll(message, speaker) {
   const info = testData(message);
+  // Recalcula na hora do clique: o cartão pode ter sido desenhado numa rodada anterior
+  const actors = rerollActors(speaker);
+  if (!actors.length) return warn('DESORDEM.Habilidade.ProntidaoIndisponivel');
+  const dice = rerollCandidates(info.values, info.sides).map((index) => ({
+    index,
+    label: `d${info.sides[index]} = ${info.values[index]}`,
+  }));
+  const choice = await askReroll(actors, dice);
+  if (!choice) return;
+  const { actor, index } = choice;
   const entries = actorEffects(actor);
   const entry = firstEffect(actor, 'rerrolar', null, entries);
-  if (!entry) return;
-  if (!usableThisRound(actor, entry)) return warn('DESORDEM.Habilidade.ProntidaoRodada');
   const wallet = walletOf(actor, entries);
-  if (!canPay(entry.params.custo, wallet)) return warn('DESORDEM.Habilidade.ProntidaoSemPD');
-  const candidates = rerollCandidates(info.values, info.sides);
-  const options = candidates
-    .map((i) => `<option value="${i}">d${info.sides[i]} = ${info.values[i]}</option>`)
-    .join('');
-  const index = await ask({
-    title: t('DESORDEM.Habilidade.ProntidaoTitulo'),
-    content: `<label>${t('DESORDEM.Habilidade.ProntidaoEscolha')} <select name="dado">${options}</select></label>`,
-    read: (form) => Number(form.elements.dado.value),
-  });
-  if (index === null || index === undefined) return;
+  if (!entry || !usableThisRound(actor, entry) || !canPay(entry.params.custo, wallet)) {
+    return warn('DESORDEM.Habilidade.ProntidaoIndisponivel');
+  }
   const roll = await new Roll(`1d${info.sides[index]}`).evaluate();
   // Paga o custo e marca o uso nesta rodada (fora de combate, nada é marcado)
   await actor.update({ ...payUpdates(entry.params.custo, wallet), ...roundUseUpdate(entry) });
@@ -420,21 +461,10 @@ export function renderTestButtons(message, html) {
     );
   }
 
-  // Repetir dado: no teste de qualquer um, por quem tem o efeito (token selecionado, quem fez o
-  // teste ou o personagem do usuário)
-  const mine = rerollActor(owner);
-  const reroll = mine ? firstEffect(mine, 'rerrolar') : null;
-  if (
-    reroll &&
-    usableThisRound(mine, reroll) &&
-    canPay(reroll.params.custo, walletOf(mine)) &&
-    rerollCandidates(info.values, info.sides).length > 0
-  ) {
-    addButton(
-      bar,
-      t('DESORDEM.Habilidade.ProntidaoBotao', { custo: reroll.params.custo.valor }),
-      () => useReroll(message, mine),
-    );
+  // Repetir dado (Prontidão): um botão só, se algum personagem do usuário estiver pronto para usar
+  const ready = rerollActors(owner);
+  if (ready.length && rerollCandidates(info.values, info.sides).length > 0) {
+    addButton(bar, rerollLabel(ready[0]), () => useReroll(message, owner));
   }
 
   if (bar.children.length) container.append(bar);

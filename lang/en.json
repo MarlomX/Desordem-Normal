@@ -671,7 +671,7 @@
       "ProntidaoTitulo": "Reroll a die",
       "ProntidaoEscolha": "Die to roll again:",
       "ProntidaoNota": "{nome} spends DP to roll the d{dado} again: {de} → {para}.",
-      "ProntidaoBotao": "Reroll a die ({custo} DP)",
+      "ProntidaoBotao": "{nome} ({custo} DP)",
       "AnimalFerido": "The companion got hurt and no longer helps this scene.",
       "Impeto": "Drive",
       "ImpetoDado": "+d4 on the next test (1 space)",
@@ -683,7 +683,9 @@
       "Curar": "Heal ally",
       "AnimalFeridoMarca": "Animal hurt",
       "Sorrateiro": "+d8 on the next Crime or Stealth test (3 DP)",
-      "ProntidaoRodada": "This ability was already used this combat round."
+      "ProntidaoRodada": "This ability was already used this combat round.",
+      "ProntidaoQuem": "Character:",
+      "ProntidaoIndisponivel": "None of your characters can use this ability now (already used this round or not enough DP)."
     },
     "Perseguicao": {
       "Titulo": "Chase",

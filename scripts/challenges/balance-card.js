@@ -13,13 +13,14 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { postMessage, render } from '../rolls/chat.js';
+import { askReroll, rerollLabel } from '../rolls/abilities-chat.js';
 import { applyAnalysis } from '../rolls/abilities.js';
 import { canPay, payUpdates } from '../rolls/ability-effects.js';
 import {
   actorEffects,
   adjustResource,
   firstEffect,
-  rerollActor,
+  rerollActors,
   resourceUpdates,
   roundUseUpdate,
   usableThisRound,
@@ -178,24 +179,26 @@ async function requestAnalysis(message, actor) {
 /**
  * Prontidão (efeito `rerrolar`): gasta o custo (2 PD) e rola de novo um d10 que não tirou 1 (uma
  * vez por cartão; em combate, também uma vez por rodada).
+ * @param {ChatMessage} message Cartão de equilíbrio.
+ * @param {Actor|null} speaker Quem faz o equilíbrio (para a escolha do mestre).
  */
-async function requestReroll(message, actor) {
+async function requestReroll(message, speaker) {
   const flag = message.flags[SYSTEM_ID].equilibrio;
+  const actors = rerollActors(speaker);
+  if (!actors.length) return warn('DESORDEM.Habilidade.ProntidaoIndisponivel');
+  const dice = balanceRerollCandidates(flag).map((index) => ({
+    index,
+    label: `d${BALANCE_SIDES} = ${flag.base[index]}`,
+  }));
+  const choice = await askReroll(actors, dice);
+  if (!choice) return undefined;
+  const { actor, index } = choice;
   const entries = actorEffects(actor);
   const entry = firstEffect(actor, 'rerrolar', null, entries);
-  if (!entry) return undefined;
-  if (!usableThisRound(actor, entry)) return warn('DESORDEM.Habilidade.ProntidaoRodada');
   const wallet = walletOf(actor, entries);
-  if (!canPay(entry.params.custo, wallet)) return warn('DESORDEM.Habilidade.ProntidaoSemPD');
-  const options = balanceRerollCandidates(flag)
-    .map((i) => `<option value="${i}">d${BALANCE_SIDES} = ${flag.base[i]}</option>`)
-    .join('');
-  const index = await ask({
-    title: t('DESORDEM.Habilidade.ProntidaoTitulo'),
-    content: `<label>${t('DESORDEM.Habilidade.ProntidaoEscolha')} <select name="dado">${options}</select></label>`,
-    read: (form) => Number(form.elements.dado.value),
-  });
-  if (index === null || index === undefined) return undefined;
+  if (!entry || !usableThisRound(actor, entry) || !canPay(entry.params.custo, wallet)) {
+    return warn('DESORDEM.Habilidade.ProntidaoIndisponivel');
+  }
   const roll = await new Roll(`1d${BALANCE_SIDES}`).evaluate();
   await showDice(roll);
   await actor.update({ ...payUpdates(entry.params.custo, wallet), ...roundUseUpdate(entry) });
@@ -360,10 +363,9 @@ export function renderBalanceCard(message, html) {
   const actor = game.actors.get(flag.actorId);
   const challenge = getChallenge(flag.desafioId);
   const entry = challenge?.participantes.find((item) => item.actorId === flag.actorId);
-  // Repetir dado: token selecionado, quem faz o equilíbrio ou o personagem do usuário
-  const mine = rerollActor(actor);
+  // Repetir dado (Prontidão): um botão só, se algum personagem do usuário estiver pronto
+  const ready = rerollActors(actor);
   const analysis = actor?.isOwner ? adjustResource(actor) : null;
-  const reroll = mine ? firstEffect(mine, 'rerrolar') : null;
   const view = balanceView(flag, {
     canAct: Boolean(actor?.isOwner),
     reserve: challenge ? participantReserve(challenge, flag.actorId, acrobaciaOf(actor)) : 0,
@@ -372,11 +374,7 @@ export function renderBalanceCard(message, html) {
     active: Boolean(challenge?.ativo && entry),
     now: Date.now(),
     canAnalyse: Boolean(actor?.isOwner) && (analysis?.points ?? 0) > 0,
-    canReroll:
-      Boolean(mine?.isOwner) &&
-      Boolean(reroll) &&
-      usableThisRound(mine, reroll) &&
-      canPay(reroll.params.custo, walletOf(mine)),
+    canReroll: ready.length > 0,
   });
   const doc = html.ownerDocument;
   const add = (tag, className, text) => {
@@ -483,13 +481,7 @@ export function renderBalanceCard(message, html) {
     );
   }
   if (view.showReroll) {
-    bar.append(
-      cardButton(
-        doc,
-        t('DESORDEM.Habilidade.ProntidaoBotao', { custo: reroll?.params.custo.valor ?? 0 }),
-        () => requestReroll(message, mine),
-      ),
-    );
+    bar.append(cardButton(doc, rerollLabel(ready[0]), () => requestReroll(message, actor)));
   }
   if (!bar.children.length) bar.remove();
 }
