@@ -6,6 +6,9 @@ import { resolveTest } from './test.js';
 import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { sequenceRng } from './dice.js';
 
+/** Dado somado ao teste de Defender-se (regras p. 18). */
+export const DEFENSE_BONUS_DIE = 6;
+
 /** Automações disponíveis para uma habilidade (a chave fica no campo `automacao` do item). */
 export const AUTOMATIONS = Object.freeze([
   'impeto',
@@ -123,9 +126,13 @@ export function resolveWithValues(plan, values) {
  * @param {number} context.impeto Espaços de ímpeto.
  * @param {number} context.pd PD disponíveis (já descontado o custo do pavor).
  * @param {boolean} [context.allowNonLethal=false] Só o teste de lesão aceita o dano não letal.
+ * @param {boolean} [context.allowDefense=false] Só o teste de Defender-se aceita o d6 da defesa.
  * @returns {{extraDice: number[], pdCost: number, impetoCost: number, used: string[]}}
  */
-export function activeBoosts(active, { skillKey, impeto, pd, allowNonLethal = false }) {
+export function activeBoosts(
+  active,
+  { skillKey, impeto, pd, allowNonLethal = false, allowDefense = false },
+) {
   const boosts = { extraDice: [], pdCost: 0, impetoCost: 0, used: [] };
   if (active.includes('impetoDado') && impeto >= COSTS.impetoDado) {
     boosts.extraDice.push(4);
@@ -141,6 +148,12 @@ export function activeBoosts(active, { skillKey, impeto, pd, allowNonLethal = fa
   if (allowNonLethal && active.includes('naoLetal')) {
     boosts.extraDice.push(NON_LETHAL_BONUS_DIE);
     boosts.used.push('naoLetal');
+  }
+  // Defender-se (só no teste de defesa do teste oposto): +d6, sem custo. Desmarcado na janela,
+  // o mesmo teste serve para uma esquiva sem o dado (poderes parecidos com defender-se)
+  if (allowDefense && active.includes('defesa')) {
+    boosts.extraDice.push(DEFENSE_BONUS_DIE);
+    boosts.used.push('defesa');
   }
   return boosts;
 }

@@ -233,6 +233,8 @@ async function settleAbilities(actor, options, result) {
  *   `desafio`), para o botão «somar pontos» do cartão.
  * @param {object} [opts.opostoFlag] Lado de um teste oposto iniciado pela ficha (flag
  *   `respostaOposto`: cartão, lado, ator e perícia); o mestre registra o teste no cartão.
+ * @param {object} [opts.socorroFlag] Primeiros socorros (flag `primeirosSocorros`: paciente e
+ *   estado do botão de aplicar).
  */
 export async function rollTest({
   attrLabel = game.i18n.localize('DESORDEM.Teste.Atributo'),
@@ -244,6 +246,7 @@ export async function rollTest({
   acaoFlag,
   desafioFlag,
   opostoFlag,
+  socorroFlag,
   rollMode,
   ...options
 }) {
@@ -259,6 +262,7 @@ export async function rollTest({
   if (flags && acaoFlag) flags.acaoFurtiva = acaoFlag;
   if (flags && desafioFlag) flags.desafio = desafioFlag;
   if (flags && opostoFlag) flags.respostaOposto = opostoFlag;
+  if (flags && socorroFlag) flags.primeirosSocorros = socorroFlag;
   // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js). O teste de
   // esconderijo não tem efeito de falha crítica (a regra não traz nenhum). Nas criaturas o mestre
   // decide a penalidade (a tabela fala de PD e de itens carregados, que elas não têm).
@@ -276,13 +280,15 @@ export async function rollTest({
  * Serve para a prévia da janela pré-teste.
  * @returns {{attrDie: number, skillDie: number, attrLabel: string, skillLabel: string}}
  */
-export function testDicePreview(actor, skillKey, attribute) {
+export function testDicePreview(actor, skillKey, attribute, extraStepMods = []) {
   const attrKey = resolveSkillAttribute(actor.system, skillKey, attribute);
   const { system } = actor;
   const plan = planDice({
     attrDie: system.atributos[attrKey],
     skillDie: skillDieOf(actor, skillKey),
     stepMods: [
+      // Passos próprios deste teste (ex.: primeiros socorros sem maleta), para a prévia bater
+      ...extraStepMods,
       ...contusionStepMods(system.estado, attrKey),
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
     ],
@@ -309,6 +315,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     embraceFear,
     active = [],
     allowNonLethal = false,
+    allowDefense = false,
     ...rest
   } = options;
   let fear;
@@ -331,6 +338,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     impeto: resources.impeto,
     pd: resources.pd - fear.pdCost,
     allowNonLethal,
+    allowDefense,
   });
 
   return {

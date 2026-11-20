@@ -3,6 +3,7 @@ import { WEAPON_KINDS } from '../rolls/equipment.js';
 import { AUTOMATIONS } from '../rolls/abilities.js';
 import { buildChoices } from './context.js';
 import { isThreat } from '../rolls/threat.js';
+import { DAMAGE_BASES } from '../rolls/damage.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
@@ -54,6 +55,10 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       ],
       kindChoices: buildChoices(WEAPON_KINDS, item.system.tipo, (kind) =>
         t(`DESORDEM.Item.Tipo.${kind}`),
+      ),
+      // Base do dano: RA (normal) ou RB (desarmado)
+      baseChoices: buildChoices(DAMAGE_BASES, item.system.baseDano ?? 'ra', (base) =>
+        t(`DESORDEM.Item.Base.${base}`),
       ),
       handsChoices: buildChoices([1, 2], item.system.maos, (hands) =>
         t(`DESORDEM.Item.Maos.${hands}`),

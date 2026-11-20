@@ -51,6 +51,7 @@
       <button type="button" class="desordem-ficha__rolar" data-action="rollSkill" data-skill="{{key}}">
         <span class="desordem-ficha__pericia-nome">{{label}}</span>
       </button>
+      {{#if firstAid}}<button type="button" class="desordem-ficha__socorro" data-action="firstAid" title="{{localize "DESORDEM.Socorro.Botao"}}"><i class="fa-solid fa-kit-medical" aria-hidden="true"></i></button>{{/if}}
       <span class="desordem-attr-etiqueta{{#if attrOverridden}} is-alterado{{/if}}" title="{{#if attrOverridden}}{{localize "DESORDEM.Ficha.AtributoAlterado" padrao=attrDefaultLabel}}{{else}}{{localize "DESORDEM.Ficha.AtributoTrocar"}}{{/if}}">
         <span class="desordem-attr-etiqueta__texto">{{attrLabel}}</span>
         <select class="desordem-attr-etiqueta__select" data-attr-campo data-key="{{key}}" {{#unless ../editable}}disabled{{/unless}}>

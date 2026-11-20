@@ -359,7 +359,7 @@ export function buildEquipmentRows(items, { kindLabel, handsLabel, skillLabel, e
       descricao: system.descricao,
       kindLabel: kindLabel(system.tipo),
       handsLabel: handsLabel(system.maos),
-      damageLabel: weaponDamageLabel(system.bonusDano),
+      damageLabel: weaponDamageLabel(system.bonusDano, system.baseDano),
       skillLabel: skillLabel(weaponSkill(system)),
       empunhada: system.empunhada,
       naoLetal: system.naoLetal,

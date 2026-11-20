@@ -58,7 +58,8 @@
         "Hab": {
           "impetoDado": "Drive die (+d{die})",
           "sorrateiro": "Sneak die (+d{die})",
-          "naoLetal": "Non-lethal damage (+d{die})"
+          "naoLetal": "Non-lethal damage (+d{die})",
+          "defesa": "Defend (+d{die}): uncheck to dodge without the die"
         },
         "Indisponivel": {
           "impeto": "not enough drive",
@@ -110,7 +111,7 @@
       "Saude": "Health",
       "Dano": "Damage",
       "TestesLesaoCena": "Injury tests this scene",
-      "PrimeirosSocorrosCena": "First aid tests this scene",
+      "PrimeirosSocorrosCena": "First aid received in the scene",
       "Lesoes": "Injuries",
       "SemLesoes": "No injuries",
       "RemoverLesao": "Remove injury",
@@ -239,7 +240,8 @@
         "Titulo": "Bonus Dice",
         "Vazio": "No die",
         "Dica": "Up to 2 extra dice, for this test only."
-      }
+      },
+      "PrimeirosSocorrosDica": "How many times this character received first aid in this scene. Each adds +3 to the next DC (the GM adds it automatically on each attempt)."
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -299,9 +301,9 @@
       "Arma": "Weapon",
       "ArmaLivre": "weapon of their choice",
       "Defender": "Defend",
-      "DefesaCom": "{pericia} + d6",
-      "DefesaSoCorpo": "{pericia} + d6 (only against a melee attack)",
-      "DicaDefesa": "Defend: skill test + d6 against the attack. If you win, you take no damage (and deal none).",
+      "DefesaCom": "{pericia}",
+      "DefesaSoCorpo": "{pericia} (only against a melee attack)",
+      "DicaDefesa": "Defend: skill test + d6 against the attack (the pre-roll window lets you uncheck the d6, for a dodge). If you win, you take no damage (and deal none).",
       "DicaLuta": "The defender chose Fighting: it only works against a melee attack.",
       "SemArma": "This actor has no weapons (create one on the sheet).",
       "SemArmaCorpo": "This actor has no melee weapon.",
@@ -604,7 +606,16 @@
         "sorrateiro": "Extra die on Crime or Stealth (3 DP)"
       },
       "Natural": "Natural weapon",
-      "DicaNatural": "Natural weapon (claws, bite, kick): takes no hands and does not need to be wielded. Creature attacks are natural weapons by default."
+      "DicaNatural": "Natural weapon (claws, bite, kick): takes no hands and does not need to be wielded. Creature attacks are natural weapons by default.",
+      "Desarmado": {
+        "Nome": "Unarmed",
+        "Descricao": "Punches and kicks: LR damage, non-lethal."
+      },
+      "BaseDano": "Damage base",
+      "Base": {
+        "ra": "High roll (HR)",
+        "rb": "Low roll (LR)"
+      }
     },
     "Armadura": {
       "Titulo": "Armor points",
@@ -613,7 +624,7 @@
     },
     "Equipamento": {
       "CausaDano": "hits with {arma} and deals {valor} damage",
-      "DanoFormula": "Damage: {formula}, with HR {ra}.",
+      "DanoFormula": "Damage: {formula}, with {base} {ra}.",
       "AplicarAlvos": "Apply damage to targets",
       "SemAlvo": "Target at least one token to apply the damage.",
       "SoMestre": "Only whoever controls {nome} can apply damage to them: ask the GM.",
@@ -1318,6 +1329,24 @@
       "SegundaFase": "{nome} already acted in an earlier phase this round (only with an effect such as Readiness).",
       "TambemAgiu": "also: {fases}",
       "Vazia": "nobody"
+    },
+    "Socorro": {
+      "Botao": "First aid (Mind + Medicine)",
+      "Titulo": "First aid",
+      "Dica": "Saves a dying character: they lose the condition, recover 1 HP and wake up. DC 7, +3 for each use on the same patient in the scene.",
+      "Paciente": "Patient",
+      "Maleta": "I have a medical kit",
+      "DicaPassos": "Without a kit: two step reductions. On yourself: two more. The next window’s preview already shows the reduced dice.",
+      "Continuar": "Continue",
+      "EmSi": "yourself",
+      "DT": "DC {dt}",
+      "Rotulo": "First aid on {nome}",
+      "Aplicar": "Apply first aid to {nome}",
+      "JaAplicado": "First aid applied to {nome}.",
+      "Aplicado": "{nome} is no longer dying and has {pv} HP.",
+      "AplicadoAcorda": "{nome} is no longer dying, wakes up and has {pv} HP.",
+      "NaoMoribundo": "{nome} is not dying: first aid has no effect.",
+      "SemMestre": "A connected GM is needed to apply first aid."
     }
   },
   "TYPES.Item.arma": "Weapon",

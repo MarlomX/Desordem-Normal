@@ -30,6 +30,8 @@ export class ArmaModel extends foundry.abstract.TypeDataModel {
         max: 20,
         initial: 0,
       }),
+      // Base do dano: rolagem alta (RA, o normal) ou rolagem baixa (RB, como o desarmado)
+      baseDano: new f.StringField({ required: true, choices: ['ra', 'rb'], initial: 'ra' }),
       // Perícia do ataque; vazio = Luta (corpo a corpo) ou Pontaria (à distância)
       pericia: texto(),
       naoLetal: new f.BooleanField({ initial: false }),

@@ -3,7 +3,7 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { render, postMessage, rollSkill } from './chat.js';
-import { computeDamage } from './damage.js';
+import { computeDamage, damageBaseValue } from './damage.js';
 import { damageActor } from './health.js';
 import { weaponSkill, weaponDamageLabel, itemUse, itemUseChanges } from './equipment.js';
 import { hasAbility } from './abilities.js';
@@ -47,15 +47,16 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
     await abilityNote(actor, t('DESORDEM.Habilidade.AnimalFerido'));
   }
   if (!result.success) return { result, amount: null };
-  const amount = computeDamage(result, system.bonusDano);
+  const amount = computeDamage(result, system.bonusDano, system.baseDano);
   await postMessage({
     actor,
     content: await render(TEMPLATE_ATAQUE, {
       name: actor.name,
       weapon: weapon.name,
       amount,
-      high: result.highSum,
-      formula: weaponDamageLabel(system.bonusDano),
+      high: damageBaseValue(result, system.baseDano),
+      base: system.baseDano === 'rb' ? 'RB' : 'RA',
+      formula: weaponDamageLabel(system.bonusDano, system.baseDano),
       nonLethal: system.naoLetal,
     }),
     flags: { danoArma: { amount, naoLetal: system.naoLetal } },

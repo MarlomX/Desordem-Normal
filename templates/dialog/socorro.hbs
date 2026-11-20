@@ -1,0 +1,8 @@
+<div class="desordem-oposto-escolha">
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Socorro.Dica"}}</p>
+  <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Socorro.Paciente"}}</span>
+    <select name="patient">{{#each patients}}<option value="{{uuid}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+  </label>
+  <label class="desordem-ficha__campo"><input type="checkbox" name="kit" {{#if kit}}checked{{/if}}> <span>{{localize "DESORDEM.Socorro.Maleta"}}</span></label>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Socorro.DicaPassos"}}</p>
+</div>

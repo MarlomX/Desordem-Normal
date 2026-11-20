@@ -1,0 +1,76 @@
+/**
+ * Primeiros socorros (regras p. 22). Lógica pura, sem dependência do Foundry.
+ *
+ * Teste de Mente + Medicina contra DT 7, que sobe +3 a cada uso de primeiros socorros no mesmo
+ * paciente na cena (o contador fica na ficha do paciente). Sem maleta de medicamentos: duas
+ * reduções de passo; em si mesmo: mais duas. Se passar, o paciente moribundo perde a condição,
+ * recupera 1 PV e, se estava inconsciente, acorda.
+ */
+
+/** DT básica e aumento por uso no mesmo paciente. */
+export const FIRST_AID_DT = 7;
+export const FIRST_AID_DT_STEP = 3;
+
+/** Reduções de passo (no dado da perícia) sem maleta e em si mesmo. */
+export const FIRST_AID_PENALTY = 2;
+
+/**
+ * DT do teste conforme quantas vezes o paciente já recebeu primeiros socorros na cena.
+ * @param {number} uses Contador do paciente (valor estranho conta como 0).
+ */
+export function firstAidDt(uses) {
+  const count = Number.isInteger(uses) && uses > 0 ? uses : 0;
+  return FIRST_AID_DT + FIRST_AID_DT_STEP * count;
+}
+
+/**
+ * Reduções de passo do teste: −2 sem maleta, −2 em si mesmo (as duas se somam).
+ * @param {{kit: boolean, self: boolean}} situation
+ * @returns {{target: 'skill', steps: number}[]}
+ */
+export function firstAidStepMods({ kit, self }) {
+  const steps = (kit ? 0 : FIRST_AID_PENALTY) + (self ? FIRST_AID_PENALTY : 0);
+  return steps ? [{ target: 'skill', steps: -steps }] : [];
+}
+
+/** Tira acentos e caixa (para comparar nomes de itens). */
+const plain = (value) =>
+  String(value ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+
+/**
+ * O curandeiro tem uma maleta de medicamentos? Procura um item com «maleta» ou «kit médico» no
+ * nome (sem acento nem caixa). Só serve para marcar a caixa da janela; quem decide é o jogador.
+ * @param {{name: string}[]} items
+ */
+export function hasMedicalKit(items) {
+  return (items ?? []).some((item) => {
+    const name = plain(item?.name);
+    return name.includes('maleta') || name.includes('kit medico') || name.includes('medical kit');
+  });
+}
+
+/**
+ * Efeito de primeiros socorros bem-sucedidos no paciente. Só vale para quem está moribundo.
+ * @param {{pv: {value: number, max: number}, estado: {moribundo: boolean, inconsciente: boolean}}} system
+ * @returns {{ok: boolean, updates?: object, woke?: boolean, before?: number, after?: number}}
+ *   `updates` nas chaves da ficha (`system.*`); `ok` false se o paciente não está moribundo.
+ */
+export function firstAidOutcome(system) {
+  if (!system?.estado?.moribundo) return { ok: false };
+  const before = system.pv.value;
+  const after = Math.min(system.pv.max, before + 1);
+  return {
+    ok: true,
+    woke: Boolean(system.estado.inconsciente),
+    before,
+    after,
+    updates: {
+      'system.pv.value': after,
+      'system.estado.moribundo': false,
+      'system.estado.inconsciente': false,
+    },
+  };
+}

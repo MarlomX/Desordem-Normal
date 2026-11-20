@@ -17,6 +17,9 @@
       <select name="system.maos" {{#unless editable}}disabled{{/unless}}>{{#each handsChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
     {{/unless}}
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.BaseDano"}}</span>
+      <select name="system.baseDano" {{#unless editable}}disabled{{/unless}}>{{#each baseChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.BonusDano"}}</span>
       <input type="number" name="system.bonusDano" value="{{system.bonusDano}}" min="-10" max="20" {{#unless editable}}disabled{{/unless}}>
     </label>

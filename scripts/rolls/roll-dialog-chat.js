@@ -333,6 +333,9 @@ function refresh(form, root, model) {
  *   esconderijo, esconder-se, distrair; veja `stealthOptions`). Sem isso, a seção não aparece.
  * @param {{id: string, nome: string, dt: number}[]} [config.challenges] Testes estendidos ativos
  *   de que o personagem participa: com algum, a janela oferece «usar no desafio».
+ * @param {boolean} [config.allowDefense] Teste de Defender-se: oferece o +d6 já marcado.
+ * @param {object[]} [config.stepMods] Passos próprios deste teste, só para a prévia dos dados
+ *   (quem rola precisa passar os mesmos passos ao teste).
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
  */
 export async function askRollChoices(
@@ -348,11 +351,14 @@ export async function askRollChoices(
     chase = null,
     stealth = null,
     challenges = [],
+    allowDefense = false,
+    stepMods = [],
     shift = false,
   },
 ) {
-  if (shift) return {};
-  const dice = testDicePreview(actor, skillKey, attribute);
+  // Pular a janela usa as escolhas padrão: na defesa, o +d6 (que vem marcado)
+  if (shift) return allowDefense ? { active: ['defesa'] } : {};
+  const dice = testDicePreview(actor, skillKey, attribute, stepMods);
   // PD, ímpeto e pavor (0 numa criatura: a janela não mostra pavor nem custos)
   const resources = testResources(actor.system);
   const model = buildRollModel({
@@ -364,6 +370,7 @@ export async function askRollChoices(
       impeto: hasAbility(actor, 'impeto'),
       sorrateiro: hasAbility(actor, 'sorrateiro'),
       naoLetal: allowNonLethal,
+      defesa: allowDefense,
     },
     resources: { impeto: resources.impeto, pd: resources.pd },
     fearDie: resources.fearDie,

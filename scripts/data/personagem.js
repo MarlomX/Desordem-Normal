@@ -63,7 +63,7 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       cena: new f.SchemaField({
         testesLesao: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
         testesTrauma: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
-        // Tentativas de primeiros socorros feitas nesta cena (só um contador salvo na ficha)
+        // Primeiros socorros RECEBIDOS nesta cena (cada um sobe +3 a DT do próximo neste paciente)
         primeirosSocorros: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
         // Quem já recebeu a cura nesta cena (ids dos aliados) e o animal ferido da cena
         curados: new f.ArrayField(new f.StringField({ required: true, blank: false })),

@@ -58,7 +58,8 @@
         "Hab": {
           "impetoDado": "Dado de ímpeto (+d{die})",
           "sorrateiro": "Dado furtivo (+d{die})",
-          "naoLetal": "Dano não letal (+d{die})"
+          "naoLetal": "Dano não letal (+d{die})",
+          "defesa": "Defender-se (+d{die}): desmarque para esquivar sem o dado"
         },
         "Indisponivel": {
           "impeto": "sem ímpeto suficiente",
@@ -110,7 +111,7 @@
       "Saude": "Saúde",
       "Dano": "Dano",
       "TestesLesaoCena": "Testes de lesão na cena",
-      "PrimeirosSocorrosCena": "Testes de primeiros socorros na cena",
+      "PrimeirosSocorrosCena": "Primeiros socorros recebidos na cena",
       "Lesoes": "Lesões",
       "SemLesoes": "Nenhuma lesão",
       "RemoverLesao": "Remover lesão",
@@ -239,7 +240,8 @@
         "Titulo": "Dados Bônus",
         "Vazio": "Sem dado",
         "Dica": "Até 2 dados extras, só para este teste."
-      }
+      },
+      "PrimeirosSocorrosDica": "Quantas vezes este personagem recebeu primeiros socorros nesta cena. Cada uma soma +3 à DT da próxima (o mestre soma sozinho a cada tentativa)."
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -299,9 +301,9 @@
       "Arma": "Arma",
       "ArmaLivre": "arma à escolha",
       "Defender": "Defender-se",
-      "DefesaCom": "{pericia} + d6",
-      "DefesaSoCorpo": "{pericia} + d6 (só contra ataque corpo a corpo)",
-      "DicaDefesa": "Defender-se: teste da perícia + d6 contra o ataque. Se vencer, não sofre dano (nem causa).",
+      "DefesaCom": "{pericia}",
+      "DefesaSoCorpo": "{pericia} (só contra ataque corpo a corpo)",
+      "DicaDefesa": "Defender-se: teste da perícia + d6 contra o ataque (na janela pré-teste dá para desmarcar o d6, para uma esquiva). Se vencer, não sofre dano (nem causa).",
       "DicaLuta": "O defensor escolheu Luta: ela só vale contra ataque corpo a corpo.",
       "SemArma": "Este ator não tem armas (crie uma na ficha).",
       "SemArmaCorpo": "Este ator não tem arma corpo a corpo.",
@@ -604,7 +606,16 @@
         "sorrateiro": "Dado extra em Crime ou Furtividade (3 PD)"
       },
       "Natural": "Arma natural",
-      "DicaNatural": "Arma natural (garras, mordida, coice): não ocupa as mãos e não precisa ser empunhada. Os ataques das criaturas são armas naturais por padrão."
+      "DicaNatural": "Arma natural (garras, mordida, coice): não ocupa as mãos e não precisa ser empunhada. Os ataques das criaturas são armas naturais por padrão.",
+      "Desarmado": {
+        "Nome": "Desarmado",
+        "Descricao": "Socos e chutes: dano RB, não letal."
+      },
+      "BaseDano": "Base do dano",
+      "Base": {
+        "ra": "Rolagem alta (RA)",
+        "rb": "Rolagem baixa (RB)"
+      }
     },
     "Armadura": {
       "Titulo": "Pontos de armadura",
@@ -613,7 +624,7 @@
     },
     "Equipamento": {
       "CausaDano": "acerta com {arma} e causa {valor} de dano",
-      "DanoFormula": "Dano: {formula}, com RA {ra}.",
+      "DanoFormula": "Dano: {formula}, com {base} {ra}.",
       "AplicarAlvos": "Aplicar dano aos alvos",
       "SemAlvo": "Mire (target) pelo menos um token para aplicar o dano.",
       "SoMestre": "Só quem controla {nome} pode aplicar o dano nele: peça ao mestre.",
@@ -1318,6 +1329,24 @@
       "SegundaFase": "{nome} já agiu numa fase anterior nesta rodada (só com um efeito como Prontidão).",
       "TambemAgiu": "também: {fases}",
       "Vazia": "ninguém"
+    },
+    "Socorro": {
+      "Botao": "Primeiros socorros (Mente + Medicina)",
+      "Titulo": "Primeiros socorros",
+      "Dica": "Salva um moribundo: perde a condição, recupera 1 PV e acorda. DT 7, +3 a cada uso no mesmo paciente na cena.",
+      "Paciente": "Paciente",
+      "Maleta": "Tenho maleta de medicamentos",
+      "DicaPassos": "Sem maleta: duas reduções de passo. Em si mesmo: mais duas. A prévia da janela seguinte já mostra os dados reduzidos.",
+      "Continuar": "Continuar",
+      "EmSi": "você mesmo",
+      "DT": "DT {dt}",
+      "Rotulo": "Primeiros socorros em {nome}",
+      "Aplicar": "Aplicar primeiros socorros em {nome}",
+      "JaAplicado": "Primeiros socorros aplicados em {nome}.",
+      "Aplicado": "{nome} deixa de estar moribundo e fica com {pv} PV.",
+      "AplicadoAcorda": "{nome} deixa de estar moribundo, acorda e fica com {pv} PV.",
+      "NaoMoribundo": "{nome} não está moribundo: os primeiros socorros não têm efeito.",
+      "SemMestre": "Precisa de um mestre conectado para aplicar os primeiros socorros."
     }
   },
   "TYPES.Item.arma": "Arma",

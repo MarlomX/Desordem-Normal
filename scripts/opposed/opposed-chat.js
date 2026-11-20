@@ -24,7 +24,6 @@ import { weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { abilityNote } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
 import {
-  DEFENSE_DIE,
   buildOpposedCardContext,
   bothRolled,
   canCancel,
@@ -82,7 +81,7 @@ function weaponsFor(actor, tipo) {
   }));
   return weaponChoices(items, tipo).map((weapon) => ({
     ...weapon,
-    label: `${t(`DESORDEM.Pericias.${weaponSkill(weapon)}`)}, ${weaponDamageLabel(weapon.bonusDano)}`,
+    label: `${t(`DESORDEM.Pericias.${weaponSkill(weapon)}`)}, ${weaponDamageLabel(weapon.bonusDano, weapon.baseDano)}`,
   }));
 }
 
@@ -350,19 +349,22 @@ async function rollSide(message, side, event) {
   if (!choice) return;
   const { skill, arma } = choice;
 
+  // Defender-se: o +d6 aparece na janela pré-teste já marcado (desmarcar = esquiva sem o dado)
+  const allowDefense = data.papel === 'defesa';
   const options = await askRollChoices(actor, {
     skillKey: skill,
     showDt: false,
+    allowDefense,
     shift: event?.shiftKey,
   });
   if (!options) return;
   const weapon = arma ? actor.items.get(arma.id) : null;
   const companion = weapon ? weaponCompanionDice(actor, weapon) : [];
-  const extra = data.papel === 'defesa' ? [DEFENSE_DIE] : companion;
   const test = skillTestOptions(actor, skill, undefined, {
     ...options,
     showDt: false,
-    extraDice: [...extra, ...(options.extraDice ?? [])],
+    allowDefense,
+    extraDice: [...companion, ...(options.extraDice ?? [])],
   });
   const what =
     data.papel === 'ataque'
@@ -576,6 +578,7 @@ function weaponOf(actor, armaId) {
     id: item.id,
     nome: item.name,
     bonusDano: item.system.bonusDano,
+    baseDano: item.system.baseDano,
     naoLetal: Boolean(item.system.naoLetal),
     tipo: item.system.tipo,
     pericia: item.system.pericia ?? '',

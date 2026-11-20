@@ -87,10 +87,49 @@ export function weaponSkill(weapon) {
   return weapon.tipo === 'distancia' ? 'pontaria' : 'luta';
 }
 
-/** Texto do dano da arma (ex.: "RA", "RA+2", "RA−1"). */
-export function weaponDamageLabel(bonus) {
-  if (!bonus) return 'RA';
-  return bonus > 0 ? `RA+${bonus}` : `RA−${Math.abs(bonus)}`;
+/** Texto do dano da arma (ex.: "RA", "RA+2", "RB"); `base` é 'ra' (padrão) ou 'rb'. */
+export function weaponDamageLabel(bonus, base = 'ra') {
+  const name = base === 'rb' ? 'RB' : 'RA';
+  if (!bonus) return name;
+  return bonus > 0 ? `${name}+${bonus}` : `${name}−${Math.abs(bonus)}`;
+}
+
+/** Marca (flag) da arma padrão «Desarmado», criada com toda ficha nova. */
+export const UNARMED_FLAG = 'desarmado';
+
+/**
+ * Dados do item «Desarmado» (soco e chute): arma natural corpo a corpo, sem mãos, com dano RB
+ * não letal (regras p. 22: socos e chutes causam dano não letal).
+ * @param {string} systemId Id do sistema (chave das flags).
+ * @param {{nome: string, descricao: string}} texts Nome e descrição já traduzidos.
+ */
+export function unarmedWeaponData(systemId, { nome, descricao }) {
+  return {
+    name: nome,
+    type: 'arma',
+    system: {
+      tipo: 'corpo',
+      maos: 1,
+      bonusDano: 0,
+      baseDano: 'rb',
+      pericia: '',
+      naoLetal: true,
+      empunhada: false,
+      natural: true,
+      descricao,
+    },
+    flags: { [systemId]: { [UNARMED_FLAG]: true } },
+  };
+}
+
+/**
+ * A ficha que vai ser criada precisa ganhar o «Desarmado»? Só se ainda não tem um (fichas
+ * duplicadas ou importadas já trazem o delas).
+ * @param {{flags?: object}[]} items Itens da ficha (dados de origem).
+ * @param {string} systemId
+ */
+export function needsUnarmed(items, systemId) {
+  return !(items ?? []).some((item) => item?.flags?.[systemId]?.[UNARMED_FLAG]);
 }
 
 /**

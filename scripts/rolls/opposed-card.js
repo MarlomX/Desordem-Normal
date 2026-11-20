@@ -49,9 +49,6 @@ export const SIDES = Object.freeze(['a', 'b']);
 /** Perícias de Defender-se (Luta só contra ataque corpo a corpo). */
 export const DEFENSE_SKILLS = Object.freeze(['acrobacia', 'luta']);
 
-/** Dado somado ao teste de Defender-se. */
-export const DEFENSE_DIE = 6;
-
 const MAX_DESCRIPTION = 120;
 const text = (value, max = 80) =>
   String(value ?? '')
@@ -73,6 +70,7 @@ function cleanWeapon(arma) {
     id: text(arma.id, 64),
     nome: text(arma.nome),
     bonusDano: Number.isInteger(arma.bonusDano) ? arma.bonusDano : 0,
+    baseDano: arma.baseDano === 'rb' ? 'rb' : 'ra',
     naoLetal: Boolean(arma.naoLetal),
     tipo: arma.tipo === 'distancia' ? 'distancia' : 'corpo',
   };
@@ -206,7 +204,7 @@ function damageEntries(state, hits, results) {
     const arma = state[side].arma;
     if (!hits?.[side] || !arma) continue;
     dano[side] = {
-      valor: computeDamage(results[side], arma.bonusDano),
+      valor: computeDamage(results[side], arma.bonusDano, arma.baseDano),
       naoLetal: arma.naoLetal,
       estado: 'pendente',
       por: '',
@@ -332,6 +330,7 @@ export function weaponChoices(items, tipo) {
       id,
       nome: name,
       bonusDano: system.bonusDano,
+      baseDano: system.baseDano === 'rb' ? 'rb' : 'ra',
       naoLetal: Boolean(system.naoLetal),
       tipo: system.tipo,
       pericia: system.pericia ?? '',

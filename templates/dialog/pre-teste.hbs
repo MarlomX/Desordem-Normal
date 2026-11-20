@@ -159,7 +159,7 @@
     <legend><i class="fa-solid fa-bolt" aria-hidden="true"></i> {{localize "DESORDEM.Teste.Pre.Habilidades"}}</legend>
     {{#each abilities}}
     <label class="desordem-pre__opcao{{#unless available}} is-indisponivel{{/unless}}" data-opcao="{{key}}">
-      <input type="checkbox" name="active" value="{{key}}" {{#unless available}}disabled{{/unless}}>
+      <input type="checkbox" name="active" value="{{key}}" {{#if checked}}checked{{/if}} {{#unless available}}disabled{{/unless}}>
       <span class="desordem-pre__nome">{{label}}</span>
       <span class="desordem-pre__custo">{{costText}}</span>
       {{#if reasonText}}<span class="desordem-pre__motivo">{{reasonText}}</span>{{/if}}

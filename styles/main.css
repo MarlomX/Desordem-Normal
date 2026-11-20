@@ -3510,3 +3510,27 @@ button.desordem-desafios-cartao__nome:hover {
 .desordem-oposto-modos .form-footer {
   flex-direction: column;
 }
+
+/* ===== Primeiros socorros (v0.19.5) ===== */
+.desordem-ficha__socorro {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-socorro-barra {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  font-size: 0.9em;
+}
+
+.desordem-socorro-barra button {
+  flex: 1 1 auto;
+  margin: 0;
+}

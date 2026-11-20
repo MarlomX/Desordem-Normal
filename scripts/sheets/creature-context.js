@@ -53,7 +53,7 @@ export function buildAttackRows(items, { kindLabel, skillLabel, diceOf, editable
         kindLabel: kindLabel(system.tipo),
         skillLabel: skillLabel(skill),
         testLabel: `d${dice.attrDie} + d${dice.skillDie}`,
-        damageLabel: weaponDamageLabel(system.bonusDano),
+        damageLabel: weaponDamageLabel(system.bonusDano, system.baseDano),
         naoLetal: system.naoLetal,
         locked: !editable,
       };

@@ -11,6 +11,7 @@ import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { proposeOpposed } from '../opposed/opposed-chat.js';
+import { startFirstAid } from '../rolls/first-aid-chat.js';
 import { attributeChoiceUpdate } from '../rolls/attribute.js';
 import {
   EXTRA_GROUPS,
@@ -138,6 +139,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       adjustHideUses: PersonagemSheet.#onAdjustHideUses,
       setTab: PersonagemSheet.#onSetTab,
       proposeOpposed: PersonagemSheet.#onProposeOpposed,
+      firstAid: PersonagemSheet.#onFirstAid,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
       setPip: PersonagemSheet.#onSetPip,
@@ -227,12 +229,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         attrStepOf,
       ),
       skillStep,
+      // A Medicina ganha o botão de primeiros socorros
       skills: buildSkillRows(system.pericias, PERICIAS, {
         ...attrFieldOptions,
         skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
         skillStep,
         attrChoices: system.atributosPericias,
-      }),
+      }).map((row) => ({ ...row, firstAid: row.key === 'medicina' })),
       aptitudes: addRowAttributes(
         buildAreaRows(system.aptidoes, APTIDOES, (key) => t(`DESORDEM.Aptidoes.${key}`), skillStep),
         { ...attrFieldOptions, chosenOf: (row) => system.atributosPericias[row.key] },
@@ -561,6 +564,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       modal: true,
     });
     if (confirmed === true) await this.#saveExtras(group, removeExtra(this.#extras(group), id));
+  }
+
+  /** Primeiros socorros (botão ao lado da Medicina): escolhe o paciente e rola. */
+  static async #onFirstAid(event) {
+    await startFirstAid(this.document, event);
   }
 
   /** Propõe um teste oposto: escolhe a perícia e publica o cartão (o token mirado é o oponente). */
