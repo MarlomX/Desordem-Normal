@@ -1,36 +1,49 @@
 /* global document */
 /**
- * Teste oposto iniciado pela ficha (Foundry). A lógica do cartão fica em `rolls/opposed-card.js`.
+ * Teste oposto iniciado pela ficha (Foundry). A lógica do cartão fica em `rolls/opposed-card.js`
+ * e as regras de comparação em `rolls/opposed-rules.js`.
  *
- * 1. «Propor teste oposto» na ficha: a pessoa escolhe a perícia do seu lado e, se tiver um token
- *    mirado, ele é o oponente. Sai no chat um cartão sem rolagem.
+ * 1. «Teste oposto» na ficha: a pessoa escolhe o tipo (perícia, corpo a corpo, atacar contra uma
+ *    defesa ou defender-se) e o seu lado (perícia, arma ou defesa). Com um token mirado, ele é o
+ *    oponente. Sai no chat um cartão sem rolagem.
  * 2. Cada lado clica em «Rolar» (ou «Aceitar», se o oponente ainda está em aberto), passa pela
  *    janela pré-teste e rola um teste comum, público, com a marca `respostaOposto`.
  * 3. O mestre ativo vê o teste chegar (hook `createChatMessage`), confere que quem rolou é dono do
- *    ator e registra o teste no cartão. Com os dois lados, compara e mostra o vencedor. Se um dos
+ *    ator e registra o teste no cartão. Com os dois lados, compara e mostra o resultado. Se um dos
  *    testes mudar depois (análise, repetir dado), o cartão é recalculado (`updateChatMessage`).
- *
- * Só o mestre grava o resultado; os jogadores só criam mensagens (o cartão e os próprios testes).
+ * 4. Nos cartões de combate, cada acerto ganha o botão «Aplicar dano», de uso único, para o dono
+ *    do alvo (ou o mestre). O mestre reserva o botão para quem clicou e só então o dano é aplicado,
+ *    no navegador de quem clicou (é lá que aparecem a pergunta da armadura e o teste de lesão).
  */
 import { SYSTEM_ID } from '../config.js';
 import { postMessage, render, skillName, skillTestOptions, rollTest } from '../rolls/chat.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { addImpeto, hasAbility, resolveWithValues } from '../rolls/abilities.js';
+import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
+import { weaponCompanionDice } from '../rolls/equipment-chat.js';
+import { abilityNote } from '../rolls/abilities-chat.js';
+import { damageActor } from '../rolls/health.js';
 import {
+  DEFENSE_DIE,
   buildOpposedCardContext,
   bothRolled,
   canCancel,
   canRollSide,
+  cardType,
   createOpposedState,
+  defenseChoices,
   loserSide,
+  markDamage,
   opposedSkillChoices,
   registerSide,
   repeatState,
   resolveState,
+  weaponChoices,
 } from '../rolls/opposed-card.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/oposto-cartao.hbs`;
 const TEMPLATE_DIALOG = `systems/${SYSTEM_ID}/templates/dialog/oposto.hbs`;
+const SOCKET = `system.${SYSTEM_ID}`;
 const ACTOR_TYPES = ['personagem', 'criatura'];
 
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
@@ -41,13 +54,15 @@ const cardState = (message) => message?.flags?.[SYSTEM_ID]?.oposto ?? null;
 /** Marca do teste que responde a um cartão. */
 const answerFlag = (message) => message?.flags?.[SYSTEM_ID]?.respostaOposto ?? null;
 
+const otherSide = (side) => (side === 'a' ? 'b' : 'a');
+
 /** HTML do cartão para um estado. */
 function renderCard(state) {
   const context = buildOpposedCardContext(state);
   return render(TEMPLATE, { ...context, lados: [context.a, context.b] });
 }
 
-/** Perícias que o ator pode usar na disputa (para os seletores das janelas). */
+/** Perícias que o ator pode usar na disputa simples (para os seletores das janelas). */
 function skillChoicesFor(actor) {
   return opposedSkillChoices(actor.system, {
     skill: (key) => t(`DESORDEM.Pericias.${key}`),
@@ -55,6 +70,30 @@ function skillChoicesFor(actor) {
     craft: (key) => `${t('DESORDEM.Ficha.Oficios')}: ${t(`DESORDEM.Oficios.${key}`)}`,
     extra: (group, name) => name || t(`DESORDEM.Ficha.ExtraSemNome.${group}`),
   });
+}
+
+/** Armas do ator que servem para o cartão, com «Luta, RA+2» no rótulo. */
+function weaponsFor(actor, tipo) {
+  const items = actor.items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    type: item.type,
+    system: item.system,
+  }));
+  return weaponChoices(items, tipo).map((weapon) => ({
+    ...weapon,
+    label: `${t(`DESORDEM.Pericias.${weaponSkill(weapon)}`)}, ${weaponDamageLabel(weapon.bonusDano)}`,
+  }));
+}
+
+/** Opções de Defender-se (Luta só contra corpo a corpo). */
+function defenseSkillsFor(attackWeapon) {
+  return defenseChoices(attackWeapon).map(({ key, soCorpo }) => ({
+    key,
+    label: soCorpo
+      ? t('DESORDEM.Oposto.DefesaSoCorpo', { pericia: t(`DESORDEM.Pericias.${key}`) })
+      : t('DESORDEM.Oposto.DefesaCom', { pericia: t(`DESORDEM.Pericias.${key}`) }),
+  }));
 }
 
 /** O único token mirado, se for de outro ator (o oponente sugerido). */
@@ -88,7 +127,7 @@ function candidateActors(excludeUuid) {
 }
 
 /**
- * Janela de escolha (proposta ou aceite). Devolve os valores do formulário ou null.
+ * Janela de escolha (proposta ou resposta). Devolve os valores do formulário ou null.
  * @param {object} context Dados do template `dialog/oposto.hbs`.
  */
 async function askChoices(title, context) {
@@ -109,6 +148,7 @@ async function askChoices(title, context) {
           return {
             confirmed: true,
             skill: fields.skill?.value ?? '',
+            weapon: fields.weapon?.value ?? '',
             actor: fields.actor?.value ?? '',
             descricao: fields.descricao?.value ?? '',
           };
@@ -121,31 +161,94 @@ async function askChoices(title, context) {
   return answer?.confirmed === true ? answer : null;
 }
 
+/** Primeiro passo da proposta: o tipo de disputa (devolve o nome do botão, ou null). */
+async function askMode(actor) {
+  const mode = await foundry.applications.api.DialogV2.wait({
+    window: { title: t('DESORDEM.Oposto.ProporTitulo') },
+    classes: ['desordem-normal', 'desordem-oposto-janela', 'desordem-oposto-modos'],
+    content: `<p class="desordem-ficha__dica">${t('DESORDEM.Oposto.EscolhaTipo', {
+      nome: Handlebars.escapeExpression(actor.name),
+    })}</p>`,
+    modal: true,
+    rejectClose: false,
+    buttons: [
+      {
+        action: 'simples',
+        label: t('DESORDEM.Oposto.Modo.simples'),
+        icon: 'fa-solid fa-scale-balanced',
+      },
+      { action: 'corpo', label: t('DESORDEM.Oposto.Modo.corpo'), icon: 'fa-solid fa-hand-fist' },
+      { action: 'atacar', label: t('DESORDEM.Oposto.Modo.atacar'), icon: 'fa-solid fa-crosshairs' },
+      { action: 'defender', label: t('DESORDEM.Oposto.Modo.defender'), icon: 'fa-solid fa-shield' },
+    ],
+  });
+  return ['simples', 'corpo', 'atacar', 'defender'].includes(mode) ? mode : null;
+}
+
 /**
- * Botão «Propor teste oposto» da ficha: escolhe a perícia (e uma descrição curta) e publica o
+ * Botão «Teste oposto» da ficha: escolhe o tipo, o seu lado e uma descrição curta, e publica o
  * cartão. Com um token mirado de outro ator, ele vira o oponente.
  * @param {Actor} actor
  */
 export async function proposeOpposed(actor) {
+  const mode = await askMode(actor);
+  if (!mode) return null;
+  const tipo = mode === 'atacar' || mode === 'defender' ? 'defesa' : mode;
   const opponent = targetedOpponent(actor);
-  const skills = skillChoicesFor(actor);
-  const answer = await askChoices(t('DESORDEM.Oposto.ProporTitulo'), {
-    skills,
-    showSkill: true,
+  const base = {
     showDescription: true,
     opponentName: opponent?.name ?? '',
     confirmar: t('DESORDEM.Oposto.Propor'),
-  });
-  if (!answer || !skills.some((choice) => choice.key === answer.skill)) return null;
+  };
+  let side;
+  if (mode === 'simples') {
+    const skills = skillChoicesFor(actor);
+    const answer = await askChoices(t('DESORDEM.Oposto.Modo.simples'), {
+      ...base,
+      skills,
+      showSkill: true,
+    });
+    if (!answer || !skills.some((choice) => choice.key === answer.skill)) return null;
+    side = { papel: 'pericia', skill: answer.skill, descricao: answer.descricao };
+  } else if (mode === 'defender') {
+    const skills = defenseSkillsFor(null);
+    const answer = await askChoices(t('DESORDEM.Oposto.Modo.defender'), {
+      ...base,
+      skills,
+      showSkill: true,
+      note: t('DESORDEM.Oposto.DicaDefesa'),
+    });
+    if (!answer || !skills.some((choice) => choice.key === answer.skill)) return null;
+    side = { papel: 'defesa', skill: answer.skill, descricao: answer.descricao };
+  } else {
+    const weapons = weaponsFor(actor, tipo);
+    if (!weapons.length) {
+      ui.notifications.warn(
+        t(tipo === 'corpo' ? 'DESORDEM.Oposto.SemArmaCorpo' : 'DESORDEM.Oposto.SemArma'),
+      );
+      return null;
+    }
+    const answer = await askChoices(t(`DESORDEM.Oposto.Modo.${mode}`), {
+      ...base,
+      weapons,
+      showWeapon: true,
+    });
+    const arma = weapons.find((weapon) => weapon.id === answer?.weapon);
+    if (!arma) return null;
+    side = { papel: 'ataque', skill: weaponSkill(arma), arma, descricao: answer.descricao };
+  }
   const state = createOpposedState({
+    tipo,
     a: {
       actorUuid: actor.uuid,
       nome: actor.name,
-      skill: answer.skill,
-      skillLabel: skillName(answer.skill, actor),
+      papel: side.papel,
+      skill: side.skill,
+      skillLabel: skillName(side.skill, actor),
+      arma: side.arma ?? null,
     },
     b: opponent ? { actorUuid: opponent.uuid, nome: opponent.name } : {},
-    descricao: answer.descricao,
+    descricao: side.descricao,
   });
   return postMessage({
     actor,
@@ -155,48 +258,97 @@ export async function proposeOpposed(actor) {
   });
 }
 
-/** Cliques em andamento neste navegador (mensagem + lado), contra o duplo clique. */
+/** Cliques em andamento neste navegador (mensagem + botão), contra o duplo clique. */
 const inFlight = new Set();
 
+/** Escolhe o ator de um lado em aberto (pergunta só se houver mais de um candidato). */
+async function pickActor(state, side) {
+  const candidates = candidateActors(state[otherSide(side)].actorUuid);
+  if (!candidates.length) {
+    ui.notifications.warn(t('DESORDEM.Oposto.SemCandidatos'));
+    return null;
+  }
+  if (candidates.length === 1) return candidates[0];
+  const answer = await askChoices(t('DESORDEM.Oposto.AceitarTitulo'), {
+    actors: candidates.map((actor) => ({ uuid: actor.uuid, name: actor.name })),
+    showActor: true,
+    opponentName: state[otherSide(side)].nome,
+    confirmar: t('DESORDEM.Oposto.Continuar'),
+  });
+  return candidates.find((actor) => actor.uuid === answer?.actor) ?? null;
+}
+
 /**
- * Rola um lado do cartão: escolhe o ator (lado em aberto) e a perícia (se o lado ainda não tem),
- * passa pela janela pré-teste e publica o teste comum com a marca do cartão.
+ * O que o lado vai usar no teste: a escolha já feita na proposta ou, se faltar, uma janela com a
+ * perícia (simples), a arma (ataque) ou a defesa. Devolve {skill, arma} ou null.
+ */
+async function pickChoice(state, side, actor) {
+  const data = state[side];
+  const opponent = state[otherSide(side)];
+  const tipo = cardType(state);
+  if (data.papel === 'ataque') {
+    if (data.arma) {
+      const item = actor.items.get(data.arma.id);
+      return item ? { skill: data.skill, arma: data.arma } : null;
+    }
+    const weapons = weaponsFor(actor, tipo);
+    if (!weapons.length) {
+      ui.notifications.warn(
+        t(tipo === 'corpo' ? 'DESORDEM.Oposto.SemArmaCorpo' : 'DESORDEM.Oposto.SemArma'),
+      );
+      return null;
+    }
+    const answer = await askChoices(t('DESORDEM.Oposto.AceitarTitulo'), {
+      weapons,
+      showWeapon: true,
+      opponentName: opponent.nome,
+      note:
+        opponent.papel === 'defesa' && opponent.skill === 'luta'
+          ? t('DESORDEM.Oposto.DicaLuta')
+          : '',
+      confirmar: t('DESORDEM.Oposto.Rolar'),
+    });
+    const arma = weapons.find((weapon) => weapon.id === answer?.weapon);
+    return arma ? { skill: weaponSkill(arma), arma } : null;
+  }
+  if (data.skill) return { skill: data.skill, arma: null };
+  const skills =
+    data.papel === 'defesa'
+      ? defenseSkillsFor(opponent.arma)
+      : skillChoicesFor(actor).map((choice) => ({
+          ...choice,
+          selected: choice.key === opponent.skill,
+        }));
+  const answer = await askChoices(t('DESORDEM.Oposto.AceitarTitulo'), {
+    skills,
+    showSkill: true,
+    opponentName: opponent.nome,
+    confirmar: t('DESORDEM.Oposto.Rolar'),
+  });
+  if (!answer || !skills.some((choice) => choice.key === answer.skill)) return null;
+  return { skill: answer.skill, arma: null };
+}
+
+/**
+ * Rola um lado do cartão: escolhe o ator (lado em aberto) e o que ele usa, passa pela janela
+ * pré-teste e publica o teste comum com a marca do cartão. Ataque: perícia da arma (com o dado
+ * do companheiro animal, como no ataque comum); Defender-se: a perícia + d6.
  */
 async function rollSide(message, side, event) {
   const state = cardState(message);
   const data = state?.[side];
   if (!data) return;
-  const other = state[side === 'a' ? 'b' : 'a'];
-  let actor = data.actorUuid ? await foundry.utils.fromUuid(data.actorUuid) : null;
-  let skill = data.skill;
-
-  if (!actor || !skill) {
-    const candidates = actor ? [actor] : candidateActors(other.actorUuid);
-    if (!candidates.length) {
-      ui.notifications.warn(t('DESORDEM.Oposto.SemCandidatos'));
-      return;
-    }
-    const answer = await askChoices(t('DESORDEM.Oposto.AceitarTitulo'), {
-      actors: actor ? [] : candidates.map((c) => ({ uuid: c.uuid, name: c.name })),
-      showActor: !actor,
-      // Sem ator ainda, a perícia é a do mesmo nome do outro lado, se existir
-      skills: skillChoicesFor(candidates[0]).map((choice) => ({
-        ...choice,
-        selected: choice.key === other.skill,
-      })),
-      showSkill: true,
-      opponentName: other.nome,
-      confirmar: t('DESORDEM.Oposto.Rolar'),
-    });
-    if (!answer) return;
-    actor = actor ?? candidates.find((c) => c.uuid === answer.actor) ?? null;
-    skill = answer.skill;
-    if (!actor || !skillChoicesFor(actor).some((choice) => choice.key === skill)) return;
-  }
+  const actor = data.actorUuid
+    ? await foundry.utils.fromUuid(data.actorUuid)
+    : await pickActor(state, side);
+  if (!actor) return;
   if (!actor.isOwner || !canRollSide(state, side, actor.uuid)) {
     ui.notifications.warn(t('DESORDEM.Oposto.SemPermissao'));
     return;
   }
+  const choice = await pickChoice(state, side, actor);
+  if (!choice) return;
+  const { skill, arma } = choice;
 
   const options = await askRollChoices(actor, {
     skillKey: skill,
@@ -204,14 +356,38 @@ async function rollSide(message, side, event) {
     shift: event?.shiftKey,
   });
   if (!options) return;
-  const test = skillTestOptions(actor, skill, undefined, { ...options, showDt: false });
-  await rollTest({
+  const weapon = arma ? actor.items.get(arma.id) : null;
+  const companion = weapon ? weaponCompanionDice(actor, weapon) : [];
+  const extra = data.papel === 'defesa' ? [DEFENSE_DIE] : companion;
+  const test = skillTestOptions(actor, skill, undefined, {
+    ...options,
+    showDt: false,
+    extraDice: [...extra, ...(options.extraDice ?? [])],
+  });
+  const what =
+    data.papel === 'ataque'
+      ? weapon.name
+      : data.papel === 'defesa'
+        ? t('DESORDEM.Oposto.Defender')
+        : `${test.attrLabel} + ${test.skillLabel}`;
+  const result = await rollTest({
     ...test,
     actor,
-    label: `${test.attrLabel} + ${test.skillLabel} · ${t('DESORDEM.Oposto.Titulo')}`,
+    label: `${what} · ${t('DESORDEM.Oposto.Titulo')}`,
     rollMode: 'publicroll',
-    opostoFlag: { cardId: message.id, lado: side, actorUuid: actor.uuid, skill },
+    opostoFlag: {
+      cardId: message.id,
+      lado: side,
+      actorUuid: actor.uuid,
+      skill,
+      armaId: arma?.id ?? '',
+    },
   });
+  // Companheiro animal: o primeiro dado extra em 1 fere o animal (como no ataque comum)
+  if (companion.length && result?.dice?.[2]?.source === 'extra' && result.dice[2].value === 1) {
+    await actor.update({ 'system.cena.animalFerido': true });
+    await abilityNote(actor, t('DESORDEM.Habilidade.AnimalFerido'));
+  }
 }
 
 /** O mestre (ou o autor do cartão) cancela um cartão ainda aberto. */
@@ -236,6 +412,42 @@ async function repeatCard(message) {
   });
   const old = { ...state, estado: 'repetido' };
   await message.update({ content: await renderCard(old), [`flags.${SYSTEM_ID}.oposto`]: old });
+}
+
+/** Danos que este navegador pediu e ainda não aplicou (chave: mensagem + lado). */
+const damageRequests = new Set();
+
+/** Aplica o dano reservado para este usuário (no alvo, com a pergunta da armadura e a lesão). */
+async function applyReservedDamage(message, side) {
+  const state = cardState(message);
+  const entry = state?.dano?.[side];
+  const target = await foundry.utils.fromUuid(state?.[otherSide(side)]?.actorUuid ?? '');
+  if (!entry || !target?.isOwner) return;
+  await damageActor(target, entry.valor, { nonLethal: entry.naoLetal });
+}
+
+/**
+ * Clique em «Aplicar dano»: quem pode editar o cartão marca e aplica na hora; os outros pedem ao
+ * mestre, que reserva o dano para quem pediu (o hook de atualização aplica em seguida).
+ */
+async function requestDamage(message, side) {
+  const state = cardState(message);
+  const target = foundry.utils.fromUuidSync(state?.[otherSide(side)]?.actorUuid ?? '');
+  if (!target?.isOwner || state?.dano?.[side]?.estado !== 'pendente') return;
+  if (message.canUserModify(game.user, 'update')) {
+    const next = markDamage(state, side, game.user.id);
+    if (!next) return;
+    await message.update({ content: await renderCard(next), [`flags.${SYSTEM_ID}.oposto`]: next });
+    await applyReservedDamage(message, side);
+    return;
+  }
+  damageRequests.add(`${message.id}:${side}`);
+  game.socket.emit(SOCKET, {
+    action: 'opposedDamage',
+    messageId: message.id,
+    side,
+    userId: game.user.id,
+  });
 }
 
 /** Cria um botão do cartão que chama `action` uma vez por vez (sem duplo clique). */
@@ -271,10 +483,10 @@ function userCanRoll(state, side) {
     const actor = foundry.utils.fromUuidSync(data.actorUuid);
     return Boolean(actor?.isOwner);
   }
-  return candidateActors(state[side === 'a' ? 'b' : 'a'].actorUuid).length > 0;
+  return candidateActors(state[otherSide(side)].actorUuid).length > 0;
 }
 
-/** Hook renderChatMessageHTML: põe os botões do cartão (rolar, aceitar, cancelar, repetir). */
+/** Hook renderChatMessageHTML: põe os botões do cartão (rolar, aceitar, dano, cancelar, repetir). */
 export function renderOpposedCard(message, html) {
   const state = cardState(message);
   if (!state || !message.isContentVisible) return;
@@ -289,6 +501,23 @@ export function renderOpposedCard(message, html) {
         t(accept ? 'DESORDEM.Oposto.Aceitar' : 'DESORDEM.Oposto.Rolar'),
         accept ? 'fa-hand' : 'fa-dice-d20',
         (event) => rollSide(message, side, event),
+      ),
+    );
+  }
+  // Dano: só para o dono do alvo (o mestre, nas criaturas), enquanto pendente
+  for (const side of ['a', 'b']) {
+    const slot = html.querySelector(`[data-oposto-dano="${side}"]`);
+    const entry = state.dano?.[side];
+    if (!slot || entry?.estado !== 'pendente') continue;
+    const target = foundry.utils.fromUuidSync(state[otherSide(side)].actorUuid);
+    if (!target?.isOwner) continue;
+    slot.append(
+      cardButton(
+        message,
+        `dano-${side}`,
+        t('DESORDEM.Oposto.AplicarDano', { valor: entry.valor, nome: target.name }),
+        'fa-heart-crack',
+        () => requestDamage(message, side),
       ),
     );
   }
@@ -339,6 +568,20 @@ async function saveCard(card, state) {
   await card.update({ content: await renderCard(next), [`flags.${SYSTEM_ID}.oposto`]: next });
 }
 
+/** Arma do teste, lida do próprio ator (nunca do pedido), no formato do cartão. */
+function weaponOf(actor, armaId) {
+  const item = armaId ? actor.items.get(armaId) : null;
+  if (item?.type !== 'arma') return null;
+  return {
+    id: item.id,
+    nome: item.name,
+    bonusDano: item.system.bonusDano,
+    naoLetal: Boolean(item.system.naoLetal),
+    tipo: item.system.tipo,
+    pericia: item.system.pericia ?? '',
+  };
+}
+
 /** O mestre registra no cartão o teste que acabou de chegar, se ele for válido. */
 async function registerAnswer(test) {
   const flag = answerFlag(test);
@@ -355,6 +598,7 @@ async function registerAnswer(test) {
     nome: actor.name,
     skill: flag.skill,
     skillLabel: display.skillLabel ?? '',
+    arma: weaponOf(actor, flag.armaId),
     testId: test.id,
   });
   if (next) await saveCard(card, next);
@@ -370,6 +614,22 @@ async function refreshAnswer(test) {
   await saveCard(card, state);
 }
 
+/**
+ * Pedido de dano de um jogador: o mestre confere que ele é dono do alvo e que o dano ainda está
+ * pendente, e reserva o dano para ele (o navegador dele aplica ao ver a reserva).
+ */
+async function reserveDamage({ messageId, side, userId }) {
+  const card = game.messages.get(messageId);
+  const state = cardState(card);
+  const user = game.users.get(userId);
+  if (!state || !user || !['a', 'b'].includes(side)) return;
+  const target = await foundry.utils.fromUuid(state[otherSide(side)]?.actorUuid ?? '');
+  if (!target?.testUserPermission(user, 'OWNER')) return;
+  const next = markDamage(state, side, userId);
+  if (next)
+    await card.update({ content: await renderCard(next), [`flags.${SYSTEM_ID}.oposto`]: next });
+}
+
 /** Fila do mestre: cada gravação espera a anterior (dois testes ao mesmo tempo não se perdem). */
 let queue = Promise.resolve();
 function enqueue(task) {
@@ -379,14 +639,29 @@ function enqueue(task) {
 
 const isActiveGM = () => game.users.activeGM?.id === game.user.id;
 
-/** Registra os hooks do mestre (chamar uma vez, no `init`). */
+/** Registra os hooks e o socket (chamar uma vez, no `init`). */
 export function registerOpposedHooks() {
   Hooks.on('createChatMessage', (message) => {
     if (isActiveGM() && answerFlag(message)) enqueue(() => registerAnswer(message));
   });
   Hooks.on('updateChatMessage', (message, changes) => {
+    // Dano reservado para este navegador: aplica agora (uma vez)
+    const state = cardState(message);
+    for (const side of ['a', 'b']) {
+      const key = `${message.id}:${side}`;
+      const entry = state?.dano?.[side];
+      if (!damageRequests.has(key) || entry?.estado !== 'aplicado') continue;
+      damageRequests.delete(key);
+      if (entry.por === game.user.id) applyReservedDamage(message, side);
+    }
     if (!isActiveGM() || !answerFlag(message)) return;
     if (!changes?.flags?.[SYSTEM_ID]?.teste) return;
     enqueue(() => refreshAnswer(message));
+  });
+  Hooks.once('ready', () => {
+    game.socket.on(SOCKET, (data) => {
+      if (data?.action !== 'opposedDamage' || !isActiveGM()) return;
+      enqueue(() => reserveDamage(data));
+    });
   });
 }

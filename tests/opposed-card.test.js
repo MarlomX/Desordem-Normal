@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   bothRolled,
+  cardType,
+  defenseChoices,
+  markDamage,
+  validChoice,
+  weaponChoices,
   buildOpposedCardContext,
   canCancel,
   canRollSide,
@@ -72,6 +77,7 @@ test('resolveState compara os dois lados; empate deixa o cartão em «empate»',
   assert.equal(ganhaA.resultado.margin, 4);
   assert.deepEqual(ganhaA.resultado.b, {
     total: 7,
+    highRoll: 0,
     criticalSuccess: false,
     criticalFailure: false,
   });
@@ -164,4 +170,189 @@ test('buildOpposedCardContext marca vencedor, perdedor, margem e lado aberto', (
   assert.equal(aberto.a.temTotal, false);
   assert.equal(buildOpposedCardContext(resolveState(state, res(0), res(9))).a.temTotal, true);
   assert.equal(aberto.vencedorNome, '');
+});
+
+// ===== 0.19.4: combate, defesa e desempate pela RA =====
+
+const dados = (values, crit = null) => ({
+  total: values.reduce((sum, v) => sum + v, 0),
+  dice: values.map((value) => ({ value })),
+  highRoll: Math.max(...values),
+  highSum: crit === 'success' ? values[0] + values[1] : Math.max(...values),
+  criticalSuccess: crit === 'success',
+  criticalFailure: false,
+});
+const espada = {
+  id: 'w1',
+  nome: 'Espada',
+  bonusDano: 2,
+  naoLetal: false,
+  tipo: 'corpo',
+  pericia: '',
+};
+const arco = {
+  id: 'w2',
+  nome: 'Arco',
+  bonusDano: 1,
+  naoLetal: false,
+  tipo: 'distancia',
+  pericia: '',
+};
+const garras = {
+  id: 'w3',
+  nome: 'Garras',
+  bonusDano: 1,
+  naoLetal: false,
+  tipo: 'corpo',
+  pericia: '',
+};
+
+test('simples: total igual decide pela RA; RA igual continua empate (repetem)', () => {
+  const base = {
+    ...createOpposedState({ a: A, b: B }),
+    a: { ...A, papel: 'pericia', arma: null, testId: 'm1' },
+    b: { ...B, papel: 'pericia', arma: null, skill: 'luta', testId: 'm2' },
+  };
+  const ra = resolveState(base, dados([6, 2]), dados([4, 4]));
+  assert.equal(ra.estado, 'resolvido');
+  assert.equal(ra.resultado.winner, 'a');
+  assert.equal(buildOpposedCardContext(ra).porRA, true);
+  assert.equal(resolveState(base, dados([6, 2]), dados([6, 1, 1])).estado, 'empate');
+});
+
+test('cartões antigos (sem tipo nem papel) continuam sendo simples', () => {
+  assert.equal(cardType({ estado: 'aberto' }), 'simples');
+  assert.equal(cardType({ tipo: 'xyz' }), 'simples');
+});
+
+test('validChoice confere a escolha de cada papel', () => {
+  assert.equal(validChoice('simples', 'pericia', { skill: 'luta' }), true);
+  assert.equal(validChoice('simples', 'pericia', {}), false);
+  assert.equal(validChoice('corpo', 'ataque', { skill: 'luta', arma: espada }), true);
+  assert.equal(validChoice('corpo', 'ataque', { skill: 'pontaria', arma: arco }), false);
+  assert.equal(validChoice('defesa', 'ataque', { skill: 'pontaria', arma: arco }), true);
+  // A perícia do ataque é a da arma
+  assert.equal(validChoice('defesa', 'ataque', { skill: 'luta', arma: arco }), false);
+  assert.equal(validChoice('defesa', 'defesa', { skill: 'acrobacia' }), true);
+  assert.equal(validChoice('defesa', 'defesa', { skill: 'luta' }), true);
+  assert.equal(validChoice('defesa', 'defesa', { skill: 'atletismo' }), false);
+});
+
+test('corpo a corpo: os dois lados atacam; empate acerta os dois com o dano de cada arma', () => {
+  let state = createOpposedState({
+    tipo: 'corpo',
+    a: { ...A, skill: 'luta', arma: espada },
+    b: { actorUuid: 'Actor.b', nome: 'Bruxa' },
+  });
+  assert.equal(state.a.papel, 'ataque');
+  assert.equal(state.b.papel, 'ataque');
+  assert.equal(state.a.arma.nome, 'Espada');
+  assert.throws(
+    () => createOpposedState({ tipo: 'corpo', a: { ...A, skill: 'pontaria', arma: arco } }),
+    RangeError,
+  );
+  state = registerSide(state, 'a', { ...A, skill: 'luta', arma: espada, testId: 'm1' });
+  // O lado B não pode atacar à distância num cartão corpo a corpo
+  assert.equal(
+    registerSide(state, 'b', { actorUuid: 'Actor.b', skill: 'pontaria', arma: arco, testId: 'x' }),
+    null,
+  );
+  state = registerSide(state, 'b', {
+    actorUuid: 'Actor.b',
+    nome: 'Bruxa',
+    skill: 'luta',
+    skillLabel: 'Luta',
+    arma: garras,
+    testId: 'm2',
+  });
+  const empate = resolveState(state, dados([5, 3]), dados([6, 2]));
+  assert.equal(empate.estado, 'resolvido');
+  assert.deepEqual(empate.dano.a, { valor: 7, naoLetal: false, estado: 'pendente', por: '' });
+  assert.deepEqual(empate.dano.b, { valor: 7, naoLetal: false, estado: 'pendente', por: '' });
+  const ctx = buildOpposedCardContext(empate);
+  assert.equal(ctx.acertos.length, 2);
+  assert.equal(ctx.acertos[0].alvo, 'Bruxa');
+  // Ninguém atinge 7: ninguém acerta
+  const erro = resolveState(state, dados([3, 3]), dados([2, 2]));
+  assert.deepEqual(erro.dano, { a: null, b: null });
+  assert.equal(buildOpposedCardContext(erro).ninguemAcerta, true);
+});
+
+test('defesa: quem propõe se defende; o ataque precisa vencer; o dano aplicado fica', () => {
+  let state = createOpposedState({
+    tipo: 'defesa',
+    a: { ...A, papel: 'defesa', skill: 'acrobacia', skillLabel: 'Acrobacia' },
+    b: { actorUuid: 'Actor.b', nome: 'Bruxa' },
+  });
+  assert.equal(state.a.papel, 'defesa');
+  assert.equal(state.b.papel, 'ataque');
+  state = registerSide(state, 'a', { ...A, skill: 'acrobacia', testId: 'm1' });
+  state = registerSide(state, 'b', {
+    actorUuid: 'Actor.b',
+    nome: 'Bruxa',
+    skill: 'pontaria',
+    skillLabel: 'Pontaria',
+    arma: arco,
+    testId: 'm2',
+  });
+  const acerta = resolveState(state, dados([3, 2, 1]), dados([5, 4]));
+  assert.equal(acerta.resultado.winner, 'b');
+  assert.deepEqual(acerta.dano.b, { valor: 6, naoLetal: false, estado: 'pendente', por: '' });
+  assert.equal(acerta.dano.a, null);
+  // Marca o dano aplicado; recalcular (análise virou a defesa) não apaga o que já foi aplicado
+  const aplicado = markDamage(acerta, 'b', 'u1');
+  assert.equal(aplicado.dano.b.estado, 'aplicado');
+  assert.equal(markDamage(aplicado, 'b', 'u1'), null);
+  assert.equal(markDamage(acerta, 'a', 'u1'), null);
+  const virou = resolveState(aplicado, dados([6, 6, 1]), dados([5, 4]));
+  assert.equal(virou.resultado.winner, 'a');
+  assert.equal(virou.dano.b.estado, 'aplicado');
+  // Defesa vence: nenhum dano pendente e o cartão diz que a defesa venceu
+  const defendeu = resolveState(state, dados([6, 6, 1]), dados([5, 4]));
+  assert.deepEqual(defendeu.dano, { a: null, b: null });
+  assert.equal(buildOpposedCardContext(defendeu).defesaVenceu, true);
+  assert.equal(buildOpposedCardContext(defendeu).defensorNome, 'Ana');
+  assert.equal(buildOpposedCardContext(defendeu).ninguemAcerta, false);
+});
+
+test('defesa com Luta contra ataque à distância fica marcada para o mestre decidir', () => {
+  let state = createOpposedState({
+    tipo: 'defesa',
+    a: { ...A, papel: 'defesa', skill: 'luta', skillLabel: 'Luta' },
+  });
+  state = registerSide(state, 'a', { ...A, skill: 'luta', testId: 'm1' });
+  state = registerSide(state, 'b', {
+    actorUuid: 'Actor.z',
+    nome: 'Zé',
+    skill: 'pontaria',
+    arma: arco,
+    testId: 'm2',
+  });
+  const ctx = buildOpposedCardContext(resolveState(state, dados([4, 4]), dados([5, 4])));
+  assert.equal(ctx.lutaContraDistancia, true);
+});
+
+test('weaponChoices e defenseChoices oferecem só o que serve para o cartão', () => {
+  const items = [
+    { id: 'w2', name: 'Arco', type: 'arma', system: { tipo: 'distancia', bonusDano: 1 } },
+    { id: 'w1', name: 'Espada', type: 'arma', system: { tipo: 'corpo', bonusDano: 2 } },
+    { id: 'h', name: 'Uivo', type: 'habilidade', system: {} },
+  ];
+  assert.deepEqual(
+    weaponChoices(items, 'corpo').map((w) => w.nome),
+    ['Espada'],
+  );
+  assert.deepEqual(
+    weaponChoices(items, 'defesa').map((w) => w.nome),
+    ['Arco', 'Espada'],
+  );
+  assert.deepEqual(defenseChoices(null), [
+    { key: 'acrobacia', soCorpo: false },
+    { key: 'luta', soCorpo: true },
+  ]);
+  assert.deepEqual(
+    defenseChoices({ tipo: 'distancia' }).map((c) => c.key),
+    ['acrobacia'],
+  );
+  assert.deepEqual(defenseChoices({ tipo: 'corpo' })[1], { key: 'luta', soCorpo: false });
 });

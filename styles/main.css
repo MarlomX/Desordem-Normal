@@ -3486,3 +3486,27 @@ button.desordem-desafios-cartao__nome:hover {
   flex-direction: column;
   gap: 6px;
 }
+
+/* ===== Teste oposto de combate (v0.19.4) ===== */
+.desordem-oposto__ra {
+  font-size: 0.7em;
+  opacity: 0.65;
+}
+
+.desordem-oposto__acerto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.desordem-oposto__acerto.is-aplicado {
+  opacity: 0.65;
+}
+
+.desordem-oposto__veredito p {
+  margin: 0;
+}
+
+.desordem-oposto-modos .form-footer {
+  flex-direction: column;
+}

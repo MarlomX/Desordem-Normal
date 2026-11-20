@@ -1,15 +1,19 @@
-<div class="desordem-oposto desordem-oposto--cartao desordem-oposto--{{estado}}">
-  <h3 class="desordem-oposto__titulo">{{localize "DESORDEM.Oposto.Titulo"}}</h3>
+<div class="desordem-oposto desordem-oposto--cartao desordem-oposto--{{estado}} desordem-oposto--tipo-{{tipo}}">
+  <h3 class="desordem-oposto__titulo">{{localize "DESORDEM.Oposto.Titulo"}}{{#unless tipoSimples}} · {{localize tipoKey}}{{/unless}}</h3>
   {{#if descricao}}<p class="desordem-oposto__descricao">{{descricao}}</p>{{/if}}
 
   {{#each lados}}
   <div class="desordem-oposto__linha{{#if vencedor}} is-vencedor{{/if}}{{#if perdedor}} is-perdedor{{/if}}">
     <div class="desordem-oposto__quem">
       <strong>{{#if aberto}}{{localize "DESORDEM.Oposto.QuemAceitar"}}{{else}}{{nome}}{{/if}}</strong>
-      <span class="desordem-oposto__pericia">{{#if skillLabel}}{{skillLabel}}{{else}}{{localize "DESORDEM.Oposto.PericiaLivre"}}{{/if}}</span>
+      <span class="desordem-oposto__pericia">
+        {{#if ataque}}<i class="fa-solid fa-hand-fist" aria-hidden="true"></i> {{#if armaNome}}{{armaNome}}{{else}}{{localize "DESORDEM.Oposto.ArmaLivre"}}{{/if}}
+        {{else if defesa}}<i class="fa-solid fa-shield" aria-hidden="true"></i> {{localize "DESORDEM.Oposto.Defender"}}{{#if skillLabel}} ({{skillLabel}} + d6){{/if}}
+        {{else}}{{#if skillLabel}}{{skillLabel}}{{else}}{{localize "DESORDEM.Oposto.PericiaLivre"}}{{/if}}{{/if}}
+      </span>
     </div>
     <div class="desordem-oposto__total">
-      {{#if temTotal}}<strong>{{total}}</strong>{{else}}{{#if rolou}}<span class="desordem-oposto__estado">{{localize "DESORDEM.Oposto.Rolou"}}</span>{{else}}<span class="desordem-oposto__estado">{{localize "DESORDEM.Oposto.Aguardando"}}</span>{{/if}}{{/if}}
+      {{#if temTotal}}<strong>{{total}}</strong><span class="desordem-oposto__ra">{{localize "DESORDEM.Oposto.RA" ra=highRoll}}</span>{{else}}{{#if rolou}}<span class="desordem-oposto__estado">{{localize "DESORDEM.Oposto.Rolou"}}</span>{{else}}<span class="desordem-oposto__estado">{{localize "DESORDEM.Oposto.Aguardando"}}</span>{{/if}}{{/if}}
       {{#if criticalSuccess}}<span class="desordem-oposto__critico">{{localize "DESORDEM.Teste.SucessoCritico"}}</span>{{/if}}
       {{#if criticalFailure}}<span class="desordem-oposto__critico desordem-oposto__critico--falha">{{localize "DESORDEM.Teste.FalhaCritica"}}</span>{{/if}}
     </div>
@@ -17,13 +21,27 @@
   </div>
   {{/each}}
 
-  <p class="desordem-oposto__veredito">
-    {{#if resolvido}}{{localize "DESORDEM.Oposto.Vence" nome=vencedorNome}}{{#if temMargem}} · {{localize "DESORDEM.Oposto.Margem"}}: {{margem}}{{/if}}{{/if}}
-    {{#if empate}}{{localize "DESORDEM.Oposto.EmpateRepetir"}}{{/if}}
-    {{#if cancelado}}{{localize "DESORDEM.Oposto.Cancelado"}}{{/if}}
-    {{#if repetido}}{{localize "DESORDEM.Oposto.Repetido"}}{{/if}}
-    {{#if aberto}}{{localize "DESORDEM.Oposto.DicaAberto"}}{{/if}}
-  </p>
+  <div class="desordem-oposto__veredito">
+    {{#if resolvido}}
+      {{#if vencedorNome}}<p>{{localize "DESORDEM.Oposto.Vence" nome=vencedorNome}}{{#if temMargem}} · {{localize "DESORDEM.Oposto.Margem"}}: {{margem}}{{/if}}</p>{{/if}}
+      {{#if defesaVenceu}}<p>{{localize "DESORDEM.Oposto.DefesaVence" nome=defensorNome}}</p>{{/if}}
+      {{#each acertos}}
+      <div class="desordem-oposto__acerto{{#if aplicado}} is-aplicado{{/if}}">
+        <p>{{localize "DESORDEM.Oposto.Acerta" atacante=atacante alvo=alvo valor=valor}}{{#if naoLetal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}}{{#if aplicado}} — {{localize "DESORDEM.Oposto.DanoAplicado"}}{{/if}}</p>
+        <div class="desordem-oposto__acoes" data-oposto-dano="{{key}}"></div>
+      </div>
+      {{/each}}
+      {{#if ninguemAcerta}}<p>{{localize "DESORDEM.Oposto.NinguemAcerta"}}</p>{{/if}}
+    {{/if}}
+    {{#if empate}}<p>{{localize "DESORDEM.Oposto.EmpateRepetir"}}</p>{{/if}}
+    {{#if cancelado}}<p>{{localize "DESORDEM.Oposto.Cancelado"}}</p>{{/if}}
+    {{#if repetido}}<p>{{localize "DESORDEM.Oposto.Repetido"}}</p>{{/if}}
+    {{#if aberto}}<p>{{localize "DESORDEM.Oposto.DicaAberto"}}</p>{{/if}}
+  </div>
   {{#if porCritico}}<p class="desordem-teste__nota">{{localize "DESORDEM.Oposto.PorCritico"}}</p>{{/if}}
+  {{#if porRA}}<p class="desordem-teste__nota">{{localize "DESORDEM.Oposto.PorRA"}}</p>{{/if}}
+  {{#if porSegunda}}<p class="desordem-teste__nota">{{localize "DESORDEM.Oposto.PorSegunda"}}</p>{{/if}}
+  {{#if porDefesa}}<p class="desordem-teste__nota">{{localize "DESORDEM.Oposto.PorDefesa"}}</p>{{/if}}
+  {{#if lutaContraDistancia}}<p class="desordem-teste__nota">{{localize "DESORDEM.Oposto.LutaContraDistancia"}}</p>{{/if}}
   <div class="desordem-oposto__rodape" data-oposto-rodape></div>
 </div>

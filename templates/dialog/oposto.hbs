@@ -1,8 +1,14 @@
 <div class="desordem-oposto-escolha">
   {{#if opponentName}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Oposto.Contra" nome=opponentName}}</p>{{else}}{{#if showDescription}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Oposto.ContraQualquer"}}</p>{{/if}}{{/if}}
+  {{#if note}}<p class="desordem-ficha__dica">{{note}}</p>{{/if}}
   {{#if showActor}}
   <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Oposto.Ator"}}</span>
     <select name="actor">{{#each actors}}<option value="{{uuid}}">{{name}}</option>{{/each}}</select>
+  </label>
+  {{/if}}
+  {{#if showWeapon}}
+  <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Oposto.Arma"}}</span>
+    <select name="weapon">{{#each weapons}}<option value="{{id}}">{{nome}} ({{label}})</option>{{/each}}</select>
   </label>
   {{/if}}
   {{#if showSkill}}
