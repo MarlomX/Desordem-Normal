@@ -70,11 +70,71 @@
   {{#unless ownerIsThreat}}
   <div class="desordem-item__campos">
     <label class="desordem-ficha__campo"><input type="checkbox" name="system.perfil" {{#if system.perfil}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Perfil"}}</span></label>
-    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Automacao"}}</span>
-      <select name="system.automacao" {{#unless editable}}disabled{{/unless}}>{{#each automationChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    {{#if editable}}
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Efeito.Modelo"}}</span>
+      <select data-efeito-modelo><option value="">{{localize "DESORDEM.Efeito.ModeloEscolher"}}</option>{{#each effectsEditor.modelChoices}}<option value="{{value}}">{{label}}</option>{{/each}}</select>
     </label>
+    {{/if}}
   </div>
-  <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaAutomacao"}}</p>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.DicaModelo"}}</p>
+
+  <section class="desordem-hab-efeitos">
+    <h3 class="desordem-hab-efeitos__titulo">{{localize "DESORDEM.Efeito.Titulo"}}</h3>
+    {{#if effectsEditor.legacy}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Legado" nome=effectsEditor.legacyName}}</p>{{/if}}
+    {{#if effectsEditor.empty}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Vazio"}}</p>{{/if}}
+    <datalist id="{{effectsEditor.datalistId}}">{{#each effectsEditor.resources}}<option value="{{this}}"></option>{{/each}}</datalist>
+    {{#each effectsEditor.rows}}
+    <div class="desordem-hab-efeito{{#if open}} is-aberto{{/if}}" data-efeito-id="{{id}}">
+      <div class="desordem-hab-efeito__linha">
+        <div class="desordem-hab-efeito__texto">
+          <strong>{{tipoLabel}}</strong>
+          <span class="desordem-hab-efeito__resumo">{{summary}}</span>
+          {{#unless supported}}<span class="desordem-hab-efeito__aviso">{{localize "DESORDEM.Efeito.SemUso"}}</span>{{/unless}}
+        </div>
+        {{#if ../editable}}
+        <div class="desordem-hab-efeito__botoes">
+          <button type="button" data-action="efeitoAbrir" title="{{localize "DESORDEM.Efeito.Editar"}}"><i class="fa-solid {{#if open}}fa-chevron-up{{else}}fa-pen{{/if}}"></i></button>
+          <button type="button" data-action="efeitoSubir" data-efeito="{{index}}" title="{{localize "DESORDEM.Efeito.Subir"}}" {{#if first}}disabled{{/if}}><i class="fa-solid fa-arrow-up"></i></button>
+          <button type="button" data-action="efeitoDescer" data-efeito="{{index}}" title="{{localize "DESORDEM.Efeito.Descer"}}" {{#if last}}disabled{{/if}}><i class="fa-solid fa-arrow-down"></i></button>
+          <button type="button" data-action="efeitoRemover" data-efeito="{{index}}" title="{{localize "DESORDEM.Efeito.Remover"}}"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        {{/if}}
+      </div>
+      {{#if open}}
+      <div class="desordem-hab-efeito__campos">
+        {{#each fields}}
+        {{#if isInt}}<label class="desordem-ficha__campo"><span>{{label}}</span><input type="number" data-efeito="{{index}}" data-efeito-campo="{{key}}" value="{{value}}" min="{{min}}" max="{{max}}"></label>{{/if}}
+        {{#if isBool}}<label class="desordem-ficha__campo"><input type="checkbox" data-efeito="{{index}}" data-efeito-campo="{{key}}" {{#if value}}checked{{/if}}> <span>{{label}}</span></label>{{/if}}
+        {{#if isText}}<label class="desordem-ficha__campo"><span>{{label}}</span><input type="text" data-efeito="{{index}}" data-efeito-campo="{{key}}" value="{{value}}"></label>{{/if}}
+        {{#if isResource}}<label class="desordem-ficha__campo"><span>{{label}}</span><input type="text" list="{{../../effectsEditor.datalistId}}" data-efeito="{{index}}" data-efeito-campo="{{key}}" value="{{value}}"></label>{{/if}}
+        {{#if isChoice}}<label class="desordem-ficha__campo"><span>{{label}}</span><select data-efeito="{{index}}" data-efeito-campo="{{key}}">{{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>{{/if}}
+        {{#if isDie}}<label class="desordem-ficha__campo"><span>{{label}}</span><select data-efeito="{{index}}" data-efeito-campo="{{key}}">{{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>{{/if}}
+        {{#if isSkill}}<label class="desordem-ficha__campo"><span>{{label}}</span><select data-efeito="{{index}}" data-efeito-campo="{{key}}">{{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>{{/if}}
+        {{#if isCost}}
+        <fieldset class="desordem-hab-efeito__custo"><legend>{{label}}</legend>
+          <select data-efeito="{{index}}" data-efeito-campo="{{key}}.tipo">{{#each kinds}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+          {{#if paid}}<input type="number" min="0" max="20" data-efeito="{{index}}" data-efeito-campo="{{key}}.valor" value="{{value.valor}}">{{/if}}
+          {{#if byResource}}<input type="text" list="{{../../effectsEditor.datalistId}}" placeholder="{{localize "DESORDEM.Efeito.Campos.recurso"}}" data-efeito="{{index}}" data-efeito-campo="{{key}}.recurso" value="{{value.recurso}}">{{/if}}
+        </fieldset>
+        {{/if}}
+        {{#if isSkills}}
+        <fieldset class="desordem-hab-efeito__pericias"><legend>{{label}}</legend>
+          {{#each skills}}<label><input type="checkbox" data-efeito="{{../index}}" data-efeito-campo="pericias" data-pericia="{{key}}" {{#if checked}}checked{{/if}}> {{label}}</label>{{/each}}
+          <p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.DicaPericias"}}</p>
+        </fieldset>
+        {{/if}}
+        {{/each}}
+      </div>
+      {{/if}}
+    </div>
+    {{/each}}
+    {{#if editable}}{{#if effectsEditor.canAdd}}
+    <div class="desordem-hab-efeitos__novo">
+      <select data-efeito-novo>{{#each effectsEditor.typeChoices}}<option value="{{value}}">{{label}}</option>{{/each}}</select>
+      <button type="button" data-action="efeitoAdicionar"><i class="fa-solid fa-plus"></i> {{localize "DESORDEM.Efeito.Adicionar"}}</button>
+    </div>
+    {{else}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Limite" n=effectsEditor.max}}</p>{{/if}}{{/if}}
+  </section>
   {{/unless}}
   {{/if}}
 

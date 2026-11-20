@@ -26,8 +26,14 @@ export const TRIGGERS = Object.freeze([
 /** Tipos de teste que filtram um efeito (`qualquer` vale em todos). */
 export const TEST_KINDS = Object.freeze(['qualquer', 'ataqueCorpo', 'ataqueDistancia', 'defesa']);
 
+/** Atributos de um `passoCena` (vazio = o jogador escolhe na hora). */
+export const ATTRIBUTE_CHOICES = Object.freeze(['', 'fisico', 'mente', 'emocao']);
+
 /** O que um efeito pode gastar. */
 export const COST_KINDS = Object.freeze(['nenhum', 'pd', 'pv', 'recurso']);
+
+/** Grupo de um dado extra na janela pré-teste: «Habilidades» ou «Ações». */
+export const OPTION_GROUPS = Object.freeze(['habilidade', 'acao']);
 
 /** Limite de uso: sem limite, ou uma vez por rodada (só em combate; fora dele, sem limite). */
 export const LIMITS = Object.freeze(['nenhum', 'rodadaCombate']);
@@ -37,8 +43,6 @@ export const ACTION_RESULTS = Object.freeze(['curarPV', 'concederDados']);
 
 /** Condições de um `passoCondicional`. */
 export const CONDITIONS = Object.freeze(['pvMetade', 'pdMetade']);
-
-const ATTRIBUTE_CHOICES = Object.freeze(['', 'fisico', 'mente', 'emocao']);
 
 // ---------- Números das habilidades antigas (também são os padrões) ----------
 
@@ -61,9 +65,14 @@ export const SNEAK_SKILLS = Object.freeze(['crime', 'furtividade']);
 
 // ---------- Campos dos parâmetros ----------
 
-// Cada campo sabe o seu padrão e como limpar um valor qualquer (texto vindo de formulário, valor
-// ausente, número fora da faixa). Um valor inválido vira o padrão.
+// Cada campo sabe o seu padrão, como limpar um valor qualquer (texto vindo de formulário, valor
+// ausente, número fora da faixa; um valor inválido vira o padrão) e que controle o editor usa
+// (`kind`): int, bool, text, resource (chave de recurso), skill (uma perícia), choice, die,
+// skills (lista de perícias) e cost.
 const intField = (initial, min, max) => ({
+  kind: 'int',
+  min,
+  max,
   initial,
   clean(value) {
     // Texto vazio não vira 0 (Number('') === 0): fica o padrão
@@ -74,18 +83,24 @@ const intField = (initial, min, max) => ({
   },
 });
 const boolField = (initial) => ({
+  kind: 'bool',
   initial,
   clean: (value) => (typeof value === 'boolean' ? value : value === 'true' ? true : initial),
 });
-const textField = (initial = '') => ({
+const textField = (initial = '', kind = 'text') => ({
+  kind,
   initial,
   clean: (value) => (typeof value === 'string' ? value.trim().slice(0, 200) : initial),
 });
 const choiceField = (choices, initial) => ({
+  kind: 'choice',
+  choices,
   initial,
   clean: (value) => (choices.includes(value) ? value : initial),
 });
 const dieField = (initial) => ({
+  kind: 'die',
+  choices: DIE_SIDES,
   initial,
   clean: (value) => {
     const n = Number(value);
@@ -93,6 +108,7 @@ const dieField = (initial) => ({
   },
 });
 const listField = () => ({
+  kind: 'skills',
   initial: [],
   clean: (value) =>
     Array.isArray(value)
@@ -100,6 +116,7 @@ const listField = () => ({
       : [],
 });
 const costField = () => ({
+  kind: 'cost',
   initial: { tipo: 'nenhum', valor: 0, recurso: '' },
   clean: (value) => normalizeCost(value),
 });
@@ -126,7 +143,7 @@ export const EFFECT_TYPES = Object.freeze({
   },
   // Ganha N num recurso quando o gatilho acontece
   ganharRecurso: {
-    recurso: textField(),
+    recurso: textField('', 'resource'),
     quantidade: intField(1, 1, 20),
     gatilho: choiceField(TRIGGERS, 'acao'),
   },
@@ -136,11 +153,11 @@ export const EFFECT_TYPES = Object.freeze({
     pericias: listField(),
     teste: choiceField(TEST_KINDS, 'qualquer'),
     custo: costField(),
-    grupo: choiceField(['habilidade', 'acao'], 'habilidade'),
+    grupo: choiceField(OPTION_GROUPS, 'habilidade'),
     marcado: boolField(false),
   },
   // Depois de rolar: cada ponto do recurso muda um dado em ±1
-  ajusteDados: { recurso: textField() },
+  ajusteDados: { recurso: textField('', 'resource') },
   // Depois de rolar: rola de novo um dado que não tirou 1 (de qualquer teste)
   rerrolar: { custo: costField(), limite: choiceField(LIMITS, 'rodadaCombate') },
   // Botão na ficha: aumento de passo num atributo até o fim da cena (vazio = escolher)
@@ -154,7 +171,7 @@ export const EFFECT_TYPES = Object.freeze({
   // Botão na ficha: teste com DT; se passar, cura ou dá dados bônus
   testeAcao: {
     custo: costField(),
-    pericia: textField('medicina'),
+    pericia: textField('medicina', 'skill'),
     dt: intField(7, 1, 99),
     resultado: choiceField(ACTION_RESULTS, 'curarPV'),
     dado: dieField(6),
@@ -164,7 +181,10 @@ export const EFFECT_TYPES = Object.freeze({
   // Dado de um companheiro; um 1 nele o tira da cena
   companheiro: { dado: dieField(6), teste: choiceField(TEST_KINDS, 'ataqueCorpo') },
   // Defesa como ação livre (sem o d6 do Defender-se)
-  defesaLivre: { pericia: textField('acrobacia'), limite: choiceField(LIMITS, 'rodadaCombate') },
+  defesaLivre: {
+    pericia: textField('acrobacia', 'skill'),
+    limite: choiceField(LIMITS, 'rodadaCombate'),
+  },
   // Aumento de passo passivo enquanto a condição valer
   passoCondicional: { condicao: choiceField(CONDITIONS, 'pvMetade'), passos: intField(1, 1, 3) },
   // Torna-se o alvo de um ataque contra um aliado

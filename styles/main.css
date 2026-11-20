@@ -3534,3 +3534,130 @@ button.desordem-desafios-cartao__nome:hover {
   flex: 1 1 auto;
   margin: 0;
 }
+
+/* ===== Editor de efeitos da habilidade (v0.20.3) ===== */
+
+.desordem-hab-efeitos {
+  margin-bottom: 8px;
+}
+
+.desordem-hab-efeitos__titulo {
+  margin: 4px 0 6px;
+  border-bottom: 1px solid var(--dn-border);
+  font-size: 1em;
+}
+
+.desordem-hab-efeito {
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-hab-efeito.is-aberto {
+  border-color: var(--dn-accent-line);
+}
+
+.desordem-hab-efeito__linha {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.desordem-hab-efeito__texto {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.desordem-hab-efeito__resumo {
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.desordem-hab-efeito__aviso {
+  color: var(--dn-gold);
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+.desordem-hab-efeito__botoes {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.desordem-hab-efeito__botoes button {
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-hab-efeito__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11em, 1fr));
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+
+.desordem-hab-efeito__custo,
+.desordem-hab-efeito__pericias {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 4px 8px 6px;
+  border: 1px solid var(--dn-border);
+  border-radius: 6px;
+}
+
+.desordem-hab-efeito__custo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.desordem-hab-efeito__custo select,
+.desordem-hab-efeito__custo input {
+  flex: 1 1 6em;
+  min-width: 0;
+}
+
+.desordem-hab-efeito__pericias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9em, 1fr));
+  gap: 2px 8px;
+}
+
+.desordem-hab-efeito__pericias label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
+}
+
+.desordem-hab-efeito__pericias .desordem-ficha__dica {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+}
+
+.desordem-hab-efeitos__novo {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.desordem-hab-efeitos__novo select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.desordem-hab-efeitos__novo button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}

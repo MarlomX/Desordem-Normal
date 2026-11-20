@@ -596,10 +596,7 @@
       "DicaMao": "Muitos itens podem ser usados sem estar na mão. Marque \"Na mão\" só para segurar o item: ele ocupa uma ou duas mãos, e são duas no total.",
       "Perfil": "Habilidade de perfil (aparece sempre primeiro)",
       "PerfilEtiqueta": "perfil",
-      "Automacao": "Automação",
-      "DicaAutomacao": "A automação liga a habilidade a um comportamento do sistema. Sem automação, ela serve só de descrição.",
       "Automacoes": {
-        "nenhuma": "Nenhuma (só descrição)",
         "impeto": "Barra de ímpeto (falhas enchem; gasta para bônus)",
         "impetoInicial": "Ímpeto inicial (1 espaço a cada nova cena)",
         "analise": "Marcadores de análise (ajustam os dados depois do teste)",
@@ -1354,6 +1351,133 @@
       "AplicadoAcorda": "{nome} deixa de estar moribundo, acorda e fica com {pv} PV.",
       "NaoMoribundo": "{nome} não está moribundo: os primeiros socorros não têm efeito.",
       "SemMestre": "Precisa de um mestre conectado para aplicar os primeiros socorros."
+    },
+    "Efeito": {
+      "Titulo": "Efeitos",
+      "Modelo": "Modelo",
+      "ModeloEscolher": "Usar um modelo…",
+      "ModeloConfirma": "Trocar os efeitos desta habilidade pelos do modelo «{nome}»?",
+      "DicaModelo": "Um modelo preenche os efeitos com os de uma habilidade pronta; depois dá para editar cada um.",
+      "Legado": "Efeitos da automação antiga ({nome}). Ao editar qualquer um, eles passam a ser os efeitos desta habilidade.",
+      "Vazio": "Nenhum efeito: a habilidade serve só de descrição.",
+      "SemUso": "ainda sem uso automático nesta versão",
+      "Adicionar": "Adicionar efeito",
+      "Limite": "Máximo de {n} efeitos por habilidade.",
+      "Editar": "Editar",
+      "Subir": "Subir",
+      "Descer": "Descer",
+      "Remover": "Remover",
+      "AEscolha": "À escolha",
+      "DicaPericias": "Nenhuma marcada = vale em todas as perícias.",
+      "Tipos": {
+        "recurso": "Recurso",
+        "ganharRecurso": "Ganhar recurso",
+        "dadoExtra": "Dado extra",
+        "ajusteDados": "Ajustar dados",
+        "rerrolar": "Repetir dado",
+        "passoCena": "Passo na cena",
+        "acaoNota": "Ação com aviso",
+        "testeAcao": "Teste com efeito",
+        "companheiro": "Companheiro",
+        "defesaLivre": "Defesa livre",
+        "passoCondicional": "Passo condicional",
+        "interceptar": "Assumir ataque"
+      },
+      "Campos": {
+        "chave": "Chave",
+        "nome": "Nome",
+        "maximo": "Máximo",
+        "esvazia": "Esvazia no fim da cena",
+        "recurso": "Recurso",
+        "quantidade": "Quantidade",
+        "gatilho": "Quando",
+        "dado": "Dado",
+        "pericias": "Perícias",
+        "teste": "Tipo de teste",
+        "custo": "Custo",
+        "grupo": "Grupo na janela",
+        "marcado": "Já marcado na janela",
+        "limite": "Limite",
+        "atributo": "Atributo",
+        "passos": "Passos",
+        "texto": "Texto no chat",
+        "pericia": "Perícia",
+        "dt": "DT",
+        "resultado": "Se passar",
+        "margem": "+1 dado a cada",
+        "umaVezPorAlvo": "Uma vez por alvo na cena",
+        "condicao": "Condição"
+      },
+      "Gatilhos": {
+        "falha": "Ao falhar um teste com DT",
+        "perdeOposto": "Ao perder um teste oposto",
+        "defender": "Ao se defender",
+        "inicioCena": "No início da cena",
+        "inicioCombate": "No início do combate",
+        "acao": "Com uma ação (botão na ficha)"
+      },
+      "Testes": {
+        "qualquer": "Qualquer teste",
+        "ataqueCorpo": "Ataque corpo a corpo",
+        "ataqueDistancia": "Ataque à distância",
+        "defesa": "Defesa"
+      },
+      "Grupos": {
+        "habilidade": "Habilidades",
+        "acao": "Ações"
+      },
+      "Custos": {
+        "nenhum": "Sem custo",
+        "pd": "PD",
+        "pv": "PV",
+        "recurso": "Recurso"
+      },
+      "Limites": {
+        "nenhum": "Sem limite",
+        "rodadaCombate": "1× por rodada em combate"
+      },
+      "Resultados": {
+        "curarPV": "Cura PV igual à RA",
+        "concederDados": "Dá dados bônus ao grupo"
+      },
+      "Condicoes": {
+        "pvMetade": "PV na metade ou menos",
+        "pdMetade": "PD na metade ou menos"
+      },
+      "Resumo": {
+        "recurso": "«{nome}» (chave {chave}): até {maximo}{esvazia}",
+        "Esvazia": ", esvazia no fim da cena",
+        "ganharRecurso": "+{quantidade} em {recurso} {quando}",
+        "Quando": {
+          "falha": "ao falhar um teste com DT",
+          "perdeOposto": "ao perder um teste oposto",
+          "defender": "ao se defender",
+          "inicioCena": "no início da cena",
+          "inicioCombate": "no início do combate",
+          "acao": "com uma ação"
+        },
+        "dadoExtra": "+d{dado} em {pericias}{teste}{custo}",
+        "QualquerPericia": "qualquer perícia",
+        "ajusteDados": "Depois de rolar, cada ponto de {recurso} muda um dado em ±1",
+        "rerrolar": "Rola de novo um dado que não tirou 1{custo}{limite}",
+        "passoCena": "+{passos} passo(s) em {atributo} até o fim da cena{custo}",
+        "acaoNota": "Aviso no chat{custo}{texto}",
+        "testeAcao": "Teste de {pericia} (DT {dt}){custo}: {resultado}",
+        "Cura": "cura PV igual à RA",
+        "UmaVez": " (1× por alvo na cena)",
+        "Dados": "1d{dado} +1d{dado} a cada {margem} acima da DT, para você e os aliados",
+        "companheiro": "+d{dado} em {teste}; para de ajudar na cena se tirar 1",
+        "defesaLivre": "Defesa livre com {pericia}, sem o d6{limite}",
+        "passoCondicional": "+{passos} passo(s) em todos os testes com {condicao}",
+        "interceptar": "Torna-se o alvo de um ataque contra um aliado{custo}{limite}",
+        "PorRodada": " (1×/rodada em combate)",
+        "ComCusto": " — custa {custo}",
+        "Custo": {
+          "pd": "{valor} PD",
+          "pv": "{valor} PV",
+          "recurso": "{valor} de {recurso}"
+        }
+      }
     }
   },
   "TYPES.Item.arma": "Arma",
