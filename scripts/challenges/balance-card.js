@@ -13,7 +13,17 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { postMessage, render } from '../rolls/chat.js';
-import { COSTS, applyAnalysis, hasAbility } from '../rolls/abilities.js';
+import { applyAnalysis } from '../rolls/abilities.js';
+import { canPay, payUpdates } from '../rolls/ability-effects.js';
+import {
+  actorEffects,
+  adjustResource,
+  firstEffect,
+  resourceUpdates,
+  roundUseUpdate,
+  usableThisRound,
+  walletOf,
+} from '../rolls/ability-effects-actor.js';
 import {
   BALANCE_BONUS_SIDES,
   BALANCE_SIDES,
@@ -127,7 +137,10 @@ async function ask({ title, content, read }) {
 /** Análise sobre os d10: o dono escolhe os valores novos e paga os marcadores. */
 async function requestAnalysis(message, actor) {
   const flag = message.flags[SYSTEM_ID].equilibrio;
-  const points = actor.system.recursos.analise;
+  // Recurso do efeito `ajusteDados` (na análise, os marcadores)
+  const resource = adjustResource(actor);
+  if (!resource) return undefined;
+  const points = resource.points;
   const fields = flag.base
     .map(
       (value, i) =>
@@ -153,7 +166,7 @@ async function requestAnalysis(message, actor) {
     return undefined;
   }
   if (applied.cost === 0) return undefined;
-  await actor.update({ 'system.recursos.analise': points - applied.cost });
+  await actor.update(resourceUpdates({ [resource.chave]: points - applied.cost }));
   return request(message, {
     op: 'analise',
     values: applied.values,
@@ -161,10 +174,18 @@ async function requestAnalysis(message, actor) {
   });
 }
 
-/** Prontidão: gasta 2 PD e rola de novo um d10 que não tirou 1 (uma vez por cartão). */
+/**
+ * Prontidão (efeito `rerrolar`): gasta o custo (2 PD) e rola de novo um d10 que não tirou 1 (uma
+ * vez por cartão; em combate, também uma vez por rodada).
+ */
 async function requestReroll(message, actor) {
   const flag = message.flags[SYSTEM_ID].equilibrio;
-  if (actor.system.pd.value < COSTS.prontidao) return warn('DESORDEM.Habilidade.ProntidaoSemPD');
+  const entries = actorEffects(actor);
+  const entry = firstEffect(actor, 'rerrolar', null, entries);
+  if (!entry) return undefined;
+  if (!usableThisRound(actor, entry)) return warn('DESORDEM.Habilidade.ProntidaoRodada');
+  const wallet = walletOf(actor, entries);
+  if (!canPay(entry.params.custo, wallet)) return warn('DESORDEM.Habilidade.ProntidaoSemPD');
   const options = balanceRerollCandidates(flag)
     .map((i) => `<option value="${i}">d${BALANCE_SIDES} = ${flag.base[i]}</option>`)
     .join('');
@@ -176,7 +197,7 @@ async function requestReroll(message, actor) {
   if (index === null || index === undefined) return undefined;
   const roll = await new Roll(`1d${BALANCE_SIDES}`).evaluate();
   await showDice(roll);
-  await actor.update({ 'system.pd.value': actor.system.pd.value - COSTS.prontidao });
+  await actor.update({ ...payUpdates(entry.params.custo, wallet), ...roundUseUpdate(entry) });
   return request(message, {
     op: 'repetir',
     index,
@@ -201,7 +222,8 @@ function allowed(op, actor, requester) {
   // Prontidão: quem pede precisa controlar um personagem com a habilidade (pode ser um aliado)
   if (op === 'repetir') {
     return game.actors.some(
-      (other) => other.testUserPermission(requester, 'OWNER') && hasAbility(other, 'prontidao'),
+      (other) =>
+        other.testUserPermission(requester, 'OWNER') && Boolean(firstEffect(other, 'rerrolar')),
     );
   }
   return actor.testUserPermission(requester, 'OWNER');
@@ -338,6 +360,8 @@ export function renderBalanceCard(message, html) {
   const challenge = getChallenge(flag.desafioId);
   const entry = challenge?.participantes.find((item) => item.actorId === flag.actorId);
   const mine = globalThis.canvas?.tokens?.controlled?.[0]?.actor ?? game.user.character;
+  const analysis = actor?.isOwner ? adjustResource(actor) : null;
+  const reroll = mine?.isOwner ? firstEffect(mine, 'rerrolar') : null;
   const view = balanceView(flag, {
     canAct: Boolean(actor?.isOwner),
     reserve: challenge ? participantReserve(challenge, flag.actorId, acrobaciaOf(actor)) : 0,
@@ -345,12 +369,12 @@ export function renderBalanceCard(message, html) {
     target: challenge?.pa ?? 1,
     active: Boolean(challenge?.ativo && entry),
     now: Date.now(),
-    canAnalyse:
-      Boolean(actor?.isOwner) && hasAbility(actor, 'analise') && actor.system.recursos.analise > 0,
+    canAnalyse: Boolean(actor?.isOwner) && (analysis?.points ?? 0) > 0,
     canReroll:
       Boolean(mine?.isOwner) &&
-      hasAbility(mine, 'prontidao') &&
-      mine.system.pd.value >= COSTS.prontidao,
+      Boolean(reroll) &&
+      usableThisRound(mine, reroll) &&
+      canPay(reroll.params.custo, walletOf(mine)),
   });
   const doc = html.ownerDocument;
   const add = (tag, className, text) => {
@@ -451,15 +475,17 @@ export function renderBalanceCard(message, html) {
     bar.append(
       cardButton(
         doc,
-        t('DESORDEM.Habilidade.AnaliseBotao', { pontos: actor.system.recursos.analise }),
+        t('DESORDEM.Habilidade.AnaliseBotao', { pontos: analysis?.points ?? 0 }),
         () => requestAnalysis(message, actor),
       ),
     );
   }
   if (view.showReroll) {
     bar.append(
-      cardButton(doc, t('DESORDEM.Habilidade.ProntidaoBotao', { custo: COSTS.prontidao }), () =>
-        requestReroll(message, mine),
+      cardButton(
+        doc,
+        t('DESORDEM.Habilidade.ProntidaoBotao', { custo: reroll?.params.custo.valor ?? 0 }),
+        () => requestReroll(message, mine),
       ),
     );
   }

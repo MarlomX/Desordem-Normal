@@ -18,7 +18,8 @@
 import { SYSTEM_ID } from '../config.js';
 import { postMessage, render, skillName, skillTestOptions, rollTest } from '../rolls/chat.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
-import { addImpeto, hasAbility, resolveWithValues } from '../rolls/abilities.js';
+import { resolveWithValues } from '../rolls/abilities.js';
+import { triggerUpdates } from '../rolls/ability-effects-actor.js';
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
 import { weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { abilityNote } from '../rolls/abilities-chat.js';
@@ -550,7 +551,8 @@ function testResult(message) {
 
 /**
  * Compara os dois lados (se ambos rolaram) e grava o cartão. Na primeira vez que o cartão tem um
- * perdedor, enche o ímpeto dele (se tiver a habilidade), como no teste oposto pela API.
+ * perdedor, dispara os ganhos dele de «ao perder um oposto» (ex.: enche o ímpeto), como no teste
+ * oposto pela API.
  */
 async function saveCard(card, state) {
   let next = state;
@@ -562,9 +564,9 @@ async function saveCard(card, state) {
   const loser = loserSide(next);
   if (loser && !next.impetoAplicado) {
     const actor = await foundry.utils.fromUuid(next[loser].actorUuid);
-    if (actor && hasAbility(actor, 'impeto')) {
-      await actor.update({ 'system.recursos.impeto': addImpeto(actor.system.recursos.impeto) });
-    }
+    // Ganhos de «ao perder um oposto» (efeitos `ganharRecurso`; ex.: enche o ímpeto)
+    const updates = actor ? triggerUpdates(actor, 'perdeOposto') : {};
+    if (Object.keys(updates).length) await actor.update(updates);
     next = { ...next, impetoAplicado: true };
   }
   await card.update({ content: await renderCard(next), [`flags.${SYSTEM_ID}.oposto`]: next });

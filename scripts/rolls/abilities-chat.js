@@ -5,16 +5,19 @@
  */
 import { SYSTEM_ID, ATRIBUTOS } from '../config.js';
 import { render, postMessage, rollSkill, rebuildTest } from './chat.js';
+import { applyAnalysis, rerollCandidates, replaceDie, sceneReset } from './abilities.js';
+import { canPay, payUpdates, sceneResources } from './ability-effects.js';
 import {
-  COSTS,
-  ANALISE_MAX,
-  hasAbility,
-  gainAnalysis,
-  applyAnalysis,
-  rerollCandidates,
-  replaceDie,
-  sceneReset,
-} from './abilities.js';
+  actorEffects,
+  actorResources,
+  adjustResource,
+  firstEffect,
+  resourceUpdates,
+  roundUseUpdate,
+  triggerUpdates,
+  usableThisRound,
+  walletOf,
+} from './ability-effects-actor.js';
 import { createPending } from './pending-table.js';
 import { disasterSync } from './critical-failure.js';
 
@@ -48,33 +51,31 @@ async function ask({ title, content, read }) {
   });
 }
 
-// ---------- Ativações para o próximo teste ----------
-
-/** Liga ou desliga uma habilidade para o próximo teste (dado extra de ímpeto, dado furtivo). */
-export async function toggleActive(actor, key) {
-  const active = actor.toObject().system.ativas;
-  const on = active.includes(key);
-  if (!on && key === 'impetoDado' && actor.system.recursos.impeto < COSTS.impetoDado) {
-    warn('DESORDEM.Habilidade.ImpetoInsuficiente');
-    return;
-  }
-  await actor.update({ 'system.ativas': on ? active.filter((k) => k !== key) : [...active, key] });
-}
-
 // ---------- Ímpeto ----------
 
-/** Gasta 3 espaços de ímpeto para subir um passo o dado de um atributo até o fim da cena. */
-export async function impetoStep(actor) {
-  const bar = actor.system.recursos.impeto;
-  if (bar < COSTS.impetoPasso) return warn('DESORDEM.Habilidade.ImpetoInsuficiente');
-  const options = ATRIBUTOS.map(
-    (key) => `<option value="${key}">${t(`DESORDEM.Atributos.${key}`)}</option>`,
-  ).join('');
-  const attribute = await ask({
-    title: t('DESORDEM.Habilidade.ImpetoPassoTitulo'),
-    content: `<label>${t('DESORDEM.Habilidade.ImpetoPassoEscolha')} <select name="atributo">${options}</select></label>`,
-    read: (form) => form.elements.atributo.value,
-  });
+/**
+ * Aumento de passo até o fim da cena (efeito `passoCena`; no ímpeto, 3 espaços para subir um
+ * passo um atributo à escolha).
+ * @param {Actor} actor
+ * @param {string|null} [itemId] Habilidade cujo botão foi clicado (sem ela, a primeira que tiver).
+ */
+export async function impetoStep(actor, itemId = null) {
+  const entries = actorEffects(actor);
+  const entry = firstEffect(actor, 'passoCena', itemId, entries);
+  if (!entry) return undefined;
+  const wallet = walletOf(actor, entries);
+  if (!canPay(entry.params.custo, wallet)) return warn('DESORDEM.Habilidade.ImpetoInsuficiente');
+  let attribute = entry.params.atributo;
+  if (!attribute) {
+    const options = ATRIBUTOS.map(
+      (key) => `<option value="${key}">${t(`DESORDEM.Atributos.${key}`)}</option>`,
+    ).join('');
+    attribute = await ask({
+      title: t('DESORDEM.Habilidade.ImpetoPassoTitulo'),
+      content: `<label>${t('DESORDEM.Habilidade.ImpetoPassoEscolha')} <select name="atributo">${options}</select></label>`,
+      read: (form) => form.elements.atributo.value,
+    });
+  }
   if (!attribute) return undefined;
   const effects = [
     ...actor.toObject().system.efeitos,
@@ -82,12 +83,12 @@ export async function impetoStep(actor) {
       nome: t('DESORDEM.Habilidade.EfeitoImpeto'),
       descricao: t('DESORDEM.Habilidade.EfeitoImpetoDescricao'),
       atributo: attribute,
-      passos: 1,
+      passos: entry.params.passos,
       fimDeCena: true,
     },
   ];
   await actor.update({
-    'system.recursos.impeto': bar - COSTS.impetoPasso,
+    ...payUpdates(entry.params.custo, wallet),
     'system.efeitos': effects,
   });
   return abilityNote(
@@ -96,37 +97,63 @@ export async function impetoStep(actor) {
   );
 }
 
-/** Gasta 3 espaços de ímpeto para uma ação extra (só narrativa: avisa o mestre no chat). */
-export async function impetoAction(actor) {
-  const bar = actor.system.recursos.impeto;
-  if (bar < COSTS.impetoAcao) return warn('DESORDEM.Habilidade.ImpetoInsuficiente');
-  await actor.update({ 'system.recursos.impeto': bar - COSTS.impetoAcao });
-  return abilityNote(
-    actor,
-    t('DESORDEM.Habilidade.ImpetoAcaoTexto'),
-    t('DESORDEM.Habilidade.ImpetoAcaoDetalhe'),
-  );
+/**
+ * Ação com aviso no chat (efeito `acaoNota`; no ímpeto, 3 espaços para uma ação extra). Só gasta
+ * o custo e avisa: a mesa resolve o resto.
+ */
+export async function impetoAction(actor, itemId = null) {
+  const entries = actorEffects(actor);
+  const entry = firstEffect(actor, 'acaoNota', itemId, entries);
+  if (!entry) return undefined;
+  const wallet = walletOf(actor, entries);
+  if (!canPay(entry.params.custo, wallet)) return warn('DESORDEM.Habilidade.ImpetoInsuficiente');
+  const updates = payUpdates(entry.params.custo, wallet);
+  if (Object.keys(updates).length) await actor.update(updates);
+  // Sem texto próprio, o aviso da ação extra do ímpeto
+  return entry.params.texto
+    ? abilityNote(actor, entry.params.texto)
+    : abilityNote(
+        actor,
+        t('DESORDEM.Habilidade.ImpetoAcaoTexto'),
+        t('DESORDEM.Habilidade.ImpetoAcaoDetalhe'),
+      );
 }
 
 // ---------- Análise ----------
 
-/** Gasta uma ação para ganhar 2 marcadores de análise (até 4). */
-export async function gainAnalysisMarkers(actor) {
-  const before = actor.system.recursos.analise;
-  const after = gainAnalysis(before);
-  await actor.update({ 'system.recursos.analise': after });
+/**
+ * Gasta uma ação para ganhar num recurso (efeito `ganharRecurso` com gatilho «ação»; na análise,
+ * 2 marcadores, até 4).
+ */
+export async function gainAnalysisMarkers(actor, itemId = null) {
+  const entries = actorEffects(actor);
+  const gain = entries.find(
+    (e) =>
+      e.tipo === 'ganharRecurso' &&
+      e.params.gatilho === 'acao' &&
+      (itemId === null || e.itemId === itemId),
+  );
+  if (!gain) return undefined;
+  const { defs, values } = actorResources(actor, entries);
+  const chave = gain.params.recurso;
+  if (!defs[chave]) return undefined;
+  const updates = triggerUpdates(actor, 'acao', gain.itemId);
+  const before = values[chave];
+  const after = updates[`system.recursosHab.${chave}`] ?? before;
+  if (Object.keys(updates).length) await actor.update(updates);
   return abilityNote(
     actor,
     t('DESORDEM.Habilidade.AnaliseGanha', { valor: after - before }),
-    `${after}/${ANALISE_MAX}`,
+    `${after}/${defs[chave].maximo}`,
   );
 }
 
 // ---------- Esquiva ----------
 
-/** Teste de Acrobacia da esquiva (livre, oposto ao ataque; a comparação é feita pela mesa). */
+/** Teste da esquiva (efeito `defesaLivre`; livre, oposto ao ataque; a mesa compara). */
 export function rollDodge(actor, options = {}) {
-  return rollSkill(actor, 'acrobacia', {
+  const skill = firstEffect(actor, 'defesaLivre')?.params.pericia || 'acrobacia';
+  return rollSkill(actor, skill, {
     ...options,
     showDt: false,
     label: `${actor.name}: ${t('DESORDEM.Habilidade.EsquivaTitulo')}`,
@@ -136,23 +163,36 @@ export function rollDodge(actor, options = {}) {
 // ---------- Cura de aliado ----------
 
 /**
- * Cura um aliado (o token mirado): gasta PD e faz um teste de Medicina; se passar, o cartão traz o
- * botão de recuperar PV (igual à rolagem alta, somando as duas maiores em crítico) que o aliado
- * clica. Cada aliado só pode ser curado uma vez por cena.
+ * Cura um aliado (efeito `testeAcao` que cura PV; o alvo é o token mirado): gasta o custo e faz o
+ * teste (Medicina DT 7 no curandeiro); se passar, o cartão traz o botão de recuperar PV (igual à
+ * rolagem alta, somando as duas maiores em crítico) que o aliado clica. Com «uma vez por alvo»,
+ * cada aliado só pode ser curado uma vez por cena.
  */
-export async function healAlly(actor) {
+export async function healAlly(actor, itemId = null) {
+  const entries = actorEffects(actor);
+  const entry = entries.find(
+    (e) =>
+      e.tipo === 'testeAcao' &&
+      e.params.resultado === 'curarPV' &&
+      (itemId === null || e.itemId === itemId),
+  );
+  if (!entry) return undefined;
+  const { custo, pericia, dt, umaVezPorAlvo } = entry.params;
   const target = [...game.user.targets][0]?.actor;
   if (!target) return warn('DESORDEM.Habilidade.CuraSemAlvo');
   if (target.id === actor.id) return warn('DESORDEM.Habilidade.CuraEmSi');
-  if (actor.system.cena.curados.includes(target.id)) {
+  if (umaVezPorAlvo && actor.system.cena.curados.includes(target.id)) {
     return warn('DESORDEM.Habilidade.CuraJaCurou', { nome: target.name });
   }
-  if (actor.system.pd.value < COSTS.curandeiro) return warn('DESORDEM.Habilidade.CuraSemPD');
+  const wallet = walletOf(actor, entries);
+  if (!canPay(custo, wallet)) return warn('DESORDEM.Habilidade.CuraSemPD');
   await actor.update({
-    'system.pd.value': actor.system.pd.value - COSTS.curandeiro,
-    'system.cena.curados': [...actor.toObject().system.cena.curados, target.id],
+    ...payUpdates(custo, wallet),
+    ...(umaVezPorAlvo
+      ? { 'system.cena.curados': [...actor.toObject().system.cena.curados, target.id] }
+      : {}),
   });
-  const result = await rollSkill(actor, 'medicina', { dt: 7 });
+  const result = await rollSkill(actor, pericia, { dt });
   if (!result.success) return result;
   await postMessage({
     actor,
@@ -181,13 +221,15 @@ export async function endScene(actors) {
     actors ? [actors].flat() : game.actors.filter((a) => a.type === 'personagem')
   ).filter((actor) => actor.isOwner);
   for (const actor of list) {
+    // Recursos das habilidades: esvaziam (se o efeito mandar) e recebem os ganhos de início de cena
+    const entries = actorEffects(actor);
     await actor.update(
       sceneReset({
         pv: actor.system.pv.value,
         contusao: actor.system.estado.contusao,
         estupor: actor.system.estado.estupor,
         efeitos: actor.toObject().system.efeitos,
-        impetoInicial: hasAbility(actor, 'impetoInicial'),
+        recursos: sceneResources(entries, actorResources(actor, entries).values),
       }),
     );
   }
@@ -272,7 +314,9 @@ export function registerAbilitySocket() {
 /** Usa a análise: o jogador escolhe os novos valores dos dados e gasta os marcadores. */
 async function useAnalysis(message, actor) {
   const info = testData(message);
-  const points = actor.system.recursos.analise;
+  const resource = adjustResource(actor);
+  if (!resource) return;
+  const points = resource.points;
   const count = info.sides.length;
   const current = info.values.slice(0, count);
   const fields = current
@@ -295,17 +339,24 @@ async function useAnalysis(message, actor) {
     return;
   }
   if (applied.cost === 0) return;
-  await actor.update({ 'system.recursos.analise': points - applied.cost });
+  await actor.update(resourceUpdates({ [resource.chave]: points - applied.cost }));
   await requestRewrite(message, [...applied.values, ...info.values.slice(count)], {
     notes: [t('DESORDEM.Habilidade.AnaliseNota', { nome: actor.name, pontos: applied.cost })],
   });
 }
 
-/** Repetir dado: gasta 2 PD para rolar de novo um dado do teste cujo resultado não seja 1. */
+/**
+ * Repetir dado (efeito `rerrolar`; na prontidão, 2 PD): rola de novo um dado do teste cujo
+ * resultado não seja 1. Em combate, uma vez por rodada; fora de combate, sem limite.
+ */
 async function useReroll(message, actor) {
   const info = testData(message);
-  if (info.used?.prontidao) return warn('DESORDEM.Habilidade.ProntidaoJaUsada');
-  if (actor.system.pd.value < COSTS.prontidao) return warn('DESORDEM.Habilidade.ProntidaoSemPD');
+  const entries = actorEffects(actor);
+  const entry = firstEffect(actor, 'rerrolar', null, entries);
+  if (!entry) return;
+  if (!usableThisRound(actor, entry)) return warn('DESORDEM.Habilidade.ProntidaoRodada');
+  const wallet = walletOf(actor, entries);
+  if (!canPay(entry.params.custo, wallet)) return warn('DESORDEM.Habilidade.ProntidaoSemPD');
   const candidates = rerollCandidates(info.values, info.sides);
   const options = candidates
     .map((i) => `<option value="${i}">d${info.sides[i]} = ${info.values[i]}</option>`)
@@ -317,7 +368,8 @@ async function useReroll(message, actor) {
   });
   if (index === null || index === undefined) return;
   const roll = await new Roll(`1d${info.sides[index]}`).evaluate();
-  await actor.update({ 'system.pd.value': actor.system.pd.value - COSTS.prontidao });
+  // Paga o custo e marca o uso nesta rodada (fora de combate, nada é marcado)
+  await actor.update({ ...payUpdates(entry.params.custo, wallet), ...roundUseUpdate(entry) });
   const text = t('DESORDEM.Habilidade.ProntidaoNota', {
     nome: actor.name,
     dado: info.sides[index],
@@ -360,24 +412,26 @@ export function renderTestButtons(message, html) {
   bar.className = 'desordem-teste__habilidades';
 
   const owner = game.actors.get(message.speaker?.actor);
-  if (owner?.isOwner && hasAbility(owner, 'analise') && owner.system.recursos.analise > 0) {
-    addButton(
-      bar,
-      t('DESORDEM.Habilidade.AnaliseBotao', { pontos: owner.system.recursos.analise }),
-      () => useAnalysis(message, owner),
+  const adjust = owner?.isOwner ? adjustResource(owner) : null;
+  if (adjust && adjust.points > 0) {
+    addButton(bar, t('DESORDEM.Habilidade.AnaliseBotao', { pontos: adjust.points }), () =>
+      useAnalysis(message, owner),
     );
   }
 
+  // Repetir dado: o personagem controlado (ou o do usuário) pode usar no teste de qualquer um
   const mine = game.canvas?.tokens?.controlled?.[0]?.actor ?? game.user.character;
+  const reroll = mine?.isOwner ? firstEffect(mine, 'rerrolar') : null;
   if (
-    mine?.isOwner &&
-    hasAbility(mine, 'prontidao') &&
-    !info.used?.prontidao &&
-    mine.system.pd.value >= COSTS.prontidao &&
+    reroll &&
+    usableThisRound(mine, reroll) &&
+    canPay(reroll.params.custo, walletOf(mine)) &&
     rerollCandidates(info.values, info.sides).length > 0
   ) {
-    addButton(bar, t('DESORDEM.Habilidade.ProntidaoBotao', { custo: COSTS.prontidao }), () =>
-      useReroll(message, mine),
+    addButton(
+      bar,
+      t('DESORDEM.Habilidade.ProntidaoBotao', { custo: reroll.params.custo.valor }),
+      () => useReroll(message, mine),
     );
   }
 

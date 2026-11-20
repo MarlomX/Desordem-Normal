@@ -1,10 +1,15 @@
 import { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
-import { migrateCraftSkill } from './migrations.js';
+import { migrateCraftSkill, migrateAbilityResources } from './migrations.js';
 import { OVERRIDABLE_KEYS } from '../rolls/attribute.js';
 
 export default class PersonagemModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     const f = foundry.data.fields;
+
+    // Mapa chave → valor, com o tipo do valor conferido (TypedObjectField existe no v12+; se
+    // faltar, um ObjectField comum guarda o mesmo mapa sem conferir)
+    const objetoDe = (element) =>
+      f.TypedObjectField ? new f.TypedObjectField(element) : new f.ObjectField();
 
     // Dados vão de d4 a d12 (d20 só com efeitos paranormais); guardamos o número de faces.
     const dado = (inicial = 4) =>
@@ -69,7 +74,20 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         curados: new f.ArrayField(new f.StringField({ required: true, blank: false })),
         animalFerido: new f.BooleanField({ initial: false })
       }),
-      // Recursos das habilidades: barra de ímpeto (0 a 5) e marcadores de análise (0 a 4)
+      // Recursos das habilidades (v0.20.0): valor atual de cada recurso, pela chave do efeito
+      // `recurso` (ex.: { impeto: 2, analise: 0 }). O máximo vem do efeito, não daqui.
+      recursosHab: objetoDe(
+        new f.NumberField({ required: true, integer: true, min: 0, max: 20, initial: 0 })
+      ),
+      // Último uso, por efeito, das habilidades limitadas a uma vez por rodada de combate
+      // (chave `itemId-efeitoId`; vale enquanto o combate e a rodada forem os mesmos)
+      usosRodada: objetoDe(
+        new f.SchemaField({
+          combate: new f.StringField({ required: true, blank: true, initial: '' }),
+          rodada: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 })
+        })
+      ),
+      // Campos antigos (até a v0.19.x), só lidos pela migração para `recursosHab`
       recursos: new f.SchemaField({
         impeto: new f.NumberField({ required: true, integer: true, min: 0, max: 5, initial: 0 }),
         analise: new f.NumberField({ required: true, integer: true, min: 0, max: 4, initial: 0 })
@@ -110,10 +128,12 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
 
   /**
    * Adapta dados salvos por versões anteriores antes de o Foundry validá-los.
-   * Até a v0.14.4 existia a perícia `metalurgia`; hoje ela é uma área do Ofício.
+   * Até a v0.14.4 existia a perícia `metalurgia`; hoje ela é uma área do Ofício. Até a v0.19.x
+   * o ímpeto e a análise ficavam em `recursos`; hoje ficam em `recursosHab`.
    */
   static migrateData(source) {
     migrateCraftSkill(source);
+    migrateAbilityResources(source);
     return super.migrateData(source);
   }
 }

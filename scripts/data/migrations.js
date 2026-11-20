@@ -23,3 +23,19 @@ export function migrateCraftSkill(source) {
   }
   return source;
 }
+
+/**
+ * Até a v0.19.x o ímpeto e a análise tinham campos fixos (`recursos.impeto`, `recursos.analise`).
+ * Desde a v0.20.0 o valor de cada recurso das habilidades fica no mapa `recursosHab`, pela chave
+ * do recurso. Só copia se o mapa ainda não existe (o campo antigo fica onde está, sem uso).
+ * @param {object} source Dados do ator (`system`), possivelmente de uma versão antiga.
+ */
+export function migrateAbilityResources(source) {
+  const old = source?.recursos;
+  if (!source || source.recursosHab !== undefined || !old || typeof old !== 'object') {
+    return source;
+  }
+  const count = (value) => (Number.isInteger(value) && value > 0 ? value : 0);
+  source.recursosHab = { impeto: count(old.impeto), analise: count(old.analise) };
+  return source;
+}

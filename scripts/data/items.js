@@ -86,8 +86,11 @@ export class ItemModel extends foundry.abstract.TypeDataModel {
 
 /**
  * Habilidade. Não separamos as que vêm da origem das que vêm de nível: todas são iguais, e a de
- * perfil (`perfil`) aparece sempre primeiro. `automacao` liga a habilidade a um comportamento do
- * sistema; vazio = só descrição.
+ * perfil (`perfil`) aparece sempre primeiro. `efeitos` é a lista de efeitos da habilidade (tipos
+ * do catálogo em rolls/ability-effects.js); `params` fica livre no banco e é limpo por `normalizeEffect`
+ * sempre que o sistema lê. `automacao` é o campo antigo (até a 0.19.x): com a lista vazia, os
+ * efeitos equivalentes à automação são montados na hora (`itemEffects`). Vazio nos dois = só
+ * descrição.
  */
 export class HabilidadeModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
@@ -95,6 +98,13 @@ export class HabilidadeModel extends foundry.abstract.TypeDataModel {
       descricao: texto(),
       perfil: new f.BooleanField({ initial: false }),
       automacao: new f.StringField({ required: true, blank: true, initial: '' }),
+      efeitos: new f.ArrayField(
+        new f.SchemaField({
+          id: new f.StringField({ required: true, blank: false, initial: 'e0' }),
+          tipo: new f.StringField({ required: true, blank: false, initial: 'acaoNota' }),
+          params: new f.ObjectField(),
+        }),
+      ),
     };
   }
 

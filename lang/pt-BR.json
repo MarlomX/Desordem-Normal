@@ -89,7 +89,8 @@
           "folego": "Fôlego",
           "manual": "Bônus",
           "vazio": "Livre",
-          "defesa": "Defesa"
+          "defesa": "Defesa",
+          "habilidade": "Habilidade"
         },
         "SemEspaco": "sem espaço de dado",
         "Unidade": {
@@ -97,7 +98,8 @@
           "impeto": "ímpeto"
         },
         "Restam": "restam {n}",
-        "Acoes": "Ações"
+        "Acoes": "Ações",
+        "HabEfeito": "{nome} (+d{die})"
       }
     },
     "Ficha": {
@@ -680,7 +682,8 @@
       "Esquivar": "Esquivar",
       "Curar": "Curar aliado",
       "AnimalFeridoMarca": "Animal ferido",
-      "Sorrateiro": "+d8 no próximo teste de Crime ou Furtividade (3 PD)"
+      "Sorrateiro": "+d8 no próximo teste de Crime ou Furtividade (3 PD)",
+      "ProntidaoRodada": "Esta habilidade já foi usada nesta rodada de combate."
     },
     "Perseguicao": {
       "Titulo": "Perseguição",

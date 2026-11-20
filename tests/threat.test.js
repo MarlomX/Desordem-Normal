@@ -25,7 +25,7 @@ test('isThreat reconhece a criatura pelo ator ou pelo tipo', () => {
 test('testResources lê os recursos do personagem e zera os que a criatura não tem', () => {
   const personagem = {
     pd: { value: 7, max: 10 },
-    recursos: { impeto: 2, analise: 1 },
+    recursosHab: { impeto: 2, analise: 1 },
     estado: { pavor: 6 },
   };
   assert.deepEqual(testResources(personagem), { pd: 7, impeto: 2, analise: 1, fearDie: 6 });

@@ -1,9 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  IMPETO_MAX,
-  hasAbility,
-  addImpeto,
   impetoFillsOnFailure,
   opposedLoser,
   gainAnalysis,
@@ -15,23 +12,6 @@ import {
   activeBoosts,
   sceneReset,
 } from '../scripts/rolls/abilities.js';
-
-const actorWith = (...keys) => ({
-  items: {
-    some: (fn) => keys.map((k) => ({ type: 'habilidade', system: { automacao: k } })).some(fn),
-  },
-});
-
-test('hasAbility procura a automação entre as habilidades do personagem', () => {
-  assert.equal(hasAbility(actorWith('impeto'), 'impeto'), true);
-  assert.equal(hasAbility(actorWith('analise'), 'impeto'), false);
-});
-
-test('a barra de ímpeto enche sem passar do máximo', () => {
-  assert.equal(addImpeto(0), 1);
-  assert.equal(addImpeto(IMPETO_MAX), IMPETO_MAX);
-  assert.equal(addImpeto(4, 3), IMPETO_MAX);
-});
 
 test('só testes com DT que falharam enchem o ímpeto; o perdedor do oposto também', () => {
   assert.equal(impetoFillsOnFailure({ success: false }), true);
@@ -136,7 +116,7 @@ test('sceneReset zera a cena, esvazia recursos e dá 1 PV a quem está com 0', (
       { nome: 'A', fimDeCena: true },
       { nome: 'B', fimDeCena: false },
     ],
-    impetoInicial: false,
+    recursos: { impeto: 0, analise: 0 },
   });
   assert.equal(changes['system.pv.value'], 1);
   assert.equal(changes['system.estado.contusao'], false);
@@ -145,22 +125,47 @@ test('sceneReset zera a cena, esvazia recursos e dá 1 PV a quem está com 0', (
   assert.equal(changes['system.cena.primeirosSocorros'], 0);
   assert.equal(changes['system.estado.moribundo'], false);
   assert.deepEqual(changes['system.cena.curados'], []);
-  assert.equal(changes['system.recursos.impeto'], 0);
-  assert.equal(changes['system.recursos.analise'], 0);
+  assert.equal(changes['system.recursosHab.impeto'], 0);
+  assert.equal(changes['system.recursosHab.analise'], 0);
   for (const key of ['fisico', 'mente', 'emocao', 'pericias']) {
     assert.equal(changes[`system.passos.${key}`], 0);
   }
   assert.deepEqual(changes['system.efeitos'], [{ nome: 'B', fimDeCena: false }]);
 });
 
-test('sceneReset mantém o PV de quem tem vida e dá 1 de ímpeto a quem tem ímpeto inicial', () => {
+test('sceneReset mantém o PV de quem tem vida e grava os recursos calculados', () => {
   const changes = sceneReset({
     pv: 7,
     contusao: false,
     estupor: false,
     efeitos: [],
-    impetoInicial: true,
+    recursos: { impeto: 1 },
   });
   assert.equal(changes['system.pv.value'], 7);
-  assert.equal(changes['system.recursos.impeto'], 1);
+  assert.equal(changes['system.recursosHab.impeto'], 1);
+  // Sem recursos (quem não tem habilidades com recurso): nada de recursosHab na gravação
+  const plain = sceneReset({ pv: 3, contusao: false, estupor: false, efeitos: [] });
+  assert.equal(
+    Object.keys(plain).some((key) => key.startsWith('system.recursosHab')),
+    false,
+  );
+});
+
+test('activeBoosts usa os dados extras informados (efeitos) no lugar dos antigos', () => {
+  const diceOptions = [
+    { key: 'e1', die: 10, cost: { pd: 2, impeto: 0 } },
+    { key: 'e2', die: 6, cost: { pd: 0, impeto: 0 } },
+  ];
+  const boosts = activeBoosts(['e1', 'e2', 'impetoDado'], {
+    skillKey: 'luta',
+    impeto: 5,
+    pd: 2,
+    diceOptions,
+  });
+  // `impetoDado` não está entre as opções informadas: não vale
+  assert.deepEqual(boosts, { extraDice: [10, 6], pdCost: 2, impetoCost: 0, used: ['e1', 'e2'] });
+  assert.deepEqual(
+    activeBoosts(['e1'], { skillKey: 'luta', impeto: 0, pd: 1, diceOptions }).used,
+    [],
+  );
 });

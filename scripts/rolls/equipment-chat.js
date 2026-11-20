@@ -6,7 +6,7 @@ import { render, postMessage, rollSkill } from './chat.js';
 import { computeDamage, damageBaseValue } from './damage.js';
 import { damageActor } from './health.js';
 import { weaponSkill, weaponDamageLabel, itemUse, itemUseChanges } from './equipment.js';
-import { hasAbility } from './abilities.js';
+import { firstEffect } from './ability-effects-actor.js';
 import { abilityNote } from './abilities-chat.js';
 
 const TEMPLATE_ATAQUE = `systems/${SYSTEM_ID}/templates/chat/ataque.hbs`;
@@ -23,23 +23,27 @@ const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localiz
  * @returns {Promise<{result: object, amount: (number|null)}>}
  */
 /**
- * Companheiro animal: +d6 nos ataques corpo a corpo, até o animal se ferir (dado em 1).
- * @returns {number[]} [6] se o companheiro ajuda neste ataque, senão [].
+ * Companheiro animal (efeito `companheiro`): o dado dele nos ataques do tipo do efeito (corpo a
+ * corpo, por padrão), até o animal se ferir (dado em 1).
+ * @returns {number[]} [dado] se o companheiro ajuda neste ataque, senão [].
  */
 export function weaponCompanionDice(actor, weapon) {
   const { system } = weapon;
-  const companion =
-    system.tipo === 'corpo' && hasAbility(actor, 'companheiro') && !actor.system.cena.animalFerido;
-  return companion ? [6] : [];
+  const companion = firstEffect(actor, 'companheiro');
+  if (!companion || actor.system.cena?.animalFerido) return [];
+  const kind = system.tipo === 'corpo' ? 'ataqueCorpo' : 'ataqueDistancia';
+  const fits = companion.params.teste === 'qualquer' || companion.params.teste === kind;
+  return fits ? [companion.params.dado] : [];
 }
 
 export async function attackWithWeapon(actor, weapon, options = {}) {
   const { system } = weapon;
-  const companion = weaponCompanionDice(actor, weapon).length > 0;
+  const companionDice = weaponCompanionDice(actor, weapon);
+  const companion = companionDice.length > 0;
   const result = await rollSkill(actor, weaponSkill(system), {
     dt: 7,
     ...options,
-    extraDice: [...(companion ? [6] : []), ...(options.extraDice ?? [])],
+    extraDice: [...companionDice, ...(options.extraDice ?? [])],
   });
   // O dado do companheiro é o primeiro dado extra do teste
   if (companion && result.dice[2]?.source === 'extra' && result.dice[2].value === 1) {

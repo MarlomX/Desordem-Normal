@@ -4,7 +4,8 @@
  * pavor antes de rolar. A lógica (opções, custos, prévia) está em `roll-dialog.js`.
  */
 import { SYSTEM_ID } from '../config.js';
-import { hasAbility } from './abilities.js';
+import { dialogDiceOptions } from './ability-effects.js';
+import { actorEffects } from './ability-effects-actor.js';
 import { advanceDtField } from './chase.js';
 import { render, testDicePreview } from './chat.js';
 import { buildFearDie } from '../sheets/dado-pavor.js';
@@ -19,6 +20,10 @@ import {
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/dialog/pre-teste.hbs`;
 
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+
+/** Opções da janela com rótulo e origem próprios no idioma; as outras usam os genéricos. */
+const KNOWN_OPTIONS = ['impetoDado', 'sorrateiro', 'naoLetal', 'defesa'];
+const KNOWN_ORIGINS = [...KNOWN_OPTIONS, 'base', 'pavor', 'folego', 'manual', 'vazio'];
 
 /** Opção marcada na seção de furtividade ('' = teste comum). */
 const stealthChoice = (form) =>
@@ -110,7 +115,8 @@ function slotElement(slot, manualIndex) {
 
   const origin = document.createElement('small');
   origin.className = 'desordem-pre__origem';
-  origin.textContent = t(`DESORDEM.Teste.Pre.Origem.${slot.kind}`);
+  const kind = KNOWN_ORIGINS.includes(slot.kind) ? slot.kind : 'habilidade';
+  origin.textContent = t(`DESORDEM.Teste.Pre.Origem.${kind}`);
   wrapper.append(die, origin);
   return wrapper;
 }
@@ -366,12 +372,12 @@ export async function askRollChoices(
     attrDie: dice.attrDie,
     skillDie: dice.skillDie,
     baseExtraDice,
-    has: {
-      impeto: hasAbility(actor, 'impeto'),
-      sorrateiro: hasAbility(actor, 'sorrateiro'),
-      naoLetal: allowNonLethal,
-      defesa: allowDefense,
-    },
+    has: { naoLetal: allowNonLethal, defesa: allowDefense },
+    // Dados extras dos efeitos das habilidades (ímpeto, furtivo...), filtrados pela perícia
+    diceOptions: dialogDiceOptions(actorEffects(actor), {
+      skillKey,
+      testKind: allowDefense ? 'defesa' : 'qualquer',
+    }),
     resources: { impeto: resources.impeto, pd: resources.pd },
     fearDie: resources.fearDie,
     ignoreFear,
@@ -391,7 +397,10 @@ export async function askRollChoices(
       .join(' · ');
   const abilityRows = model.abilities.map((ability) => ({
     ...ability,
-    label: t(`DESORDEM.Teste.Pre.Hab.${ability.key}`, { die: ability.die }),
+    // As opções conhecidas têm rótulo próprio; as outras, o nome da habilidade e o dado
+    label: KNOWN_OPTIONS.includes(ability.key)
+      ? t(`DESORDEM.Teste.Pre.Hab.${ability.key}`, { die: ability.die })
+      : t('DESORDEM.Teste.Pre.HabEfeito', { nome: ability.itemName ?? '', die: ability.die }),
     costText: costText(ability.cost),
     reasonText: ability.reason ? t(`DESORDEM.Teste.Pre.Indisponivel.${ability.reason}`) : '',
   }));

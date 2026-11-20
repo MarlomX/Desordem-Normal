@@ -13,13 +13,18 @@ import { lesionModifier, contusionStepMods } from './injury.js';
 import { traumaModifier } from './emotional.js';
 import { collectStepMods } from './steps.js';
 import {
-  hasAbility,
-  addImpeto,
   impetoFillsOnFailure,
   opposedLoser,
   activeBoosts,
   resolveWithValues,
 } from './abilities.js';
+import { dialogDiceOptions } from './ability-effects.js';
+import {
+  actorEffects,
+  actorResources,
+  resourceUpdates,
+  triggerUpdates,
+} from './ability-effects-actor.js';
 import { resolveFearOptions } from './fear.js';
 import { createPending } from './pending-table.js';
 import { isThreat, testResources } from './threat.js';
@@ -193,19 +198,24 @@ export async function runTest(actor, options) {
 }
 
 /**
- * Efeitos das habilidades depois de um teste: paga o ímpeto gasto e
- * enche a barra de ímpeto se o teste com DT falhou.
+ * Efeitos das habilidades depois de um teste: paga o ímpeto gasto na janela pré-teste e dispara
+ * os ganhos de «ao falhar» (efeitos `ganharRecurso`; ex.: enche a barra de ímpeto) se o teste
+ * com DT falhou.
  */
 async function settleAbilities(actor, options, result) {
-  // Ameaças (criaturas) não têm barra de ímpeto
-  if (!actor.system.recursos) return;
-  const updates = {};
-  const before = actor.system.recursos.impeto;
-  let impeto = before - (options.impetoCost ?? 0);
-  if (hasAbility(actor, 'impeto') && impetoFillsOnFailure(result, options.showDt)) {
-    impeto = addImpeto(impeto);
+  // Ameaças (criaturas) não têm recursos de habilidade
+  if (!actor.system.recursosHab) return;
+  const { values } = actorResources(actor);
+  const paid = { ...values };
+  if (options.impetoCost && paid.impeto !== undefined) {
+    paid.impeto = Math.max(0, paid.impeto - options.impetoCost);
   }
-  if (impeto !== before) updates['system.recursos.impeto'] = impeto;
+  const updates = {
+    ...resourceUpdates(paid.impeto !== values.impeto ? { impeto: paid.impeto } : {}),
+    ...(impetoFillsOnFailure(result, options.showDt)
+      ? triggerUpdates(actor, 'falha', null, paid)
+      : {}),
+  };
   if (Object.keys(updates).length) await actor.update(updates);
 }
 
@@ -332,11 +342,15 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     throw error;
   }
 
-  // Habilidades escolhidas na janela pré-teste (dado extra de ímpeto, dado furtivo)
+  // Habilidades escolhidas na janela pré-teste (efeitos `dadoExtra`: ímpeto, dado furtivo...)
   const boosts = activeBoosts(active, {
     skillKey,
     impeto: resources.impeto,
     pd: resources.pd - fear.pdCost,
+    diceOptions: dialogDiceOptions(actorEffects(actor), {
+      skillKey,
+      testKind: allowDefense ? 'defesa' : 'qualquer',
+    }),
     allowNonLethal,
     allowDefense,
   });
@@ -442,14 +456,11 @@ export async function rollOpposed(a, b) {
   const [sideA, sideB] = await Promise.all([prepare(a), prepare(b)]);
   const outcome = resolveOpposed(sideA.result, sideB.result);
 
-  // Quem perde a disputa enche a barra de ímpeto (se tiver a habilidade)
+  // Quem perde a disputa dispara os ganhos de «ao perder um oposto» (ex.: enche o ímpeto)
   const loser = opposedLoser(outcome);
   const loserActor = loser === 'a' ? a.actor : loser === 'b' ? b.actor : null;
-  if (loserActor && hasAbility(loserActor, 'impeto')) {
-    await loserActor.update({
-      'system.recursos.impeto': addImpeto(loserActor.system.recursos.impeto),
-    });
-  }
+  const loserUpdates = loserActor ? triggerUpdates(loserActor, 'perdeOposto') : {};
+  if (Object.keys(loserUpdates).length) await loserActor.update(loserUpdates);
 
   const context = {
     ...buildOpposedContext(outcome),

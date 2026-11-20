@@ -17,12 +17,12 @@
     </details>
     <div class="desordem-habilidade__controles">
       {{#if showImpeto}}
-      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Impeto"}}</span> <strong>{{impeto}} / 5</strong></label>
+      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Impeto"}}</span> <strong>{{impeto}} / {{impetoMax}}</strong></label>
       <button type="button" data-action="impetoStep" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.ImpetoPasso"}}</button>
       <button type="button" data-action="impetoAction" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.ImpetoAcao"}}</button>
       {{/if}}
       {{#if showAnalise}}
-      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Marcadores"}}</span> <strong>{{analise}} / 4</strong></label>
+      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Marcadores"}}</span> <strong>{{analise}} / {{analiseMax}}</strong></label>
       <button type="button" data-action="gainAnalysis" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.Analisar"}}</button>
       {{/if}}
       {{#if showDodge}}<button type="button" data-action="dodge" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.Esquivar"}}</button>{{/if}}

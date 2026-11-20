@@ -2,7 +2,8 @@
  * Janela pré-teste: o que o jogador pode escolher antes de rolar (dados bônus, habilidades,
  * controlar ou abraçar o pavor), com custos e uma prévia dos dados. Lógica pura, sem Foundry.
  */
-import { COSTS, DEFENSE_BONUS_DIE, SNEAK_SKILLS } from './abilities.js';
+import { DEFENSE_BONUS_DIE } from './abilities.js';
+import { dialogDiceOptions, legacyEffects } from './ability-effects.js';
 import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { BONUS_SLOTS, bonusDice, normalizeBonus } from './bonus.js';
 import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } from './fear.js';
@@ -30,9 +31,11 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  * @param {number} input.attrDie Dado do atributo já com passos e contusão.
  * @param {number} input.skillDie Dado da perícia já com passos.
  * @param {number[]} [input.baseExtraDice] Dados extras fixos do teste (companheiro, não letal...).
- * @param {{impeto?: boolean, sorrateiro?: boolean, naoLetal?: boolean}} input.has Habilidades que
- *   o personagem tem; `naoLetal` só no teste de lesão (+d6, sem custo); `defesa` só no teste de
- *   Defender-se (+d6, sem custo, já marcado).
+ * @param {{impeto?: boolean, sorrateiro?: boolean, naoLetal?: boolean}} input.has Opções do
+ *   teste: `naoLetal` só no teste de lesão (+d6, sem custo); `defesa` só no teste de Defender-se
+ *   (+d6, sem custo, já marcado). `impeto` e `sorrateiro` são um atalho para os dados das
+ *   automações antigas, usado só quando `diceOptions` não é informado.
+ * @param {object[]} [input.diceOptions] Dados extras dos efeitos do ator (`dialogDiceOptions`).
  * @param {{impeto: number, pd: number}} input.resources Espaços de ímpeto e PD atuais.
  * @param {number} [input.fearDie=0] Dado de pavor guardado na ficha.
  * @param {boolean} [input.ignoreFear=false] Testes que não sofrem o dado de pavor.
@@ -57,6 +60,7 @@ export function buildRollModel({
   skillDie,
   baseExtraDice = [],
   has = {},
+  diceOptions,
   resources,
   fearDie = 0,
   ignoreFear = false,
@@ -67,24 +71,32 @@ export function buildRollModel({
   challenges = [],
 }) {
   const abilities = [];
-  if (has.impeto) {
-    const ok = resources.impeto >= COSTS.impetoDado;
+  // Dados extras dos efeitos (ímpeto, furtividade...): cada um com o seu custo em PD ou ímpeto
+  const options =
+    diceOptions ??
+    dialogDiceOptions(
+      [
+        ...(has.impeto ? legacyEffects('impeto') : []),
+        ...(has.sorrateiro ? legacyEffects('sorrateiro') : []),
+      ],
+      { skillKey },
+    );
+  for (const option of options) {
+    const reason =
+      option.cost.impeto > resources.impeto
+        ? 'impeto'
+        : option.cost.pd > resources.pd
+          ? 'pd'
+          : null;
     abilities.push({
-      key: 'impetoDado',
-      die: 4,
-      cost: { impeto: COSTS.impetoDado, pd: 0 },
-      available: ok,
-      reason: ok ? null : 'impeto',
-    });
-  }
-  if (has.sorrateiro && SNEAK_SKILLS.includes(skillKey)) {
-    const ok = resources.pd >= COSTS.sorrateiro;
-    abilities.push({
-      key: 'sorrateiro',
-      die: 8,
-      cost: { impeto: 0, pd: COSTS.sorrateiro },
-      available: ok,
-      reason: ok ? null : 'pd',
+      key: option.key,
+      die: option.die,
+      cost: { impeto: option.cost.impeto, pd: option.cost.pd },
+      available: reason === null,
+      reason,
+      ...(option.itemName ? { itemName: option.itemName } : {}),
+      ...(option.checked ? { checked: true } : {}),
+      ...(option.group === 'acao' ? { group: 'acao' } : {}),
     });
   }
   // Defender-se: +d6 já marcado (desmarcar = esquiva sem o dado)

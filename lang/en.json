@@ -89,7 +89,8 @@
           "folego": "Breath",
           "manual": "Bonus",
           "vazio": "Free",
-          "defesa": "Defense"
+          "defesa": "Defense",
+          "habilidade": "Ability"
         },
         "SemEspaco": "no die slot left",
         "Unidade": {
@@ -97,7 +98,8 @@
           "impeto": "drive"
         },
         "Restam": "{n} left",
-        "Acoes": "Actions"
+        "Acoes": "Actions",
+        "HabEfeito": "{nome} (+d{die})"
       }
     },
     "Ficha": {
@@ -680,7 +682,8 @@
       "Esquivar": "Dodge",
       "Curar": "Heal ally",
       "AnimalFeridoMarca": "Animal hurt",
-      "Sorrateiro": "+d8 on the next Crime or Stealth test (3 DP)"
+      "Sorrateiro": "+d8 on the next Crime or Stealth test (3 DP)",
+      "ProntidaoRodada": "This ability was already used this combat round."
     },
     "Perseguicao": {
       "Titulo": "Chase",

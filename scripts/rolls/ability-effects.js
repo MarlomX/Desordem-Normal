@@ -1,0 +1,475 @@
+/**
+ * Efeitos de habilidade: lógica pura (sem Foundry) do catálogo de efeitos.
+ *
+ * Uma habilidade é um texto mais uma lista de efeitos. Cada efeito tem um `id`, um `tipo`
+ * escolhido num catálogo fechado (`EFFECT_TYPES`) e os parâmetros desse tipo (`params`). O tipo
+ * já diz onde o efeito aparece (janela pré-teste, cartão do teste, ficha, gatilho); os parâmetros
+ * só trazem números, perícias e custos. Não há código livre.
+ *
+ * Itens antigos (até a 0.19.x) não têm efeitos, só o campo `automacao`: `itemEffects` monta os
+ * efeitos equivalentes na hora (`legacyEffects`), com os mesmos números de antes.
+ */
+
+/** Dados que um efeito pode usar. */
+export const DIE_SIDES = Object.freeze([4, 6, 8, 10, 12]);
+
+/** Momentos em que um efeito `ganharRecurso` dispara. */
+export const TRIGGERS = Object.freeze([
+  'falha', // um teste com DT falhou
+  'perdeOposto', // perdeu um teste oposto
+  'defender', // fez o teste de Defender-se
+  'inicioCena', // a Nova cena começou
+  'inicioCombate', // um combate começou
+  'acao', // botão na ficha (gasta a ação do personagem)
+]);
+
+/** Tipos de teste que filtram um efeito (`qualquer` vale em todos). */
+export const TEST_KINDS = Object.freeze(['qualquer', 'ataqueCorpo', 'ataqueDistancia', 'defesa']);
+
+/** O que um efeito pode gastar. */
+export const COST_KINDS = Object.freeze(['nenhum', 'pd', 'pv', 'recurso']);
+
+/** Limite de uso: sem limite, ou uma vez por rodada (só em combate; fora dele, sem limite). */
+export const LIMITS = Object.freeze(['nenhum', 'rodadaCombate']);
+
+/** Resultados de um `testeAcao` que passou. */
+export const ACTION_RESULTS = Object.freeze(['curarPV', 'concederDados']);
+
+/** Condições de um `passoCondicional`. */
+export const CONDITIONS = Object.freeze(['pvMetade', 'pdMetade']);
+
+const ATTRIBUTE_CHOICES = Object.freeze(['', 'fisico', 'mente', 'emocao']);
+
+// ---------- Números das habilidades antigas (também são os padrões) ----------
+
+export const IMPETO_MAX = 5;
+export const ANALISE_MAX = 4;
+export const ANALISE_GAIN = 2;
+
+/** Custos das automações antigas. */
+export const COSTS = Object.freeze({
+  prontidao: 2,
+  curandeiro: 2,
+  sorrateiro: 3,
+  impetoDado: 1,
+  impetoPasso: 3,
+  impetoAcao: 3,
+});
+
+/** Perícias do dado extra furtivo das automações antigas. */
+export const SNEAK_SKILLS = Object.freeze(['crime', 'furtividade']);
+
+// ---------- Campos dos parâmetros ----------
+
+// Cada campo sabe o seu padrão e como limpar um valor qualquer (texto vindo de formulário, valor
+// ausente, número fora da faixa). Um valor inválido vira o padrão.
+const intField = (initial, min, max) => ({
+  initial,
+  clean(value) {
+    // Texto vazio não vira 0 (Number('') === 0): fica o padrão
+    if (value === '' || value === null || value === undefined) return initial;
+    const n = Math.trunc(Number(value));
+    if (!Number.isFinite(n)) return initial;
+    return Math.min(max, Math.max(min, n));
+  },
+});
+const boolField = (initial) => ({
+  initial,
+  clean: (value) => (typeof value === 'boolean' ? value : value === 'true' ? true : initial),
+});
+const textField = (initial = '') => ({
+  initial,
+  clean: (value) => (typeof value === 'string' ? value.trim().slice(0, 200) : initial),
+});
+const choiceField = (choices, initial) => ({
+  initial,
+  clean: (value) => (choices.includes(value) ? value : initial),
+});
+const dieField = (initial) => ({
+  initial,
+  clean: (value) => {
+    const n = Number(value);
+    return DIE_SIDES.includes(n) ? n : initial;
+  },
+});
+const listField = () => ({
+  initial: [],
+  clean: (value) =>
+    Array.isArray(value)
+      ? [...new Set(value.filter((v) => typeof v === 'string' && v).map((v) => v.trim()))]
+      : [],
+});
+const costField = () => ({
+  initial: { tipo: 'nenhum', valor: 0, recurso: '' },
+  clean: (value) => normalizeCost(value),
+});
+
+/** Custo de um efeito: tipo (nenhum, PD, PV, recurso), quanto e, se for recurso, qual. */
+export function normalizeCost(raw) {
+  const tipo = COST_KINDS.includes(raw?.tipo) ? raw.tipo : 'nenhum';
+  if (tipo === 'nenhum') return { tipo, valor: 0, recurso: '' };
+  return {
+    tipo,
+    valor: intField(0, 0, 20).clean(raw?.valor),
+    recurso: tipo === 'recurso' ? textField().clean(raw?.recurso) : '',
+  };
+}
+
+/** Catálogo: os campos de cada tipo de efeito. */
+export const EFFECT_TYPES = Object.freeze({
+  // Barra ou contador próprio (o valor atual fica no ator, em `recursosHab[chave]`)
+  recurso: {
+    chave: textField(),
+    nome: textField(),
+    maximo: intField(5, 1, 20),
+    esvazia: boolField(true),
+  },
+  // Ganha N num recurso quando o gatilho acontece
+  ganharRecurso: {
+    recurso: textField(),
+    quantidade: intField(1, 1, 20),
+    gatilho: choiceField(TRIGGERS, 'acao'),
+  },
+  // Dado extra marcado na janela pré-teste (perícias vazias = todas)
+  dadoExtra: {
+    dado: dieField(6),
+    pericias: listField(),
+    teste: choiceField(TEST_KINDS, 'qualquer'),
+    custo: costField(),
+    grupo: choiceField(['habilidade', 'acao'], 'habilidade'),
+    marcado: boolField(false),
+  },
+  // Depois de rolar: cada ponto do recurso muda um dado em ±1
+  ajusteDados: { recurso: textField() },
+  // Depois de rolar: rola de novo um dado que não tirou 1 (de qualquer teste)
+  rerrolar: { custo: costField(), limite: choiceField(LIMITS, 'rodadaCombate') },
+  // Botão na ficha: aumento de passo num atributo até o fim da cena (vazio = escolher)
+  passoCena: {
+    custo: costField(),
+    atributo: choiceField(ATTRIBUTE_CHOICES, ''),
+    passos: intField(1, 1, 3),
+  },
+  // Botão na ficha: gasta o custo e avisa no chat (a mesa resolve o resto)
+  acaoNota: { custo: costField(), texto: textField() },
+  // Botão na ficha: teste com DT; se passar, cura ou dá dados bônus
+  testeAcao: {
+    custo: costField(),
+    pericia: textField('medicina'),
+    dt: intField(7, 1, 99),
+    resultado: choiceField(ACTION_RESULTS, 'curarPV'),
+    dado: dieField(6),
+    margem: intField(3, 1, 10),
+    umaVezPorAlvo: boolField(true),
+  },
+  // Dado de um companheiro; um 1 nele o tira da cena
+  companheiro: { dado: dieField(6), teste: choiceField(TEST_KINDS, 'ataqueCorpo') },
+  // Defesa como ação livre (sem o d6 do Defender-se)
+  defesaLivre: { pericia: textField('acrobacia'), limite: choiceField(LIMITS, 'rodadaCombate') },
+  // Aumento de passo passivo enquanto a condição valer
+  passoCondicional: { condicao: choiceField(CONDITIONS, 'pvMetade'), passos: intField(1, 1, 3) },
+  // Torna-se o alvo de um ataque contra um aliado
+  interceptar: { custo: costField(), limite: choiceField(LIMITS, 'rodadaCombate') },
+});
+
+/** Parâmetros padrão de um tipo (cópia nova). */
+export function defaultParams(tipo) {
+  const fields = EFFECT_TYPES[tipo];
+  if (!fields) return null;
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, field]) => [key, globalThis.structuredClone(field.initial)]),
+  );
+}
+
+/**
+ * Limpa um efeito: tipo conhecido, todos os parâmetros do tipo (valores inválidos viram o padrão,
+ * parâmetros desconhecidos somem). Devolve `null` para um tipo que não está no catálogo.
+ * @param {{id?: string, tipo?: string, params?: object}} raw
+ * @param {string} [fallbackId] Id usado se o efeito não tiver um.
+ */
+export function normalizeEffect(raw, fallbackId = '') {
+  const fields = EFFECT_TYPES[raw?.tipo];
+  if (!fields) return null;
+  const source = raw.params && typeof raw.params === 'object' ? raw.params : {};
+  const params = Object.fromEntries(
+    Object.entries(fields).map(([key, field]) => [key, field.clean(source[key])]),
+  );
+  const id = typeof raw.id === 'string' && raw.id ? raw.id : fallbackId;
+  return { id, tipo: raw.tipo, params };
+}
+
+/** Limpa uma lista de efeitos (tipos desconhecidos somem; sem id, `e0`, `e1`...). */
+export function normalizeEffects(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map((raw, i) => normalizeEffect(raw, `e${i}`)).filter(Boolean);
+}
+
+// ---------- Habilidades antigas ----------
+
+const effect = (id, tipo, params) => normalizeEffect({ id, tipo, params });
+const pdCost = (valor) => ({ tipo: 'pd', valor });
+const resourceCost = (recurso, valor) => ({ tipo: 'recurso', recurso, valor });
+
+/**
+ * Efeitos equivalentes a uma automação antiga (campo `automacao` dos itens até a 0.19.x). Os ids
+ * são fixos: os efeitos de uma mesma automação têm sempre o mesmo id.
+ * @param {string} key
+ * @returns {object[]}
+ */
+export function legacyEffects(key) {
+  switch (key) {
+    case 'impeto':
+      return [
+        effect('impetoBarra', 'recurso', { chave: 'impeto', maximo: IMPETO_MAX, esvazia: true }),
+        effect('impetoFalha', 'ganharRecurso', { recurso: 'impeto', gatilho: 'falha' }),
+        effect('impetoOposto', 'ganharRecurso', { recurso: 'impeto', gatilho: 'perdeOposto' }),
+        effect('impetoDado', 'dadoExtra', {
+          dado: 4,
+          custo: resourceCost('impeto', COSTS.impetoDado),
+        }),
+        effect('impetoPasso', 'passoCena', { custo: resourceCost('impeto', COSTS.impetoPasso) }),
+        effect('impetoAcao', 'acaoNota', { custo: resourceCost('impeto', COSTS.impetoAcao) }),
+      ];
+    case 'impetoInicial':
+      return [
+        effect('impetoInicial', 'ganharRecurso', { recurso: 'impeto', gatilho: 'inicioCena' }),
+      ];
+    case 'analise':
+      return [
+        effect('analiseMarcadores', 'recurso', {
+          chave: 'analise',
+          maximo: ANALISE_MAX,
+          esvazia: true,
+        }),
+        effect('analisar', 'ganharRecurso', {
+          recurso: 'analise',
+          quantidade: ANALISE_GAIN,
+          gatilho: 'acao',
+        }),
+        effect('analiseAjuste', 'ajusteDados', { recurso: 'analise' }),
+      ];
+    case 'prontidao':
+      return [effect('prontidao', 'rerrolar', { custo: pdCost(COSTS.prontidao) })];
+    case 'esquiva':
+      return [effect('esquiva', 'defesaLivre', { pericia: 'acrobacia' })];
+    case 'companheiro':
+      return [effect('companheiro', 'companheiro', { dado: 6, teste: 'ataqueCorpo' })];
+    case 'curandeiro':
+      return [
+        effect('curandeiro', 'testeAcao', {
+          custo: pdCost(COSTS.curandeiro),
+          pericia: 'medicina',
+          dt: 7,
+          resultado: 'curarPV',
+        }),
+      ];
+    case 'sorrateiro':
+      return [
+        effect('sorrateiro', 'dadoExtra', {
+          dado: 8,
+          pericias: [...SNEAK_SKILLS],
+          custo: pdCost(COSTS.sorrateiro),
+        }),
+      ];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Efeitos de uma habilidade: os da lista, ou, se a lista estiver vazia, os equivalentes à
+ * automação antiga.
+ * @param {{efeitos?: object[], automacao?: string}} system `item.system`.
+ */
+export function itemEffects(system) {
+  const own = normalizeEffects(system?.efeitos);
+  return own.length ? own : legacyEffects(system?.automacao ?? '');
+}
+
+/**
+ * Efeitos de todas as habilidades de um ator, cada um com o item de onde veio.
+ * @param {Iterable<{id: string, name: string, type: string, system: object}>} items
+ * @returns {{itemId: string, itemName: string, id: string, tipo: string, params: object}[]}
+ */
+export function collectEffects(items) {
+  const list = [];
+  for (const item of items ?? []) {
+    if (item.type !== 'habilidade') continue;
+    for (const entry of itemEffects(item.system)) {
+      list.push({ itemId: item.id, itemName: item.name, ...entry });
+    }
+  }
+  return list;
+}
+
+/** Efeitos de um tipo (e, se quiser, de um item só). */
+export function effectsOfType(entries, tipo, itemId = null) {
+  return entries.filter((e) => e.tipo === tipo && (itemId === null || e.itemId === itemId));
+}
+
+/** Chave de um efeito no ator (para os limites de uso): item + efeito. */
+export function effectKey(entry) {
+  return `${entry.itemId}-${entry.id}`;
+}
+
+// ---------- Recursos ----------
+
+/**
+ * Recursos definidos pelos efeitos `recurso` (o primeiro de cada chave vale).
+ * @returns {Object<string, {chave: string, nome: string, maximo: number, esvazia: boolean,
+ *   itemName: string}>}
+ */
+export function resourceDefs(entries) {
+  const defs = {};
+  for (const entry of effectsOfType(entries, 'recurso')) {
+    const { chave, nome, maximo, esvazia } = entry.params;
+    if (!chave || defs[chave]) continue;
+    defs[chave] = {
+      chave,
+      nome: nome || entry.itemName,
+      maximo,
+      esvazia,
+      itemName: entry.itemName,
+    };
+  }
+  return defs;
+}
+
+/** Valor atual de um recurso (0 se o ator não tem o recurso; nunca acima do máximo). */
+export function resourceValue(values, defs, chave) {
+  const def = defs[chave];
+  if (!def) return 0;
+  const n = Math.trunc(Number(values?.[chave]) || 0);
+  return Math.min(def.maximo, Math.max(0, n));
+}
+
+/** Novo valor de um recurso depois de somar (ou tirar) `amount`, sem sair de 0..máximo. */
+export function addResource(values, defs, chave, amount) {
+  const def = defs[chave];
+  if (!def) return 0;
+  return Math.min(def.maximo, Math.max(0, resourceValue(values, defs, chave) + amount));
+}
+
+/**
+ * O que os efeitos `ganharRecurso` de um gatilho mudam nos recursos.
+ * @param {object[]} entries Efeitos do ator.
+ * @param {Object<string, number>} values Valores atuais (`recursosHab`).
+ * @param {string} trigger Um de `TRIGGERS`.
+ * @param {string|null} [itemId] Só os efeitos deste item (o botão «ação» de uma habilidade).
+ * @returns {Object<string, number>} Só os recursos que mudaram, com o valor novo.
+ */
+export function triggerChanges(entries, values, trigger, itemId = null) {
+  const defs = resourceDefs(entries);
+  const next = { ...values };
+  for (const entry of effectsOfType(entries, 'ganharRecurso', itemId)) {
+    const { recurso, quantidade, gatilho } = entry.params;
+    if (gatilho !== trigger || !defs[recurso]) continue;
+    next[recurso] = addResource(next, defs, recurso, quantidade);
+  }
+  const changes = {};
+  for (const chave of Object.keys(defs)) {
+    const value = resourceValue(next, defs, chave);
+    if (value !== resourceValue(values, defs, chave)) changes[chave] = value;
+  }
+  return changes;
+}
+
+/**
+ * Recursos na Nova cena: os que esvaziam voltam a 0; depois, os ganhos de início de cena.
+ * @returns {Object<string, number>} Valor novo de cada recurso definido.
+ */
+export function sceneResources(entries, values) {
+  const defs = resourceDefs(entries);
+  const next = {};
+  for (const [chave, def] of Object.entries(defs)) {
+    next[chave] = def.esvazia ? 0 : resourceValue(values, defs, chave);
+  }
+  for (const entry of effectsOfType(entries, 'ganharRecurso')) {
+    const { recurso, quantidade, gatilho } = entry.params;
+    if (gatilho !== 'inicioCena' || !defs[recurso]) continue;
+    next[recurso] = addResource(next, defs, recurso, quantidade);
+  }
+  return next;
+}
+
+// ---------- Custos ----------
+
+/**
+ * O ator pode pagar este custo?
+ * @param {{tipo: string, valor: number, recurso: string}} cost
+ * @param {{pd: number, pv: number, recursos: Object<string, number>}} wallet Valores atuais.
+ */
+export function canPay(cost, wallet) {
+  const { tipo, valor, recurso } = normalizeCost(cost);
+  if (tipo === 'nenhum' || valor === 0) return true;
+  if (tipo === 'pd') return wallet.pd >= valor;
+  if (tipo === 'pv') return wallet.pv >= valor;
+  return (wallet.recursos?.[recurso] ?? 0) >= valor;
+}
+
+/**
+ * Gravação que paga um custo (caminhos `system.*` do ator). Sem conferir se dá: chame `canPay`.
+ * @returns {Object<string, number>}
+ */
+export function payUpdates(cost, wallet) {
+  const { tipo, valor, recurso } = normalizeCost(cost);
+  if (tipo === 'nenhum' || valor === 0) return {};
+  if (tipo === 'pd') return { 'system.pd.value': Math.max(0, wallet.pd - valor) };
+  if (tipo === 'pv') return { 'system.pv.value': Math.max(0, wallet.pv - valor) };
+  const current = wallet.recursos?.[recurso] ?? 0;
+  return { [`system.recursosHab.${recurso}`]: Math.max(0, current - valor) };
+}
+
+// ---------- Janela pré-teste ----------
+
+/**
+ * Dados extras que a janela pré-teste oferece (efeitos `dadoExtra`), no formato de
+ * `buildRollModel`. Por enquanto a janela só conhece custos em PD e no recurso `impeto`; os
+ * outros custos chegam com a janela genérica.
+ * @param {object[]} entries Efeitos do ator.
+ * @param {{skillKey: string, testKind?: string}} context
+ * @returns {{key: string, die: number, cost: {pd: number, impeto: number}, itemName: string,
+ *   group: string, checked: boolean}[]}
+ */
+export function dialogDiceOptions(entries, { skillKey, testKind = 'qualquer' }) {
+  const seen = new Set();
+  const options = [];
+  for (const entry of effectsOfType(entries, 'dadoExtra')) {
+    const { dado, pericias, teste, custo, grupo, marcado } = entry.params;
+    if (seen.has(entry.id)) continue;
+    if (pericias.length && !pericias.includes(skillKey)) continue;
+    if (teste !== 'qualquer' && teste !== testKind) continue;
+    let cost;
+    if (custo.tipo === 'nenhum') cost = { pd: 0, impeto: 0 };
+    else if (custo.tipo === 'pd') cost = { pd: custo.valor, impeto: 0 };
+    else if (custo.tipo === 'recurso' && custo.recurso === 'impeto') {
+      cost = { pd: 0, impeto: custo.valor };
+    } else continue;
+    seen.add(entry.id);
+    options.push({
+      key: entry.id,
+      die: dado,
+      cost,
+      itemName: entry.itemName ?? '',
+      group: grupo,
+      checked: marcado,
+    });
+  }
+  return options;
+}
+
+// ---------- Limite por rodada ----------
+
+/**
+ * O efeito ainda pode ser usado nesta rodada? Fora de combate (`now` nulo), sem limite.
+ * @param {{combate: string, rodada: number}|undefined} lastUse Último uso guardado no ator.
+ * @param {{combate: string, rodada: number}|null} now Combate e rodada atuais.
+ */
+export function roundLimitOk(lastUse, now) {
+  if (!now) return true;
+  return !(lastUse && lastUse.combate === now.combate && lastUse.rodada === now.rodada);
+}
+
+/** Condição de um `passoCondicional`: valor atual na metade do máximo ou menos. */
+export function halfOrLess(value, max) {
+  return max > 0 && value * 2 <= max;
+}

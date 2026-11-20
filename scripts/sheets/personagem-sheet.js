@@ -10,6 +10,7 @@ import { weaponSkill } from '../rolls/equipment.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
+import { actorResources, firstEffect } from '../rolls/ability-effects-actor.js';
 import { proposeOpposed } from '../opposed/opposed-chat.js';
 import { startFirstAid } from '../rolls/first-aid-chat.js';
 import { attributeChoiceUpdate } from '../rolls/attribute.js';
@@ -68,7 +69,6 @@ import {
   resourcePercent,
   stepResource,
   stepCounter,
-  PIP_MAX,
   buildPips,
   togglePip,
   buildStatusTags,
@@ -182,8 +182,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const t = (key) => game.i18n.localize(key);
     const activeTab = resolveActiveTab(PersonagemSheet.#activeTabs.get(this.document.id));
     const tabs = buildTabs(activeTab, (id) => t(`DESORDEM.Ficha.Abas.${id}`));
-    const abilityItems = this.document.items.filter((item) => item.type === 'habilidade');
-    const hasAutomation = (key) => abilityItems.some((item) => item.system.automacao === key);
+    // Recursos das habilidades (efeitos `recurso`): definições (máximo) e valores atuais
+    const resources = actorResources(this.document);
     // Passos temporários (manuais + efeitos) de cada atributo e do dado geral das perícias
     const stepsData = this.document.toObject().system;
     const attrStepOf = (key) =>
@@ -215,10 +215,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         stateLabel: (key) => t(`DESORDEM.Ficha.Estado.${key}`),
         fearLabel: (die) => game.i18n.format('DESORDEM.Ficha.Cab.PavorEtiqueta', { dado: die }),
       }),
-      showImpeto: hasAutomation('impeto'),
-      showAnalise: hasAutomation('analise'),
-      impetoPips: buildPips(system.recursos.impeto, PIP_MAX.impeto),
-      analisePips: buildPips(system.recursos.analise, PIP_MAX.analise),
+      showImpeto: Boolean(resources.defs.impeto),
+      showAnalise: Boolean(resources.defs.analise),
+      impetoPips: buildPips(resources.values.impeto ?? 0, resources.defs.impeto?.maximo ?? 0),
+      analisePips: buildPips(resources.values.analise ?? 0, resources.defs.analise?.maximo ?? 0),
       actor: this.document,
       system,
       editable: this.isEditable,
@@ -286,7 +286,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
           .map((item) => ({ id: item.id, name: item.name, system: item.system })),
         {
           active: system.ativas,
-          resources: system.recursos,
+          resources: resources.values,
           hurtCompanion: system.cena.animalFerido,
           editable: this.isEditable,
           openIds: PersonagemSheet.#openAbilities.get(this.document.id) ?? [],
@@ -625,9 +625,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
 
   static async #onSetPip(event, target) {
     const key = target.dataset.resource;
-    if (!(key in PIP_MAX)) return;
-    const value = togglePip(this.document.system.recursos[key], Number(target.dataset.n));
-    await this.document.update({ [`system.recursos.${key}`]: value });
+    const { defs, values } = actorResources(this.document);
+    if (!defs[key]) return;
+    const value = Math.min(defs[key].maximo, togglePip(values[key], Number(target.dataset.n)));
+    await this.document.update({ [`system.recursosHab.${key}`]: value });
   }
 
   /** Clique no nome de uma perícia: faz o teste e publica no chat. */
@@ -780,31 +781,40 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     });
   }
 
-  /** Ímpeto: gasta 3 espaços para subir um atributo um passo até o fim da cena. */
-  static async #onImpetoStep() {
-    await impetoStep(this.document);
+  /**
+   * Habilidade da linha onde o botão foi clicado (`data-item-id` da linha), para usar os efeitos
+   * dela; `null` se o botão estiver fora de uma linha.
+   */
+  static #abilityOf(target) {
+    return target.closest('[data-item-id]')?.dataset.itemId ?? null;
   }
 
-  /** Ímpeto: gasta 3 espaços para uma ação extra (avisa o mestre no chat). */
-  static async #onImpetoAction() {
-    await impetoAction(this.document);
+  /** Ímpeto (efeito `passoCena`): gasta 3 espaços para subir um atributo um passo na cena. */
+  static async #onImpetoStep(event, target) {
+    await impetoStep(this.document, PersonagemSheet.#abilityOf(target));
   }
 
-  /** Análise: gasta uma ação para ganhar 2 marcadores. */
-  static async #onGainAnalysis() {
-    await gainAnalysisMarkers(this.document);
+  /** Ímpeto (efeito `acaoNota`): gasta 3 espaços para uma ação extra (avisa no chat). */
+  static async #onImpetoAction(event, target) {
+    await impetoAction(this.document, PersonagemSheet.#abilityOf(target));
   }
 
-  /** Esquiva livre: teste de Acrobacia oposto ao ataque. */
+  /** Análise (efeito `ganharRecurso` por ação): gasta uma ação para ganhar 2 marcadores. */
+  static async #onGainAnalysis(event, target) {
+    await gainAnalysisMarkers(this.document, PersonagemSheet.#abilityOf(target));
+  }
+
+  /** Esquiva livre (efeito `defesaLivre`): teste de Acrobacia oposto ao ataque. */
   static async #onDodge(event) {
-    await this.#rollWithChoices(event, { skillKey: 'acrobacia', showDt: false }, (options) =>
+    const skillKey = firstEffect(this.document, 'defesaLivre')?.params.pericia || 'acrobacia';
+    await this.#rollWithChoices(event, { skillKey, showDt: false }, (options) =>
       rollDodge(this.document, options),
     );
   }
 
-  /** Cura o aliado mirado (Medicina DT 7, 2 PD). */
-  static async #onHealAlly() {
-    await healAlly(this.document);
+  /** Cura o aliado mirado (efeito `testeAcao`; no curandeiro, Medicina DT 7, 2 PD). */
+  static async #onHealAlly(event, target) {
+    await healAlly(this.document, PersonagemSheet.#abilityOf(target));
   }
 
   /** Abre a janela da perseguição (cartão da ficha). */

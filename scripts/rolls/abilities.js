@@ -5,11 +5,23 @@
 import { resolveTest } from './test.js';
 import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { sequenceRng } from './dice.js';
+import {
+  ANALISE_GAIN,
+  ANALISE_MAX,
+  COSTS,
+  IMPETO_MAX,
+  SNEAK_SKILLS,
+  dialogDiceOptions,
+  legacyEffects,
+} from './ability-effects.js';
+
+// Os números das habilidades antigas agora moram no catálogo de efeitos (ability-effects.js)
+export { ANALISE_GAIN, ANALISE_MAX, COSTS, IMPETO_MAX, SNEAK_SKILLS };
 
 /** Dado somado ao teste de Defender-se (regras p. 18). */
 export const DEFENSE_BONUS_DIE = 6;
 
-/** Automações disponíveis para uma habilidade (a chave fica no campo `automacao` do item). */
+/** Automações antigas (campo `automacao` do item; os efeitos equivalentes vêm de ability-effects.js). */
 export const AUTOMATIONS = Object.freeze([
   'impeto',
   'impetoInicial',
@@ -20,33 +32,6 @@ export const AUTOMATIONS = Object.freeze([
   'curandeiro',
   'sorrateiro',
 ]);
-
-export const IMPETO_MAX = 5;
-export const ANALISE_MAX = 4;
-export const ANALISE_GAIN = 2;
-
-/** Custos fixos das habilidades que gastam PD ou ímpeto. */
-export const COSTS = Object.freeze({
-  prontidao: 2,
-  curandeiro: 2,
-  sorrateiro: 3,
-  impetoDado: 1,
-  impetoPasso: 3,
-  impetoAcao: 3,
-});
-
-/** Perícias em que o bônus de dado extra da habilidade "furtiva" vale. */
-export const SNEAK_SKILLS = Object.freeze(['crime', 'furtividade']);
-
-/** O personagem tem uma habilidade com esta automação? (`actor.items` é uma coleção do Foundry.) */
-export function hasAbility(actor, key) {
-  return actor.items.some((item) => item.type === 'habilidade' && item.system.automacao === key);
-}
-
-/** Preenche espaços da barra de ímpeto, sem passar do máximo. */
-export function addImpeto(current, amount = 1) {
-  return Math.min(IMPETO_MAX, Math.max(0, current + amount));
-}
 
 /**
  * Um teste com DT que falhou (inclusive falha crítica) enche a barra de ímpeto. Testes opostos
@@ -118,31 +103,36 @@ export function resolveWithValues(plan, values) {
   return resolveTest({ ...plan, rng: sequenceRng(values) });
 }
 
+/** Dados extras das automações antigas de ímpeto e furtividade (padrão de `activeBoosts`). */
+const LEGACY_DICE = [...legacyEffects('impeto'), ...legacyEffects('sorrateiro')];
+
 /**
- * Bônus das habilidades "ativadas" para o próximo teste, e o que cada uma gasta.
- * @param {string[]} active Habilidades ativadas na ficha ('impetoDado', 'sorrateiro', 'naoLetal').
+ * Bônus das habilidades marcadas na janela pré-teste, e o que cada uma gasta.
+ * @param {string[]} active Opções marcadas (ids dos efeitos `dadoExtra`, 'naoLetal', 'defesa').
  * @param {Object} context
  * @param {string} context.skillKey Perícia do teste.
  * @param {number} context.impeto Espaços de ímpeto.
  * @param {number} context.pd PD disponíveis (já descontado o custo do pavor).
+ * @param {object[]} [context.diceOptions] Dados extras do ator (`dialogDiceOptions`); sem isso,
+ *   valem os das automações antigas de ímpeto e furtividade.
  * @param {boolean} [context.allowNonLethal=false] Só o teste de lesão aceita o dano não letal.
  * @param {boolean} [context.allowDefense=false] Só o teste de Defender-se aceita o d6 da defesa.
  * @returns {{extraDice: number[], pdCost: number, impetoCost: number, used: string[]}}
  */
 export function activeBoosts(
   active,
-  { skillKey, impeto, pd, allowNonLethal = false, allowDefense = false },
+  { skillKey, impeto, pd, diceOptions, allowNonLethal = false, allowDefense = false },
 ) {
   const boosts = { extraDice: [], pdCost: 0, impetoCost: 0, used: [] };
-  if (active.includes('impetoDado') && impeto >= COSTS.impetoDado) {
-    boosts.extraDice.push(4);
-    boosts.impetoCost += COSTS.impetoDado;
-    boosts.used.push('impetoDado');
-  }
-  if (active.includes('sorrateiro') && SNEAK_SKILLS.includes(skillKey) && pd >= COSTS.sorrateiro) {
-    boosts.extraDice.push(8);
-    boosts.pdCost += COSTS.sorrateiro;
-    boosts.used.push('sorrateiro');
+  const options = diceOptions ?? dialogDiceOptions(LEGACY_DICE, { skillKey });
+  for (const option of options) {
+    if (!active.includes(option.key)) continue;
+    // Cada opção confere o recurso inteiro (como a janela pré-teste)
+    if (option.cost.impeto > impeto || option.cost.pd > pd) continue;
+    boosts.extraDice.push(option.die);
+    boosts.pdCost += option.cost.pd;
+    boosts.impetoCost += option.cost.impeto;
+    boosts.used.push(option.key);
   }
   // Dano não letal (só no teste de lesão): +1d6, sem custo
   if (allowNonLethal && active.includes('naoLetal')) {
@@ -159,19 +149,25 @@ export function activeBoosts(
 }
 
 /**
- * Reinício de cena de um personagem: zera os contadores de testes da cena, esvazia ímpeto e
- * análise, tira a contusão e o estupor, remove os efeitos "até o fim da cena", limpa o que foi
- * ativado, e quem está com 0 PV recupera 1. Quem tem a habilidade de ímpeto inicial já começa
- * a nova cena com 1 espaço.
+ * Reinício de cena de um personagem: zera os contadores de testes da cena, tira a contusão e o
+ * estupor, remove os efeitos "até o fim da cena", limpa o que foi ativado, e quem está com 0 PV
+ * recupera 1. Os recursos das habilidades (ímpeto, análise...) chegam já calculados por
+ * `sceneResources` (esvaziar e ganhos de início de cena).
  * @param {Object} state
  * @param {number} state.pv
  * @param {boolean} state.contusao
  * @param {boolean} state.estupor
  * @param {{fimDeCena: boolean}[]} state.efeitos
- * @param {boolean} state.impetoInicial O personagem tem a habilidade de ímpeto inicial.
+ * @param {Object<string, number>} [state.recursos] Valor novo de cada recurso das habilidades.
  * @returns {Object} Valores novos, nas chaves da ficha (`system.*`).
  */
 export function sceneReset(state) {
+  const resources = Object.fromEntries(
+    Object.entries(state.recursos ?? {}).map(([key, value]) => [
+      `system.recursosHab.${key}`,
+      value,
+    ]),
+  );
   return {
     'system.pv.value': state.pv === 0 ? 1 : state.pv,
     'system.estado.contusao': false,
@@ -183,8 +179,7 @@ export function sceneReset(state) {
     'system.cena.testesTrauma': 0,
     'system.cena.curados': [],
     'system.cena.animalFerido': false,
-    'system.recursos.impeto': state.impetoInicial ? 1 : 0,
-    'system.recursos.analise': 0,
+    ...resources,
     'system.ativas': [],
     'system.passos.fisico': 0,
     'system.passos.mente': 0,

@@ -30,15 +30,16 @@ const count = (value) => (Number.isInteger(value) && value > 0 ? value : 0);
 
 /**
  * Recursos que o caminho dos testes lê da ficha. Numa ameaça os campos não existem: PD, ímpeto,
- * análise e pavor valem 0 (nada a gastar, nenhum dado de pavor).
+ * análise e pavor valem 0 (nada a gastar, nenhum dado de pavor). Ímpeto e análise vêm do mapa de
+ * recursos das habilidades (`recursosHab`, desde a v0.20.0).
  * @param {object} system `actor.system`.
  * @returns {{pd: number, impeto: number, analise: number, fearDie: number}}
  */
 export function testResources(system) {
   return {
     pd: count(system?.pd?.value),
-    impeto: count(system?.recursos?.impeto),
-    analise: count(system?.recursos?.analise),
+    impeto: count(system?.recursosHab?.impeto),
+    analise: count(system?.recursosHab?.analise),
     fearDie: count(system?.estado?.pavor),
   };
 }

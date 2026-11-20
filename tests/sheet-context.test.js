@@ -374,6 +374,37 @@ test('buildAbilityRows mostra os controles de cada automação e o estado das at
   assert.equal(by.G.showImpeto || by.G.showAnalise || by.G.showHeal, false);
 });
 
+test('buildAbilityRows: máximos das barras vêm do efeito e a lista de efeitos vence a automação', () => {
+  const rows = buildAbilityRows(
+    [
+      abl('1', 'A', 'impeto'),
+      abl('2', 'B', 'analise'),
+      {
+        id: '3',
+        name: 'C',
+        system: {
+          descricao: '',
+          perfil: false,
+          // A automação antiga é ignorada: a lista de efeitos não está vazia
+          automacao: 'impeto',
+          efeitos: [
+            { id: 'r', tipo: 'recurso', params: { chave: 'impeto', maximo: 7 } },
+            { id: 'c', tipo: 'companheiro', params: { dado: 8 } },
+          ],
+        },
+      },
+    ],
+    { active: [], resources: {}, hurtCompanion: false },
+  );
+  const by = Object.fromEntries(rows.map((r) => [r.name, r]));
+  assert.equal(by.A.impetoMax, 5);
+  assert.equal(by.B.analiseMax, 4);
+  assert.equal(by.A.impeto, 0);
+  assert.equal(by.C.impetoMax, 7);
+  assert.equal(by.C.showCompanion, true);
+  assert.equal(by.C.showDodge, false);
+});
+
 test('buildAbilityRows trava os controles quando a ficha não é editável', () => {
   const [row] = buildAbilityRows([abl('1', 'A', 'impeto')], {
     active: [],
