@@ -116,7 +116,8 @@
           "passo": "{nome}: +{valor} step ({quando})",
           "critico": "{nome}: critical on {valor}+",
           "Automatico": "automatic",
-          "JaAtacou": "this weapon already attacked this scene"
+          "JaAtacou": "this weapon already attacked this scene",
+          "penalidade": "{nome}: −{valor} step"
         }
       },
       "Usou": "Used",
@@ -124,7 +125,8 @@
       "UsouArma": {
         "bonus": "{nome} (+{valor} to the attack)",
         "passo": "{nome} (+{valor} step)",
-        "critico": "{nome} (critical on {valor}+)"
+        "critico": "{nome} (critical on {valor}+)",
+        "penalidade": "{nome} (−{valor} step)"
       }
     },
     "Ficha": {
@@ -208,7 +210,7 @@
       "MaosEmUso": "hands in use: {usadas}",
       "MaosDemais": "(more than two hands occupied!)",
       "Armas": "Weapons",
-      "Armaduras": "Armor",
+      "Armaduras": "Armor and shields",
       "Itens": "Items",
       "Atacar": "Attack",
       "Usar": "Use",
@@ -273,7 +275,14 @@
       },
       "PrimeirosSocorrosDica": "How many times this character received first aid in this scene. Each adds +3 to the next DC (the GM adds it automatically on each attempt).",
       "DadosBonusDica": "Bonus dice received (lost at New scene).",
-      "EfeitoTodosAtributos": "All attributes"
+      "EfeitoTodosAtributos": "All attributes",
+      "PenalidadeArmadura": "−{passos} step ({itens})",
+      "ArmaduraExtra": "Extra armor: +{extra} ({restantes} left).",
+      "ArmaduraExtraGasta": "Spent",
+      "ArmaduraRotulo": {
+        "armadura": "{categoria} armor",
+        "escudo": "{categoria} shield"
+      }
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -658,7 +667,20 @@
         "duas": "two-handed"
       },
       "Arremesso": "Thrown (consumable)",
-      "DicaArremesso": "Thrown weapon: each attack spends one unit automatically, with a chat notice. At 0 units it stays at zero and cannot attack."
+      "DicaArremesso": "Thrown weapon: each attack spends one unit automatically, with a chat notice. At 0 units it stays at zero and cannot attack.",
+      "Subtipo": {
+        "Titulo": "Kind",
+        "armadura": "Armor",
+        "escudo": "Shield"
+      },
+      "DicaArmadura": "Armor: worn, gives armor points. Several can be worn together and their points add up (the GM decides whether that is allowed).",
+      "DicaEscudo": "Shield: wielded (takes one hand, one at a time), gives no armor points and can be used together with armor.",
+      "Penalidade": {
+        "Titulo": "Penalty while in use",
+        "Passos": "Steps down",
+        "Dica": "The die of the checked skills goes down these steps while the armor is worn (or the shield wielded). The sheet shows the reduced die.",
+        "Resumo": "−{passos} step on {pericias}"
+      }
     },
     "Armadura": {
       "Titulo": "Armor points",
@@ -676,15 +698,16 @@
       "SemUso": "{nome} has no uses left and is not consumable.",
       "Bloqueio": {
         "maos": "No free hands: unequip a weapon or an item first.",
-        "armadura": "Only one armor can be worn at a time: take the other off first.",
-        "proficiencia": "Martial weapon: you cannot wield it without martial proficiency."
+        "proficiencia": "Martial weapon: you cannot wield it without martial proficiency.",
+        "escudo": "Only one shield can be wielded at a time: put the other away first."
       },
       "AplicarEm": "Apply damage to {nome}",
       "SemMunicao": "{nome} has no units left: you cannot attack with it.",
       "MunicaoGasta": "{nome}: 1 unit spent automatically on the attack ({restantes} left).",
       "SemProficiencia": "Martial without proficiency: the GM decides whether the attack counts (for example, with a disadvantage).",
       "ProficienciaMarcial": "Martial proficiency",
-      "ProficienciaHabilidade": "(already granted by an ability)"
+      "ProficienciaHabilidade": "(already granted by an ability)",
+      "SemProficienciaArmadura": "Martial without proficiency: cannot be worn or wielded."
     },
     "Habilidade": {
       "Confirmar": "Confirm",
@@ -1435,7 +1458,9 @@
         "proficienciaMarcial": "Martial proficiency",
         "bonusAtaque": "Attack bonus",
         "passoAtaque": "Attack step",
-        "criticoAmpliado": "Expanded critical"
+        "criticoAmpliado": "Expanded critical",
+        "reducaoEscudo": "Shield reduction",
+        "armaduraExtra": "Extra armor"
       },
       "Campos": {
         "chave": "Key",
@@ -1464,7 +1489,9 @@
         "rotulo": "Button label",
         "valor": "Bonus",
         "quando": "Applies when",
-        "minimo": "Minimum critical value"
+        "minimo": "Minimum critical value",
+        "somaMinima": "Minimum total",
+        "pontos": "Points"
       },
       "Gatilhos": {
         "falha": "On failing a test with a DC",
@@ -1539,7 +1566,9 @@
         "proficienciaMarcial": "Can wield martial weapons",
         "bonusAtaque": "+{valor} to the attack total",
         "passoAtaque": "+{passos} step on the attack skill die ({quando})",
-        "criticoAmpliado": "Critical success with two matching dice of {minimo} or higher"
+        "criticoAmpliado": "Critical success with two matching dice of {minimo} or higher",
+        "reducaoEscudo": "Lost an attack with a total of {soma} or more: the damage drops by the low roll",
+        "armaduraExtra": "+{pontos} point on the worn armor"
       },
       "Botao": {
         "passoCena": "Scene step{custo}",
@@ -1576,8 +1605,9 @@
       "Item": {
         "Vazio": "No effects: the item is description only.",
         "arma": "The weapon effects only apply to attacks made with it.",
-        "armadura": "The armor effects apply while it is worn. Armor effect types arrive in an upcoming version.",
-        "item": "The item effects apply while it is on the sheet (in the backpack)."
+        "armadura": "The armor effects apply while it is worn. The skill penalty lives in the fields above, not here.",
+        "item": "The item effects apply while it is on the sheet (in the backpack).",
+        "escudo": "The shield effects apply while it is wielded. The shield reduction starts working with the Resolve damage window."
       },
       "QuandoAtaque": {
         "sempre": "Always",

@@ -6,7 +6,7 @@ import { rollTraumaTest } from '../rolls/mind.js';
 import { traumaDT } from '../rolls/emotional.js';
 import { invokeRelation } from '../rolls/relation-chat.js';
 import { attackWithWeapon, useItem, weaponCompanionDice } from '../rolls/equipment-chat.js';
-import { weaponSkill } from '../rolls/equipment.js';
+import { armorSkillPenalties, weaponSkill } from '../rolls/equipment.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
@@ -29,9 +29,30 @@ import {
   updateExtra,
 } from '../rolls/extras.js';
 import { useAbilityEffect, rollDodge, endScene } from '../rolls/abilities-chat.js';
-import { groupBonusDice, hasMartialProficiency, weaponTestKind } from '../rolls/ability-effects.js';
+import {
+  armorExtraPoints,
+  groupBonusDice,
+  hasMartialProficiency,
+  weaponTestKind,
+} from '../rolls/ability-effects.js';
 import { resourceBars } from './ability-controls.js';
 import { itemEffectsText } from '../rolls/ability-effects-editor.js';
+
+/**
+ * Texto da penalidade passiva de uma armadura ou escudo («−1 passo em Atletismo, Furtividade»),
+ * ou vazio se não houver.
+ * @param {{type: string, system: object}} item
+ * @param {(key: string, data?: object) => string} format Tradução com dados.
+ * @param {(key: string) => string} skillName Nome de uma perícia.
+ */
+function armorPenaltyText(item, format, skillName) {
+  const { penalidadePassos: passos = 0, penalidadePericias: pericias = [] } = item.system ?? {};
+  if (item.type !== 'armadura' || !passos || !pericias.length) return '';
+  return format('DESORDEM.Item.Penalidade.Resumo', {
+    passos,
+    pericias: pericias.map(skillName).join(', '),
+  });
+}
 import {
   addRelation,
   removeRelation,
@@ -240,6 +261,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
         skillStep,
         attrChoices: system.atributosPericias,
+        // Penalidade passiva das armaduras vestidas e escudos empunhados
+        penalties: armorSkillPenalties(this.document.items),
+        penaltyLabel: ({ steps, sources }) =>
+          game.i18n.format('DESORDEM.Ficha.PenalidadeArmadura', {
+            passos: steps,
+            itens: sources.join(', '),
+          }),
       }).map((row) => ({ ...row, firstAid: row.key === 'medicina' })),
       aptitudes: addRowAttributes(
         buildAreaRows(system.aptidoes, APTIDOES, (key) => t(`DESORDEM.Aptidoes.${key}`), skillStep),
@@ -767,8 +795,23 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
           skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
           categoryLabel: (category) => t(`DESORDEM.Item.Categoria.${category}`),
           // Resumo dos efeitos de cada item, uma linha por efeito, embaixo do nome
-          effectsText: (item) => itemEffectsText(item, { t: format, skill: skillName }),
+          // (na armadura e no escudo, a penalidade passiva vem primeiro)
+          effectsText: (item) =>
+            [
+              armorPenaltyText(item, format, skillName),
+              itemEffectsText(item, { t: format, skill: skillName }),
+            ]
+              .filter(Boolean)
+              .join('\n'),
           proficient: hasMartialProficiency(actor.system, entries),
+          // Armadura extra (habilidades) e quanto dela já foi gasto
+          armorBonus: {
+            extra: armorExtraPoints(entries),
+            extraSpent: actor.system.armaduraExtraGasta,
+          },
+          // «Armadura marcial» / «Martial armor»: a ordem vem do idioma
+          armorKindLabel: (kind, categoria) =>
+            format(`DESORDEM.Ficha.ArmaduraRotulo.${kind}`, { categoria }),
           editable: this.isEditable,
         },
       ),

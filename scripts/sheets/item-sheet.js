@@ -1,5 +1,13 @@
 import { SYSTEM_ID, PERICIAS } from '../config.js';
-import { GRIPS, WEAPON_CATEGORIES, WEAPON_KINDS, isNatural } from '../rolls/equipment.js';
+import {
+  ARMOR_KINDS,
+  GRIPS,
+  WEAPON_CATEGORIES,
+  WEAPON_KINDS,
+  isNatural,
+  isShield,
+} from '../rolls/equipment.js';
+import { effectItemType } from '../rolls/ability-effects.js';
 import { AUTOMATIONS } from '../rolls/abilities.js';
 import { buildChoices } from './context.js';
 import { isThreat } from '../rolls/threat.js';
@@ -74,9 +82,26 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       effectsEditor: this.#effectsContext(t, skills),
       // Arma natural: sem empunhadura nem caixa de empunhar (não ocupa as mãos)
       isNatural: item.type === 'arma' && isNatural(item.system),
-      categoryChoices: buildChoices(WEAPON_CATEGORIES, item.system.categoria, (category) =>
-        t(`DESORDEM.Item.Categoria.${category}`),
+      categoryChoices: buildChoices(
+        // Armadura e escudo: só simples ou marcial (não há armadura natural)
+        item.type === 'armadura'
+          ? WEAPON_CATEGORIES.filter((c) => c !== 'natural')
+          : WEAPON_CATEGORIES,
+        item.system.categoria,
+        (category) => t(`DESORDEM.Item.Categoria.${category}`),
       ),
+      // Armadura ou escudo: subtipo, e as perícias da penalidade passiva (caixas)
+      isShield: item.type === 'armadura' && isShield(item.system),
+      armorKindChoices: buildChoices(ARMOR_KINDS, item.system.subtipo, (kind) =>
+        t(`DESORDEM.Item.Subtipo.${kind}`),
+      ),
+      penaltySkills:
+        item.type === 'armadura'
+          ? skills.map((skill) => ({
+              ...skill,
+              checked: (item.system.penalidadePericias ?? []).includes(skill.key),
+            }))
+          : [],
       kindChoices: buildChoices(WEAPON_KINDS, item.system.tipo, (kind) =>
         t(`DESORDEM.Item.Tipo.${kind}`),
       ),
@@ -111,7 +136,8 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
    */
   #effectsContext(t, skills) {
     const item = this.document;
-    const itemType = item.type;
+    // Tipo para os efeitos: o escudo (subtipo da armadura) tem os seus próprios tipos
+    const itemType = effectItemType(item);
     const ability = itemType === 'habilidade';
     const { effects, legacy } = editorEffects(item.system, itemType);
     const owner = item.parent?.documentName === 'Actor' ? item.parent : null;
@@ -148,7 +174,7 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
 
   /** Lista atual (a do item ou, numa habilidade vazia, a da automação antiga). */
   #effects() {
-    return editorEffects(this.document.system, this.document.type).effects;
+    return editorEffects(this.document.system, effectItemType(this.document)).effects;
   }
 
   /**
@@ -171,6 +197,24 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     root
       .querySelector('[data-efeito-modelo]')
       ?.addEventListener('change', (event) => this.#onTemplate(event));
+    for (const box of root.querySelectorAll('[data-penalidade-pericia]')) {
+      box.addEventListener('change', (event) => this.#onPenaltySkill(event));
+    }
+  }
+
+  /**
+   * Liga ou desliga uma perícia da penalidade passiva da armadura (as caixas não têm `name`: a
+   * lista inteira é gravada de uma vez).
+   */
+  async #onPenaltySkill(event) {
+    event.stopPropagation();
+    const box = event.currentTarget;
+    const skill = box.dataset.penalidadePericia;
+    const current = this.document.system.penalidadePericias ?? [];
+    const next = box.checked
+      ? [...new Set([...current, skill])]
+      : current.filter((key) => key !== skill);
+    await this.document.update({ 'system.penalidadePericias': next });
   }
 
   /** Um campo de efeito mudou: limpa o valor pelo catálogo e grava a lista. */

@@ -2,7 +2,7 @@
  * Modelos de dados dos Items: armas, armaduras e itens em geral.
  */
 import { AUTOMATIONS } from '../rolls/abilities.js';
-import { GRIPS, WEAPON_CATEGORIES } from '../rolls/equipment.js';
+import { ARMOR_KINDS, GRIPS, WEAPON_CATEGORIES } from '../rolls/equipment.js';
 import { migrateGearSource, migrateWeaponSource } from './migrations.js';
 
 const f = foundry.data.fields;
@@ -77,16 +77,39 @@ export class ArmaModel extends foundry.abstract.TypeDataModel {
 }
 
 /**
- * Armadura: cada ponto gasto reduz em 10 o dano físico sofrido (não se recupera no playtest).
- * Só uma armadura pode ser vestida por vez; os efeitos dela só valem enquanto vestida.
+ * Armadura ou escudo (`subtipo`).
+ * - Armadura: vestida; cada ponto gasto reduz em 10 o dano físico sofrido (não se recupera no
+ *   playtest). Várias podem ser vestidas juntas, e os pontos somam (o mestre decide se vale).
+ * - Escudo: empunhado (ocupa uma mão, só um por vez), sem pontos de armadura; pode ser usado
+ *   junto com a armadura.
+ * Os dois têm categoria (simples ou marcial: sem proficiência marcial não dá para vestir nem
+ * empunhar) e uma penalidade passiva: reduz em N passos o dado das perícias escolhidas enquanto o
+ * item está em uso. Os efeitos só valem com o item em uso (vestido ou empunhado).
  */
 export class ArmaduraModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       descricao: texto(),
+      subtipo: new f.StringField({ required: true, choices: ARMOR_KINDS, initial: 'armadura' }),
+      categoria: new f.StringField({
+        required: true,
+        choices: ['simples', 'marcial'],
+        initial: 'simples',
+      }),
       pontos: contagem(1),
       restantes: contagem(1),
       vestida: new f.BooleanField({ initial: false }),
+      // Só o escudo: empunhado (ocupa uma mão)
+      empunhada: new f.BooleanField({ initial: false }),
+      // Penalidade passiva: passos a menos no dado das perícias escolhidas (0 = nenhuma)
+      penalidadePassos: new f.NumberField({
+        required: true,
+        integer: true,
+        min: 0,
+        max: 3,
+        initial: 0,
+      }),
+      penalidadePericias: new f.ArrayField(new f.StringField({ required: true, blank: false })),
       efeitos: efeitos(),
     };
   }

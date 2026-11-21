@@ -80,6 +80,9 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       // Proficiência marcial marcada à mão (também pode vir de uma habilidade, pelo efeito
       // `proficienciaMarcial`). Sem ela, a ficha não deixa empunhar armas marciais.
       proficienciaMarcial: new f.BooleanField({ initial: false }),
+      // Pontos de «Armadura extra» (efeito de habilidade) já gastos. Ficam no personagem, não na
+      // armadura: trocar de armadura não devolve o ponto (pontos gastos não se recuperam).
+      armaduraExtraGasta: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
       // Recursos das habilidades (v0.20.0): valor atual de cada recurso, pela chave do efeito
       // `recurso` (ex.: { impeto: 2, analise: 0 }). O máximo vem do efeito, não daqui.
       recursosHab: objetoDe(

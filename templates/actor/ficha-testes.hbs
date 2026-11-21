@@ -60,7 +60,7 @@
       </span>
       <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
-      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}"{{#if penaltyNote}} data-tooltip="{{penaltyNote}}"{{/if}}>
         <span class="desordem-forma__valor">{{shownDie}}</span>
         <select class="desordem-forma__select" name="system.pericias.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
         {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}

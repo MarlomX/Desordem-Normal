@@ -256,7 +256,7 @@ test('buildEquipmentRows separa armas, armaduras e itens e calcula mãos e armad
     rows.armors.map((a) => [a.pontos, a.restantes, a.vestida]),
     [[2, 1, true]],
   );
-  assert.deepEqual(rows.armorTotals, { total: 2, available: 1 });
+  assert.deepEqual(rows.armorTotals, { total: 2, available: 1, extra: 0, extraLeft: 0 });
   assert.deepEqual(
     rows.others.map((o) => [o.name, o.showUse, o.canUse, o.hasUsos]),
     [
@@ -299,13 +299,13 @@ test('buildEquipmentRows libera equipar quando há mão livre', () => {
   assert.equal(rows.others[0].blocked, false);
 });
 
-test('buildEquipmentRows permite uma só armadura vestida', () => {
+test('buildEquipmentRows permite vestir várias armaduras', () => {
   const rows = buildEquipmentRows([armr('A', 1, 1, true), armr('B', 1, 1, false)], labels);
   assert.deepEqual(
     rows.armors.map((a) => [a.name, a.blocked]),
     [
       ['A', false],
-      ['B', true],
+      ['B', false],
     ],
   );
   const free = buildEquipmentRows([armr('A', 1, 1, false), armr('B', 1, 1, false)], labels);

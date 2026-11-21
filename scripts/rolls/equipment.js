@@ -33,33 +33,120 @@ export function handsOf(system) {
   return system?.empunhadura === 'duas' ? 2 : 1;
 }
 
+/** Subtipos de armadura: armadura (vestida, dá pontos) e escudo (empunhado, sem pontos). */
+export const ARMOR_KINDS = Object.freeze(['armadura', 'escudo']);
+
+/** Marca de «gastar o ponto da Armadura extra» em `pickArmorToSpend` (não é id de item). */
+export const ARMOR_EXTRA = 'extra';
+
+/** O item de armadura é um escudo? */
+export function isShield(system) {
+  return system?.subtipo === 'escudo';
+}
+
+/** Armadura vestida que conta pontos (escudos nunca contam). */
+const wornArmor = (armor) => Boolean(armor.vestida) && !isShield(armor);
+
 /** Pontos de armadura que ainda restam em uma armadura (nunca mais que o total dela). */
 const remainingPoints = (armor) => Math.max(0, Math.min(armor.restantes, armor.pontos));
 
 /**
- * Pontos de armadura do item vestido.
- * @param {{pontos: number, restantes: number, vestida: boolean}[]} armors
- * @returns {{total: number, available: number}} `total` conta os pontos e `available` os que restam.
+ * Pontos de armadura das armaduras vestidas (várias podem ser vestidas: os pontos somam). A
+ * «Armadura extra» (efeito de habilidade) só conta com uma armadura vestida que dê pontos.
+ * @param {{pontos: number, restantes: number, vestida: boolean, subtipo?: string}[]} armors
+ * @param {{extra?: number, extraSpent?: number}} [bonus] Pontos de Armadura extra e quantos já
+ *   foram gastos (`system.armaduraExtraGasta`).
+ * @returns {{total: number, available: number, extra: number, extraLeft: number}} `total` conta
+ *   os pontos (com o extra), `available` os que restam; `extra` e `extraLeft` só os do extra.
  */
-export function armorSummary(armors) {
+export function armorSummary(armors, { extra = 0, extraSpent = 0 } = {}) {
   let total = 0;
   let available = 0;
   for (const armor of armors) {
-    if (!armor.vestida) continue;
+    if (!wornArmor(armor)) continue;
     total += armor.pontos;
     available += remainingPoints(armor);
   }
-  return { total, available };
+  const counts = armors.some((armor) => wornArmor(armor) && armor.pontos > 0);
+  const extraTotal = counts ? Math.max(0, extra) : 0;
+  const extraLeft = counts ? Math.max(0, extraTotal - Math.max(0, extraSpent)) : 0;
+  return {
+    total: total + extraTotal,
+    available: available + extraLeft,
+    extra: extraTotal,
+    extraLeft,
+  };
 }
 
 /**
- * Escolhe de qual armadura sai o ponto gasto: a primeira vestida que ainda tem pontos.
- * @param {{id: string, pontos: number, restantes: number, vestida: boolean}[]} armors
- * @returns {string|null} id da armadura, ou null se não houver pontos.
+ * Escolhe de onde sai o ponto gasto: primeiro a primeira armadura vestida que ainda tem pontos;
+ * sem pontos nas armaduras, a Armadura extra (`ARMOR_EXTRA`), se ainda houver.
+ * @param {{id: string, pontos: number, restantes: number, vestida: boolean, subtipo?: string}[]}
+ *   armors
+ * @param {{extra?: number, extraSpent?: number}} [bonus] Como em `armorSummary`.
+ * @returns {string|null} id da armadura, `ARMOR_EXTRA`, ou null se não houver pontos.
  */
-export function pickArmorToSpend(armors) {
-  const armor = armors.find((a) => a.vestida && remainingPoints(a) > 0);
-  return armor ? armor.id : null;
+export function pickArmorToSpend(armors, bonus = {}) {
+  const armor = armors.find((a) => wornArmor(a) && remainingPoints(a) > 0);
+  if (armor) return armor.id;
+  return armorSummary(armors, bonus).extraLeft > 0 ? ARMOR_EXTRA : null;
+}
+
+/**
+ * Penalidades passivas das armaduras vestidas e dos escudos empunhados: quantos passos cada
+ * perícia perde e de quais itens (os passos de vários itens somam).
+ * @param {{name: string, type: string, system: object}[]} items Itens do personagem.
+ * @returns {Object<string, {steps: number, sources: string[]}>} Por perícia; `steps` positivo
+ *   (passos a menos).
+ */
+export function armorSkillPenalties(items) {
+  const penalties = {};
+  for (const item of items ?? []) {
+    if (item.type !== 'armadura') continue;
+    const { system } = item;
+    const inUse = isShield(system) ? system.empunhada : system.vestida;
+    const steps = Math.max(0, Math.trunc(Number(system.penalidadePassos) || 0));
+    if (!inUse || !steps) continue;
+    for (const skill of system.penalidadePericias ?? []) {
+      penalties[skill] ??= { steps: 0, sources: [] };
+      penalties[skill].steps += steps;
+      penalties[skill].sources.push(item.name);
+    }
+  }
+  return penalties;
+}
+
+/**
+ * Passos de penalidade das armaduras num teste de uma perícia, no formato dos passos do teste
+ * (vazio sem penalidade).
+ * @param {Object<string, {steps: number}>} penalties `armorSkillPenalties`.
+ * @param {string} skillKey
+ * @returns {{target: 'skill', steps: number}[]}
+ */
+export function armorStepMods(penalties, skillKey) {
+  const steps = penalties?.[skillKey]?.steps ?? 0;
+  return steps ? [{ target: 'skill', steps: -steps }] : [];
+}
+
+/**
+ * Linha da penalidade das armaduras num teste, no mesmo formato das linhas dos efeitos da arma
+ * (`weaponAttackEffects(...).lines`): vai para a seção «Itens» da janela e para a linha «Usou».
+ * `null` se a perícia não tem penalidade.
+ * @param {Object<string, {steps: number, sources: string[]}>} penalties `armorSkillPenalties`.
+ * @param {string} skillKey
+ */
+export function armorPenaltyLine(penalties, skillKey) {
+  const entry = penalties?.[skillKey];
+  if (!entry?.steps) return null;
+  return {
+    key: 'penalidadeArmadura',
+    kind: 'penalidade',
+    itemName: entry.sources.join(', '),
+    value: entry.steps,
+    quando: null,
+    applies: true,
+    optional: false,
+  };
 }
 
 /** Dano depois de gastar um ponto de armadura (nunca negativo). */
@@ -71,9 +158,9 @@ export function reduceDamageWithArmor(amount) {
 export const HANDS = 2;
 
 /**
- * Mãos ocupadas pelos itens e armas empunhados (cada um usa uma ou duas; veja `handsOf`).
- * @param {{empunhadura: string, empunhada: boolean, categoria?: string}[]} held Armas e itens
- *   (os não empunhados e as armas naturais não contam).
+ * Mãos ocupadas pelas armas, itens e escudos empunhados (cada um usa uma ou duas; veja `handsOf`).
+ * @param {{empunhadura: string, empunhada: boolean, categoria?: string}[]} held Armas, itens e
+ *   escudos (os não empunhados e as armas naturais não contam).
  * @returns {{used: number, over: boolean}} `over` indica mais de duas mãos em uso.
  */
 export function handsInUse(held) {
@@ -81,39 +168,57 @@ export function handsInUse(held) {
   return { used, over: used > HANDS };
 }
 
-/** A arma é marcial (precisa de proficiência para ser empunhada)? */
+/** A arma, armadura ou escudo é marcial (precisa de proficiência para ser equipado)? */
 export function isMartial(system) {
   return system?.categoria === 'marcial';
 }
 
+/** O que ocupa mãos: armas, itens gerais e escudos (dados `system`). */
+const handHolders = (items) =>
+  items
+    .filter(
+      (i) =>
+        i.type === 'arma' || i.type === 'item' || (i.type === 'armadura' && isShield(i.system)),
+    )
+    .map((i) => i.system);
+
+/** O item está equipado (vestido, se for armadura; empunhado, nos outros e no escudo)? */
+export function isEquipped(item) {
+  const { system } = item;
+  if (item.type === 'armadura' && !isShield(system)) return Boolean(system.vestida);
+  return Boolean(system.empunhada);
+}
+
 /**
- * Decide se uma mudança em um item do personagem respeita os limites do equipamento: no máximo
- * duas mãos ocupadas (armas e itens empunhados), uma só armadura vestida e, sem proficiência
- * marcial, nenhuma arma marcial empunhada.
+ * Decide se uma mudança em um item do personagem respeita os limites do equipamento:
+ * - no máximo duas mãos ocupadas (armas, itens e escudos empunhados);
+ * - um só escudo empunhado;
+ * - sem proficiência marcial, nada marcial equipado (arma empunhada, armadura vestida, escudo);
+ * - armaduras: várias podem ser vestidas juntas (o mestre decide se vale).
  * @param {{id: string, type: string, system: Object}[]} siblings Os outros itens do personagem.
  * @param {{type: string, system: Object}} next O item, já com a mudança aplicada.
  * @param {{proficient?: boolean}} [owner] `proficient`: o dono tem proficiência marcial (padrão
  *   verdadeiro: criaturas e quem chama sem saber não são travados).
- * @returns {{ok: boolean, reason: ('maos'|'armadura'|'proficiencia'|null)}}
+ * @returns {{ok: boolean, reason: ('maos'|'escudo'|'proficiencia'|null)}}
  */
 export function checkEquipment(siblings, next, { proficient = true } = {}) {
+  const ok = { ok: true, reason: null };
+  const { system } = next;
+  if (!isEquipped(next)) return ok;
+  // Marcial sem proficiência: não pode ser equipado (regra da missão, até uma regra melhor)
+  if (isMartial(system) && !proficient) return { ok: false, reason: 'proficiencia' };
+  // Armadura vestida: sem limite de quantidade nem de mãos
+  if (next.type === 'armadura' && !isShield(system)) return ok;
   if (next.type === 'armadura') {
-    const other = siblings.some((i) => i.type === 'armadura' && i.system.vestida);
-    return next.system.vestida && other
-      ? { ok: false, reason: 'armadura' }
-      : { ok: true, reason: null };
+    const otherShield = siblings.some(
+      (i) => i.type === 'armadura' && isShield(i.system) && i.system.empunhada,
+    );
+    if (otherShield) return { ok: false, reason: 'escudo' };
   }
-  // Arma marcial sem proficiência: não pode ser empunhada (regra da missão, até uma regra melhor)
-  if (next.type === 'arma' && next.system.empunhada && isMartial(next.system) && !proficient) {
-    return { ok: false, reason: 'proficiencia' };
-  }
-  if (next.system.empunhada && !isNatural(next.system)) {
-    const used = handsInUse(
-      siblings.filter((i) => i.type === 'arma' || i.type === 'item').map((i) => i.system),
-    ).used;
-    if (used + handsOf(next.system) > HANDS) return { ok: false, reason: 'maos' };
-  }
-  return { ok: true, reason: null };
+  if (isNatural(system)) return ok;
+  const used = handsInUse(handHolders(siblings)).used;
+  if (used + handsOf(system) > HANDS) return { ok: false, reason: 'maos' };
+  return ok;
 }
 
 /**

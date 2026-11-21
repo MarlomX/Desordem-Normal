@@ -11,6 +11,7 @@ import {
   TRIGGERS,
   EFFECT_TYPES,
   defaultParams,
+  effectItemType,
   itemEffectTypes,
   itemEffects,
   legacyEffects,
@@ -37,6 +38,7 @@ const HIDDEN_FIELDS = Object.freeze({
   arma: Object.freeze({ dadoExtra: Object.freeze(['pericias', 'teste', 'grupo']) }),
   armadura: Object.freeze({ dadoExtra: Object.freeze(['grupo']) }),
   item: Object.freeze({ dadoExtra: Object.freeze(['grupo']) }),
+  escudo: Object.freeze({ dadoExtra: Object.freeze(['grupo']) }),
 });
 
 /** O campo `key` de um efeito `tipo` fica escondido neste tipo de item? */
@@ -159,6 +161,8 @@ export function effectSupported(effect, itemType = 'habilidade') {
     case 'bonusAtaque':
     case 'passoAtaque':
     case 'criticoAmpliado':
+    // Armadura extra (v0.21.3): soma nos pontos da armadura vestida
+    case 'armaduraExtra':
       return true;
     case 'ganharRecurso':
       // Todos os gatilhos têm uso desde a v0.20.7 (ao se defender, início do combate)
@@ -260,6 +264,10 @@ export function describeEffect(effect, { t, skill, itemType = 'habilidade' }) {
       });
     case 'criticoAmpliado':
       return t(key('criticoAmpliado'), { minimo: p.minimo });
+    case 'reducaoEscudo':
+      return t(key('reducaoEscudo'), { soma: p.somaMinima });
+    case 'armaduraExtra':
+      return t(key('armaduraExtra'), { pontos: p.pontos });
     default:
       return '';
   }
@@ -273,7 +281,7 @@ export function describeEffect(effect, { t, skill, itemType = 'habilidade' }) {
  */
 export function itemEffectsText(item, { t, skill }) {
   return ownEffects(item)
-    .map((effect) => describeEffect(effect, { t, skill, itemType: item.type }))
+    .map((effect) => describeEffect(effect, { t, skill, itemType: effectItemType(item) }))
     .filter(Boolean)
     .join('\n');
 }

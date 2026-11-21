@@ -27,14 +27,16 @@ test('armorSummary conta só a armadura vestida e os pontos que restam', () => {
     armor({ pontos: 2, restantes: 1 }),
     armor({ id: 'b', pontos: 3, restantes: 3, vestida: false }),
   ];
-  assert.deepEqual(armorSummary(list), { total: 2, available: 1 });
-  assert.deepEqual(armorSummary([]), { total: 0, available: 0 });
+  assert.deepEqual(armorSummary(list), { total: 2, available: 1, extra: 0, extraLeft: 0 });
+  assert.deepEqual(armorSummary([]), { total: 0, available: 0, extra: 0, extraLeft: 0 });
 });
 
 test('armorSummary nunca conta mais pontos restantes que o total da armadura', () => {
   assert.deepEqual(armorSummary([armor({ pontos: 1, restantes: 5 })]), {
     total: 1,
     available: 1,
+    extra: 0,
+    extraLeft: 0,
   });
   assert.equal(armorSummary([armor({ pontos: 2, restantes: -1 })]).available, 0);
 });
@@ -109,11 +111,11 @@ test('checkEquipment: duas mãos no máximo, somando armas e itens', () => {
   );
 });
 
-test('checkEquipment: só uma armadura vestida, e armaduras não ocupam as mãos', () => {
+test('checkEquipment: várias armaduras podem ser vestidas, e armaduras não ocupam as mãos', () => {
   const worn = piece('a', 'armadura', { vestida: true });
   assert.deepEqual(checkEquipment([worn], { type: 'armadura', system: { vestida: true } }), {
-    ok: false,
-    reason: 'armadura',
+    ok: true,
+    reason: null,
   });
   assert.equal(checkEquipment([worn], { type: 'armadura', system: { vestida: false } }).ok, true);
   assert.equal(

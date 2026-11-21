@@ -8,7 +8,7 @@ import { migrateGearSource, migrateWeaponSource } from '../scripts/data/migratio
 import { checkEquipment, handsInUse, handsOf, isNatural } from '../scripts/rolls/equipment.js';
 import {
   EFFECT_TYPES,
-  WEAPON_ONLY_TYPES,
+  EQUIPMENT_ONLY_TYPES,
   collectEffects,
   dialogDiceOptions,
   itemEffectTypes,
@@ -113,10 +113,10 @@ test('handsInUse e checkEquipment usam a empunhadura (natural nunca ocupa mão)'
 
 // ---------- Tipos aceitos e item em uso ----------
 
-test('itemEffectTypes: habilidade aceita todos menos os de arma; item, o dado extra; armadura, nenhum', () => {
+test('itemEffectTypes: habilidade aceita todos menos os de equipamento; cada equipamento, os seus', () => {
   assert.deepEqual(
     itemEffectTypes('habilidade'),
-    Object.keys(EFFECT_TYPES).filter((tipo) => !WEAPON_ONLY_TYPES.includes(tipo)),
+    Object.keys(EFFECT_TYPES).filter((tipo) => !EQUIPMENT_ONLY_TYPES.includes(tipo)),
   );
   assert.deepEqual(itemEffectTypes('arma'), [
     'dadoExtra',
@@ -125,7 +125,8 @@ test('itemEffectTypes: habilidade aceita todos menos os de arma; item, o dado ex
     'criticoAmpliado',
   ]);
   assert.deepEqual(itemEffectTypes('item'), ['dadoExtra']);
-  assert.deepEqual(itemEffectTypes('armadura'), []);
+  assert.deepEqual(itemEffectTypes('armadura'), ['dadoExtra']);
+  assert.deepEqual(itemEffectTypes('escudo'), ['dadoExtra', 'reducaoEscudo']);
   assert.deepEqual(itemEffectTypes('outro'), []);
 });
 
@@ -134,7 +135,7 @@ test('allowedEffectTypes: num item de criatura, só os tipos de criatura entre o
     ...Object.keys(EFFECT_TYPES).filter((tipo) => CREATURE_EFFECT_TYPES.includes(tipo)),
   ]);
   assert.deepEqual(allowedEffectTypes('arma', { creature: true }), ['dadoExtra']);
-  assert.deepEqual(allowedEffectTypes('armadura'), []);
+  assert.deepEqual(allowedEffectTypes('armadura'), ['dadoExtra']);
 });
 
 test('itemInUse: arma só no ataque com ela, armadura só vestida, item e habilidade sempre', () => {
@@ -157,8 +158,15 @@ test('ownEffects descarta tipos que o equipamento não aceita (vindos de macro o
     ownEffects(item).map((e) => e.id),
     ['x'],
   );
-  // Na armadura, nenhum tipo vale ainda
-  assert.deepEqual(ownEffects(piece('a', 'armadura', { efeitos: [extraDie('z')] })), []);
+  // Na armadura, a redução do escudo não vale (só no escudo)
+  const shieldOnly = { id: 'z', tipo: 'reducaoEscudo', params: {} };
+  assert.deepEqual(ownEffects(piece('a', 'armadura', { efeitos: [shieldOnly] })), []);
+  assert.deepEqual(
+    ownEffects(piece('e', 'armadura', { subtipo: 'escudo', efeitos: [shieldOnly] })).map(
+      (e) => e.id,
+    ),
+    ['z'],
+  );
 });
 
 test('collectEffects junta habilidades e equipamentos em uso, com itemType', () => {
@@ -167,6 +175,8 @@ test('collectEffects junta habilidades e equipamentos em uso, com itemType', () 
     piece('w', 'arma', { efeitos: [extraDie('arma', { dado: 6 })] }, 'Gládio'),
     piece('i', 'item', { efeitos: [extraDie('item', { dado: 4 })] }, 'Gazua'),
     piece('a', 'armadura', { vestida: true, efeitos: [extraDie('armadura')] }, 'Cota'),
+    // Escudo guardado (não empunhado): os efeitos não valem
+    piece('e', 'armadura', { subtipo: 'escudo', empunhada: false, efeitos: [extraDie('esc')] }),
   ];
   const outside = collectEffects(items);
   assert.deepEqual(
@@ -174,6 +184,7 @@ test('collectEffects junta habilidades e equipamentos em uso, com itemType', () 
     [
       ['hab', 'habilidade'],
       ['item', 'item'],
+      ['armadura', 'armadura'],
     ],
   );
   const attack = collectEffects(items, { weaponId: 'w' });
@@ -229,7 +240,8 @@ test('effectSupported: tipo que o item não aceita fica marcado como sem uso', (
   assert.equal(effectSupported(note), true);
   assert.equal(effectSupported(note, 'item'), false);
   assert.equal(effectSupported(extraDie('d'), 'item'), true);
-  assert.equal(effectSupported(extraDie('d'), 'armadura'), false);
+  assert.equal(effectSupported(extraDie('d'), 'armadura'), true);
+  assert.equal(effectSupported(extraDie('d'), 'outro'), false);
 });
 
 test('describeEffect: na arma o dado extra é «no ataque com esta arma»', () => {

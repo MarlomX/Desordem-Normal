@@ -219,10 +219,18 @@ export const EFFECT_TYPES = Object.freeze({
   },
   // Arma: sucesso crítico com dois dados iguais de valor `minimo` ou mais (o normal é 6)
   criticoAmpliado: { minimo: intField(5, 2, 5) },
+  // Escudo: perdeu um oposto de ataque com soma `somaMinima` ou mais → o dano cai pela rolagem
+  // baixa (gravado na 0.21.3; o cálculo entra na janela Resolver dano)
+  reducaoEscudo: { somaMinima: intField(7, 1, 30) },
+  // Habilidade: +N pontos na armadura vestida (o gasto fica em `system.armaduraExtraGasta`)
+  armaduraExtra: { pontos: intField(1, 1, 3) },
 });
 
 /** Tipos que só uma arma aceita (a habilidade não os oferece). */
 export const WEAPON_ONLY_TYPES = Object.freeze(['bonusAtaque', 'passoAtaque', 'criticoAmpliado']);
+
+/** Tipos que só um equipamento aceita: os de arma e os de escudo (a habilidade não os oferece). */
+export const EQUIPMENT_ONLY_TYPES = Object.freeze([...WEAPON_ONLY_TYPES, 'reducaoEscudo']);
 
 /** Parâmetros padrão de um tipo (cópia nova). */
 export function defaultParams(tipo) {
@@ -346,31 +354,44 @@ export function itemEffects(system) {
 export const ITEM_EFFECT_TYPES = Object.freeze({
   // Efeitos dos ataques com a arma
   arma: Object.freeze(['dadoExtra', 'bonusAtaque', 'passoAtaque', 'criticoAmpliado']),
-  // Nenhum ainda (0.21.2: passo em perícias enquanto vestida, redução do escudo)
-  armadura: Object.freeze([]),
+  // Dado extra enquanto vestida (a penalidade nas perícias é um campo da armadura, não um efeito)
+  armadura: Object.freeze(['dadoExtra']),
+  // Escudo (subtipo da armadura): dado extra e redução do escudo, enquanto empunhado
+  escudo: Object.freeze(['dadoExtra', 'reducaoEscudo']),
   // Dado extra com o item na mochila (0.21.4: curar, passo no alvo, ferramenta, ação com aviso)
   item: Object.freeze(['dadoExtra']),
 });
 
 /**
- * Tipos de efeito que um item aceita: na habilidade, todos menos os de arma
- * (`WEAPON_ONLY_TYPES`); num equipamento, a lista de `ITEM_EFFECT_TYPES`; num tipo desconhecido,
- * nenhum.
- * @param {string} itemType `arma`, `armadura`, `item` ou `habilidade`.
+ * Tipos de efeito que um item aceita: na habilidade, todos menos os de equipamento
+ * (`EQUIPMENT_ONLY_TYPES`); num equipamento, a lista de `ITEM_EFFECT_TYPES`; num tipo
+ * desconhecido, nenhum.
+ * @param {string} itemType `arma`, `armadura`, `escudo`, `item` ou `habilidade` (veja
+ *   `effectItemType`).
  * @returns {string[]}
  */
 export function itemEffectTypes(itemType) {
   if (itemType === 'habilidade') {
-    return Object.keys(EFFECT_TYPES).filter((tipo) => !WEAPON_ONLY_TYPES.includes(tipo));
+    return Object.keys(EFFECT_TYPES).filter((tipo) => !EQUIPMENT_ONLY_TYPES.includes(tipo));
   }
   return [...(ITEM_EFFECT_TYPES[itemType] ?? [])];
+}
+
+/**
+ * Tipo do item para os efeitos: o próprio tipo, menos o escudo (subtipo da armadura), que tem os
+ * seus tipos de efeito (`escudo`).
+ * @param {{type: string, system?: object}} item
+ */
+export function effectItemType(item) {
+  if (item?.type === 'armadura' && item.system?.subtipo === 'escudo') return 'escudo';
+  return item?.type;
 }
 
 /**
  * O item está em uso, de modo que os seus efeitos valem agora?
  * - habilidade: sempre;
  * - arma: só no ataque com ela (`weaponId` igual ao id dela);
- * - armadura: só vestida;
+ * - armadura: só vestida; escudo: só empunhado;
  * - item geral: sempre (basta estar na ficha, «na mochila»).
  * @param {{id: string, type: string, system: object}} item
  * @param {{weaponId?: string|null}} [context] Arma do ataque que está sendo feito, se houver.
@@ -383,7 +404,9 @@ export function itemInUse(item, { weaponId = null } = {}) {
     case 'arma':
       return Boolean(weaponId) && item.id === weaponId;
     case 'armadura':
-      return Boolean(item.system?.vestida);
+      return item.system?.subtipo === 'escudo'
+        ? Boolean(item.system?.empunhada)
+        : Boolean(item.system?.vestida);
     default:
       return false;
   }
@@ -396,7 +419,7 @@ export function itemInUse(item, { weaponId = null } = {}) {
  */
 export function ownEffects(item) {
   if (item?.type === 'habilidade') return itemEffects(item.system);
-  const allowed = itemEffectTypes(item?.type);
+  const allowed = itemEffectTypes(effectItemType(item));
   return normalizeEffects(item?.system?.efeitos).filter((e) => allowed.includes(e.tipo));
 }
 
@@ -413,7 +436,7 @@ export function collectEffects(items, context = {}) {
   for (const item of items ?? []) {
     if (!itemInUse(item, context)) continue;
     for (const entry of ownEffects(item)) {
-      list.push({ itemId: item.id, itemName: item.name, itemType: item.type, ...entry });
+      list.push({ itemId: item.id, itemName: item.name, itemType: effectItemType(item), ...entry });
     }
   }
   return list;
@@ -679,6 +702,16 @@ export function weaponAttackEffects(entries, { firstAttack = false, notAttacked 
     }
   }
   return { modifier, steps, critMin, lines };
+}
+
+/**
+ * Pontos de «Armadura extra» do personagem: a soma dos efeitos `armaduraExtra` das habilidades.
+ * @param {object[]} entries Efeitos do ator.
+ */
+export function armorExtraPoints(entries) {
+  return entries
+    .filter((e) => e.tipo === 'armaduraExtra')
+    .reduce((sum, e) => sum + (e.params?.pontos ?? 0), 0);
 }
 
 /**

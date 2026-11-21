@@ -16,6 +16,7 @@ import { advanceDtField } from './chase.js';
 import { render, testDicePreview } from './chat.js';
 import { buildFearDie } from '../sheets/dado-pavor.js';
 import { testResources } from './threat.js';
+import { armorPenaltyLine, armorSkillPenalties } from './equipment.js';
 import {
   buildRollModel,
   emptySelection,
@@ -413,6 +414,9 @@ export async function askRollChoices(
         firstAttack: firstWeaponAttack(actor.system.cena, weaponId),
       })
     : { steps: 0, lines: [] };
+  // Penalidade das armaduras em uso nesta perícia (a prévia já a inclui, por `testDicePreview`)
+  const penalty = armorPenaltyLine(armorSkillPenalties(actor.items), skillKey);
+  const penaltyLines = penalty ? [penalty] : [];
   const dice = testDicePreview(actor, skillKey, attribute, [
     ...stepMods,
     ...(attack.steps ? [{ target: 'skill', steps: attack.steps }] : []),
@@ -547,7 +551,8 @@ export async function askRollChoices(
     actions: abilityRows.filter((ability) => ability.group === 'acao'),
     // Seção «Itens»: dados extras de itens e as linhas dos efeitos da arma do ataque
     items: abilityRows.filter((ability) => ability.group === 'item'),
-    weaponLines: attack.lines.map((line) => ({
+    // Linhas automáticas: efeitos da arma e penalidade das armaduras nesta perícia
+    weaponLines: [...attack.lines, ...penaltyLines].map((line) => ({
       ...line,
       label: t(`DESORDEM.Teste.Pre.Arma.${line.kind}`, {
         nome: line.itemName,
@@ -556,7 +561,8 @@ export async function askRollChoices(
       }),
     })),
     hasItems:
-      abilityRows.some((ability) => ability.group === 'item') || attack.lines.length > 0,
+      abilityRows.some((ability) => ability.group === 'item') ||
+      attack.lines.length + penaltyLines.length > 0,
     fear: model.fear && {
       ...model.fear,
       title: t('DESORDEM.Teste.Pre.Pavor', { die: model.fear.die }),

@@ -12,6 +12,7 @@ import { buildChatContext, buildOpposedContext } from './presenter.js';
 import { lesionModifier, contusionStepMods } from './injury.js';
 import { traumaModifier } from './emotional.js';
 import { collectStepMods } from './steps.js';
+import { armorPenaltyLine, armorSkillPenalties, armorStepMods } from './equipment.js';
 import {
   impetoFillsOnFailure,
   opposedLoser,
@@ -335,6 +336,8 @@ export function testDicePreview(actor, skillKey, attribute, extraStepMods = []) 
     stepMods: [
       // Passos próprios deste teste (ex.: primeiros socorros sem maleta), para a prévia bater
       ...extraStepMods,
+      // Penalidade passiva das armaduras vestidas e dos escudos empunhados nesta perícia
+      ...armorStepMods(armorSkillPenalties(actor.items), skillKey),
       ...contusionStepMods(system.estado, attrKey),
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
     ],
@@ -422,8 +425,10 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     ),
     t: localize
   });
-  // Linha «Usou» do cartão: também os efeitos da arma que entraram neste ataque
-  usos.push(...attackUsedLines(attack.lines, localize));
+  // Penalidade passiva das armaduras e escudos em uso nesta perícia (passos a menos)
+  const penaltyLine = armorPenaltyLine(armorSkillPenalties(actor.items), skillKey);
+  // Linha «Usou» do cartão: também os efeitos da arma que entraram neste ataque e a penalidade
+  usos.push(...attackUsedLines([...attack.lines, ...(penaltyLine ? [penaltyLine] : [])], localize));
 
   return {
     ...rest,
@@ -437,6 +442,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
       ...(rest.stepMods ?? []),
       // Passo no ataque (efeito da arma): no dado da perícia
       ...(attack.steps ? [{ target: 'skill', steps: attack.steps }] : []),
+      // Penalidade das armaduras e escudos em uso (passos a menos no dado da perícia)
+      ...(penaltyLine ? [{ target: 'skill', steps: -penaltyLine.value }] : []),
       ...contusionStepMods(system.estado, attrKey),
       // (os passos condicionais das habilidades chegam como efeitos da ficha, na aba Condição)
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),

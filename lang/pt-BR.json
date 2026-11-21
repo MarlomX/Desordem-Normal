@@ -116,7 +116,8 @@
           "passo": "{nome}: +{valor} passo ({quando})",
           "critico": "{nome}: crítico com {valor}+",
           "Automatico": "automático",
-          "JaAtacou": "esta arma já atacou nesta cena"
+          "JaAtacou": "esta arma já atacou nesta cena",
+          "penalidade": "{nome}: −{valor} passo"
         }
       },
       "Usou": "Usou",
@@ -124,7 +125,8 @@
       "UsouArma": {
         "bonus": "{nome} (+{valor} no ataque)",
         "passo": "{nome} (+{valor} passo)",
-        "critico": "{nome} (crítico com {valor}+)"
+        "critico": "{nome} (crítico com {valor}+)",
+        "penalidade": "{nome} (−{valor} passo)"
       }
     },
     "Ficha": {
@@ -208,7 +210,7 @@
       "MaosEmUso": "mãos em uso: {usadas}",
       "MaosDemais": "(mais de duas mãos ocupadas!)",
       "Armas": "Armas",
-      "Armaduras": "Armaduras",
+      "Armaduras": "Armaduras e escudos",
       "Itens": "Itens",
       "Atacar": "Atacar",
       "Usar": "Usar",
@@ -273,7 +275,14 @@
       },
       "PrimeirosSocorrosDica": "Quantas vezes este personagem recebeu primeiros socorros nesta cena. Cada uma soma +3 à DT da próxima (o mestre soma sozinho a cada tentativa).",
       "DadosBonusDica": "Dados bônus recebidos (somem na Nova cena).",
-      "EfeitoTodosAtributos": "Todos os atributos"
+      "EfeitoTodosAtributos": "Todos os atributos",
+      "PenalidadeArmadura": "−{passos} passo ({itens})",
+      "ArmaduraExtra": "Armadura extra: +{extra} (restam {restantes}).",
+      "ArmaduraExtraGasta": "Gastos",
+      "ArmaduraRotulo": {
+        "armadura": "Armadura {categoria}",
+        "escudo": "Escudo {categoria}"
+      }
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -658,7 +667,20 @@
         "duas": "duas mãos"
       },
       "Arremesso": "Arremesso (consumível)",
-      "DicaArremesso": "Arma de arremesso: cada ataque gasta uma unidade automaticamente, com aviso no chat. Com 0 unidades, ela fica zerada e não ataca."
+      "DicaArremesso": "Arma de arremesso: cada ataque gasta uma unidade automaticamente, com aviso no chat. Com 0 unidades, ela fica zerada e não ataca.",
+      "Subtipo": {
+        "Titulo": "Tipo",
+        "armadura": "Armadura",
+        "escudo": "Escudo"
+      },
+      "DicaArmadura": "Armadura: vestida, dá pontos de armadura. Várias podem ser vestidas juntas e os pontos somam (o mestre decide se vale).",
+      "DicaEscudo": "Escudo: empunhado (ocupa uma mão, um por vez), não dá pontos de armadura e pode ser usado junto com a armadura.",
+      "Penalidade": {
+        "Titulo": "Penalidade enquanto em uso",
+        "Passos": "Passos a menos",
+        "Dica": "O dado das perícias marcadas desce esses passos enquanto a armadura está vestida (ou o escudo empunhado). A ficha mostra o dado já reduzido.",
+        "Resumo": "−{passos} passo em {pericias}"
+      }
     },
     "Armadura": {
       "Titulo": "Pontos de armadura",
@@ -676,15 +698,16 @@
       "SemUso": "{nome} não tem usos restantes nem é consumível.",
       "Bloqueio": {
         "maos": "Sem mãos livres: desequipe uma arma ou um item antes.",
-        "armadura": "Só uma armadura pode ser vestida por vez: tire a outra antes.",
-        "proficiencia": "Arma marcial: sem proficiência marcial não dá para empunhá-la."
+        "proficiencia": "Arma marcial: sem proficiência marcial não dá para empunhá-la.",
+        "escudo": "Só um escudo pode ser empunhado por vez: guarde o outro antes."
       },
       "AplicarEm": "Aplicar dano em {nome}",
       "SemMunicao": "{nome} não tem unidades: não dá para atacar com ela.",
       "MunicaoGasta": "{nome}: 1 unidade gasta automaticamente no ataque (restam {restantes}).",
       "SemProficiencia": "Marcial sem proficiência: o mestre decide se o ataque vale (por exemplo, com desvantagem).",
       "ProficienciaMarcial": "Proficiência marcial",
-      "ProficienciaHabilidade": "(já vem de uma habilidade)"
+      "ProficienciaHabilidade": "(já vem de uma habilidade)",
+      "SemProficienciaArmadura": "Marcial sem proficiência: não pode ser vestida nem empunhada."
     },
     "Habilidade": {
       "Confirmar": "Confirmar",
@@ -1435,7 +1458,9 @@
         "proficienciaMarcial": "Proficiência marcial",
         "bonusAtaque": "Bônus de ataque",
         "passoAtaque": "Passo no ataque",
-        "criticoAmpliado": "Crítico ampliado"
+        "criticoAmpliado": "Crítico ampliado",
+        "reducaoEscudo": "Redução do escudo",
+        "armaduraExtra": "Armadura extra"
       },
       "Campos": {
         "chave": "Chave",
@@ -1464,7 +1489,9 @@
         "rotulo": "Rótulo do botão",
         "valor": "Bônus",
         "quando": "Quando vale",
-        "minimo": "Valor mínimo do crítico"
+        "minimo": "Valor mínimo do crítico",
+        "somaMinima": "Soma mínima",
+        "pontos": "Pontos"
       },
       "Gatilhos": {
         "falha": "Ao falhar um teste com DT",
@@ -1539,7 +1566,9 @@
         "proficienciaMarcial": "Pode empunhar armas marciais",
         "bonusAtaque": "+{valor} no total do ataque",
         "passoAtaque": "+{passos} passo no dado da perícia do ataque ({quando})",
-        "criticoAmpliado": "Sucesso crítico com dois dados iguais de {minimo} ou mais"
+        "criticoAmpliado": "Sucesso crítico com dois dados iguais de {minimo} ou mais",
+        "reducaoEscudo": "Perdeu um ataque com soma {soma} ou mais: o dano cai pela rolagem baixa",
+        "armaduraExtra": "+{pontos} ponto na armadura vestida"
       },
       "Botao": {
         "passoCena": "Passo na cena{custo}",
@@ -1576,8 +1605,9 @@
       "Item": {
         "Vazio": "Nenhum efeito: o item serve só de descrição.",
         "arma": "Os efeitos da arma só valem nos ataques com ela.",
-        "armadura": "Os efeitos da armadura valem enquanto ela está vestida. Os tipos de efeito de armadura chegam numa próxima versão.",
-        "item": "Os efeitos do item valem enquanto ele está na ficha (na mochila)."
+        "armadura": "Os efeitos da armadura valem enquanto ela está vestida. A penalidade nas perícias fica nos campos acima, não aqui.",
+        "item": "Os efeitos do item valem enquanto ele está na ficha (na mochila).",
+        "escudo": "Os efeitos do escudo valem enquanto ele está empunhado. A redução do escudo passa a valer com a janela Resolver dano."
       },
       "QuandoAtaque": {
         "sempre": "Sempre",

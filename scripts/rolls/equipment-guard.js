@@ -1,9 +1,9 @@
 /**
  * Regras do equipamento aplicadas a qualquer alteração de item (ficha, ficha do item ou macro):
- * no máximo duas mãos ocupadas, uma só armadura vestida e nada marcial empunhado sem
- * proficiência marcial.
+ * no máximo duas mãos ocupadas (armas, itens e escudos), um só escudo e nada marcial equipado sem
+ * proficiência marcial. Armaduras vestidas não têm limite.
  */
-import { checkEquipment } from './equipment.js';
+import { checkEquipment, isShield } from './equipment.js';
 import { hasMartialProficiency } from './ability-effects.js';
 import { actorEffects } from './ability-effects-actor.js';
 
@@ -26,16 +26,21 @@ function ownerProficient(item) {
   return hasMartialProficiency(actor.system, actorEffects(actor));
 }
 
-/** Campo que a regra controla em cada tipo de item (o que o torna "equipado"). */
-const equipField = (type) => (type === 'armadura' ? 'vestida' : 'empunhada');
+/**
+ * Campo que a regra controla em cada item (o que o torna "equipado"): `vestida` na armadura;
+ * `empunhada` nas armas, nos itens e no escudo.
+ */
+const equipField = (item) =>
+  item.type === 'armadura' && !isShield(item.system) ? 'vestida' : 'empunhada';
 
 /** Bloqueia a alteração (e restaura a ficha) se ela violar os limites do equipamento. */
 function guardUpdate(item, changes) {
   if (!item.parent?.items) return undefined;
   const { system = {} } = foundry.utils.expandObject(changes);
-  // Só confere mudanças no que equipa o item: empunhar, vestir, empunhadura ou categoria (uma arma
-  // que deixa de ser natural passa a ocupar mãos)
-  if (!['empunhada', 'vestida', 'empunhadura', 'categoria'].some((key) => key in system)) {
+  // Só confere mudanças no que equipa o item: empunhar, vestir, empunhadura, categoria (uma arma
+  // que deixa de ser natural passa a ocupar mãos) ou subtipo (armadura que vira escudo)
+  const watched = ['empunhada', 'vestida', 'empunhadura', 'categoria', 'subtipo'];
+  if (!watched.some((key) => key in system)) {
     return undefined;
   }
   const merged = foundry.utils.mergeObject(item.toObject().system, system, { inplace: false });
@@ -62,7 +67,7 @@ function guardCreate(item) {
     { type: item.type, system: item.system },
     { proficient: ownerProficient(item) },
   );
-  if (!ok) item.updateSource({ [`system.${equipField(item.type)}`]: false });
+  if (!ok) item.updateSource({ [`system.${equipField(item)}`]: false });
 }
 
 /** Registra os ganchos (chamar uma vez, no `init`). */

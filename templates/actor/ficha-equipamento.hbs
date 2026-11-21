@@ -24,12 +24,15 @@
   {{#if editable}}<button type="button" data-action="createItem" data-type="arma">{{localize "DESORDEM.Item.Novo.arma"}}</button>{{/if}}
 
   <h4>{{localize "DESORDEM.Ficha.Armaduras"}}</h4>
+  {{#if equipment.armorTotals.extra}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.ArmaduraExtra" extra=equipment.armorTotals.extra restantes=equipment.armorTotals.extraLeft}}
+    <label class="desordem-item-linha__marca">{{localize "DESORDEM.Ficha.ArmaduraExtraGasta"}} <input type="number" class="desordem-item-linha__numero" name="system.armaduraExtraGasta" value="{{system.armaduraExtraGasta}}" min="0" max="{{equipment.armorTotals.extra}}" {{#unless editable}}disabled{{/unless}}></label></p>{{/if}}
   {{#each equipment.armors}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
-    <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="vestida" data-item-id="{{id}}" {{#if vestida}}checked{{/if}} {{#if blocked}}disabled title="{{localize "DESORDEM.Equipamento.Bloqueio.armadura"}}"{{/if}}> {{localize "DESORDEM.Item.Vestida"}}</label>
-    <span class="desordem-item-linha__nome" {{#if descricao}}data-tooltip="{{descricao}}"{{/if}}><strong>{{name}}</strong> — {{localize "DESORDEM.Ficha.PontosArmadura" restantes=restantes pontos=pontos}}</span>
+    <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="{{equipField}}" data-item-id="{{id}}" {{#if equipped}}checked{{/if}} {{#if blocked}}disabled{{#if blockReason}} title="{{localize (concat "DESORDEM.Equipamento.Bloqueio." blockReason)}}"{{/if}}{{/if}}> {{#if shield}}{{localize "DESORDEM.Item.Empunhada"}}{{else}}{{localize "DESORDEM.Item.Vestida"}}{{/if}}</label>
+    <span class="desordem-item-linha__nome" {{#if descricao}}data-tooltip="{{descricao}}"{{/if}}><strong>{{name}}</strong> — {{kindLabel}}{{#unless shield}}, {{localize "DESORDEM.Ficha.PontosArmadura" restantes=restantes pontos=pontos}}{{/unless}}</span>
     <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
     {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="deleteItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Remover"}}">×</button>{{/unless}}
+    {{#if lacksProficiency}}<span class="desordem-item-linha__aviso">{{localize "DESORDEM.Equipamento.SemProficienciaArmadura"}}</span>{{/if}}
     {{#if effects.length}}<span class="desordem-item-linha__efeitos">{{#each effects}}<span>{{this}}</span>{{/each}}</span>{{/if}}
   </div>
   {{/each}}

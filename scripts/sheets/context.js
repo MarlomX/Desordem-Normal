@@ -12,6 +12,7 @@ import {
   handsOf,
   isMartial,
   isNatural,
+  isShield,
   itemUse,
   weaponReady,
   weaponSkill,
@@ -147,11 +148,26 @@ function chosenOrDefault(chosen, defaultKey) {
  * @param {object} [labels.skillStep] `stepIndicator` do dado geral das perícias.
  * @param {Record<string, string>} [labels.attrChoices] Perícia -> atributo escolhido na ficha
  *   (vazio ou ausente = padrão).
+ * @param {Object<string, {steps: number, sources: string[]}>} [labels.penalties] Penalidades
+ *   passivas das armaduras em uso (`armorSkillPenalties`): o dado mostrado já desce, junto com o
+ *   passo manual (um único total; a escada para em d4 e d12, então nunca passa de d12).
+ * @param {(entry: {steps: number, sources: string[]}) => string} [labels.penaltyLabel] Texto da
+ *   dica da penalidade (quais armaduras, quantos passos).
  */
 export function buildSkillRows(
   skills,
   skillAttributes,
-  { skillLabel, attrLabel, defaultLabel, attributeDice, attrStepOf, skillStep, attrChoices },
+  {
+    skillLabel,
+    attrLabel,
+    defaultLabel,
+    attributeDice,
+    attrStepOf,
+    skillStep,
+    attrChoices,
+    penalties = {},
+    penaltyLabel = () => '',
+  },
 ) {
   return Object.entries(skillAttributes)
     .map(([key, defaultKey]) => {
@@ -164,14 +180,21 @@ export function buildSkillRows(
         attributeDice,
         attrStepOf,
       });
+      // Passos da perícia: o manual (geral) menos a penalidade das armaduras, somados antes de
+      // mexer no dado (d12 −1 da armadura +1 manual = d12)
+      const penalty = penalties[key];
+      const net = (skillStep?.net ?? 0) - (penalty?.steps ?? 0);
+      const shown = shownDie(skills[key], { net });
       return {
         key,
         label: skillLabel(key),
         ...attr,
         die: Number(skills[key]),
-        shownDie: shownDie(skills[key], skillStep),
-        shifted: shownDie(skills[key], skillStep) !== Number(skills[key]),
-        shiftDir: shiftDirection(skills[key], shownDie(skills[key], skillStep)),
+        shownDie: shown,
+        shifted: shown !== Number(skills[key]),
+        shiftDir: shiftDirection(skills[key], shown),
+        // Dica no dado: de onde vem a redução (vazio sem penalidade)
+        penaltyNote: penalty?.steps ? penaltyLabel(penalty) : '',
         trained: Number(skills[key]) >= 6,
         search: normalizeSearch(`${skillLabel(key)} ${attr.attrLabel}`),
         options: dieOptions(skills[key]),
@@ -366,7 +389,11 @@ export function buildEffectRows(
  * @param {(item: Object) => string} [options.effectsText] Resumo dos efeitos do item, um por
  *   linha (mostrado embaixo do nome); vazio = sem efeitos.
  * @param {boolean} [options.proficient=true] O personagem tem proficiência marcial (sem ela, a
- *   caixa de empunhar das armas marciais fica travada).
+ *   caixa de equipar das armas, armaduras e escudos marciais fica travada).
+ * @param {{extra?: number, extraSpent?: number}} [options.armorBonus] Armadura extra (pontos e
+ *   gastos), somada no resumo de pontos.
+ * @param {(kind: string, category: string) => string} [options.armorKindLabel] Rótulo do
+ *   subtipo com a categoria já traduzida («Armadura marcial», «Escudo simples»).
  * @param {boolean} [options.editable=true]
  */
 export function buildEquipmentRows(items, {
@@ -376,14 +403,18 @@ export function buildEquipmentRows(items, {
   categoryLabel = (category) => category,
   effectsText = () => '',
   proficient = true,
+  armorBonus = {},
+  armorKindLabel = (kind, category) => `${kind} ${category}`,
   editable = true,
 }) {
   const of = (type) => items.filter((item) => item.type === type);
   const weapons = of('arma');
   const armors = of('armadura');
   const others = of('item');
-  const hands = handsInUse([...weapons, ...others].map((i) => i.system));
-  const armorWorn = armors.some((a) => a.system.vestida);
+  // Mãos: armas, itens e escudos empunhados
+  const shields = armors.filter((a) => isShield(a.system));
+  const hands = handsInUse([...weapons, ...others, ...shields].map((i) => i.system));
+  const shieldHeld = shields.some((a) => a.system.empunhada);
   // Equipar fica bloqueado se o item não está equipado e não cabe
   const cannotHold = (system) => !system.empunhada && hands.used + handsOf(system) > HANDS;
   // Resumo dos efeitos, uma linha por efeito (fica visível embaixo do nome, sem passar o mouse)
@@ -430,16 +461,40 @@ export function buildEquipmentRows(items, {
     }),
     armors: armors.map((item) => {
       const { id, name, system } = item;
+      const shield = isShield(system);
+      const lacksProficiency = isMartial(system) && !proficient;
+      // Equipado: escudo empunhado ou armadura vestida (várias armaduras podem ser vestidas)
+      const equipped = shield ? Boolean(system.empunhada) : Boolean(system.vestida);
+      const blockReason = equipped
+        ? null
+        : lacksProficiency
+          ? 'proficiencia'
+          : shield && shieldHeld
+            ? 'escudo'
+            : shield && cannotHold(system)
+              ? 'maos'
+              : null;
       return {
         id,
         name,
         descricao: system.descricao,
         effects: effectLines(item),
+        shield,
+        kindLabel: armorKindLabel(
+          system.subtipo ?? 'armadura',
+          categoryLabel(system.categoria ?? 'simples'),
+        ),
         pontos: system.pontos,
         restantes: Math.max(0, Math.min(system.restantes, system.pontos)),
         vestida: system.vestida,
+        empunhada: Boolean(system.empunhada),
+        // Campo da caixa de equipar na linha: vestida (armadura) ou empunhada (escudo)
+        equipField: shield ? 'empunhada' : 'vestida',
+        equipped,
+        lacksProficiency,
+        blockReason,
         locked: !editable,
-        blocked: !editable || (!system.vestida && armorWorn),
+        blocked: !editable || blockReason !== null,
       };
     }),
     others: others.map((item) => {
@@ -463,7 +518,10 @@ export function buildEquipmentRows(items, {
       };
     }),
     hands,
-    armorTotals: armorSummary(armors.map((a) => a.system)),
+    armorTotals: armorSummary(
+      armors.map((a) => a.system),
+      armorBonus,
+    ),
   };
 }
 
