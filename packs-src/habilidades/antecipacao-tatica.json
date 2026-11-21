@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/clockwork.svg",
   "system": {
-    "descricao": "",
+    "descricao": "No começo de um combate, gaste 2 PD para ganhar uma rodada em que você age antes de todos os outros personagens e NPCs.",
     "perfil": false,
     "automacao": "",
     "efeitos": [

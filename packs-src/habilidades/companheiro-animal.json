@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/pawprint.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Um lobo acompanha você e soma +d6 aos seus ataques corpo a corpo. Se o dado dele der 1, o lobo se fere e não ajuda mais até o fim da cena.",
     "perfil": false,
     "automacao": "",
     "efeitos": [

@@ -30,10 +30,10 @@ test('compêndio de habilidades: 13 itens com id, chave e nome únicos', () => {
   assert.equal(names.size, docs.length);
 });
 
-test('compêndio de habilidades: sem as pagas, sem descrição e com efeitos já normalizados', () => {
+test('compêndio de habilidades: sem as pagas, com descrição e com efeitos já normalizados', () => {
   for (const { file, doc } of docs) {
     assert.ok(!PAID.includes(doc.name), file);
-    assert.equal(doc.system.descricao, '', file);
+    assert.ok(doc.system.descricao.trim().length > 0, file);
     assert.equal(doc.system.automacao, '', file);
     assert.deepEqual(normalizeEffects(doc.system.efeitos), doc.system.efeitos, file);
   }

@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/eye.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Gaste uma ação para ganhar 2 marcadores de análise (no máximo 4). Depois de rolar um teste, cada marcador gasto muda um dado em 1 para cima ou para baixo, sem passar do máximo do dado. Os marcadores que sobram se perdem no fim da cena.",
     "perfil": false,
     "automacao": "",
     "efeitos": [

@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/item-bag.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Bolsa com preparados de uso único; usar um custa uma ação e um alvo. Tônico de urtiga-feroz: o Físico do alvo sobe um passo por uma cena. Bálsamo de confrei: o alvo recupera 2d4 PV (se for outro ser, ele precisa ficar parado nesta rodada). Pote de vespa: ataque à distância com teste de Sobrevivência, dano RA+1; se o alvo não morrer, perde a próxima ação.",
     "perfil": false,
     "automacao": "",
     "efeitos": []

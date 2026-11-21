@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/invisible.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Em testes de Crime ou Furtividade, gaste 3 PD para somar +d8.",
     "perfil": false,
     "automacao": "",
     "efeitos": [

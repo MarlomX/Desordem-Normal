@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/fire.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Toda cena começa com 1 espaço da sua barra de ímpeto já cheio.",
     "perfil": false,
     "automacao": "",
     "efeitos": [

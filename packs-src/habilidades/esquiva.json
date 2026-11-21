@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/wing.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Uma vez por rodada, ao sofrer um ataque, você pode, como ação livre, opor um teste de Acrobacia ao teste de ataque. Se vencer, o ataque não acerta você.",
     "perfil": false,
     "automacao": "",
     "efeitos": [

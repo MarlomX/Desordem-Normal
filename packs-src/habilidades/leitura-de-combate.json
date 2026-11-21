@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/shield.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Em combate, cada vez que você usa uma ação para se defender, ganha 1 marcador de análise.",
     "perfil": false,
     "automacao": "",
     "efeitos": [

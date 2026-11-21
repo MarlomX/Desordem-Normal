@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/dice-target.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Uma vez por rodada, quando você ou alguém em alcance curto rola um teste, gaste 2 PD para rolar de novo um dos dados que não deu 1. Em combate, você também pode agir na sua fase ou numa fase posterior, depois das ações já roladas nela.",
     "perfil": false,
     "automacao": "",
     "efeitos": [

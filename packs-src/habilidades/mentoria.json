@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/book.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Ao ajudar alguém, faça um teste com a perícia usada na ajuda contra DT 7. Se passar, quem foi ajudado pode trocar um dos dados que rolou pela sua rolagem alta.",
     "perfil": false,
     "automacao": "",
     "efeitos": []

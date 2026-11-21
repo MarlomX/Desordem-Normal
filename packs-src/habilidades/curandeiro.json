@@ -5,7 +5,7 @@
   "type": "habilidade",
   "img": "icons/svg/heal.svg",
   "system": {
-    "descricao": "",
+    "descricao": "Gaste uma ação e 2 PD e faça um teste de Medicina (DT 7) para tratar um aliado. Se passar, ele recupera PV igual à rolagem alta. Cada aliado só pode receber isto uma vez por cena.",
     "perfil": false,
     "automacao": "",
     "efeitos": [
