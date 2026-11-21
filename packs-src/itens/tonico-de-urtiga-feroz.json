@@ -1,0 +1,33 @@
+{
+  "_id": "dnItemBasico0020",
+  "_key": "!items!dnItemBasico0020",
+  "name": "Tônico de urtiga-feroz",
+  "type": "item",
+  "img": "icons/svg/item-bag.svg",
+  "system": {
+    "descricao": "Uso único. Gaste uma ação: quem receber ganha um aumento de passo em Físico até o fim da cena.",
+    "quantidade": 1,
+    "consumivel": true,
+    "empunhadura": "uma",
+    "empunhada": false,
+    "usosMax": 0,
+    "usos": 0,
+    "efeitos": [
+      {
+        "id": "fisico",
+        "tipo": "passoAlvo",
+        "params": {
+          "atributo": "fisico",
+          "passos": 1
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 2000000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

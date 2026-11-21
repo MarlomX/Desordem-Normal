@@ -1,0 +1,37 @@
+{
+  "_id": "dnItemBasico0009",
+  "_key": "!items!dnItemBasico0009",
+  "name": "Lança",
+  "type": "arma",
+  "img": "icons/svg/sword.svg",
+  "system": {
+    "descricao": "Arma corpo a corpo. Dano RA+2. Aumento de passo no primeiro ataque contra um inimigo que ainda não atacou você (marque a caixa na janela do teste).",
+    "tipo": "corpo",
+    "categoria": "simples",
+    "empunhadura": "uma",
+    "bonusDano": 2,
+    "baseDano": "ra",
+    "pericia": "",
+    "naoLetal": false,
+    "empunhada": false,
+    "quantidade": 1,
+    "consumivel": false,
+    "efeitos": [
+      {
+        "id": "naoAtacou",
+        "tipo": "passoAtaque",
+        "params": {
+          "passos": 1,
+          "quando": "naoAtacou"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 900000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

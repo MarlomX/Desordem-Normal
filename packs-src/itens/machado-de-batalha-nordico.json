@@ -1,0 +1,28 @@
+{
+  "_id": "dnItemBasico0007",
+  "_key": "!items!dnItemBasico0007",
+  "name": "Machado de batalha nórdico",
+  "type": "arma",
+  "img": "icons/svg/sword.svg",
+  "system": {
+    "descricao": "Arma corpo a corpo. Dano RA+3.",
+    "tipo": "corpo",
+    "categoria": "simples",
+    "empunhadura": "uma",
+    "bonusDano": 3,
+    "baseDano": "ra",
+    "pericia": "",
+    "naoLetal": false,
+    "empunhada": false,
+    "quantidade": 1,
+    "consumivel": false,
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 700000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

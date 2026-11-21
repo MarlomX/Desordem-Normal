@@ -1,0 +1,29 @@
+{
+  "_id": "dnItemBasico0012",
+  "_key": "!items!dnItemBasico0012",
+  "name": "Cota de malha",
+  "type": "armadura",
+  "img": "icons/svg/statue.svg",
+  "system": {
+    "descricao": "Armadura marcial. 2 pontos de armadura. Enquanto vestida, Atletismo e Furtividade descem um passo.",
+    "subtipo": "armadura",
+    "categoria": "marcial",
+    "pontos": 2,
+    "restantes": 2,
+    "vestida": false,
+    "empunhada": false,
+    "penalidadePassos": 1,
+    "penalidadePericias": [
+      "atletismo",
+      "furtividade"
+    ],
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

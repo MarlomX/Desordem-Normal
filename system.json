@@ -41,6 +41,17 @@
         "PLAYER": "OBSERVER",
         "ASSISTANT": "OWNER"
       }
+    },
+    {
+      "name": "itens",
+      "label": "Itens básicos",
+      "path": "packs/itens",
+      "type": "Item",
+      "system": "desordem-normal",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
     }
   ],
   "url": "https://github.com/MarlomX/desordem-normal",

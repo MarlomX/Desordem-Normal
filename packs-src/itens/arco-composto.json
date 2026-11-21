@@ -1,0 +1,28 @@
+{
+  "_id": "dnItemBasico0006",
+  "_key": "!items!dnItemBasico0006",
+  "name": "Arco composto",
+  "type": "arma",
+  "img": "icons/svg/target.svg",
+  "system": {
+    "descricao": "Arma à distância, de duas mãos. Dano RA+1.",
+    "tipo": "distancia",
+    "categoria": "simples",
+    "empunhadura": "duas",
+    "bonusDano": 1,
+    "baseDano": "ra",
+    "pericia": "",
+    "naoLetal": false,
+    "empunhada": false,
+    "quantidade": 1,
+    "consumivel": false,
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 600000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

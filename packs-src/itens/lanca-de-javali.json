@@ -1,0 +1,37 @@
+{
+  "_id": "dnItemBasico0003",
+  "_key": "!items!dnItemBasico0003",
+  "name": "Lança de javali",
+  "type": "arma",
+  "img": "icons/svg/sword.svg",
+  "system": {
+    "descricao": "Arma corpo a corpo. Dano RA+2. O primeiro ataque com ela em cada cena ganha um aumento de passo.",
+    "tipo": "corpo",
+    "categoria": "simples",
+    "empunhadura": "uma",
+    "bonusDano": 2,
+    "baseDano": "ra",
+    "pericia": "",
+    "naoLetal": false,
+    "empunhada": false,
+    "quantidade": 1,
+    "consumivel": false,
+    "efeitos": [
+      {
+        "id": "primeiro",
+        "tipo": "passoAtaque",
+        "params": {
+          "passos": 1,
+          "quando": "primeiroCena"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 300000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

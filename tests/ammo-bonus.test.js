@@ -80,3 +80,11 @@ test('os dois efeitos são só do item geral e têm resumo', () => {
   const text = describeEffect(ammo, { t, skill: (k) => k });
   assert.ok(text.includes('"passos":1') && text.includes('"dano":2'));
 });
+
+test('diceVariantKey separa munição e a caixa «contra quem ainda não me atacou»', async () => {
+  const { diceVariantKey } = await import('../scripts/rolls/roll-dialog.js');
+  assert.equal(diceVariantKey(null, false), '|0');
+  assert.equal(diceVariantKey('aljava', false), 'aljava|0');
+  assert.equal(diceVariantKey('aljava', true), 'aljava|1');
+  assert.notEqual(diceVariantKey(null, true), diceVariantKey(null, false));
+});

@@ -1,0 +1,34 @@
+{
+  "_id": "dnItemBasico0016",
+  "_key": "!items!dnItemBasico0016",
+  "name": "Escudo",
+  "type": "armadura",
+  "img": "icons/svg/shield.svg",
+  "system": {
+    "descricao": "Escudo (ocupa uma mão). Ao perder um teste oposto de ataque com soma 7 ou mais, o dano recebido cai pela sua rolagem baixa.",
+    "subtipo": "escudo",
+    "categoria": "simples",
+    "pontos": 0,
+    "restantes": 0,
+    "vestida": false,
+    "empunhada": false,
+    "penalidadePassos": 0,
+    "penalidadePericias": [],
+    "efeitos": [
+      {
+        "id": "reducao",
+        "tipo": "reducaoEscudo",
+        "params": {
+          "somaMinima": 7
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1600000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

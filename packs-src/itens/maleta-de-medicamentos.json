@@ -1,0 +1,32 @@
+{
+  "_id": "dnItemBasico0017",
+  "_key": "!items!dnItemBasico0017",
+  "name": "Maleta de medicamentos",
+  "type": "item",
+  "img": "icons/svg/heal.svg",
+  "system": {
+    "descricao": "Ferramenta de Medicina: sem ela, primeiros socorros sofrem redução de passo.",
+    "quantidade": 1,
+    "consumivel": false,
+    "empunhadura": "uma",
+    "empunhada": false,
+    "usosMax": 0,
+    "usos": 0,
+    "efeitos": [
+      {
+        "id": "medicina",
+        "tipo": "ferramenta",
+        "params": {
+          "ferramenta": "medicina"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1700000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

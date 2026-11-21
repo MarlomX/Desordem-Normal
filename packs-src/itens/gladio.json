@@ -1,0 +1,36 @@
+{
+  "_id": "dnItemBasico0011",
+  "_key": "!items!dnItemBasico0011",
+  "name": "Gládio",
+  "type": "arma",
+  "img": "icons/svg/sword.svg",
+  "system": {
+    "descricao": "Arma corpo a corpo marcial (exige proficiência marcial). Dano RA+4 e +1 nos testes de ataque.",
+    "tipo": "corpo",
+    "categoria": "marcial",
+    "empunhadura": "uma",
+    "bonusDano": 4,
+    "baseDano": "ra",
+    "pericia": "",
+    "naoLetal": false,
+    "empunhada": false,
+    "quantidade": 1,
+    "consumivel": false,
+    "efeitos": [
+      {
+        "id": "bonus",
+        "tipo": "bonusAtaque",
+        "params": {
+          "valor": 1
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

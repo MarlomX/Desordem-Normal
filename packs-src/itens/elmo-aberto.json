@@ -1,0 +1,28 @@
+{
+  "_id": "dnItemBasico0014",
+  "_key": "!items!dnItemBasico0014",
+  "name": "Elmo aberto",
+  "type": "armadura",
+  "img": "icons/svg/statue.svg",
+  "system": {
+    "descricao": "Armadura. 1 ponto de armadura. Enquanto vestido, Percepção desce um passo.",
+    "subtipo": "armadura",
+    "categoria": "simples",
+    "pontos": 1,
+    "restantes": 1,
+    "vestida": false,
+    "empunhada": false,
+    "penalidadePassos": 1,
+    "penalidadePericias": [
+      "percepcao"
+    ],
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1400000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

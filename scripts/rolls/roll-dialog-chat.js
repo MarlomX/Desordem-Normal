@@ -20,6 +20,7 @@ import { testResources } from './threat.js';
 import { armorPenaltyLine, armorSkillPenalties } from './equipment.js';
 import {
   buildRollModel,
+  diceVariantKey,
   emptySelection,
   evaluateSelection,
   selectionToOptions,
@@ -215,7 +216,16 @@ function syncExtendedDt(form, on) {
 
 /** Atualiza prévia, espaços, bloqueios, custos e o botão de rolar conforme as escolhas. */
 function refresh(form, root, model) {
-  const evaluation = evaluateSelection(model, readSelection(form));
+  // Dados da prévia conforme a munição e a caixa «contra quem ainda não me atacou» (variantes
+  // calculadas ao abrir a janela)
+  const variant =
+    model.diceVariants?.[
+      diceVariantKey(
+        form.querySelector('input[name="municao"]:checked')?.value ?? null,
+        Boolean(form.querySelector('input[name="naoAtacou"]:checked')),
+      )
+    ];
+  const evaluation = evaluateSelection(variant ? { ...model, ...variant } : model, readSelection(form));
 
   // Espaços de dado extra (refeitos a cada mudança; os bônus manuais mantêm seus valores)
   let manualIndex = 0;
@@ -428,12 +438,31 @@ export async function askRollChoices(
   // Penalidade das armaduras em uso nesta perícia (a prévia já a inclui, por `testDicePreview`)
   const penalty = armorPenaltyLine(armorSkillPenalties(actor.items), skillKey);
   const penaltyLines = penalty ? [penalty] : [];
-  const dice = testDicePreview(actor, skillKey, attribute, [
-    ...stepMods,
-    // Prévia com a munição marcada por padrão (desmarcar não muda a prévia, só a rolagem)
-    ...(defaultAmmo?.passos ? [{ target: 'skill', steps: defaultAmmo.passos }] : []),
-    ...(attack.steps ? [{ target: 'skill', steps: attack.steps }] : []),
-  ]);
+  // Dados da prévia para cada combinação de munição (ou nenhuma) e da caixa «contra quem ainda não
+  // me atacou»; a janela troca a prévia quando essas caixas mudam
+  const optionalSteps = attack.lines
+    .filter((line) => line.optional)
+    .reduce((sum, line) => sum + line.value, 0);
+  const skillStep = (steps) => (steps ? [{ target: 'skill', steps }] : []);
+  const previewFor = (ammoSteps, notAttacked) =>
+    testDicePreview(actor, skillKey, attribute, [
+      ...stepMods,
+      ...skillStep(attack.steps),
+      ...skillStep(ammoSteps),
+      ...skillStep(notAttacked ? optionalSteps : 0),
+    ]);
+  const diceVariants = {};
+  for (const option of [null, ...ammo]) {
+    for (const notAttacked of optionalSteps ? [false, true] : [false]) {
+      const preview = previewFor(option?.passos ?? 0, notAttacked);
+      diceVariants[diceVariantKey(option?.id ?? null, notAttacked)] = {
+        attrDie: preview.attrDie,
+        skillDie: preview.skillDie,
+      };
+    }
+  }
+  // A janela abre com a primeira munição marcada e a caixa desmarcada
+  const dice = previewFor(defaultAmmo?.passos ?? 0, false);
   // PD, ímpeto e pavor (0 numa criatura: a janela não mostra pavor nem custos)
   const resources = testResources(actor.system);
   // Recursos das habilidades (valores e nomes) e reserva de dados bônus
@@ -463,6 +492,8 @@ export async function askRollChoices(
     stealth,
     challenges,
   });
+  // Variantes da prévia (munição e «contra quem ainda não me atacou»); veja `refresh`
+  model.diceVariants = diceVariants;
 
   // Nomes dos recursos (custos, erros e motivos de indisponível)
   model.resourceNames = Object.fromEntries(
@@ -631,6 +662,12 @@ export async function askRollChoices(
           const challengeDt = selectedChallengeDt(form);
           if (field && Number.isFinite(challengeDt) && challengeDt > 0) {
             field.value = String(challengeDt);
+          }
+        }
+        // Munição: só uma por ataque (marcar uma desmarca as outras)
+        if (event.target.name === 'municao' && event.target.checked) {
+          for (const box of form.querySelectorAll('input[name="municao"]')) {
+            if (box !== event.target) box.checked = false;
           }
         }
         refresh(form, root, model);

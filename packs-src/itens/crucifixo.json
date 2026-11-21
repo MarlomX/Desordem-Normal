@@ -1,0 +1,32 @@
+{
+  "_id": "dnItemBasico0022",
+  "_key": "!items!dnItemBasico0022",
+  "name": "Crucifixo",
+  "type": "item",
+  "img": "icons/svg/holy-shield.svg",
+  "system": {
+    "descricao": "Um uso: +1d10 em um único teste (vai para a sua reserva de dados bônus).",
+    "quantidade": 1,
+    "consumivel": false,
+    "empunhadura": "uma",
+    "empunhada": false,
+    "usosMax": 1,
+    "usos": 1,
+    "efeitos": [
+      {
+        "id": "dado",
+        "tipo": "concederDado",
+        "params": {
+          "dado": 10
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 2200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

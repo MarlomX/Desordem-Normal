@@ -1,0 +1,26 @@
+{
+  "_id": "dnItemBasico0013",
+  "_key": "!items!dnItemBasico0013",
+  "name": "Corselete de couro",
+  "type": "armadura",
+  "img": "icons/svg/statue.svg",
+  "system": {
+    "descricao": "Armadura. 1 ponto de armadura.",
+    "subtipo": "armadura",
+    "categoria": "simples",
+    "pontos": 1,
+    "restantes": 1,
+    "vestida": false,
+    "empunhada": false,
+    "penalidadePassos": 0,
+    "penalidadePericias": [],
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1300000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

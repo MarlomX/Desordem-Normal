@@ -241,6 +241,17 @@ export function emptySelection(dt) {
  *   embrace: boolean}, rolledSides: number[], summedDice: number, errors: string[], valid: boolean
  * }}
  */
+/**
+ * Chave da variante da prévia dos dados: a munição marcada (vazio = nenhuma) e a caixa «contra
+ * quem ainda não me atacou». A janela calcula os dados de cada combinação ao abrir e troca a
+ * prévia quando essas caixas mudam.
+ * @param {string|null} ammoId
+ * @param {boolean} notAttacked
+ */
+export function diceVariantKey(ammoId, notAttacked) {
+  return `${ammoId ?? ''}|${notAttacked ? 1 : 0}`;
+}
+
 export function evaluateSelection(model, selection = emptySelection(model.dt)) {
   const usable = new Map(model.abilities.filter((a) => a.available).map((a) => [a.key, a]));
   const wanted = new Set(selection.active ?? []);

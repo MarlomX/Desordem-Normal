@@ -8,7 +8,20 @@
     "descricao": "Proficiência com equipamentos marciais. A armadura que você estiver vestindo dá 1 ponto de armadura a mais.",
     "perfil": false,
     "automacao": "",
-    "efeitos": []
+    "efeitos": [
+      {
+        "id": "proficiencia",
+        "tipo": "proficienciaMarcial",
+        "params": {}
+      },
+      {
+        "id": "armaduraExtra",
+        "tipo": "armaduraExtra",
+        "params": {
+          "pontos": 1
+        }
+      }
+    ]
   },
   "effects": [],
   "folder": null,

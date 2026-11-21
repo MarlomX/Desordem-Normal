@@ -1,0 +1,24 @@
+{
+  "_id": "dnItemBasico0018",
+  "_key": "!items!dnItemBasico0018",
+  "name": "Tenaz de ferreiro",
+  "type": "item",
+  "img": "icons/svg/item-bag.svg",
+  "system": {
+    "descricao": "Ferramenta de forja.",
+    "quantidade": 1,
+    "consumivel": false,
+    "empunhadura": "uma",
+    "empunhada": false,
+    "usosMax": 0,
+    "usos": 0,
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1800000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

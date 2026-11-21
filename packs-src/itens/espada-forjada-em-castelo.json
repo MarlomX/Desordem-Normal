@@ -1,0 +1,36 @@
+{
+  "_id": "dnItemBasico0010",
+  "_key": "!items!dnItemBasico0010",
+  "name": "Espada forjada em castelo",
+  "type": "arma",
+  "img": "icons/svg/sword.svg",
+  "system": {
+    "descricao": "Arma corpo a corpo. Dano RA+3. Nos ataques com ela, dois dados iguais de 5 ou mais já são sucesso crítico.",
+    "tipo": "corpo",
+    "categoria": "simples",
+    "empunhadura": "uma",
+    "bonusDano": 3,
+    "baseDano": "ra",
+    "pericia": "",
+    "naoLetal": false,
+    "empunhada": false,
+    "quantidade": 1,
+    "consumivel": false,
+    "efeitos": [
+      {
+        "id": "critico",
+        "tipo": "criticoAmpliado",
+        "params": {
+          "minimo": 5
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1000000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

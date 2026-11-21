@@ -1,0 +1,28 @@
+{
+  "_id": "dnItemBasico0008",
+  "_key": "!items!dnItemBasico0008",
+  "name": "Pote de vespa",
+  "type": "arma",
+  "img": "icons/svg/target.svg",
+  "system": {
+    "descricao": "Arremesso à distância com Sobrevivência. Dano RA+1. Se o alvo continuar de pé, perde a próxima ação. Gasta-se ao atacar.",
+    "tipo": "distancia",
+    "categoria": "simples",
+    "empunhadura": "uma",
+    "bonusDano": 1,
+    "baseDano": "ra",
+    "pericia": "sobrevivencia",
+    "naoLetal": false,
+    "empunhada": false,
+    "quantidade": 1,
+    "consumivel": true,
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 800000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

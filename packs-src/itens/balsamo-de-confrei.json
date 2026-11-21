@@ -1,0 +1,33 @@
+{
+  "_id": "dnItemBasico0021",
+  "_key": "!items!dnItemBasico0021",
+  "name": "Bálsamo de confrei",
+  "type": "item",
+  "img": "icons/svg/heal.svg",
+  "system": {
+    "descricao": "Uma dose por pote. Gaste uma ação: quem receber recupera 2d4 PV (num aliado, ele não pode agir nesta rodada).",
+    "quantidade": 1,
+    "consumivel": true,
+    "empunhadura": "uma",
+    "empunhada": false,
+    "usosMax": 0,
+    "usos": 0,
+    "efeitos": [
+      {
+        "id": "cura",
+        "tipo": "curar",
+        "params": {
+          "formula": "2d4",
+          "recursoCura": "pv"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 2100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}
