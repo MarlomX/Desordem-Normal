@@ -1,0 +1,30 @@
+{
+  "_id": "dnHabilidade0005",
+  "_key": "!items!dnHabilidade0005",
+  "name": "Esquiva",
+  "type": "habilidade",
+  "img": "icons/svg/wing.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "esquiva",
+        "tipo": "defesaLivre",
+        "params": {
+          "pericia": "acrobacia",
+          "limite": "rodadaCombate",
+          "rotulo": ""
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 500000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

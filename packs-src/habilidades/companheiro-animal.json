@@ -1,0 +1,29 @@
+{
+  "_id": "dnHabilidade0006",
+  "_key": "!items!dnHabilidade0006",
+  "name": "Companheiro Animal",
+  "type": "habilidade",
+  "img": "icons/svg/pawprint.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "companheiro",
+        "tipo": "companheiro",
+        "params": {
+          "dado": 6,
+          "teste": "ataqueCorpo"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 600000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

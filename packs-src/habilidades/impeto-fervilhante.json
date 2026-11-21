@@ -1,0 +1,31 @@
+{
+  "_id": "dnHabilidade0008",
+  "_key": "!items!dnHabilidade0008",
+  "name": "Ímpeto Fervilhante",
+  "type": "habilidade",
+  "img": "icons/svg/fire.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "impetoInicial",
+        "tipo": "ganharRecurso",
+        "params": {
+          "recurso": "impeto",
+          "quantidade": 1,
+          "gatilho": "inicioCena",
+          "rotulo": ""
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 800000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

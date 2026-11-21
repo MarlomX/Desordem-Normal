@@ -1,0 +1,34 @@
+{
+  "_id": "dnHabilidade0013",
+  "_key": "!items!dnHabilidade0013",
+  "name": "Antecipação Tática",
+  "type": "habilidade",
+  "img": "icons/svg/clockwork.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "antecipacao",
+        "tipo": "acaoNota",
+        "params": {
+          "custo": {
+            "tipo": "pd",
+            "valor": 2,
+            "recurso": ""
+          },
+          "texto": "",
+          "rotulo": ""
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1300000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

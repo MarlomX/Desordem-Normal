@@ -1,0 +1,20 @@
+{
+  "_id": "dnHabilidade0003",
+  "_key": "!items!dnHabilidade0003",
+  "name": "Segredo do Aço",
+  "type": "habilidade",
+  "img": "icons/svg/sword.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 300000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

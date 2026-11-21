@@ -1,0 +1,94 @@
+{
+  "_id": "dnHabilidade0007",
+  "_key": "!items!dnHabilidade0007",
+  "name": "Ímpeto",
+  "type": "habilidade",
+  "img": "icons/svg/lightning.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "impetoBarra",
+        "tipo": "recurso",
+        "params": {
+          "chave": "impeto",
+          "nome": "",
+          "maximo": 5,
+          "esvazia": true
+        }
+      },
+      {
+        "id": "impetoFalha",
+        "tipo": "ganharRecurso",
+        "params": {
+          "recurso": "impeto",
+          "quantidade": 1,
+          "gatilho": "falha",
+          "rotulo": ""
+        }
+      },
+      {
+        "id": "impetoOposto",
+        "tipo": "ganharRecurso",
+        "params": {
+          "recurso": "impeto",
+          "quantidade": 1,
+          "gatilho": "perdeOposto",
+          "rotulo": ""
+        }
+      },
+      {
+        "id": "impetoDado",
+        "tipo": "dadoExtra",
+        "params": {
+          "dado": 4,
+          "pericias": [],
+          "teste": "qualquer",
+          "custo": {
+            "tipo": "recurso",
+            "valor": 1,
+            "recurso": "impeto"
+          },
+          "grupo": "habilidade",
+          "marcado": false
+        }
+      },
+      {
+        "id": "impetoPasso",
+        "tipo": "passoCena",
+        "params": {
+          "custo": {
+            "tipo": "recurso",
+            "valor": 3,
+            "recurso": "impeto"
+          },
+          "atributo": "",
+          "passos": 1,
+          "rotulo": ""
+        }
+      },
+      {
+        "id": "impetoAcao",
+        "tipo": "acaoNota",
+        "params": {
+          "custo": {
+            "tipo": "recurso",
+            "valor": 3,
+            "recurso": "impeto"
+          },
+          "texto": "",
+          "rotulo": ""
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 700000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

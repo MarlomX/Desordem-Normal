@@ -1,0 +1,48 @@
+{
+  "_id": "dnHabilidade0001",
+  "_key": "!items!dnHabilidade0001",
+  "name": "Análise",
+  "type": "habilidade",
+  "img": "icons/svg/eye.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "analiseMarcadores",
+        "tipo": "recurso",
+        "params": {
+          "chave": "analise",
+          "nome": "",
+          "maximo": 4,
+          "esvazia": true
+        }
+      },
+      {
+        "id": "analisar",
+        "tipo": "ganharRecurso",
+        "params": {
+          "recurso": "analise",
+          "quantidade": 2,
+          "gatilho": "acao",
+          "rotulo": ""
+        }
+      },
+      {
+        "id": "analiseAjuste",
+        "tipo": "ajusteDados",
+        "params": {
+          "recurso": "analise"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

@@ -1,0 +1,33 @@
+{
+  "_id": "dnHabilidade0004",
+  "_key": "!items!dnHabilidade0004",
+  "name": "Prontidão",
+  "type": "habilidade",
+  "img": "icons/svg/dice-target.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "prontidao",
+        "tipo": "rerrolar",
+        "params": {
+          "custo": {
+            "tipo": "pd",
+            "valor": 2,
+            "recurso": ""
+          },
+          "limite": "rodadaCombate"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 400000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

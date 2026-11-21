@@ -13,8 +13,15 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           jq --arg v "$VERSION" '.version = $v' system.json > tmp.json && mv tmp.json system.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Compilar os compêndios
+        run: |
+          npm install --no-save @foundryvtt/foundryvtt-cli@3
+          node tools/pack.mjs
       - name: Gerar zip
-        run: zip -r system.zip system.json README.md LICENSE-NOTICE.md scripts styles templates lang
+        run: zip -r system.zip system.json README.md LICENSE-NOTICE.md scripts styles templates lang packs -x 'packs/*/LOCK'
       - uses: softprops/action-gh-release@v2
         with:
           files: |

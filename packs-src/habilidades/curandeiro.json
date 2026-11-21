@@ -1,0 +1,39 @@
+{
+  "_id": "dnHabilidade0011",
+  "_key": "!items!dnHabilidade0011",
+  "name": "Curandeiro",
+  "type": "habilidade",
+  "img": "icons/svg/heal.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "curandeiro",
+        "tipo": "testeAcao",
+        "params": {
+          "custo": {
+            "tipo": "pd",
+            "valor": 2,
+            "recurso": ""
+          },
+          "pericia": "medicina",
+          "dt": 7,
+          "resultado": "curarPV",
+          "dado": 6,
+          "margem": 3,
+          "umaVezPorAlvo": true,
+          "rotulo": ""
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

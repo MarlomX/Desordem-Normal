@@ -1,0 +1,40 @@
+{
+  "_id": "dnHabilidade0012",
+  "_key": "!items!dnHabilidade0012",
+  "name": "Sorrateiro",
+  "type": "habilidade",
+  "img": "icons/svg/invisible.svg",
+  "system": {
+    "descricao": "",
+    "perfil": false,
+    "automacao": "",
+    "efeitos": [
+      {
+        "id": "sorrateiro",
+        "tipo": "dadoExtra",
+        "params": {
+          "dado": 8,
+          "pericias": [
+            "crime",
+            "furtividade"
+          ],
+          "teste": "qualquer",
+          "custo": {
+            "tipo": "pd",
+            "valor": 3,
+            "recurso": ""
+          },
+          "grupo": "habilidade",
+          "marcado": false
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "sort": 1200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}
