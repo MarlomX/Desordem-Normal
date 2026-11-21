@@ -13,8 +13,10 @@ import {
   canPay,
   conditionFlips,
   effectsOfType,
+  fromAbility,
   payUpdates,
   sceneResources,
+  syncConditionalEffects,
 } from './ability-effects.js';
 import {
   actorEffects,
@@ -131,8 +133,6 @@ export async function useAbilityEffect(actor, itemId, effectId) {
       return entry.params.resultado === 'curarPV'
         ? healAlly(actor, itemId, effectId)
         : startGroupDice(actor, entry);
-    case 'interceptar':
-      return interceptAttack(actor, entry);
     default:
       return undefined;
   }
@@ -214,29 +214,6 @@ export async function impetoAction(actor, itemId = null, effectId = null) {
         detail: t('DESORDEM.Habilidade.ImpetoAcaoDetalhe'),
       })
     : abilityNote(actor, { entry, text: t('DESORDEM.Efeito.Nota.acaoNota') });
-}
-
-/**
- * Assumir um ataque contra um aliado (efeito `interceptar`): gasta o custo, marca o uso da rodada
- * e avisa no chat. O aliado é o token mirado (sem ele, o aviso não diz quem). A mesa redireciona
- * o ataque e o dano (quem aplica o dano escolhe o alvo).
- */
-async function interceptAttack(actor, entry) {
-  if (!usableThisRound(actor, entry)) {
-    return warn('DESORDEM.Efeito.Aviso.Rodada', { nome: entry.itemName });
-  }
-  const wallet = walletOf(actor);
-  if (!canPay(entry.params.custo, wallet)) return warnCost(entry, null);
-  const ally = [...game.user.targets][0]?.actor ?? null;
-  if (ally?.id === actor.id) return warn('DESORDEM.Efeito.Aviso.AliadoSiMesmo');
-  const updates = { ...payUpdates(entry.params.custo, wallet), ...roundUseUpdate(entry) };
-  if (Object.keys(updates).length) await actor.update(updates);
-  return abilityNote(actor, {
-    entry,
-    text: ally
-      ? t('DESORDEM.Efeito.Nota.interceptar', { aliado: ally.name })
-      : t('DESORDEM.Efeito.Nota.interceptarSemAlvo'),
-  });
 }
 
 // ---------- Análise ----------
@@ -398,12 +375,36 @@ const conditionState = (actor) => ({
   pdMax: actor.system.pd?.max ?? 0,
 });
 
+/** Nome do atributo de um passo condicional («todos os atributos» ou um só). */
+const stepAttributeName = (atributo) =>
+  !atributo || atributo === 'todos'
+    ? t('DESORDEM.Efeito.TodosAtributos')
+    : t(`DESORDEM.Atributos.${atributo}`);
+
 /**
- * Aviso do passo condicional: quando o PV (ou o PD) cruza a metade, um cartão diz que a habilidade
- * ativou ou desativou. O estado de antes é guardado no `preUpdateActor`, nas opções da gravação;
- * só quem fez a gravação avisa (para não repetir em cada navegador).
+ * Confere os efeitos da aba Condição que os passos condicionais criam: põe o da habilidade cuja
+ * condição vale e tira o que deixou de valer (veja `syncConditionalEffects`).
  */
-function registerConditionalStepNotes() {
+async function syncConditionalSteps(actor) {
+  if (actor?.type !== 'personagem' || !actor.isOwner) return;
+  const current = actor.toObject().system.efeitos ?? [];
+  const next = syncConditionalEffects(current, actorEffects(actor), conditionState(actor));
+  if (next) await actor.update({ 'system.efeitos': next });
+}
+
+/** A gravação mexeu no PV ou no PD (o que pode ligar ou desligar um passo condicional)? */
+const touchesCondition = (changes) =>
+  foundry.utils.hasProperty(changes, 'system.pv') ||
+  foundry.utils.hasProperty(changes, 'system.pd');
+
+/**
+ * Passo condicional: quando o PV (ou o PD) cruza a metade, a habilidade vira um efeito na aba
+ * Condição (com o nome dela, passos no dado do atributo) e um cartão avisa; quando deixa de valer,
+ * o efeito sai. O estado de antes é guardado no `preUpdateActor`, nas opções da gravação; só quem
+ * fez a gravação avisa e grava (para não repetir em cada navegador). Ganhar, editar ou perder a
+ * habilidade também confere o efeito.
+ */
+function registerConditionalSteps() {
   const key = `${SYSTEM_ID}CondicaoAntes`;
   Hooks.on('preUpdateActor', (actor, changes, options) => {
     if (effectsOfType(actorEffects(actor), 'passoCondicional').length) {
@@ -411,7 +412,11 @@ function registerConditionalStepNotes() {
     }
   });
   Hooks.on('updateActor', async (actor, changes, options, userId) => {
-    if (userId !== game.user.id || !options[key]) return;
+    if (userId !== game.user.id) return;
+    const hasSteps = Boolean(options[key]) || (actor.system.efeitos ?? []).some(fromAbility);
+    if (!hasSteps || !touchesCondition(changes)) return;
+    await syncConditionalSteps(actor);
+    if (!options[key]) return;
     for (const { entry, active } of conditionFlips(
       actorEffects(actor),
       options[key],
@@ -421,23 +426,35 @@ function registerConditionalStepNotes() {
       await abilityNote(actor, {
         entry,
         text: active
-          ? t('DESORDEM.Efeito.Nota.condicaoAtiva', { passos: entry.params.passos, condicao })
+          ? t('DESORDEM.Efeito.Nota.condicaoAtiva', {
+              passos: entry.params.passos,
+              atributo: stepAttributeName(entry.params.atributo),
+              condicao,
+            })
           : t('DESORDEM.Efeito.Nota.condicaoInativa', { condicao }),
       });
     }
   });
+  // Habilidade nova, editada ou apagada: confere o efeito de quem a tem
+  const onItem = (item, userId) => {
+    if (userId !== game.user.id || item.type !== 'habilidade') return;
+    syncConditionalSteps(item.parent);
+  };
+  Hooks.on('createItem', (item, options, userId) => onItem(item, userId));
+  Hooks.on('updateItem', (item, changes, options, userId) => onItem(item, userId));
+  Hooks.on('deleteItem', (item, options, userId) => onItem(item, userId));
 }
 
 /**
  * Registra os hooks das habilidades (chamar uma vez, no `init`): ganhos do início do combate,
- * avisos de ganhos vindos de chat.js e o aviso do passo condicional.
+ * avisos de ganhos vindos de chat.js e o passo condicional (efeito na aba Condição e aviso).
  */
 export function registerAbilityHooks() {
   Hooks.on('combatStart', (combat) => combatStartGains(combat));
   Hooks.on(GAINS_HOOK, (actor, before, changes, trigger) =>
     announceGains(actor, before, changes, trigger),
   );
-  registerConditionalStepNotes();
+  registerConditionalSteps();
 }
 
 // ---------- Reinício de cena ----------

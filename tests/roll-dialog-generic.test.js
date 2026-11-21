@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import {
   addCostBags,
   collectEffects,
-  conditionalStepMods,
+  conditionalOrigin,
+  conditionHolds,
   costBag,
   costShortfall,
   dialogDiceOptions,
   emptyCostBag,
   pickBonusDice,
+  syncConditionalEffects,
   spendBonusDice,
   weaponTestKind,
 } from '../scripts/rolls/ability-effects.js';
@@ -137,21 +139,62 @@ test('dados extras de ataque só aparecem no ataque do tipo certo', () => {
 
 // ---------- Passo condicional ----------
 
-test('conditionalStepMods: passo no dado da perícia só enquanto a condição vale', () => {
+test('conditionHolds: PV ou PD na metade ou menos', () => {
+  const state = { pv: 7, pvMax: 15, pd: 7, pdMax: 12 };
+  assert.equal(conditionHolds('pvMetade', state), true);
+  assert.equal(conditionHolds('pdMetade', state), false);
+  assert.equal(conditionHolds('pdMetade', { ...state, pd: 6 }), true);
+  assert.equal(conditionHolds('pvMetade', { ...state, pvMax: 0 }), false);
+});
+
+test('syncConditionalEffects: põe o efeito com o nome da habilidade e tira quando deixa de valer', () => {
   const list = collectEffects([
     ability('b', 'Instinto', [
       { id: 'pv', tipo: 'passoCondicional', params: { condicao: 'pvMetade', passos: 1 } },
-      { id: 'pd', tipo: 'passoCondicional', params: { condicao: 'pdMetade', passos: 2 } },
+      {
+        id: 'pd',
+        tipo: 'passoCondicional',
+        params: { condicao: 'pdMetade', passos: 2, atributo: 'mente' },
+      },
     ]),
   ]);
-  assert.deepEqual(conditionalStepMods(list, { pv: 7, pvMax: 15, pd: 10, pdMax: 12 }), [
-    { target: 'skill', steps: 1 },
+  const manual = {
+    nome: 'Caído',
+    descricao: '',
+    atributo: 'fisico',
+    passos: -1,
+    fimDeCena: true,
+    origem: '',
+  };
+  const low = { pv: 7, pvMax: 15, pd: 10, pdMax: 12 };
+  const added = syncConditionalEffects([manual], list, low);
+  assert.deepEqual(added, [
+    manual,
+    {
+      nome: 'Instinto',
+      descricao: '',
+      atributo: 'todos',
+      passos: 1,
+      fimDeCena: false,
+      origem: conditionalOrigin(list[0]),
+    },
   ]);
-  assert.deepEqual(conditionalStepMods(list, { pv: 8, pvMax: 15, pd: 6, pdMax: 12 }), [
-    { target: 'skill', steps: 2 },
+  // Já está lá: nada muda (mesmo se a pessoa editou o efeito)
+  const edited = [manual, { ...added[1], passos: 3 }];
+  assert.equal(syncConditionalEffects(edited, list, low), null);
+  // Os dois valem: o de PD entra no atributo escolhido
+  const both = syncConditionalEffects(added, list, { ...low, pd: 6 });
+  assert.equal(both.length, 3);
+  assert.equal(both[2].atributo, 'mente');
+  assert.equal(both[2].passos, 2);
+  // PV de volta acima da metade: o de PV sai, o feito à mão fica
+  assert.deepEqual(syncConditionalEffects(both, list, { ...low, pv: 15, pd: 6 }), [
+    manual,
+    both[2],
   ]);
-  assert.deepEqual(conditionalStepMods(list, { pv: 15, pvMax: 15, pd: 12, pdMax: 12 }), []);
-  assert.deepEqual(conditionalStepMods([], { pv: 1, pvMax: 15, pd: 1, pdMax: 12 }), []);
+  // Habilidade apagada: o efeito dela sai
+  assert.deepEqual(syncConditionalEffects(added, [], low), [manual]);
+  assert.equal(syncConditionalEffects([manual], [], low), null);
 });
 
 // ---------- Dados bônus ----------

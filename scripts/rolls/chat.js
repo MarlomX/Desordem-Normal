@@ -19,7 +19,6 @@ import {
   resolveWithValues,
 } from './abilities.js';
 import {
-  conditionalStepMods,
   dialogDiceOptions,
   pickBonusDice,
   spendBonusDice
@@ -316,16 +315,6 @@ export async function rollTest({
   return result;
 }
 
-/** PV e PD atuais e máximos (condições dos passos condicionais). */
-function conditionState(system) {
-  return {
-    pv: system.pv?.value ?? 0,
-    pvMax: system.pv?.max ?? 0,
-    pd: system.pd?.value ?? 0,
-    pdMax: system.pd?.max ?? 0
-  };
-}
-
 /**
  * Dados finais de um teste (atributo e perícia já com contusão, passos e efeitos), sem rolar.
  * Serve para a prévia da janela pré-teste.
@@ -342,7 +331,6 @@ export function testDicePreview(actor, skillKey, attribute, extraStepMods = []) 
       ...extraStepMods,
       ...contusionStepMods(system.estado, attrKey),
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
-      ...conditionalStepMods(actorEffects(actor), conditionState(system)),
     ],
   });
   return {
@@ -428,9 +416,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     stepMods: [
       ...(rest.stepMods ?? []),
       ...contusionStepMods(system.estado, attrKey),
+      // (os passos condicionais das habilidades chegam como efeitos da ficha, na aba Condição)
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
-      // Passos condicionais das habilidades (ex.: com PV na metade ou menos)
-      ...conditionalStepMods(entries, conditionState(system)),
     ],
     extraDice: [
       ...(rest.extraDice ?? []),

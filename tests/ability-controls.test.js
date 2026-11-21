@@ -179,12 +179,8 @@ test('sceneReset esvazia a reserva de dados bônus', () => {
   assert.deepEqual(changes['system.dadosBonus'], []);
 });
 
-test('interceptar vira botão «Assumir ataque» com o custo; ajuste de dados usa o nome do recurso', () => {
-  assert.equal(isButtonEffect(one('interceptar')), true);
-  assert.equal(
-    buttonLabel(one('interceptar', { custo: { tipo: 'pd', valor: 2 } }), { t, skill }),
-    'Assumir ataque (2 PD)',
-  );
+test('interceptar não vira botão na ficha (vai para os cartões); ajuste de dados usa o nome do recurso', () => {
+  assert.equal(isButtonEffect(one('interceptar')), false);
   assert.equal(
     adjustLabel(
       { chave: 'analise', points: 3, def: { chave: 'analise', nome: 'A', itemName: 'A' } },

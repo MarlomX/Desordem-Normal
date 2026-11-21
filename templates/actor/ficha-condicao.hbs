@@ -87,7 +87,7 @@
 
   {{#each effects}}
   <div class="desordem-efeito">
-    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.efeito"}}</span>
+    <span class="desordem-efeito-ativo__origem">{{#if fromAbility}}{{localize "DESORDEM.Ficha.EfeitoOrigem.habilidade"}}{{else}}{{localize "DESORDEM.Ficha.EfeitoOrigem.efeito"}}{{/if}}</span>
     <input type="text" class="desordem-efeito__nome" data-efeito-campo="nome" data-index="{{index}}" value="{{nome}}" title="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.EfeitoNome"}}" {{#if locked}}disabled{{/if}}>
     <select data-efeito-campo="atributo" data-index="{{index}}" {{#if locked}}disabled{{/if}}>{{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     <select data-efeito-campo="passos" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.EfeitoPassos"}}" {{#if locked}}disabled{{/if}}>{{#each stepOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>

@@ -7,7 +7,7 @@
  * (a escada de `stepShift` limita o dado). Quem soma tudo é `collectStepMods`, junto com os efeitos.
  */
 import { ATRIBUTOS } from '../config.js';
-import { effectStepMods } from './effects.js';
+import { ALL_ATTRIBUTES, effectStepMods } from './effects.js';
 import { DIE_STEPS, stepShift } from './dice.js';
 
 export const STEP_LIMIT = 4;
@@ -111,7 +111,9 @@ export function collectStepMods({ steps, effects = [], attrKey }) {
 export function stepIndicator({ steps, effects = [], key }) {
   const manual = clampSteps(steps?.[key]);
   const fromEffects = ATRIBUTOS.includes(key)
-    ? effects.filter((e) => e.atributo === key).reduce((sum, e) => sum + (e.passos || 0), 0)
+    ? effects
+        .filter((e) => e.atributo === key || e.atributo === ALL_ATTRIBUTES)
+        .reduce((sum, e) => sum + (e.passos || 0), 0)
     : 0;
   const net = manual + fromEffects;
   return {

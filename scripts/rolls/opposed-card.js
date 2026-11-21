@@ -23,7 +23,8 @@
  * Lado = {actorUuid, nome, papel, skill, skillLabel, arma, testId, esquiva}; papel = 'pericia' |
  * 'ataque' | 'defesa'; `esquiva` = a defesa foi uma esquiva livre (efeito `defesaLivre`, sem o d6); arma = {id, nome, bonusDano, naoLetal, tipo} ou null. No lado B, `actorUuid` vazio =
  * aberto a quem aceitar; `skill`/`arma` vazios = o oponente escolhe ao rolar.
- * Dano = {valor, naoLetal, estado: 'pendente' | 'aplicado', por: id do usuário que aplicou}.
+ * Dano = {valor, naoLetal, estado: 'pendente' | 'aplicado', por: id do usuário que aplicou,
+ *   guardiao?: {actorUuid, nome, habilidade}} (guardiao = quem assumiu o ataque e leva o dano).
  */
 import { PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import { extraKey } from './extras.js';
@@ -213,6 +214,8 @@ function damageEntries(state, hits, results) {
       naoLetal: arma.naoLetal,
       estado: 'pendente',
       por: '',
+      // Quem assumiu o ataque continua assumindo depois do recálculo
+      ...(previous?.guardiao ? { guardiao: previous.guardiao } : {}),
     };
   }
   return dano;
@@ -267,6 +270,31 @@ export function markDamage(state, side, userId) {
     ...state,
     dano: { ...state.dano, [side]: { ...entry, estado: 'aplicado', por: userId } },
   };
+}
+
+/**
+ * Quem assume o ataque do lado `side` (efeito `interceptar`): o dano desse lado passa a ir para o
+ * Guardião. Devolve o estado novo, ou null se o dano não está pendente, se alguém já assumiu ou se
+ * o Guardião é o atacante ou o próprio alvo.
+ * @param {object} state
+ * @param {'a'|'b'} side Lado que causou o dano.
+ * @param {{actorUuid: string, nome: string, habilidade: string}} guardian
+ */
+export function assignGuardian(state, side, guardian) {
+  const entry = state?.dano?.[side];
+  if (!entry || entry.estado !== 'pendente' || entry.guardiao || !guardian?.actorUuid) return null;
+  if ([state[side]?.actorUuid, state[other(side)]?.actorUuid].includes(guardian.actorUuid)) {
+    return null;
+  }
+  return {
+    ...state,
+    dano: { ...state.dano, [side]: { ...entry, guardiao: { ...guardian } } },
+  };
+}
+
+/** Quem leva o dano do lado `side`: o Guardião, se alguém assumiu; senão, o outro lado. */
+export function damageTargetUuid(state, side) {
+  return state?.dano?.[side]?.guardiao?.actorUuid || state?.[other(side)]?.actorUuid || '';
 }
 
 /**
@@ -397,6 +425,9 @@ export function buildOpposedCardContext(state) {
     valor: state.dano[key].valor,
     naoLetal: state.dano[key].naoLetal,
     aplicado: state.dano[key].estado === 'aplicado',
+    // «Alvo: Rowan (Guardião)» quando alguém assumiu o ataque
+    guardiaoNome: state.dano[key].guardiao?.nome ?? '',
+    guardiaoHabilidade: state.dano[key].guardiao?.habilidade ?? '',
   }));
   const attackSide = SIDES.find((key) => papelOf(state[key]) === 'ataque' && tipo === 'defesa');
   const defenseSide = attackSide ? other(attackSide) : null;

@@ -28,6 +28,7 @@
       {{#each acertos}}
       <div class="desordem-oposto__acerto{{#if aplicado}} is-aplicado{{/if}}">
         <p>{{localize "DESORDEM.Oposto.Acerta" atacante=atacante alvo=alvo valor=valor}}{{#if naoLetal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}}{{#if aplicado}} — {{localize "DESORDEM.Oposto.DanoAplicado"}}{{/if}}</p>
+        {{#if guardiaoNome}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Guardiao.Alvo" nome=guardiaoNome habilidade=guardiaoHabilidade}}</p>{{/if}}
         <div class="desordem-oposto__acoes" data-oposto-dano="{{key}}"></div>
       </div>
       {{/each}}

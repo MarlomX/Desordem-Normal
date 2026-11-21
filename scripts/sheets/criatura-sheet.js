@@ -172,6 +172,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       effects: buildEffectRows(system.efeitos, {
         attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
         noAttrLabel: t('DESORDEM.Ficha.EfeitoSemAtributo'),
+        allAttrLabel: t('DESORDEM.Ficha.EfeitoTodosAtributos'),
         attributes: ATRIBUTOS,
         editable: this.isEditable,
       }),

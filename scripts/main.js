@@ -21,6 +21,7 @@ import { renderActionBar } from './stealth/action.js';
 import { registerCreatureTables } from './stealth/tables.js';
 import { registerPhaseTracker } from './combat/phases-tracker.js';
 import { registerDefaultItems } from './data/default-items.js';
+import { registerTokenLink } from './data/token-link.js';
 import { registerFirstAidHooks, renderFirstAidButton } from './rolls/first-aid-chat.js';
 import { registerBonusDiceHooks, renderBonusDiceButton } from './rolls/bonus-dice-chat.js';
 import { proposeOpposed, registerOpposedHooks, renderOpposedCard } from './opposed/opposed-chat.js';
@@ -37,7 +38,13 @@ import {
   rollOpposed,
 } from './rolls/chat.js';
 import { damageActor, rollInjuryTest } from './rolls/health.js';
-import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
+import {
+  attackWithWeapon,
+  useItem,
+  renderEquipmentCard,
+  registerEquipmentSocket,
+} from './rolls/equipment-chat.js';
+import { registerGuardianSocket } from './rolls/guardian-chat.js';
 import { registerEquipmentGuards } from './rolls/equipment-guard.js';
 import {
   registerAbilityHooks,
@@ -110,6 +117,8 @@ Hooks.once('init', () => {
   registerOpposedHooks();
   // Fichas novas ganham a arma «Desarmado» (soco e chute, dano RB)
   registerDefaultItems();
+  // Personagens novos nascem com o token-modelo vinculado (e a migração única dos existentes)
+  registerTokenLink();
   // Primeiros socorros: o mestre conta as tentativas e aplica o resultado
   registerFirstAidHooks();
   // Dados bônus ao grupo: o mestre distribui pelo botão do teste
@@ -187,6 +196,9 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
 Hooks.once('ready', () => {
   registerRelationSocket();
   registerAbilitySocket();
+  // Assumir ataque nos cartões e o dano aplicado do cartão de ataque (o mestre grava)
+  registerGuardianSocket();
+  registerEquipmentSocket();
   registerTableSocket();
   registerChaseSocket();
   registerStealthSocket();

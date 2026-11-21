@@ -44,6 +44,9 @@ export const ACTION_RESULTS = Object.freeze(['curarPV', 'concederDados']);
 /** Condições de um `passoCondicional`. */
 export const CONDITIONS = Object.freeze(['pvMetade', 'pdMetade']);
 
+/** Atributos de um `passoCondicional` (`todos` = o dado de qualquer atributo). */
+export const STEP_ATTRIBUTE_CHOICES = Object.freeze(['todos', 'fisico', 'mente', 'emocao']);
+
 // ---------- Números das habilidades antigas (também são os padrões) ----------
 
 export const IMPETO_MAX = 5;
@@ -190,8 +193,12 @@ export const EFFECT_TYPES = Object.freeze({
     limite: choiceField(LIMITS, 'rodadaCombate'),
     rotulo: textField(),
   },
-  // Aumento de passo passivo enquanto a condição valer
-  passoCondicional: { condicao: choiceField(CONDITIONS, 'pvMetade'), passos: intField(1, 1, 3) },
+  // Aumento de passo no dado do atributo enquanto a condição valer (vira um efeito da aba Condição)
+  passoCondicional: {
+    condicao: choiceField(CONDITIONS, 'pvMetade'),
+    passos: intField(1, 1, 3),
+    atributo: choiceField(STEP_ATTRIBUTE_CHOICES, 'todos'),
+  },
   // Torna-se o alvo de um ataque contra um aliado
   interceptar: { custo: costField(), limite: choiceField(LIMITS, 'rodadaCombate') },
 });
@@ -527,21 +534,51 @@ export function weaponTestKind(weaponSystem) {
   return weaponSystem?.tipo === 'corpo' ? 'ataqueCorpo' : 'ataqueDistancia';
 }
 
+/** A condição de um `passoCondicional` vale neste estado de PV e PD? */
+export function conditionHolds(condicao, { pv, pvMax, pd, pdMax }) {
+  return condicao === 'pdMetade' ? halfOrLess(pd, pdMax) : halfOrLess(pv, pvMax);
+}
+
+/** Marca de origem de um efeito da aba Condição criado por um `passoCondicional`. */
+export function conditionalOrigin(entry) {
+  return `hab:${entry.itemId}:${entry.id}`;
+}
+
+/** O efeito da aba Condição veio de uma habilidade (tem a marca de origem)? */
+export const fromAbility = (sheetEffect) => String(sheetEffect?.origem ?? '').startsWith('hab:');
+
 /**
- * Passos dos efeitos `passoCondicional` cuja condição vale agora: um aumento de passo no dado da
- * perícia (o mesmo dado que a ajuda e o esforço extra mudam) por efeito.
- * @param {object[]} entries Efeitos do ator.
+ * Efeitos da aba Condição depois de conferir os `passoCondicional` do ator: cada um cuja condição
+ * vale tem o seu efeito (nome da habilidade, passos no dado do atributo); os que deixaram de
+ * valer, ou cuja habilidade sumiu, saem. Um efeito que já existe fica como está (a pessoa pode
+ * tê-lo editado). Os efeitos feitos à mão nunca mudam.
+ * @param {object[]} sheetEffects `system.efeitos` do ator.
+ * @param {object[]} entries Efeitos das habilidades do ator.
  * @param {{pv: number, pvMax: number, pd: number, pdMax: number}} state
- * @returns {{target: string, steps: number}[]}
+ * @returns {object[]|null} Lista nova, ou null se nada muda.
  */
-export function conditionalStepMods(entries, { pv, pvMax, pd, pdMax }) {
-  const holds = {
-    pvMetade: halfOrLess(pv, pvMax),
-    pdMetade: halfOrLess(pd, pdMax),
-  };
-  return effectsOfType(entries, 'passoCondicional')
-    .filter((entry) => holds[entry.params.condicao])
-    .map((entry) => ({ target: 'skill', steps: entry.params.passos }));
+export function syncConditionalEffects(sheetEffects, entries, state) {
+  const wanted = new Map(
+    effectsOfType(entries, 'passoCondicional')
+      .filter((entry) => conditionHolds(entry.params.condicao, state))
+      .map((entry) => [conditionalOrigin(entry), entry]),
+  );
+  const kept = (sheetEffects ?? []).filter(
+    (effect) => !fromAbility(effect) || wanted.has(effect.origem),
+  );
+  const present = new Set(kept.map((effect) => effect.origem));
+  const added = [...wanted]
+    .filter(([origem]) => !present.has(origem))
+    .map(([origem, entry]) => ({
+      nome: entry.itemName ?? '',
+      descricao: '',
+      atributo: entry.params.atributo || 'todos',
+      passos: entry.params.passos,
+      fimDeCena: false,
+      origem,
+    }));
+  if (!added.length && kept.length === (sheetEffects ?? []).length) return null;
+  return [...kept, ...added];
 }
 
 /**
@@ -553,13 +590,11 @@ export function conditionalStepMods(entries, { pv, pvMax, pd, pdMax }) {
  * @returns {{entry: object, active: boolean}[]} `active`: a condição passou a valer.
  */
 export function conditionFlips(entries, before, after) {
-  const holds = (state, condicao) =>
-    condicao === 'pvMetade' ? halfOrLess(state.pv, state.pvMax) : halfOrLess(state.pd, state.pdMax);
   return effectsOfType(entries, 'passoCondicional')
     .map((entry) => ({
       entry,
-      was: holds(before, entry.params.condicao),
-      now: holds(after, entry.params.condicao),
+      was: conditionHolds(entry.params.condicao, before),
+      now: conditionHolds(entry.params.condicao, after),
     }))
     .filter(({ was, now }) => was !== now)
     .map(({ entry, now }) => ({ entry, active: now }));

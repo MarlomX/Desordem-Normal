@@ -203,7 +203,8 @@
       "EfeitoOrigem": {
         "lesao": "Lesão",
         "trauma": "Trauma",
-        "efeito": "Efeito"
+        "efeito": "Efeito",
+        "habilidade": "Habilidade"
       },
       "DicaItens": "Itens podem ser usados sem empunhar, o que poupa o tempo de equipar e guardar. Empunhar só é preciso para segurar o item, e ele ocupa as mãos.",
       "Habilidades": "Habilidades",
@@ -258,7 +259,8 @@
         "Dica": "Até 2 dados extras, só para este teste."
       },
       "PrimeirosSocorrosDica": "Quantas vezes este personagem recebeu primeiros socorros nesta cena. Cada uma soma +3 à DT da próxima (o mestre soma sozinho a cada tentativa).",
-      "DadosBonusDica": "Dados bônus recebidos (somem na Nova cena)."
+      "DadosBonusDica": "Dados bônus recebidos (somem na Nova cena).",
+      "EfeitoTodosAtributos": "Todos os atributos"
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -650,7 +652,8 @@
       "Bloqueio": {
         "maos": "Sem mãos livres: desequipe uma arma ou um item antes.",
         "armadura": "Só uma armadura pode ser vestida por vez: tire a outra antes."
-      }
+      },
+      "AplicarEm": "Aplicar dano em {nome}"
     },
     "Habilidade": {
       "Confirmar": "Confirmar",
@@ -1485,7 +1488,7 @@
         "Dados": "1d{dado} +1d{dado} a cada {margem} acima da DT, para você e os aliados",
         "companheiro": "+d{dado} em {teste}; para de ajudar na cena se tirar 1",
         "defesaLivre": "Defesa livre com {pericia}, sem o d6{limite}",
-        "passoCondicional": "+{passos} passo(s) em todos os testes com {condicao}",
+        "passoCondicional": "+{passos} passo(s) no dado de {atributo} com {condicao}",
         "interceptar": "Torna-se o alvo de um ataque contra um aliado{custo}{limite}",
         "PorRodada": " (1×/rodada em combate)",
         "ComCusto": " — custa {custo}",
@@ -1510,23 +1513,32 @@
         "acaoNota": "é usada.",
         "ganho": "+{valor} de {recurso}.",
         "interceptar": "assume o ataque contra {aliado}.",
-        "interceptarSemAlvo": "assume um ataque contra um aliado.",
         "ganhoGatilho": "+{n} {quando}.",
-        "condicaoAtiva": "ativou: +{passos} passo(s) em todos os testes ({condicao}).",
-        "condicaoInativa": "desativou: {condicao} deixou de valer."
+        "condicaoAtiva": "ativou: +{passos} passo(s) no dado de {atributo} ({condicao}), na aba Condição.",
+        "condicaoInativa": "desativou: {condicao} deixou de valer, e o efeito saiu da aba Condição.",
+        "interceptarDe": "assume o ataque de {atacante}."
       },
       "Aviso": {
         "SemCusto": "Recursos insuficientes para usar {nome}.",
-        "Rodada": "{nome} já foi usada nesta rodada.",
-        "AliadoSiMesmo": "Mire o aliado que vai ser protegido, não você mesmo."
+        "Rodada": "{nome} já foi usada nesta rodada."
       },
-      "DicaCriatura": "Habilidade de criatura: os efeitos aceitos são dado extra, ação com aviso e companheiro, sempre sem custo."
+      "DicaCriatura": "Habilidade de criatura: os efeitos aceitos são dado extra, ação com aviso e companheiro, sempre sem custo.",
+      "TodosAtributos": "todos os atributos",
+      "Guardiao": {
+        "Alvo": "Alvo: {nome} ({habilidade})",
+        "Botao": "{habilidade}: assumir o ataque",
+        "BotaoAtor": "{habilidade}: {nome} assume o ataque",
+        "SemMestre": "Sem mestre conectado para registrar quem assume o ataque."
+      }
     },
     "Plano": {
       "Distribuir": "Distribuir {n}d{dado} ao grupo",
       "Distribuido": "Dados bônus distribuídos ({n}d{dado}) para: {alvos}.",
       "JaDistribuido": "Dados bônus já distribuídos ({n}d{dado}).",
       "SemMestre": "Nenhum mestre conectado para distribuir os dados."
+    },
+    "Token": {
+      "Migrados": "Token-modelo vinculado à ficha em {n} personagem(ns)."
     }
   },
   "TYPES.Item.arma": "Arma",

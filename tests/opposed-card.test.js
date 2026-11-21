@@ -414,3 +414,41 @@ test('esquiva: o lado guarda o nome da habilidade (só na esquiva)', () => {
   const defend = registerSide(state, 'b', { ...B, skill: 'acrobacia', testId: 'm2', esquivaNome: 'X' });
   assert.equal(defend.b.esquivaNome, '');
 });
+
+test('Guardião: assume o dano pendente da defesa, que continua com ele no recálculo', async () => {
+  const { assignGuardian, damageTargetUuid } = await import('../scripts/rolls/opposed-card.js');
+  let state = createOpposedState({
+    tipo: 'defesa',
+    a: { ...A, papel: 'defesa', skill: 'acrobacia', skillLabel: 'Acrobacia' },
+    b: { actorUuid: 'Actor.b', nome: 'Bruxa' },
+  });
+  state = registerSide(state, 'a', { ...A, skill: 'acrobacia', testId: 'm1' });
+  state = registerSide(state, 'b', {
+    actorUuid: 'Actor.b',
+    nome: 'Bruxa',
+    skill: 'pontaria',
+    arma: arco,
+    testId: 'm2',
+  });
+  const acerta = resolveState(state, dados([3, 2, 1]), dados([5, 4]));
+  assert.equal(damageTargetUuid(acerta, 'b'), 'Actor.a');
+  const rowan = { actorUuid: 'Actor.r', nome: 'Rowan', habilidade: 'Guardião' };
+  // Atacante e alvo não assumem; sem dano pendente, também não
+  assert.equal(assignGuardian(acerta, 'b', { ...rowan, actorUuid: 'Actor.a' }), null);
+  assert.equal(assignGuardian(acerta, 'b', { ...rowan, actorUuid: 'Actor.b' }), null);
+  assert.equal(assignGuardian(acerta, 'a', rowan), null);
+  const guarded = assignGuardian(acerta, 'b', rowan);
+  assert.deepEqual(guarded.dano.b.guardiao, rowan);
+  assert.equal(damageTargetUuid(guarded, 'b'), 'Actor.r');
+  // Só um assume
+  assert.equal(assignGuardian(guarded, 'b', { ...rowan, actorUuid: 'Actor.x' }), null);
+  // Recalcular (outro valor de dano) mantém o Guardião; aplicar também
+  const again = resolveState(guarded, dados([3, 2, 1]), dados([6, 4]));
+  assert.equal(again.dano.b.guardiao.nome, 'Rowan');
+  assert.equal(markDamage(again, 'b', 'u1').dano.b.guardiao.nome, 'Rowan');
+  assert.equal(assignGuardian(markDamage(again, 'b', 'u1'), 'b', rowan), null);
+  const ctx = buildOpposedCardContext(guarded);
+  assert.equal(ctx.acertos[0].guardiaoNome, 'Rowan');
+  assert.equal(ctx.acertos[0].guardiaoHabilidade, 'Guardião');
+  assert.equal(buildOpposedCardContext(acerta).acertos[0].guardiaoNome, '');
+});

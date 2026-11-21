@@ -28,7 +28,7 @@ const LEGACY_BUTTONS = Object.freeze({
 /** O efeito vira um botão na linha da habilidade? */
 export function isButtonEffect(effect) {
   if (effect.tipo === 'ganharRecurso') return effect.params.gatilho === 'acao';
-  return ['passoCena', 'acaoNota', 'testeAcao', 'defesaLivre', 'interceptar'].includes(effect.tipo);
+  return ['passoCena', 'acaoNota', 'testeAcao', 'defesaLivre'].includes(effect.tipo);
 }
 
 /** Nome de um recurso na ficha: o do efeito; sem nome, o padrão (ímpeto, marcadores) ou a chave. */

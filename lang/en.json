@@ -203,7 +203,8 @@
       "EfeitoOrigem": {
         "lesao": "Injury",
         "trauma": "Trauma",
-        "efeito": "Effect"
+        "efeito": "Effect",
+        "habilidade": "Ability"
       },
       "DicaItens": "Items can be used without wielding them, which saves the time of equipping and stowing. You only need to wield an item to hold it, and it takes up your hands.",
       "Habilidades": "Abilities",
@@ -258,7 +259,8 @@
         "Dica": "Up to 2 extra dice, for this test only."
       },
       "PrimeirosSocorrosDica": "How many times this character received first aid in this scene. Each adds +3 to the next DC (the GM adds it automatically on each attempt).",
-      "DadosBonusDica": "Bonus dice received (lost at New scene)."
+      "DadosBonusDica": "Bonus dice received (lost at New scene).",
+      "EfeitoTodosAtributos": "All attributes"
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -650,7 +652,8 @@
       "Bloqueio": {
         "maos": "No free hands: unequip a weapon or an item first.",
         "armadura": "Only one armor can be worn at a time: take the other off first."
-      }
+      },
+      "AplicarEm": "Apply damage to {nome}"
     },
     "Habilidade": {
       "Confirmar": "Confirm",
@@ -1485,7 +1488,7 @@
         "Dados": "1d{dado} +1d{dado} for every {margem} above the DC, for you and your allies",
         "companheiro": "+d{dado} on {teste}; stops helping this scene on a 1",
         "defesaLivre": "Free defense with {pericia}, without the d6{limite}",
-        "passoCondicional": "+{passos} step(s) on every test with {condicao}",
+        "passoCondicional": "+{passos} step(s) on the attribute die ({atributo}) with {condicao}",
         "interceptar": "Becomes the target of an attack against an ally{custo}{limite}",
         "PorRodada": " (1×/combat round)",
         "ComCusto": " — costs {custo}",
@@ -1510,23 +1513,32 @@
         "acaoNota": "is used.",
         "ganho": "+{valor} {recurso}.",
         "interceptar": "takes the attack against {aliado}.",
-        "interceptarSemAlvo": "takes an attack against an ally.",
         "ganhoGatilho": "+{n} {quando}.",
-        "condicaoAtiva": "activated: +{passos} step(s) on every test ({condicao}).",
-        "condicaoInativa": "deactivated: {condicao} no longer applies."
+        "condicaoAtiva": "activated: +{passos} step(s) on the attribute die ({atributo}; {condicao}), in the Condition tab.",
+        "condicaoInativa": "deactivated: {condicao} no longer applies, and the effect left the Condition tab.",
+        "interceptarDe": "takes the attack from {atacante}."
       },
       "Aviso": {
         "SemCusto": "Not enough resources to use {nome}.",
-        "Rodada": "{nome} was already used this round.",
-        "AliadoSiMesmo": "Target the ally you are protecting, not yourself."
+        "Rodada": "{nome} was already used this round."
       },
-      "DicaCriatura": "Creature ability: the accepted effects are extra die, action with notice and companion, always without cost."
+      "DicaCriatura": "Creature ability: the accepted effects are extra die, action with notice and companion, always without cost.",
+      "TodosAtributos": "all attributes",
+      "Guardiao": {
+        "Alvo": "Target: {nome} ({habilidade})",
+        "Botao": "{habilidade}: take the attack",
+        "BotaoAtor": "{habilidade}: {nome} takes the attack",
+        "SemMestre": "No GM connected to record who takes the attack."
+      }
     },
     "Plano": {
       "Distribuir": "Give {n}d{dado} to the group",
       "Distribuido": "Bonus dice given ({n}d{dado}) to: {alvos}.",
       "JaDistribuido": "Bonus dice already given ({n}d{dado}).",
       "SemMestre": "No GM connected to give the dice."
+    },
+    "Token": {
+      "Migrados": "Prototype token linked to the sheet on {n} character(s)."
     }
   },
   "TYPES.Item.arma": "Weapon",

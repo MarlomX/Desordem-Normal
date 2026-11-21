@@ -13,7 +13,7 @@ import {
   weaponSkill,
   weaponDamageLabel,
 } from '../rolls/equipment.js';
-import { EFFECT_MAX_STEPS } from '../rolls/effects.js';
+import { ALL_ATTRIBUTES, EFFECT_MAX_STEPS } from '../rolls/effects.js';
 import { abilityControls } from './ability-controls.js';
 import { shownDie, stepLimits } from '../rolls/steps.js';
 
@@ -306,10 +306,15 @@ export function buildRelationRows(relations, { degreeLabel, editable = true }) {
  * @param {Object} options
  * @param {(key: string) => string} options.attrLabel Nome traduzido do atributo.
  * @param {string} options.noAttrLabel Texto de "sem atributo".
+ * @param {string} [options.allAttrLabel] Texto de "todos os atributos" (sem ele, a opção só
+ *   aparece no efeito que já a usa).
  * @param {string[]} options.attributes Chaves dos atributos, na ordem do seletor.
  * @param {boolean} [options.editable=true]
  */
-export function buildEffectRows(effects, { attrLabel, noAttrLabel, attributes, editable = true }) {
+export function buildEffectRows(
+  effects,
+  { attrLabel, noAttrLabel, allAttrLabel = '', attributes, editable = true },
+) {
   const steps = Array.from({ length: EFFECT_MAX_STEPS * 2 + 1 }, (_, i) => i - EFFECT_MAX_STEPS);
   return effects.map((effect, index) => ({
     index,
@@ -317,8 +322,19 @@ export function buildEffectRows(effects, { attrLabel, noAttrLabel, attributes, e
     descricao: effect.descricao,
     fimDeCena: effect.fimDeCena,
     locked: !editable,
+    // Criado por uma habilidade (passo condicional): a etiqueta diz «Habilidade»
+    fromAbility: String(effect.origem ?? '').startsWith('hab:'),
     attrOptions: [
       { value: '', label: noAttrLabel, selected: effect.atributo === '' },
+      ...(allAttrLabel || effect.atributo === ALL_ATTRIBUTES
+        ? [
+            {
+              value: ALL_ATTRIBUTES,
+              label: allAttrLabel || ALL_ATTRIBUTES,
+              selected: effect.atributo === ALL_ATTRIBUTES,
+            },
+          ]
+        : []),
       ...attributes.map((key) => ({
         value: key,
         label: attrLabel(key),

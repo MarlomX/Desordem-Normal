@@ -197,6 +197,10 @@ export function describeEffect(effect, { t, skill }) {
     case 'passoCondicional':
       return t(key('passoCondicional'), {
         passos: p.passos,
+        atributo:
+          !p.atributo || p.atributo === 'todos'
+            ? t('DESORDEM.Efeito.TodosAtributos')
+            : t(`DESORDEM.Atributos.${p.atributo}`),
         condicao: t(`DESORDEM.Efeito.Condicoes.${p.condicao}`),
       });
     case 'interceptar':
@@ -297,6 +301,7 @@ function effectFields(effect, index, { t, skills, creature = false }) {
 /** Texto de uma opção de um campo de opções. */
 function choiceLabel(key, choice, t) {
   if (key === 'atributo') {
+    if (choice === 'todos') return t('DESORDEM.Efeito.TodosAtributos');
     return choice ? t(`DESORDEM.Atributos.${choice}`) : t('DESORDEM.Efeito.AEscolha');
   }
   return t(`DESORDEM.Efeito.${CHOICE_GROUPS[key]}.${choice}`);

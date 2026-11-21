@@ -14,6 +14,8 @@
  * 4. Nos cartões de combate, cada acerto ganha o botão «Aplicar dano», de uso único, para o dono
  *    do alvo (ou o mestre). O mestre reserva o botão para quem clicou e só então o dano é aplicado,
  *    no navegador de quem clicou (é lá que aparecem a pergunta da armadura e o teste de lesão).
+ * 5. Enquanto o dano está pendente, quem tem o Assumir ataque pronto ganha o botão dele (veja
+ *    `guardian-chat.js`); com o Guardião gravado, o dano daquele acerto vai para ele.
  */
 import { SYSTEM_ID } from '../config.js';
 import { postMessage, render, skillName, skillTestOptions, rollTest } from '../rolls/chat.js';
@@ -32,13 +34,16 @@ import { defenseCompanionDice, weaponCompanionDice } from '../rolls/equipment-ch
 import { weaponTestKind } from '../rolls/ability-effects.js';
 import { abilityNote, announceGains } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
+import { guardButtons, registerGuardHandler } from '../rolls/guardian-chat.js';
 import {
+  assignGuardian,
   buildOpposedCardContext,
   bothRolled,
   canCancel,
   canRollSide,
   cardType,
   createOpposedState,
+  damageTargetUuid,
   defenseChoices,
   loserSide,
   markDamage,
@@ -478,7 +483,8 @@ const damageRequests = new Set();
 async function applyReservedDamage(message, side) {
   const state = cardState(message);
   const entry = state?.dano?.[side];
-  const target = await foundry.utils.fromUuid(state?.[otherSide(side)]?.actorUuid ?? '');
+  // O alvo do dano: o Guardião, se alguém assumiu o ataque
+  const target = await foundry.utils.fromUuid(damageTargetUuid(state, side));
   if (!entry || !target?.isOwner) return;
   await damageActor(target, entry.valor, { nonLethal: entry.naoLetal });
 }
@@ -489,7 +495,7 @@ async function applyReservedDamage(message, side) {
  */
 async function requestDamage(message, side) {
   const state = cardState(message);
-  const target = foundry.utils.fromUuidSync(state?.[otherSide(side)]?.actorUuid ?? '');
+  const target = foundry.utils.fromUuidSync(damageTargetUuid(state, side));
   if (!target?.isOwner || state?.dano?.[side]?.estado !== 'pendente') return;
   if (message.canUserModify(game.user, 'update')) {
     const next = markDamage(state, side, game.user.id);
@@ -587,12 +593,17 @@ export function renderOpposedCard(message, html) {
       );
     }
   }
-  // Dano: só para o dono do alvo (o mestre, nas criaturas), enquanto pendente
+  // Dano: só para o dono do alvo (o Guardião, se alguém assumiu; o mestre, nas criaturas),
+  // enquanto pendente. Antes de alguém assumir, o botão de assumir o ataque (cartões de defesa)
   for (const side of ['a', 'b']) {
     const slot = html.querySelector(`[data-oposto-dano="${side}"]`);
     const entry = state.dano?.[side];
     if (!slot || entry?.estado !== 'pendente') continue;
-    const target = foundry.utils.fromUuidSync(state[otherSide(side)].actorUuid);
+    if (!entry.guardiao && cardType(state) === 'defesa') {
+      const exclude = [state[side].actorUuid, state[otherSide(side)].actorUuid];
+      slot.append(...guardButtons(message, { kind: 'oposto', exclude, extra: { side } }));
+    }
+    const target = foundry.utils.fromUuidSync(damageTargetUuid(state, side));
     if (!target?.isOwner) continue;
     slot.append(
       cardButton(
@@ -719,7 +730,7 @@ async function reserveDamage({ messageId, side, userId }) {
   const state = cardState(card);
   const user = game.users.get(userId);
   if (!state || !user || !['a', 'b'].includes(side)) return;
-  const target = await foundry.utils.fromUuid(state[otherSide(side)]?.actorUuid ?? '');
+  const target = await foundry.utils.fromUuid(damageTargetUuid(state, side));
   if (!target?.testUserPermission(user, 'OWNER')) return;
   const next = markDamage(state, side, userId);
   if (next)
@@ -734,6 +745,25 @@ function enqueue(task) {
 }
 
 const isActiveGM = () => game.users.activeGM?.id === game.user.id;
+
+/**
+ * Assumir ataque no cartão oposto de ataque × defesa: o mestre confere que o dano do lado ainda
+ * está pendente, que ninguém assumiu e que o Guardião não é o atacante nem o alvo, e grava.
+ */
+registerGuardHandler('oposto', {
+  enqueue,
+  check(card, { side }, guardian) {
+    const state = cardState(card);
+    if (!state || cardType(state) !== 'defesa' || !['a', 'b'].includes(side)) return null;
+    const next = assignGuardian(state, side, guardian);
+    if (!next) return null;
+    return {
+      text: t('DESORDEM.Efeito.Nota.interceptar', { aliado: state[otherSide(side)].nome }),
+      apply: async () =>
+        card.update({ content: await renderCard(next), [`flags.${SYSTEM_ID}.oposto`]: next }),
+    };
+  },
+});
 
 /** Registra os hooks e o socket (chamar uma vez, no `init`). */
 export function registerOpposedHooks() {

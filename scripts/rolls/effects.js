@@ -1,16 +1,23 @@
 /**
  * Efeitos temporários da ficha (por exemplo, o bônus de um preparado até o fim da cena).
- * Cada efeito tem nome, descrição e, opcionalmente, um atributo cujo dado sobe ou desce passos.
- * Os marcados "até o fim da cena" somem no reinício de cena.
+ * Cada efeito tem nome, descrição e, opcionalmente, um atributo (ou todos) cujo dado sobe ou desce
+ * passos. Os marcados "até o fim da cena" somem no reinício de cena. Os que uma habilidade cria
+ * (passo condicional) guardam a origem em `origem` («hab:item:efeito»); os feitos à mão, vazio.
  * Lógica pura, sem dependência do Foundry.
  */
 import { ATRIBUTOS } from '../config.js';
 
 export const EFFECT_MAX_STEPS = 3;
 
-/** @returns {{nome: string, descricao: string, atributo: string, passos: number, fimDeCena: boolean}} */
+/** Valor do atributo de um efeito que vale para o dado de qualquer atributo. */
+export const ALL_ATTRIBUTES = 'todos';
+
+/**
+ * @returns {{nome: string, descricao: string, atributo: string, passos: number, fimDeCena: boolean,
+ *   origem: string}}
+ */
 export function newEffect() {
-  return { nome: '', descricao: '', atributo: '', passos: 0, fimDeCena: false };
+  return { nome: '', descricao: '', atributo: '', passos: 0, fimDeCena: false, origem: '' };
 }
 
 /** Acrescenta um efeito novo ao fim da lista (devolve uma lista nova). */
@@ -24,8 +31,8 @@ export function removeEffect(effects, index) {
 }
 
 /**
- * Altera campos de um efeito. O atributo deve ser vazio ou um dos atributos do jogo, e os passos
- * ficam entre −3 e +3. Campos desconhecidos são ignorados.
+ * Altera campos de um efeito. O atributo deve ser vazio, `todos` ou um dos atributos do jogo, e os
+ * passos ficam entre −3 e +3. Campos desconhecidos (e a origem) são ignorados.
  */
 export function updateEffect(effects, index, changes) {
   return effects.map((effect, i) => {
@@ -37,7 +44,7 @@ export function updateEffect(effects, index, changes) {
       next.fimDeCena = changes.fimDeCena === true || changes.fimDeCena === 'true';
     if ('atributo' in changes) {
       const key = String(changes.atributo ?? '');
-      next.atributo = ATRIBUTOS.includes(key) ? key : '';
+      next.atributo = ATRIBUTOS.includes(key) || key === ALL_ATTRIBUTES ? key : '';
     }
     if ('passos' in changes) {
       const steps = Math.trunc(Number(changes.passos));
@@ -52,6 +59,9 @@ export function updateEffect(effects, index, changes) {
 /** Aumentos e reduções de passo que os efeitos dão ao dado do atributo em um teste. */
 export function effectStepMods(effects, attrKey) {
   return effects
-    .filter((effect) => effect.atributo === attrKey && effect.passos !== 0)
+    .filter(
+      (effect) =>
+        (effect.atributo === attrKey || effect.atributo === ALL_ATTRIBUTES) && effect.passos !== 0,
+    )
     .map((effect) => ({ target: 'attribute', steps: effect.passos }));
 }

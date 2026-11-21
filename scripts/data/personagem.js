@@ -118,14 +118,16 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         emocao: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
         pericias: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 })
       }),
-      // Efeitos temporários: descrição e, se quiser, passos no dado de um atributo
+      // Efeitos temporários: descrição e, se quiser, passos no dado de um atributo (ou de todos,
+      // 'todos'). `origem` marca os criados por uma habilidade (passo condicional)
       efeitos: new f.ArrayField(
         new f.SchemaField({
           nome: new f.StringField({ required: true, blank: true, initial: '' }),
           descricao: new f.StringField({ required: true, blank: true, initial: '' }),
           atributo: new f.StringField({ required: true, blank: true, initial: '' }),
           passos: new f.NumberField({ required: true, integer: true, min: -3, max: 3, initial: 0 }),
-          fimDeCena: new f.BooleanField({ initial: false })
+          fimDeCena: new f.BooleanField({ initial: false }),
+          origem: new f.StringField({ required: true, blank: true, initial: '' })
         })
       )
     };
