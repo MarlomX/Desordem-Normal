@@ -146,6 +146,8 @@ export const EFFECT_TYPES = Object.freeze({
     recurso: textField('', 'resource'),
     quantidade: intField(1, 1, 20),
     gatilho: choiceField(TRIGGERS, 'acao'),
+    // Texto do botão na ficha (só no gatilho «ação»; vazio = automático)
+    rotulo: textField(),
   },
   // Dado extra marcado na janela pré-teste (perícias vazias = todas)
   dadoExtra: {
@@ -165,9 +167,10 @@ export const EFFECT_TYPES = Object.freeze({
     custo: costField(),
     atributo: choiceField(ATTRIBUTE_CHOICES, ''),
     passos: intField(1, 1, 3),
+    rotulo: textField(),
   },
   // Botão na ficha: gasta o custo e avisa no chat (a mesa resolve o resto)
-  acaoNota: { custo: costField(), texto: textField() },
+  acaoNota: { custo: costField(), texto: textField(), rotulo: textField() },
   // Botão na ficha: teste com DT; se passar, cura ou dá dados bônus
   testeAcao: {
     custo: costField(),
@@ -177,6 +180,7 @@ export const EFFECT_TYPES = Object.freeze({
     dado: dieField(6),
     margem: intField(3, 1, 10),
     umaVezPorAlvo: boolField(true),
+    rotulo: textField(),
   },
   // Dado de um companheiro; um 1 nele o tira da cena
   companheiro: { dado: dieField(6), teste: choiceField(TEST_KINDS, 'ataqueCorpo') },
@@ -184,6 +188,7 @@ export const EFFECT_TYPES = Object.freeze({
   defesaLivre: {
     pericia: textField('acrobacia', 'skill'),
     limite: choiceField(LIMITS, 'rodadaCombate'),
+    rotulo: textField(),
   },
   // Aumento de passo passivo enquanto a condição valer
   passoCondicional: { condicao: choiceField(CONDITIONS, 'pvMetade'), passos: intField(1, 1, 3) },
@@ -492,4 +497,27 @@ export function roundLimitOk(lastUse, now) {
 /** Condição de um `passoCondicional`: valor atual na metade do máximo ou menos. */
 export function halfOrLess(value, max) {
   return max > 0 && value * 2 <= max;
+}
+
+// ---------- Dados bônus (efeito `testeAcao` que dá dados ao grupo) ----------
+
+/**
+ * Quantos dados um teste bem-sucedido dá: 1, mais 1 a cada `margem` pontos acima da DT (com
+ * margem 3: resultado 10 contra DT 7 dá 2; 13 dá 3). Teste que não passou: 0.
+ */
+export function bonusDiceGranted(total, dt, margem) {
+  if (!Number.isFinite(total) || total < dt) return 0;
+  return 1 + Math.floor((total - dt) / Math.max(1, margem));
+}
+
+/**
+ * Reserva de dados bônus agrupada por tamanho, em ordem: [6, 6, 8] → [{die: 6, count: 2},
+ * {die: 8, count: 1}]. Valores que não são dados válidos são ignorados.
+ */
+export function groupBonusDice(dice) {
+  const counts = new Map();
+  for (const die of Array.isArray(dice) ? dice : []) {
+    if (DIE_SIDES.includes(die)) counts.set(die, (counts.get(die) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => a[0] - b[0]).map(([die, count]) => ({ die, count }));
 }

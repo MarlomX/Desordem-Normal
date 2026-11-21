@@ -149,6 +149,7 @@ test('outras automações antigas mantêm os números de antes', () => {
     recurso: 'analise',
     quantidade: 2,
     gatilho: 'acao',
+    rotulo: '',
   });
   assert.equal(analise.find((e) => e.tipo === 'ajusteDados').params.recurso, 'analise');
   assert.deepEqual(one('prontidao')[0].params, {
@@ -171,6 +172,7 @@ test('outras automações antigas mantêm os números de antes', () => {
     recurso: 'impeto',
     quantidade: 1,
     gatilho: 'inicioCena',
+    rotulo: '',
   });
 });
 

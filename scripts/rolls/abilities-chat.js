@@ -4,17 +4,19 @@
  * de teste, só para quem pode usá-los.
  */
 import { SYSTEM_ID, ATRIBUTOS } from '../config.js';
-import { render, postMessage, rollSkill, rebuildTest } from './chat.js';
+import { render, postMessage, rebuildTest, rollTest, skillTestOptions } from './chat.js';
+import { startGroupDice } from './bonus-dice-chat.js';
 import { applyAnalysis, rerollCandidates, replaceDie, sceneReset } from './abilities.js';
 import { canPay, payUpdates, sceneResources } from './ability-effects.js';
 import {
   actorEffects,
   actorResources,
   adjustResource,
+  effectById,
+  findEffect,
   firstEffect,
   resourceUpdates,
   roundUseUpdate,
-  triggerUpdates,
   rerollActors,
   usableThisRound,
   walletOf,
@@ -52,39 +54,85 @@ async function ask({ title, content, read }) {
   });
 }
 
-// ---------- Ímpeto ----------
+// ---------- Botões das habilidades ----------
+
+/** Efeitos das habilidades antigas, pelo id fixo: avisos e textos de antes. */
+const LEGACY = Object.freeze({
+  passo: 'impetoPasso',
+  acao: 'impetoAcao',
+  ganho: 'analisar',
+  cura: 'curandeiro',
+});
+
+/** Aviso de custo que não dá para pagar: o das habilidades antigas ou o genérico. */
+function warnCost(entry, legacyKey) {
+  if (legacyKey) return warn(legacyKey);
+  return warn('DESORDEM.Efeito.Aviso.SemCusto', { nome: entry.itemName });
+}
+
+/**
+ * Usa o efeito de um botão da aba Habilidades (a defesa livre é tratada na ficha, porque passa
+ * pela janela pré-teste).
+ * @param {Actor} actor
+ * @param {string} itemId
+ * @param {string} effectId
+ */
+export async function useAbilityEffect(actor, itemId, effectId) {
+  const entry = effectById(actor, itemId, effectId);
+  if (!entry) return undefined;
+  switch (entry.tipo) {
+    case 'passoCena':
+      return impetoStep(actor, itemId, effectId);
+    case 'acaoNota':
+      return impetoAction(actor, itemId, effectId);
+    case 'ganharRecurso':
+      return gainAnalysisMarkers(actor, itemId, effectId);
+    case 'testeAcao':
+      return entry.params.resultado === 'curarPV'
+        ? healAlly(actor, itemId, effectId)
+        : startGroupDice(actor, entry);
+    default:
+      return undefined;
+  }
+}
 
 /**
  * Aumento de passo até o fim da cena (efeito `passoCena`; no ímpeto, 3 espaços para subir um
  * passo um atributo à escolha).
  * @param {Actor} actor
  * @param {string|null} [itemId] Habilidade cujo botão foi clicado (sem ela, a primeira que tiver).
+ * @param {string|null} [effectId] Efeito do botão (sem ele, o primeiro do tipo).
  */
-export async function impetoStep(actor, itemId = null) {
-  const entries = actorEffects(actor);
-  const entry = firstEffect(actor, 'passoCena', itemId, entries);
+export async function impetoStep(actor, itemId = null, effectId = null) {
+  const entry = findEffect(actor, 'passoCena', { itemId, effectId });
   if (!entry) return undefined;
-  const wallet = walletOf(actor, entries);
-  if (!canPay(entry.params.custo, wallet)) return warn('DESORDEM.Habilidade.ImpetoInsuficiente');
+  const legacy = entry.id === LEGACY.passo;
+  const wallet = walletOf(actor);
+  if (!canPay(entry.params.custo, wallet)) {
+    return warnCost(entry, legacy && 'DESORDEM.Habilidade.ImpetoInsuficiente');
+  }
   let attribute = entry.params.atributo;
   if (!attribute) {
     const options = ATRIBUTOS.map(
       (key) => `<option value="${key}">${t(`DESORDEM.Atributos.${key}`)}</option>`,
     ).join('');
     attribute = await ask({
-      title: t('DESORDEM.Habilidade.ImpetoPassoTitulo'),
+      title: legacy ? t('DESORDEM.Habilidade.ImpetoPassoTitulo') : entry.itemName,
       content: `<label>${t('DESORDEM.Habilidade.ImpetoPassoEscolha')} <select name="atributo">${options}</select></label>`,
       read: (form) => form.elements.atributo.value,
     });
   }
   if (!attribute) return undefined;
+  const { passos } = entry.params;
   const effects = [
     ...actor.toObject().system.efeitos,
     {
-      nome: t('DESORDEM.Habilidade.EfeitoImpeto'),
-      descricao: t('DESORDEM.Habilidade.EfeitoImpetoDescricao'),
+      nome: legacy ? t('DESORDEM.Habilidade.EfeitoImpeto') : entry.itemName,
+      descricao: legacy
+        ? t('DESORDEM.Habilidade.EfeitoImpetoDescricao')
+        : t('DESORDEM.Efeito.Nota.passoDescricao', { passos }),
       atributo: attribute,
-      passos: entry.params.passos,
+      passos,
       fimDeCena: true,
     },
   ];
@@ -92,9 +140,12 @@ export async function impetoStep(actor, itemId = null) {
     ...payUpdates(entry.params.custo, wallet),
     'system.efeitos': effects,
   });
+  const atributo = t(`DESORDEM.Atributos.${attribute}`);
   return abilityNote(
     actor,
-    t('DESORDEM.Habilidade.ImpetoPassoTexto', { atributo: t(`DESORDEM.Atributos.${attribute}`) }),
+    legacy
+      ? t('DESORDEM.Habilidade.ImpetoPassoTexto', { atributo })
+      : t('DESORDEM.Efeito.Nota.passoCena', { nome: entry.itemName, atributo, passos }),
   );
 }
 
@@ -102,22 +153,25 @@ export async function impetoStep(actor, itemId = null) {
  * Ação com aviso no chat (efeito `acaoNota`; no ímpeto, 3 espaços para uma ação extra). Só gasta
  * o custo e avisa: a mesa resolve o resto.
  */
-export async function impetoAction(actor, itemId = null) {
-  const entries = actorEffects(actor);
-  const entry = firstEffect(actor, 'acaoNota', itemId, entries);
+export async function impetoAction(actor, itemId = null, effectId = null) {
+  const entry = findEffect(actor, 'acaoNota', { itemId, effectId });
   if (!entry) return undefined;
-  const wallet = walletOf(actor, entries);
-  if (!canPay(entry.params.custo, wallet)) return warn('DESORDEM.Habilidade.ImpetoInsuficiente');
+  const legacy = entry.id === LEGACY.acao;
+  const wallet = walletOf(actor);
+  if (!canPay(entry.params.custo, wallet)) {
+    return warnCost(entry, legacy && 'DESORDEM.Habilidade.ImpetoInsuficiente');
+  }
   const updates = payUpdates(entry.params.custo, wallet);
   if (Object.keys(updates).length) await actor.update(updates);
-  // Sem texto próprio, o aviso da ação extra do ímpeto
-  return entry.params.texto
-    ? abilityNote(actor, entry.params.texto)
-    : abilityNote(
+  if (entry.params.texto) return abilityNote(actor, entry.params.texto);
+  // Sem texto próprio: o aviso da ação extra do ímpeto, ou «usa <habilidade>»
+  return legacy
+    ? abilityNote(
         actor,
         t('DESORDEM.Habilidade.ImpetoAcaoTexto'),
         t('DESORDEM.Habilidade.ImpetoAcaoDetalhe'),
-      );
+      )
+    : abilityNote(actor, t('DESORDEM.Efeito.Nota.acaoNota', { nome: entry.itemName }));
 }
 
 // ---------- Análise ----------
@@ -126,38 +180,51 @@ export async function impetoAction(actor, itemId = null) {
  * Gasta uma ação para ganhar num recurso (efeito `ganharRecurso` com gatilho «ação»; na análise,
  * 2 marcadores, até 4).
  */
-export async function gainAnalysisMarkers(actor, itemId = null) {
-  const entries = actorEffects(actor);
-  const gain = entries.find(
-    (e) =>
-      e.tipo === 'ganharRecurso' &&
-      e.params.gatilho === 'acao' &&
-      (itemId === null || e.itemId === itemId),
-  );
+export async function gainAnalysisMarkers(actor, itemId = null, effectId = null) {
+  const gain = findEffect(actor, 'ganharRecurso', {
+    itemId,
+    effectId,
+    test: (params) => params.gatilho === 'acao',
+  });
   if (!gain) return undefined;
+  const entries = actorEffects(actor);
   const { defs, values } = actorResources(actor, entries);
   const chave = gain.params.recurso;
   if (!defs[chave]) return undefined;
-  const updates = triggerUpdates(actor, 'acao', gain.itemId);
-  const before = values[chave];
-  const after = updates[`system.recursosHab.${chave}`] ?? before;
-  if (Object.keys(updates).length) await actor.update(updates);
+  // Só o ganho deste efeito (não os outros ganhos por ação da mesma habilidade)
+  const after = Math.min(defs[chave].maximo, values[chave] + gain.params.quantidade);
+  await actor.update(resourceUpdates({ [chave]: after }));
+  const valor = after - values[chave];
   return abilityNote(
     actor,
-    t('DESORDEM.Habilidade.AnaliseGanha', { valor: after - before }),
+    gain.id === LEGACY.ganho
+      ? t('DESORDEM.Habilidade.AnaliseGanha', { valor })
+      : t('DESORDEM.Efeito.Nota.ganho', {
+          nome: gain.itemName,
+          valor,
+          recurso: defs[chave].nome,
+        }),
     `${after}/${defs[chave].maximo}`,
   );
 }
 
 // ---------- Esquiva ----------
 
-/** Teste da esquiva (efeito `defesaLivre`; livre, oposto ao ataque; a mesa compara). */
-export function rollDodge(actor, options = {}) {
-  const skill = firstEffect(actor, 'defesaLivre')?.params.pericia || 'acrobacia';
-  return rollSkill(actor, skill, {
-    ...options,
-    showDt: false,
-    label: `${actor.name}: ${t('DESORDEM.Habilidade.EsquivaTitulo')}`,
+/**
+ * Teste da esquiva (efeito `defesaLivre`; livre, oposto ao ataque; a mesa compara).
+ * @param {Actor} actor
+ * @param {Object} [options] Escolhas da janela pré-teste.
+ * @param {string} [skill] Perícia do efeito (sem ela, a do primeiro efeito de defesa livre).
+ */
+export function rollDodge(actor, options = {}, skill = null) {
+  const key = skill || firstEffect(actor, 'defesaLivre')?.params.pericia || 'acrobacia';
+  return rollTest({
+    ...skillTestOptions(actor, key, undefined, {
+      ...options,
+      showDt: false,
+      label: `${actor.name}: ${t('DESORDEM.Habilidade.EsquivaTitulo')}`,
+    }),
+    actor,
   });
 }
 
@@ -165,18 +232,16 @@ export function rollDodge(actor, options = {}) {
 
 /**
  * Cura um aliado (efeito `testeAcao` que cura PV; o alvo é o token mirado): gasta o custo e faz o
- * teste (Medicina DT 7 no curandeiro); se passar, o cartão traz o botão de recuperar PV (igual à
- * rolagem alta, somando as duas maiores em crítico) que o aliado clica. Com «uma vez por alvo»,
- * cada aliado só pode ser curado uma vez por cena.
+ * teste (Medicina DT 7 no curandeiro; aceita também uma área de Aptidão); se passar, o cartão traz
+ * o botão de recuperar PV (igual à rolagem alta, somando as duas maiores em crítico) que o aliado
+ * clica. Com «uma vez por alvo», cada aliado só pode ser curado uma vez por cena.
  */
-export async function healAlly(actor, itemId = null) {
-  const entries = actorEffects(actor);
-  const entry = entries.find(
-    (e) =>
-      e.tipo === 'testeAcao' &&
-      e.params.resultado === 'curarPV' &&
-      (itemId === null || e.itemId === itemId),
-  );
+export async function healAlly(actor, itemId = null, effectId = null) {
+  const entry = findEffect(actor, 'testeAcao', {
+    itemId,
+    effectId,
+    test: (params) => params.resultado === 'curarPV',
+  });
   if (!entry) return undefined;
   const { custo, pericia, dt, umaVezPorAlvo } = entry.params;
   const target = [...game.user.targets][0]?.actor;
@@ -185,15 +250,17 @@ export async function healAlly(actor, itemId = null) {
   if (umaVezPorAlvo && actor.system.cena.curados.includes(target.id)) {
     return warn('DESORDEM.Habilidade.CuraJaCurou', { nome: target.name });
   }
-  const wallet = walletOf(actor, entries);
-  if (!canPay(custo, wallet)) return warn('DESORDEM.Habilidade.CuraSemPD');
+  const wallet = walletOf(actor);
+  if (!canPay(custo, wallet)) {
+    return warnCost(entry, entry.id === LEGACY.cura && 'DESORDEM.Habilidade.CuraSemPD');
+  }
   await actor.update({
     ...payUpdates(custo, wallet),
     ...(umaVezPorAlvo
       ? { 'system.cena.curados': [...actor.toObject().system.cena.curados, target.id] }
       : {}),
   });
-  const result = await rollSkill(actor, pericia, { dt });
+  const result = await rollTest({ ...skillTestOptions(actor, pericia, undefined, { dt }), actor });
   if (!result.success) return result;
   await postMessage({
     actor,
@@ -209,6 +276,8 @@ export async function healAlly(actor, itemId = null) {
   });
   return result;
 }
+
+// ---------- Reinício de cena ----------
 
 // ---------- Reinício de cena ----------
 

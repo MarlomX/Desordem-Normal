@@ -245,7 +245,8 @@
         "Vazio": "Sem dado",
         "Dica": "Até 2 dados extras, só para este teste."
       },
-      "PrimeirosSocorrosDica": "Quantas vezes este personagem recebeu primeiros socorros nesta cena. Cada uma soma +3 à DT da próxima (o mestre soma sozinho a cada tentativa)."
+      "PrimeirosSocorrosDica": "Quantas vezes este personagem recebeu primeiros socorros nesta cena. Cada uma soma +3 à DT da próxima (o mestre soma sozinho a cada tentativa).",
+      "DadosBonusDica": "Dados bônus recebidos (somem na Nova cena)."
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -656,7 +657,7 @@
       "CuraTexto": "usa a cura em {alvo}.",
       "CuraValor": "Cura",
       "NovaCena": "Nova cena",
-      "NovaCenaConfirmar": "Reiniciar a cena deste personagem? Zera os testes de lesão e trauma da cena, esvazia ímpeto e análise, remove efeitos até o fim da cena e recupera 1 PV se estiver com 0.",
+      "NovaCenaConfirmar": "Reiniciar a cena deste personagem? Zera os testes de lesão e trauma da cena, esvazia os recursos das habilidades que esvaziam e os dados bônus, remove efeitos até o fim da cena e recupera 1 PV se estiver com 0.",
       "NovaCenaFeita": "Cena reiniciada para {n} personagem(ns).",
       "AnaliseTitulo": "Usar análise",
       "AnaliseDica": "Cada marcador muda um dado em 1 ponto (mínimo 1, máximo do dado). Marcadores disponíveis: {pontos}. Escreva o novo valor de cada dado.",
@@ -1406,7 +1407,8 @@
         "resultado": "Se passar",
         "margem": "+1 dado a cada",
         "umaVezPorAlvo": "Uma vez por alvo na cena",
-        "condicao": "Condição"
+        "condicao": "Condição",
+        "rotulo": "Rótulo do botão"
       },
       "Gatilhos": {
         "falha": "Ao falhar um teste com DT",
@@ -1477,7 +1479,29 @@
           "pv": "{valor} PV",
           "recurso": "{valor} de {recurso}"
         }
+      },
+      "Botao": {
+        "passoCena": "Passo na cena{custo}",
+        "acaoNota": "Usar{custo}",
+        "ganharRecurso": "+{quantidade} {recurso}{custo}",
+        "testeAcao": "Teste de {pericia}{custo}",
+        "defesaLivre": "Defesa livre"
+      },
+      "Nota": {
+        "passoCena": "usa {nome}: {atributo} sobe {passos} passo(s) até o fim da cena.",
+        "passoDescricao": "O dado do atributo sobe {passos} passo(s) até o fim da cena.",
+        "acaoNota": "usa {nome}.",
+        "ganho": "usa {nome} e ganha {valor} de {recurso}."
+      },
+      "Aviso": {
+        "SemCusto": "Recursos insuficientes para usar {nome}."
       }
+    },
+    "Plano": {
+      "Distribuir": "Distribuir {n}d{dado} ao grupo",
+      "Distribuido": "Dados bônus distribuídos ({n}d{dado}) para: {alvos}.",
+      "JaDistribuido": "Dados bônus já distribuídos ({n}d{dado}).",
+      "SemMestre": "Nenhum mestre conectado para distribuir os dados."
     }
   },
   "TYPES.Item.arma": "Arma",

@@ -245,7 +245,8 @@
         "Vazio": "No die",
         "Dica": "Up to 2 extra dice, for this test only."
       },
-      "PrimeirosSocorrosDica": "How many times this character received first aid in this scene. Each adds +3 to the next DC (the GM adds it automatically on each attempt)."
+      "PrimeirosSocorrosDica": "How many times this character received first aid in this scene. Each adds +3 to the next DC (the GM adds it automatically on each attempt).",
+      "DadosBonusDica": "Bonus dice received (lost at New scene)."
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -656,7 +657,7 @@
       "CuraTexto": "uses healing on {alvo}.",
       "CuraValor": "Healing",
       "NovaCena": "New scene",
-      "NovaCenaConfirmar": "Reset this character's scene? It clears the scene's injury and trauma tests, empties drive and analysis, removes until-end-of-scene effects and restores 1 HP if at 0.",
+      "NovaCenaConfirmar": "Reset this character's scene? It clears the scene's injury and trauma tests, empties the ability resources that empty and the bonus dice, removes until-end-of-scene effects and restores 1 HP if at 0.",
       "NovaCenaFeita": "Scene reset for {n} character(s).",
       "AnaliseTitulo": "Use analysis",
       "AnaliseDica": "Each marker changes a die by 1 point (minimum 1, up to the die's maximum). Markers available: {pontos}. Type the new value of each die.",
@@ -1406,7 +1407,8 @@
         "resultado": "On success",
         "margem": "+1 die for every",
         "umaVezPorAlvo": "Once per target per scene",
-        "condicao": "Condition"
+        "condicao": "Condition",
+        "rotulo": "Button label"
       },
       "Gatilhos": {
         "falha": "On failing a test with a DC",
@@ -1477,7 +1479,29 @@
           "pv": "{valor} HP",
           "recurso": "{valor} {recurso}"
         }
+      },
+      "Botao": {
+        "passoCena": "Scene step{custo}",
+        "acaoNota": "Use{custo}",
+        "ganharRecurso": "+{quantidade} {recurso}{custo}",
+        "testeAcao": "{pericia} test{custo}",
+        "defesaLivre": "Free defense"
+      },
+      "Nota": {
+        "passoCena": "uses {nome}: {atributo} goes up {passos} step(s) until the end of the scene.",
+        "passoDescricao": "The attribute die goes up {passos} step(s) until the end of the scene.",
+        "acaoNota": "uses {nome}.",
+        "ganho": "uses {nome} and gains {valor} {recurso}."
+      },
+      "Aviso": {
+        "SemCusto": "Not enough resources to use {nome}."
       }
+    },
+    "Plano": {
+      "Distribuir": "Give {n}d{dado} to the group",
+      "Distribuido": "Bonus dice given ({n}d{dado}) to: {alvos}.",
+      "JaDistribuido": "Bonus dice already given ({n}d{dado}).",
+      "SemMestre": "No GM connected to give the dice."
     }
   },
   "TYPES.Item.arma": "Weapon",

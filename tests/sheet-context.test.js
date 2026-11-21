@@ -345,7 +345,7 @@ test('buildAbilityRows põe a de perfil primeiro e ordena as outras por nome', (
   );
 });
 
-test('buildAbilityRows mostra os controles de cada automação e o estado das ativações', () => {
+test('buildAbilityRows: habilidades antigas mantêm contadores e botões de antes', () => {
   const rows = buildAbilityRows(
     [
       abl('1', 'A', 'impeto'),
@@ -356,29 +356,39 @@ test('buildAbilityRows mostra os controles de cada automação e o estado das at
       abl('6', 'F', 'sorrateiro'),
       abl('7', 'G', 'prontidao'),
     ],
-    { active: ['impetoDado'], resources: { impeto: 3, analise: 1 }, hurtCompanion: true },
+    { resources: { impeto: 3, analise: 1 }, hurtCompanion: true },
   );
   const by = Object.fromEntries(rows.map((r) => [r.name, r]));
-  assert.equal(by.A.showImpeto, true);
-  assert.equal(by.A.impeto, 3);
-  assert.equal(by.A.impetoDadoAtivo, true);
-  assert.equal(by.B.showAnalise, true);
-  assert.equal(by.B.analise, 1);
-  assert.equal(by.C.showDodge, true);
-  assert.equal(by.D.showHeal, true);
+  const labels = (row) => row.buttons.map((b) => b.label);
+  // Sem tradução (t = a própria chave): os botões antigos usam as chaves de antes
+  assert.deepEqual(by.A.counters, [
+    { chave: 'impeto', nome: 'DESORDEM.Habilidade.Impeto', value: 3, max: 5 },
+  ]);
+  assert.deepEqual(labels(by.A), [
+    'DESORDEM.Habilidade.ImpetoPasso',
+    'DESORDEM.Habilidade.ImpetoAcao',
+  ]);
+  assert.deepEqual(by.B.counters, [
+    { chave: 'analise', nome: 'DESORDEM.Habilidade.Marcadores', value: 1, max: 4 },
+  ]);
+  assert.deepEqual(labels(by.B), ['DESORDEM.Habilidade.Analisar']);
+  assert.deepEqual(labels(by.C), ['DESORDEM.Habilidade.Esquivar']);
+  assert.deepEqual(labels(by.D), ['DESORDEM.Habilidade.Curar']);
   assert.equal(by.E.showCompanion, true);
   assert.equal(by.E.animalFerido, true);
-  assert.equal(by.F.showSneak, true);
-  assert.equal(by.F.sorrateiroAtivo, false);
-  // a repetição de dado só aparece nos cartões de teste, não na ficha
-  assert.equal(by.G.showImpeto || by.G.showAnalise || by.G.showHeal, false);
+  // Dado extra e repetir dado não têm botão na ficha (janela pré-teste e cartão do teste)
+  for (const row of [by.F, by.G]) {
+    assert.deepEqual([row.counters, row.buttons, row.showCompanion], [[], [], false]);
+  }
+  assert.deepEqual(
+    by.A.buttons.map((b) => b.effectId),
+    ['impetoPasso', 'impetoAcao'],
+  );
 });
 
-test('buildAbilityRows: máximos das barras vêm do efeito e a lista de efeitos vence a automação', () => {
+test('buildAbilityRows: máximos vêm do efeito e a lista de efeitos vence a automação', () => {
   const rows = buildAbilityRows(
     [
-      abl('1', 'A', 'impeto'),
-      abl('2', 'B', 'analise'),
       {
         id: '3',
         name: 'C',
@@ -388,21 +398,20 @@ test('buildAbilityRows: máximos das barras vêm do efeito e a lista de efeitos 
           // A automação antiga é ignorada: a lista de efeitos não está vazia
           automacao: 'impeto',
           efeitos: [
-            { id: 'r', tipo: 'recurso', params: { chave: 'impeto', maximo: 7 } },
+            { id: 'r', tipo: 'recurso', params: { chave: 'furia', nome: 'Fúria', maximo: 7 } },
             { id: 'c', tipo: 'companheiro', params: { dado: 8 } },
+            { id: 'p', tipo: 'passoCena', params: { rotulo: 'Rugir' } },
+            { id: 'g', tipo: 'ganharRecurso', params: { recurso: 'furia', gatilho: 'falha' } },
           ],
         },
       },
     ],
-    { active: [], resources: {}, hurtCompanion: false },
+    { resources: { furia: 9 }, hurtCompanion: false },
   );
-  const by = Object.fromEntries(rows.map((r) => [r.name, r]));
-  assert.equal(by.A.impetoMax, 5);
-  assert.equal(by.B.analiseMax, 4);
-  assert.equal(by.A.impeto, 0);
-  assert.equal(by.C.impetoMax, 7);
-  assert.equal(by.C.showCompanion, true);
-  assert.equal(by.C.showDodge, false);
+  assert.deepEqual(rows[0].counters, [{ chave: 'furia', nome: 'Fúria', value: 7, max: 7 }]);
+  assert.equal(rows[0].showCompanion, true);
+  // Só o passo vira botão (o ganho é por gatilho, não por ação), com o rótulo próprio
+  assert.deepEqual(rows[0].buttons, [{ effectId: 'p', tipo: 'passoCena', label: 'Rugir' }]);
 });
 
 test('buildAbilityRows trava os controles quando a ficha não é editável', () => {

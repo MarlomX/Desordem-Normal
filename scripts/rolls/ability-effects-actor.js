@@ -28,6 +28,34 @@ export function firstEffect(actor, tipo, itemId = null, entries = actorEffects(a
 }
 
 /**
+ * Um efeito do ator: de um tipo, de um item, com um id e um filtro nos parâmetros (cada critério
+ * é opcional). `null` se não houver.
+ * @param {Actor} actor
+ * @param {string} tipo
+ * @param {{itemId?: string|null, effectId?: string|null, test?: (params: object) => boolean}} [by]
+ */
+export function findEffect(
+  actor,
+  tipo,
+  { itemId = null, effectId = null, test = () => true } = {},
+) {
+  return (
+    actorEffects(actor).find(
+      (e) =>
+        e.tipo === tipo &&
+        (itemId === null || e.itemId === itemId) &&
+        (effectId === null || e.id === effectId) &&
+        test(e.params),
+    ) ?? null
+  );
+}
+
+/** O efeito de um botão da ficha (item + id do efeito), de qualquer tipo, ou `null`. */
+export function effectById(actor, itemId, effectId) {
+  return actorEffects(actor).find((e) => e.itemId === itemId && e.id === effectId) ?? null;
+}
+
+/**
  * Recursos do ator: definições (máximo, nome...) e valores atuais, já limitados ao máximo.
  * Uma criatura não tem `recursosHab`: todos valem 0.
  * @returns {{defs: Object<string, object>, values: Object<string, number>}}

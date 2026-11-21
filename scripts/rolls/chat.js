@@ -245,6 +245,8 @@ async function settleAbilities(actor, options, result) {
  *   `respostaOposto`: cartão, lado, ator e perícia); o mestre registra o teste no cartão.
  * @param {object} [opts.socorroFlag] Primeiros socorros (flag `primeirosSocorros`: paciente e
  *   estado do botão de aplicar).
+ * @param {object} [opts.planoFlag] Teste que dá dados bônus ao grupo (flag `planoDados`: dado,
+ *   margem, nome da habilidade e estado do botão de distribuir).
  */
 export async function rollTest({
   attrLabel = game.i18n.localize('DESORDEM.Teste.Atributo'),
@@ -257,6 +259,7 @@ export async function rollTest({
   desafioFlag,
   opostoFlag,
   socorroFlag,
+  planoFlag,
   rollMode,
   ...options
 }) {
@@ -273,6 +276,7 @@ export async function rollTest({
   if (flags && desafioFlag) flags.desafio = desafioFlag;
   if (flags && opostoFlag) flags.respostaOposto = opostoFlag;
   if (flags && socorroFlag) flags.primeirosSocorros = socorroFlag;
+  if (flags && planoFlag) flags.planoDados = planoFlag;
   // Falha crítica: o cartão ganha o botão de rolar o efeito (veja critical-chat.js). O teste de
   // esconderijo não tem efeito de falha crítica (a regra não traz nenhum). Nas criaturas o mestre
   // decide a penalidade (a tabela fala de PD e de itens carregados, que elas não têm).

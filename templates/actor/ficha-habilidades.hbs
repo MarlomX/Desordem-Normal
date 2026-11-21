@@ -16,17 +16,8 @@
       <p class="desordem-ficha__dica">{{#if descricao}}{{descricao}}{{else}}{{localize "DESORDEM.Ficha.Hab.SemDescricao"}}{{/if}}</p>
     </details>
     <div class="desordem-habilidade__controles">
-      {{#if showImpeto}}
-      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Impeto"}}</span> <strong>{{impeto}} / {{impetoMax}}</strong></label>
-      <button type="button" data-action="impetoStep" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.ImpetoPasso"}}</button>
-      <button type="button" data-action="impetoAction" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.ImpetoAcao"}}</button>
-      {{/if}}
-      {{#if showAnalise}}
-      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Habilidade.Marcadores"}}</span> <strong>{{analise}} / {{analiseMax}}</strong></label>
-      <button type="button" data-action="gainAnalysis" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.Analisar"}}</button>
-      {{/if}}
-      {{#if showDodge}}<button type="button" data-action="dodge" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.Esquivar"}}</button>{{/if}}
-      {{#if showHeal}}<button type="button" data-action="healAlly" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Habilidade.Curar"}}</button>{{/if}}
+      {{#each counters}}<label class="desordem-ficha__campo"><span>{{nome}}</span> <strong>{{value}} / {{max}}</strong></label>{{/each}}
+      {{#each buttons}}<button type="button" data-action="useEffect" data-item-id="{{../id}}" data-efeito-id="{{effectId}}" {{#if ../locked}}disabled{{/if}}>{{label}}</button>{{/each}}
       {{#if showCompanion}}<label class="desordem-ficha__campo"><input type="checkbox" name="system.cena.animalFerido" {{#if animalFerido}}checked{{/if}} {{#if locked}}disabled{{/if}}> <span>{{localize "DESORDEM.Habilidade.AnimalFeridoMarca"}}</span></label>{{/if}}
     </div>
   </div>

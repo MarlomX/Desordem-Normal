@@ -179,6 +179,8 @@ export function sceneReset(state) {
     'system.cena.testesTrauma': 0,
     'system.cena.curados': [],
     'system.cena.animalFerido': false,
+    // Dados bônus recebidos valem só até o fim da cena
+    'system.dadosBonus': [],
     ...resources,
     'system.ativas': [],
     'system.passos.fisico': 0,

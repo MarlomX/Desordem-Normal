@@ -22,6 +22,7 @@ import { registerCreatureTables } from './stealth/tables.js';
 import { registerPhaseTracker } from './combat/phases-tracker.js';
 import { registerDefaultItems } from './data/default-items.js';
 import { registerFirstAidHooks, renderFirstAidButton } from './rolls/first-aid-chat.js';
+import { registerBonusDiceHooks, renderBonusDiceButton } from './rolls/bonus-dice-chat.js';
 import { proposeOpposed, registerOpposedHooks, renderOpposedCard } from './opposed/opposed-chat.js';
 import { challengeApi, readyChallenges, registerChallenges } from './challenges/hooks.js';
 import { renderChallengeBar } from './challenges/test-card.js';
@@ -110,6 +111,8 @@ Hooks.once('init', () => {
   registerDefaultItems();
   // Primeiros socorros: o mestre conta as tentativas e aplica o resultado
   registerFirstAidHooks();
+  // Dados bônus ao grupo: o mestre distribui pelo botão do teste
+  registerBonusDiceHooks();
   // Tabelas de ações das criaturas: configuração do mundo, editada pelo mestre
   registerCreatureTables();
   // Desafios (teste estendido): configuração do mundo e a guia nova da barra lateral
@@ -174,6 +177,7 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderTableCard(message, html);
   renderOpposedCard(message, html);
   renderFirstAidButton(message, html);
+  renderBonusDiceButton(message, html);
   renderFearDice(message, html);
 });
 

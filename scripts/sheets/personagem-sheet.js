@@ -10,7 +10,7 @@ import { weaponSkill } from '../rolls/equipment.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
-import { actorResources, firstEffect } from '../rolls/ability-effects-actor.js';
+import { actorEffects, actorResources, effectById } from '../rolls/ability-effects-actor.js';
 import { proposeOpposed } from '../opposed/opposed-chat.js';
 import { startFirstAid } from '../rolls/first-aid-chat.js';
 import { attributeChoiceUpdate } from '../rolls/attribute.js';
@@ -22,14 +22,9 @@ import {
   removeExtra,
   updateExtra,
 } from '../rolls/extras.js';
-import {
-  impetoStep,
-  impetoAction,
-  gainAnalysisMarkers,
-  rollDodge,
-  healAlly,
-  endScene,
-} from '../rolls/abilities-chat.js';
+import { useAbilityEffect, rollDodge, endScene } from '../rolls/abilities-chat.js';
+import { groupBonusDice } from '../rolls/ability-effects.js';
+import { resourceBars } from './ability-controls.js';
 import {
   addRelation,
   removeRelation,
@@ -69,7 +64,6 @@ import {
   resourcePercent,
   stepResource,
   stepCounter,
-  buildPips,
   togglePip,
   buildStatusTags,
   isResourceLow,
@@ -122,11 +116,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       useItem: PersonagemSheet.#onUseItem,
       addEffect: PersonagemSheet.#onAddEffect,
       removeEffect: PersonagemSheet.#onRemoveEffect,
-      impetoStep: PersonagemSheet.#onImpetoStep,
-      impetoAction: PersonagemSheet.#onImpetoAction,
-      gainAnalysis: PersonagemSheet.#onGainAnalysis,
-      dodge: PersonagemSheet.#onDodge,
-      healAlly: PersonagemSheet.#onHealAlly,
+      useEffect: PersonagemSheet.#onUseEffect,
+      stepAbilityResource: PersonagemSheet.#onStepAbilityResource,
       newScene: PersonagemSheet.#onNewScene,
       openChase: PersonagemSheet.#onOpenChase,
       recoverBreath: PersonagemSheet.#onRecoverBreath,
@@ -182,8 +173,14 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const t = (key) => game.i18n.localize(key);
     const activeTab = resolveActiveTab(PersonagemSheet.#activeTabs.get(this.document.id));
     const tabs = buildTabs(activeTab, (id) => t(`DESORDEM.Ficha.Abas.${id}`));
-    // Recursos das habilidades (efeitos `recurso`): definições (máximo) e valores atuais
-    const resources = actorResources(this.document);
+    // Nome de uma perícia ou de uma área de Aptidão (botões dos testes das habilidades)
+    const skillName = (key) => {
+      if (PERICIAS[key]) return t(`DESORDEM.Pericias.${key}`);
+      if (APTIDOES.includes(key)) {
+        return `${t('DESORDEM.Ficha.Aptidoes')}: ${t(`DESORDEM.Aptidoes.${key}`)}`;
+      }
+      return key;
+    };
     // Passos temporários (manuais + efeitos) de cada atributo e do dado geral das perícias
     const stepsData = this.document.toObject().system;
     const attrStepOf = (key) =>
@@ -215,10 +212,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         stateLabel: (key) => t(`DESORDEM.Ficha.Estado.${key}`),
         fearLabel: (die) => game.i18n.format('DESORDEM.Ficha.Cab.PavorEtiqueta', { dado: die }),
       }),
-      showImpeto: Boolean(resources.defs.impeto),
-      showAnalise: Boolean(resources.defs.analise),
-      impetoPips: buildPips(resources.values.impeto ?? 0, resources.defs.impeto?.maximo ?? 0),
-      analisePips: buildPips(resources.values.analise ?? 0, resources.defs.analise?.maximo ?? 0),
+      // Barras dos recursos das habilidades (uma por efeito `recurso`) e a reserva de dados bônus
+      resourceBars: resourceBars(actorEffects(this.document), system.recursosHab ?? {}, t),
+      bonusDice: groupBonusDice(system.dadosBonus)
+        .map(({ die, count }) => `${count}d${die}`)
+        .join(' + '),
       actor: this.document,
       system,
       editable: this.isEditable,
@@ -285,11 +283,12 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
           .filter((item) => item.type === 'habilidade')
           .map((item) => ({ id: item.id, name: item.name, system: item.system })),
         {
-          active: system.ativas,
-          resources: resources.values,
+          resources: system.recursosHab ?? {},
           hurtCompanion: system.cena.animalFerido,
           editable: this.isEditable,
           openIds: PersonagemSheet.#openAbilities.get(this.document.id) ?? [],
+          t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
+          skill: skillName,
         },
       ),
       equipment: buildEquipmentRows(
@@ -782,39 +781,34 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /**
-   * Habilidade da linha onde o botão foi clicado (`data-item-id` da linha), para usar os efeitos
-   * dela; `null` se o botão estiver fora de uma linha.
+   * Botão de um efeito na aba Habilidades (passo na cena, ação, ganhar recurso, teste com efeito,
+   * defesa livre). A defesa livre passa pela janela pré-teste; os outros vão para
+   * `useAbilityEffect`.
    */
-  static #abilityOf(target) {
-    return target.closest('[data-item-id]')?.dataset.itemId ?? null;
+  static async #onUseEffect(event, target) {
+    const { itemId, efeitoId } = target.dataset;
+    const entry = effectById(this.document, itemId, efeitoId);
+    if (!entry) return;
+    if (entry.tipo === 'defesaLivre') {
+      const skillKey = entry.params.pericia || 'acrobacia';
+      await this.#rollWithChoices(event, { skillKey, showDt: false }, (options) =>
+        rollDodge(this.document, options, skillKey),
+      );
+      return;
+    }
+    await useAbilityEffect(this.document, itemId, efeitoId);
   }
 
-  /** Ímpeto (efeito `passoCena`): gasta 3 espaços para subir um atributo um passo na cena. */
-  static async #onImpetoStep(event, target) {
-    await impetoStep(this.document, PersonagemSheet.#abilityOf(target));
-  }
-
-  /** Ímpeto (efeito `acaoNota`): gasta 3 espaços para uma ação extra (avisa no chat). */
-  static async #onImpetoAction(event, target) {
-    await impetoAction(this.document, PersonagemSheet.#abilityOf(target));
-  }
-
-  /** Análise (efeito `ganharRecurso` por ação): gasta uma ação para ganhar 2 marcadores. */
-  static async #onGainAnalysis(event, target) {
-    await gainAnalysisMarkers(this.document, PersonagemSheet.#abilityOf(target));
-  }
-
-  /** Esquiva livre (efeito `defesaLivre`): teste de Acrobacia oposto ao ataque. */
-  static async #onDodge(event) {
-    const skillKey = firstEffect(this.document, 'defesaLivre')?.params.pericia || 'acrobacia';
-    await this.#rollWithChoices(event, { skillKey, showDt: false }, (options) =>
-      rollDodge(this.document, options),
+  /** − e + de um recurso com máximo alto (mostrado como número no cabeçalho). */
+  static async #onStepAbilityResource(event, target) {
+    const key = target.dataset.resource;
+    const { defs, values } = actorResources(this.document);
+    if (!defs[key]) return;
+    const value = Math.min(
+      defs[key].maximo,
+      Math.max(0, values[key] + Number(target.dataset.delta)),
     );
-  }
-
-  /** Cura o aliado mirado (efeito `testeAcao`; no curandeiro, Medicina DT 7, 2 PD). */
-  static async #onHealAlly(event, target) {
-    await healAlly(this.document, PersonagemSheet.#abilityOf(target));
+    await this.document.update({ [`system.recursosHab.${key}`]: value });
   }
 
   /** Abre a janela da perseguição (cartão da ficha). */

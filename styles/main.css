@@ -3661,3 +3661,30 @@ button.desordem-desafios-cartao__nome:hover {
   width: auto;
   margin: 0;
 }
+
+/* ===== Recursos genéricos e dados bônus no cabeçalho (v0.20.4) ===== */
+
+/* Recursos de habilidades novas: cor de destaque da ficha (ímpeto e análise têm a sua) */
+.desordem-pips--outro {
+  --dn-pip: var(--dn-mental);
+}
+
+/* Recurso com máximo alto: número com − e + no lugar das bolinhas */
+.desordem-pips__passo {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-pips__numero {
+  min-width: 2.5em;
+  text-align: center;
+}
+
+.desordem-etiqueta--bonus {
+  border-color: var(--dn-gold);
+  background: color-mix(in srgb, var(--dn-gold) 18%, transparent);
+}

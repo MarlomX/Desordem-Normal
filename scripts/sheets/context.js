@@ -14,7 +14,7 @@ import {
   weaponDamageLabel,
 } from '../rolls/equipment.js';
 import { EFFECT_MAX_STEPS } from '../rolls/effects.js';
-import { itemEffects } from '../rolls/ability-effects.js';
+import { abilityControls } from './ability-controls.js';
 import { shownDie, stepLimits } from '../rolls/steps.js';
 
 /**
@@ -409,44 +409,40 @@ export function buildChoices(values, current, label) {
 
 /**
  * Linhas das habilidades da ficha: a de perfil primeiro, depois as outras por nome. Cada linha
- * diz quais controles mostrar, conforme os efeitos da habilidade (os da lista ou, com a lista
- * vazia, os equivalentes à automação antiga).
+ * traz os contadores dos recursos e os botões dos efeitos da habilidade (os da lista ou, com a
+ * lista vazia, os equivalentes à automação antiga): veja `abilityControls`.
  * @param {{id: string, name: string, system: Object}[]} items Habilidades do personagem.
  * @param {Object} options
- * @param {string[]} options.active Habilidades ativadas para o próximo teste.
- * @param {Object<string, number>} options.resources Valores atuais dos recursos das habilidades.
+ * @param {Object<string, number>} options.resources Valores guardados dos recursos das habilidades.
  * @param {boolean} options.hurtCompanion O animal está ferido nesta cena.
  * @param {boolean} [options.editable=true]
+ * @param {Function} [options.t] Tradução (nos testes, a própria chave).
+ * @param {(key: string) => string} [options.skill] Nome de uma perícia.
  */
 export function buildAbilityRows(
   items,
-  { active, resources, hurtCompanion, editable = true, openIds = [] },
+  {
+    resources,
+    hurtCompanion,
+    editable = true,
+    openIds = [],
+    t = (key) => key,
+    skill = (key) => key
+  }
 ) {
-  const rows = items.map(({ id, name, system }) => {
-    const effects = itemEffects(system);
-    const has = (tipo, test = () => true) => effects.some((e) => e.tipo === tipo && test(e.params));
-    const bar = (chave) => effects.find((e) => e.tipo === 'recurso' && e.params.chave === chave);
+  const rows = items.map((item) => {
+    const { id, name, system } = item;
+    const controls = abilityControls(item, resources ?? {}, { t, skill });
     return {
       id,
       name,
       descricao: system.descricao,
       perfil: system.perfil,
-      automacao: system.automacao,
       locked: !editable,
       open: openIds.includes(id),
-      showImpeto: Boolean(bar('impeto')),
-      showAnalise: Boolean(bar('analise')),
-      showDodge: has('defesaLivre'),
-      showHeal: has('testeAcao', (p) => p.resultado === 'curarPV'),
-      showCompanion: has('companheiro'),
-      showSneak: has('dadoExtra', (p) => p.custo.tipo === 'pd'),
-      impeto: resources.impeto ?? 0,
-      analise: resources.analise ?? 0,
-      // Máximos vindos do efeito `recurso` (5 e 4 nas automações antigas)
-      impetoMax: bar('impeto')?.params.maximo ?? 0,
-      analiseMax: bar('analise')?.params.maximo ?? 0,
-      impetoDadoAtivo: active.includes('impetoDado'),
-      sorrateiroAtivo: active.includes('sorrateiro'),
+      counters: controls.counters,
+      buttons: controls.buttons,
+      showCompanion: controls.showCompanion,
       animalFerido: hurtCompanion
     };
   });

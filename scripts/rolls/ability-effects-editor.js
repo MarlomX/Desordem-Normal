@@ -18,9 +18,6 @@ import {
 /** Máximo de efeitos numa habilidade. */
 export const MAX_EFFECTS = 20;
 
-/** Chaves de recurso que a ficha do personagem já mostra (barras de ímpeto e de análise). */
-const SHOWN_RESOURCES = ['impeto', 'analise'];
-
 /** Grupo de textos de cada campo de opções (`DESORDEM.Efeito.<grupo>.<valor>`). */
 const CHOICE_GROUPS = Object.freeze({
   gatilho: 'Gatilhos',
@@ -98,20 +95,24 @@ export function templateEffects(key) {
  * O efeito já tem uso automático nesta versão? (Os outros ficam gravados e passam a funcionar
  * quando a ficha e a janela pré-teste genéricas chegarem.)
  * @param {object} effect
- * @param {object[]} siblings Os efeitos da mesma habilidade (alguns botões dependem deles).
  */
-export function effectSupported(effect, siblings) {
+export function effectSupported(effect) {
   const { params } = effect;
-  const hasBar = (chave) => siblings.some((e) => e.tipo === 'recurso' && e.params.chave === chave);
   switch (effect.tipo) {
+    // Barras, botões da ficha e cartão do teste (desde a v0.20.4, para qualquer recurso)
     case 'recurso':
-      return SHOWN_RESOURCES.includes(params.chave);
+    case 'ajusteDados':
+    case 'rerrolar':
+    case 'defesaLivre':
+    case 'passoCena':
+    case 'acaoNota':
+    case 'testeAcao':
+      return true;
     case 'ganharRecurso':
-      if (!SHOWN_RESOURCES.includes(params.recurso)) return false;
-      if (['falha', 'perdeOposto', 'inicioCena'].includes(params.gatilho)) return true;
-      // O botão «Analisar» da ficha aparece na linha que tem a barra de análise
-      return params.gatilho === 'acao' && hasBar('analise');
+      // «Ao se defender» e «início do combate» chegam com os gatilhos
+      return ['falha', 'perdeOposto', 'inicioCena', 'acao'].includes(params.gatilho);
     case 'dadoExtra': {
+      // Até a janela pré-teste genérica: custo em PD, ímpeto ou nenhum; teste qualquer ou defesa
       const cost = params.custo;
       const payable =
         cost.tipo === 'nenhum' ||
@@ -119,16 +120,6 @@ export function effectSupported(effect, siblings) {
         (cost.tipo === 'recurso' && cost.recurso === 'impeto');
       return payable && ['qualquer', 'defesa'].includes(params.teste);
     }
-    case 'ajusteDados':
-    case 'rerrolar':
-    case 'defesaLivre':
-      return true;
-    case 'passoCena':
-    case 'acaoNota':
-      // Os botões de passo e de ação aparecem na linha que tem a barra de ímpeto
-      return hasBar('impeto');
-    case 'testeAcao':
-      return params.resultado === 'curarPV';
     case 'companheiro':
       return params.teste !== 'defesa';
     default:
@@ -244,7 +235,7 @@ export function editorRows(effects, { t, skills, openId }) {
     tipo: effect.tipo,
     tipoLabel: t(`DESORDEM.Efeito.Tipos.${effect.tipo}`),
     summary: describeEffect(effect, { t, skill: skillLabel }),
-    supported: effectSupported(effect, effects),
+    supported: effectSupported(effect),
     open: effect.id === openId,
     first: index === 0,
     last: index === effects.length - 1,

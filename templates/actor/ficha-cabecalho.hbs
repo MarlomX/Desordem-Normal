@@ -56,17 +56,18 @@
   <div class="desordem-cab__rodape">
     {{#each statusTags}}<span class="desordem-etiqueta desordem-etiqueta--{{tone}}">{{#if die}}{{dadoPavor die die "pequeno"}} {{/if}}{{label}}</span>{{/each}}
     {{#if equipment.armorTotals.total}}<span class="desordem-etiqueta desordem-etiqueta--armadura"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{equipment.armorTotals.available}}/{{equipment.armorTotals.total}}</span>{{/if}}
-    {{#if showImpeto}}
-    <span class="desordem-pips desordem-pips--impeto" title="{{localize "DESORDEM.Habilidade.Impeto"}}">
-      <span class="desordem-pips__nome">{{localize "DESORDEM.Habilidade.Impeto"}}</span>
-      {{#each impetoPips}}<button type="button" class="desordem-pip{{#if filled}} is-filled{{/if}}" data-action="setPip" data-resource="impeto" data-n="{{n}}" {{#unless ../editable}}disabled{{/unless}}></button>{{/each}}
+    {{#each resourceBars}}
+    <span class="desordem-pips desordem-pips--{{tone}}" title="{{nome}}">
+      <span class="desordem-pips__nome">{{nome}}</span>
+      {{#if pips}}
+      {{#each pips}}<button type="button" class="desordem-pip{{#if filled}} is-filled{{/if}}" data-action="setPip" data-resource="{{../chave}}" data-n="{{n}}" {{#unless ../../editable}}disabled{{/unless}}></button>{{/each}}
+      {{else}}
+      <button type="button" class="desordem-pips__passo" data-action="stepAbilityResource" data-resource="{{chave}}" data-delta="-1" {{#unless ../editable}}disabled{{/unless}}>−</button>
+      <strong class="desordem-pips__numero">{{value}}/{{max}}</strong>
+      <button type="button" class="desordem-pips__passo" data-action="stepAbilityResource" data-resource="{{chave}}" data-delta="1" {{#unless ../editable}}disabled{{/unless}}>+</button>
+      {{/if}}
     </span>
-    {{/if}}
-    {{#if showAnalise}}
-    <span class="desordem-pips desordem-pips--analise" title="{{localize "DESORDEM.Habilidade.Marcadores"}}">
-      <span class="desordem-pips__nome">{{localize "DESORDEM.Habilidade.Marcadores"}}</span>
-      {{#each analisePips}}<button type="button" class="desordem-pip{{#if filled}} is-filled{{/if}}" data-action="setPip" data-resource="analise" data-n="{{n}}" {{#unless ../editable}}disabled{{/unless}}></button>{{/each}}
-    </span>
-    {{/if}}
+    {{/each}}
+    {{#if bonusDice}}<span class="desordem-etiqueta desordem-etiqueta--bonus" title="{{localize "DESORDEM.Ficha.DadosBonusDica"}}"><i class="fa-solid fa-dice" aria-hidden="true"></i> {{bonusDice}}</span>{{/if}}
   </div>
 </header>

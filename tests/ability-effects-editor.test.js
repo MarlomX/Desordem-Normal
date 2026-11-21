@@ -119,26 +119,24 @@ test('templateEffects: cada modelo é a automação antiga equivalente', () => {
 test('effectSupported: os efeitos das automações antigas têm todos uso automático', () => {
   for (const key of AUTOMATIONS) {
     const list = legacyEffects(key);
-    for (const effect of list)
-      assert.equal(effectSupported(effect, list), true, `${key}/${effect.id}`);
+    for (const effect of list) assert.equal(effectSupported(effect), true, `${key}/${effect.id}`);
   }
 });
 
 test('effectSupported marca o que ainda não tem uso nesta versão', () => {
-  const alone = (effect) => effectSupported(effect, [effect]);
-  assert.equal(alone(one('recurso', { chave: 'furia' })), false);
-  assert.equal(alone(one('dadoExtra', { custo: { tipo: 'pv', valor: 1 } })), false);
-  assert.equal(alone(one('dadoExtra', { teste: 'ataqueCorpo' })), false);
-  assert.equal(alone(one('dadoExtra', { custo: { tipo: 'pd', valor: 2 } })), true);
-  assert.equal(alone(one('ganharRecurso', { recurso: 'impeto', gatilho: 'defender' })), false);
-  assert.equal(alone(one('ganharRecurso', { recurso: 'impeto', gatilho: 'acao' })), false);
-  assert.equal(alone(one('passoCena')), false);
-  assert.equal(alone(one('testeAcao', { resultado: 'concederDados' })), false);
-  assert.equal(alone(one('passoCondicional')), false);
-  assert.equal(alone(one('interceptar')), false);
-  assert.equal(alone(one('companheiro', { teste: 'defesa' })), false);
-  const withBar = [one('recurso', { chave: 'impeto' }), one('passoCena')];
-  assert.equal(effectSupported(withBar[1], withBar), true);
+  assert.equal(effectSupported(one('recurso', { chave: 'furia' })), true);
+  assert.equal(effectSupported(one('passoCena')), true);
+  assert.equal(effectSupported(one('acaoNota')), true);
+  assert.equal(effectSupported(one('testeAcao', { resultado: 'concederDados' })), true);
+  assert.equal(effectSupported(one('ganharRecurso', { recurso: 'furia', gatilho: 'acao' })), true);
+  assert.equal(effectSupported(one('ganharRecurso', { gatilho: 'defender' })), false);
+  assert.equal(effectSupported(one('ganharRecurso', { gatilho: 'inicioCombate' })), false);
+  assert.equal(effectSupported(one('dadoExtra', { custo: { tipo: 'pv', valor: 1 } })), false);
+  assert.equal(effectSupported(one('dadoExtra', { teste: 'ataqueCorpo' })), false);
+  assert.equal(effectSupported(one('dadoExtra', { custo: { tipo: 'pd', valor: 2 } })), true);
+  assert.equal(effectSupported(one('passoCondicional')), false);
+  assert.equal(effectSupported(one('interceptar')), false);
+  assert.equal(effectSupported(one('companheiro', { teste: 'defesa' })), false);
 });
 
 // ---------- Textos ----------

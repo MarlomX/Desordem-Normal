@@ -87,6 +87,11 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
           rodada: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 })
         })
       ),
+      // Reserva de dados bônus recebidos (ex.: plano de ação): o tamanho de cada dado. Esvazia na
+      // Nova cena; o gasto na janela pré-teste chega na v0.20.5
+      dadosBonus: new f.ArrayField(
+        new f.NumberField({ required: true, integer: true, min: 4, max: 12, initial: 6 })
+      ),
       // Campos antigos (até a v0.19.x), só lidos pela migração para `recursosHab`
       recursos: new f.SchemaField({
         impeto: new f.NumberField({ required: true, integer: true, min: 0, max: 5, initial: 0 }),
