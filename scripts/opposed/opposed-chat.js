@@ -20,7 +20,9 @@ import { postMessage, render, skillName, skillTestOptions, rollTest } from '../r
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { resolveWithValues } from '../rolls/abilities.js';
 import {
+  actorResources,
   firstEffect,
+  resourceChanges,
   roundUseUpdate,
   triggerUpdates,
   usableThisRound,
@@ -28,7 +30,7 @@ import {
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
 import { defenseCompanionDice, weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
-import { abilityNote } from '../rolls/abilities-chat.js';
+import { abilityNote, announceGains } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
 import {
   buildOpposedCardContext,
@@ -399,7 +401,9 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
     data.papel === 'ataque'
       ? weapon.name
       : data.papel === 'defesa'
-        ? t(dodgeEffect ? 'DESORDEM.Oposto.Esquiva' : 'DESORDEM.Oposto.Defender')
+        ? dodgeEffect
+          ? dodgeEffect.itemName
+          : t('DESORDEM.Oposto.Defender')
         : `${test.attrLabel} + ${test.skillLabel}`;
   // Marca o uso da esquiva nesta rodada antes de rolar (um segundo clique já é recusado)
   if (dodgeEffect) {
@@ -423,13 +427,20 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
   // Companheiro animal: o primeiro dado extra em 1 fere o animal (como no ataque comum)
   if (companion.length && result?.dice?.[2]?.source === 'extra' && result.dice[2].value === 1) {
     await actor.update({ 'system.cena.animalFerido': true });
-    await abilityNote(actor, t('DESORDEM.Habilidade.AnimalFerido'));
+    await abilityNote(actor, {
+      entry: firstEffect(actor, 'companheiro'),
+      text: t('DESORDEM.Habilidade.AnimalFerido'),
+    });
   }
   // Gastou a ação para se defender (Defender-se com o d6; a esquiva livre não conta): ganhos de
   // «ao se defender» (ex.: um marcador de análise)
   if (result && allowDefense && options.active?.includes('defesa')) {
+    const before = actorResources(actor).values;
     const gains = triggerUpdates(actor, 'defender');
-    if (Object.keys(gains).length) await actor.update(gains);
+    if (Object.keys(gains).length) {
+      await actor.update(gains);
+      await announceGains(actor, before, resourceChanges(gains), 'defender');
+    }
   }
 }
 
@@ -634,8 +645,12 @@ async function saveCard(card, state) {
   if (loser && !next.impetoAplicado) {
     const actor = await foundry.utils.fromUuid(next[loser].actorUuid);
     // Ganhos de «ao perder um oposto» (efeitos `ganharRecurso`; ex.: enche o ímpeto)
+    const before = actor ? actorResources(actor).values : {};
     const updates = actor ? triggerUpdates(actor, 'perdeOposto') : {};
-    if (Object.keys(updates).length) await actor.update(updates);
+    if (Object.keys(updates).length) {
+      await actor.update(updates);
+      await announceGains(actor, before, resourceChanges(updates), 'perdeOposto');
+    }
     next = { ...next, impetoAplicado: true };
   }
   await card.update({ content: await renderCard(next), [`flags.${SYSTEM_ID}.oposto`]: next });
@@ -679,6 +694,8 @@ async function registerAnswer(test) {
     arma: weaponOf(actor, flag.armaId),
     testId: test.id,
     esquiva,
+    // Nome da habilidade de esquiva, mostrado no lugar de «Esquiva»
+    esquivaNome: esquiva ? dodge.itemName : '',
   });
   if (next) await saveCard(card, next);
 }

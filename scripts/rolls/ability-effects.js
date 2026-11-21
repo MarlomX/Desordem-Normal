@@ -545,6 +545,27 @@ export function conditionalStepMods(entries, { pv, pvMax, pd, pdMax }) {
 }
 
 /**
+ * Efeitos `passoCondicional` cuja condição mudou entre dois estados (para avisar no chat que a
+ * habilidade ativou ou desativou).
+ * @param {object[]} entries Efeitos do ator.
+ * @param {{pv: number, pvMax: number, pd: number, pdMax: number}} before
+ * @param {{pv: number, pvMax: number, pd: number, pdMax: number}} after
+ * @returns {{entry: object, active: boolean}[]} `active`: a condição passou a valer.
+ */
+export function conditionFlips(entries, before, after) {
+  const holds = (state, condicao) =>
+    condicao === 'pvMetade' ? halfOrLess(state.pv, state.pvMax) : halfOrLess(state.pd, state.pdMax);
+  return effectsOfType(entries, 'passoCondicional')
+    .map((entry) => ({
+      entry,
+      was: holds(before, entry.params.condicao),
+      now: holds(after, entry.params.condicao),
+    }))
+    .filter(({ was, now }) => was !== now)
+    .map(({ entry, now }) => ({ entry, active: now }));
+}
+
+/**
  * Os `count` maiores dados da reserva de dados bônus (os que a janela usa primeiro).
  * @param {number[]} reserve `system.dadosBonus`.
  */

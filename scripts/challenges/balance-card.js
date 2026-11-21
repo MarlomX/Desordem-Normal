@@ -173,7 +173,11 @@ async function requestAnalysis(message, actor) {
   return request(message, {
     op: 'analise',
     values: applied.values,
-    note: t('DESORDEM.Habilidade.AnaliseNota', { nome: actor.name, pontos: applied.cost }),
+    note: t('DESORDEM.Habilidade.AnaliseNota', {
+      nome: actor.name,
+      habilidade: firstEffect(actor, 'ajusteDados')?.itemName ?? '',
+      pontos: applied.cost,
+    }),
   });
 }
 
@@ -209,6 +213,7 @@ async function requestReroll(message, speaker) {
     value: roll.total,
     note: t('DESORDEM.Habilidade.ProntidaoNota', {
       nome: actor.name,
+      habilidade: entry.itemName,
       dado: BALANCE_SIDES,
       de: flag.base[index],
       para: roll.total,

@@ -110,7 +110,9 @@
         "CustoRecurso": "{n} de {nome}",
         "Reserva": "Dados bônus",
         "ReservaTexto": "Usar da reserva ({dados}):"
-      }
+      },
+      "Usou": "Usou",
+      "UsouReserva": "Dados bônus ({dados})"
     },
     "Ficha": {
       "Personagem": "Ficha de Personagem",
@@ -674,15 +676,15 @@
       "AnaliseTitulo": "Usar análise",
       "AnaliseDica": "Cada marcador muda um dado em 1 ponto (mínimo 1, máximo do dado). Marcadores disponíveis: {pontos}. Escreva o novo valor de cada dado.",
       "AnaliseInvalida": "Valores inválidos ou marcadores insuficientes.",
-      "AnaliseNota": "{nome} usa {pontos} marcador(es) de análise para ajustar os dados.",
+      "AnaliseNota": "{nome} usa {habilidade}: {pontos} marcador(es) para ajustar os dados.",
       "AnaliseBotao": "Usar análise ({pontos})",
       "ProntidaoJaUsada": "Esta habilidade já foi usada neste teste.",
       "ProntidaoSemPD": "PD insuficientes para repetir o dado.",
       "ProntidaoTitulo": "Repetir um dado",
       "ProntidaoEscolha": "Dado a rolar de novo:",
-      "ProntidaoNota": "{nome} gasta PD para rolar de novo o d{dado}: {de} → {para}.",
+      "ProntidaoNota": "{nome} usa {habilidade}: rola de novo o d{dado}: {de} → {para}.",
       "ProntidaoBotao": "{nome} ({custo} PD)",
-      "AnimalFerido": "O companheiro se feriu e não ajuda mais nesta cena.",
+      "AnimalFerido": "se feriu e não ajuda mais nesta cena.",
       "Impeto": "Ímpeto",
       "ImpetoDado": "+d4 no próximo teste (1 espaço)",
       "ImpetoPasso": "Subir atributo (3)",
@@ -691,11 +693,12 @@
       "Analisar": "Analisar (+2)",
       "Esquivar": "Esquivar",
       "Curar": "Curar aliado",
-      "AnimalFeridoMarca": "Animal ferido",
+      "AnimalFeridoMarca": "Companheiro ferido",
       "Sorrateiro": "+d8 no próximo teste de Crime ou Furtividade (3 PD)",
       "ProntidaoRodada": "Esta habilidade já foi usada nesta rodada de combate.",
       "ProntidaoQuem": "Personagem:",
-      "ProntidaoIndisponivel": "Nenhum personagem seu pode usar esta habilidade agora (já usada nesta rodada ou sem PD)."
+      "ProntidaoIndisponivel": "Nenhum personagem seu pode usar esta habilidade agora (já usada nesta rodada ou sem PD).",
+      "ProntidaoRolou": "rola de novo o d{dado}: {de} → {para}."
     },
     "Perseguicao": {
       "Titulo": "Perseguição",
@@ -1502,12 +1505,15 @@
         "ajusteDados": "Ajustar dados: {nome} ({pontos})"
       },
       "Nota": {
-        "passoCena": "usa {nome}: {atributo} sobe {passos} passo(s) até o fim da cena.",
+        "passoCena": "{atributo} sobe {passos} passo(s) até o fim da cena.",
         "passoDescricao": "O dado do atributo sobe {passos} passo(s) até o fim da cena.",
-        "acaoNota": "usa {nome}.",
-        "ganho": "usa {nome} e ganha {valor} de {recurso}.",
-        "interceptar": "usa {nome} e assume o ataque contra {aliado}.",
-        "interceptarSemAlvo": "usa {nome} e assume um ataque contra um aliado."
+        "acaoNota": "é usada.",
+        "ganho": "+{valor} de {recurso}.",
+        "interceptar": "assume o ataque contra {aliado}.",
+        "interceptarSemAlvo": "assume um ataque contra um aliado.",
+        "ganhoGatilho": "+{n} {quando}.",
+        "condicaoAtiva": "ativou: +{passos} passo(s) em todos os testes ({condicao}).",
+        "condicaoInativa": "desativou: {condicao} deixou de valer."
       },
       "Aviso": {
         "SemCusto": "Recursos insuficientes para usar {nome}.",

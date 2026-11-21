@@ -87,6 +87,7 @@ function cleanSide(side = {}) {
     arma: cleanWeapon(side.arma),
     testId: text(side.testId, 64),
     esquiva: papelOf(side) === 'defesa' && Boolean(side.esquiva),
+    esquivaNome: papelOf(side) === 'defesa' && side.esquiva ? text(side.esquivaNome, 80) : '',
   };
 }
 
@@ -374,6 +375,7 @@ export function buildOpposedCardContext(state) {
       ataque: papelOf(data) === 'ataque',
       defesa: papelOf(data) === 'defesa',
       esquiva: Boolean(data.esquiva),
+      esquivaNome: data.esquivaNome ?? '',
       armaNome: data.arma?.nome ?? '',
       skillLabel: data.skillLabel,
       rolou: Boolean(data.testId),

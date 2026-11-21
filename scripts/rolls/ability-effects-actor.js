@@ -143,6 +143,22 @@ export function triggerUpdates(actor, trigger, itemId = null, values = null) {
   return resourceUpdates(triggerChanges(entries, start, trigger, itemId));
 }
 
+/**
+ * Recursos que uma gravação muda (`{'system.recursosHab.impeto': 3}` → `{impeto: 3}`).
+ * @param {Object<string, *>} updates
+ */
+export function resourceChanges(updates) {
+  const prefix = 'system.recursosHab.';
+  return Object.fromEntries(
+    Object.entries(updates)
+      .filter(([path]) => path.startsWith(prefix))
+      .map(([path, value]) => [path.slice(prefix.length), value]),
+  );
+}
+
+/** Nome do hook que avisa os ganhos automáticos de recurso (ouvido em abilities-chat.js). */
+export const GAINS_HOOK = 'desordem-normal.ganhos';
+
 /** Combate e rodada atuais (`null` fora de combate ou antes de o combate começar). */
 export function currentRound() {
   const combat = game.combat;

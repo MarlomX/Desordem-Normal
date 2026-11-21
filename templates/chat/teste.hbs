@@ -10,6 +10,10 @@
   </p>
   {{/if}}
 
+  {{#if usosText}}
+  <p class="desordem-teste__ajustes"><span><strong>{{localize "DESORDEM.Teste.Usou"}}:</strong> {{usosText}}</span></p>
+  {{/if}}
+
   {{#if adjustments.length}}
   <p class="desordem-teste__ajustes">
     {{#each adjustments}}<span class="desordem-teste__passo">{{name}}: {{dadoFace from from "mini"}} → {{dadoFace to to "mini" direction}}</span>{{/each}}

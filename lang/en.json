@@ -110,7 +110,9 @@
         "CustoRecurso": "{n} {nome}",
         "Reserva": "Bonus dice",
         "ReservaTexto": "Use from the pool ({dados}):"
-      }
+      },
+      "Usou": "Used",
+      "UsouReserva": "Bonus dice ({dados})"
     },
     "Ficha": {
       "Personagem": "Character Sheet",
@@ -674,15 +676,15 @@
       "AnaliseTitulo": "Use analysis",
       "AnaliseDica": "Each marker changes a die by 1 point (minimum 1, up to the die's maximum). Markers available: {pontos}. Type the new value of each die.",
       "AnaliseInvalida": "Invalid values or not enough markers.",
-      "AnaliseNota": "{nome} uses {pontos} analysis marker(s) to adjust the dice.",
+      "AnaliseNota": "{nome} uses {habilidade}: {pontos} marker(s) to adjust the dice.",
       "AnaliseBotao": "Use analysis ({pontos})",
       "ProntidaoJaUsada": "This ability has already been used on this test.",
       "ProntidaoSemPD": "Not enough DP to reroll the die.",
       "ProntidaoTitulo": "Reroll a die",
       "ProntidaoEscolha": "Die to roll again:",
-      "ProntidaoNota": "{nome} spends DP to roll the d{dado} again: {de} → {para}.",
+      "ProntidaoNota": "{nome} uses {habilidade}: rerolls the d{dado}: {de} → {para}.",
       "ProntidaoBotao": "{nome} ({custo} DP)",
-      "AnimalFerido": "The companion got hurt and no longer helps this scene.",
+      "AnimalFerido": "got hurt and won't help for the rest of the scene.",
       "Impeto": "Drive",
       "ImpetoDado": "+d4 on the next test (1 space)",
       "ImpetoPasso": "Raise attribute (3)",
@@ -691,11 +693,12 @@
       "Analisar": "Analyze (+2)",
       "Esquivar": "Dodge",
       "Curar": "Heal ally",
-      "AnimalFeridoMarca": "Animal hurt",
+      "AnimalFeridoMarca": "Companion hurt",
       "Sorrateiro": "+d8 on the next Crime or Stealth test (3 DP)",
       "ProntidaoRodada": "This ability was already used this combat round.",
       "ProntidaoQuem": "Character:",
-      "ProntidaoIndisponivel": "None of your characters can use this ability now (already used this round or not enough DP)."
+      "ProntidaoIndisponivel": "None of your characters can use this ability now (already used this round or not enough DP).",
+      "ProntidaoRolou": "rerolls the d{dado}: {de} → {para}."
     },
     "Perseguicao": {
       "Titulo": "Chase",
@@ -1502,12 +1505,15 @@
         "ajusteDados": "Adjust dice: {nome} ({pontos})"
       },
       "Nota": {
-        "passoCena": "uses {nome}: {atributo} goes up {passos} step(s) until the end of the scene.",
+        "passoCena": "{atributo} goes up {passos} step(s) until the end of the scene.",
         "passoDescricao": "The attribute die goes up {passos} step(s) until the end of the scene.",
-        "acaoNota": "uses {nome}.",
-        "ganho": "uses {nome} and gains {valor} {recurso}.",
-        "interceptar": "uses {nome} and takes the attack against {aliado}.",
-        "interceptarSemAlvo": "uses {nome} and takes an attack against an ally."
+        "acaoNota": "is used.",
+        "ganho": "+{valor} {recurso}.",
+        "interceptar": "takes the attack against {aliado}.",
+        "interceptarSemAlvo": "takes an attack against an ally.",
+        "ganhoGatilho": "+{n} {quando}.",
+        "condicaoAtiva": "activated: +{passos} step(s) on every test ({condicao}).",
+        "condicaoInativa": "deactivated: {condicao} no longer applies."
       },
       "Aviso": {
         "SemCusto": "Not enough resources to use {nome}.",

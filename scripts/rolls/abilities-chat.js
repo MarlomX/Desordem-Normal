@@ -3,12 +3,19 @@
  * o próximo teste e reinício de cena. Os botões de análise e de repetir dado aparecem nos cartões
  * de teste, só para quem pode usá-los.
  */
-import { SYSTEM_ID, ATRIBUTOS } from '../config.js';
+import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES } from '../config.js';
+import { describeEffect } from './ability-effects-editor.js';
 import { render, postMessage, rebuildTest, rollTest, skillTestOptions } from './chat.js';
 import { startGroupDice } from './bonus-dice-chat.js';
-import { adjustLabel } from '../sheets/ability-controls.js';
+import { adjustLabel, resourceName } from '../sheets/ability-controls.js';
 import { applyAnalysis, rerollCandidates, replaceDie, sceneReset } from './abilities.js';
-import { canPay, payUpdates, sceneResources } from './ability-effects.js';
+import {
+  canPay,
+  conditionFlips,
+  effectsOfType,
+  payUpdates,
+  sceneResources,
+} from './ability-effects.js';
 import {
   actorEffects,
   actorResources,
@@ -19,6 +26,8 @@ import {
   resourceUpdates,
   roundUseUpdate,
   rerollActors,
+  resourceChanges,
+  GAINS_HOOK,
   triggerUpdates,
   usableThisRound,
   walletOf,
@@ -33,13 +42,42 @@ const SOCKET = `system.${SYSTEM_ID}`;
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 
-/** Aviso curto de uma habilidade no chat. */
-export async function abilityNote(actor, text, detail = '', rolls = []) {
+/**
+ * Aviso de habilidade no chat. O personagem já aparece no cabeçalho da mensagem; o título do
+ * cartão é o nome da habilidade (sem ele, o nome do personagem), e abaixo vem o resumo do efeito
+ * usado, se houver.
+ * @param {Actor} actor
+ * @param {Object} note
+ * @param {string} [note.title] Nome da habilidade.
+ * @param {string} note.text O que aconteceu («rola de novo o d6: 3 → 1.»).
+ * @param {string} [note.detail] Linha extra (ex.: «3/4»).
+ * @param {object} [note.entry] Efeito usado: o cartão mostra o resumo dele.
+ * @param {Roll[]} [note.rolls]
+ */
+export async function abilityNote(
+  actor,
+  { title = '', text, detail = '', entry = null, rolls = [] },
+) {
+  const effect = entry ? describeEffect(entry, { t, skill: skillName }) : '';
   return postMessage({
     actor,
-    content: await render(TEMPLATE_HABILIDADE, { name: actor.name, text, detail }),
+    content: await render(TEMPLATE_HABILIDADE, {
+      title: title || entry?.itemName || actor.name,
+      text,
+      detail,
+      effect,
+    }),
     rolls,
   });
+}
+
+/** Nome de uma perícia ou de uma área de Aptidão (resumos dos efeitos). */
+export function skillName(key) {
+  if (PERICIAS[key]) return t(`DESORDEM.Pericias.${key}`);
+  if (APTIDOES.includes(key)) {
+    return `${t('DESORDEM.Ficha.Aptidoes')}: ${t(`DESORDEM.Aptidoes.${key}`)}`;
+  }
+  return key;
 }
 
 /** Diálogo simples com um campo; devolve o valor escolhido ou null se for cancelado. */
@@ -145,12 +183,12 @@ export async function impetoStep(actor, itemId = null, effectId = null) {
     'system.efeitos': effects,
   });
   const atributo = t(`DESORDEM.Atributos.${attribute}`);
-  return abilityNote(
-    actor,
-    legacy
+  return abilityNote(actor, {
+    entry,
+    text: legacy
       ? t('DESORDEM.Habilidade.ImpetoPassoTexto', { atributo })
-      : t('DESORDEM.Efeito.Nota.passoCena', { nome: entry.itemName, atributo, passos }),
-  );
+      : t('DESORDEM.Efeito.Nota.passoCena', { atributo, passos }),
+  });
 }
 
 /**
@@ -167,15 +205,15 @@ export async function impetoAction(actor, itemId = null, effectId = null) {
   }
   const updates = payUpdates(entry.params.custo, wallet);
   if (Object.keys(updates).length) await actor.update(updates);
-  if (entry.params.texto) return abilityNote(actor, entry.params.texto);
-  // Sem texto próprio: o aviso da ação extra do ímpeto, ou «usa <habilidade>»
+  if (entry.params.texto) return abilityNote(actor, { entry, text: entry.params.texto });
+  // Sem texto próprio: o aviso da ação extra do ímpeto, ou «é usada»
   return legacy
-    ? abilityNote(
-        actor,
-        t('DESORDEM.Habilidade.ImpetoAcaoTexto'),
-        t('DESORDEM.Habilidade.ImpetoAcaoDetalhe'),
-      )
-    : abilityNote(actor, t('DESORDEM.Efeito.Nota.acaoNota', { nome: entry.itemName }));
+    ? abilityNote(actor, {
+        entry,
+        text: t('DESORDEM.Habilidade.ImpetoAcaoTexto'),
+        detail: t('DESORDEM.Habilidade.ImpetoAcaoDetalhe'),
+      })
+    : abilityNote(actor, { entry, text: t('DESORDEM.Efeito.Nota.acaoNota') });
 }
 
 /**
@@ -193,12 +231,12 @@ async function interceptAttack(actor, entry) {
   if (ally?.id === actor.id) return warn('DESORDEM.Efeito.Aviso.AliadoSiMesmo');
   const updates = { ...payUpdates(entry.params.custo, wallet), ...roundUseUpdate(entry) };
   if (Object.keys(updates).length) await actor.update(updates);
-  return abilityNote(
-    actor,
-    ally
-      ? t('DESORDEM.Efeito.Nota.interceptar', { nome: entry.itemName, aliado: ally.name })
-      : t('DESORDEM.Efeito.Nota.interceptarSemAlvo', { nome: entry.itemName }),
-  );
+  return abilityNote(actor, {
+    entry,
+    text: ally
+      ? t('DESORDEM.Efeito.Nota.interceptar', { aliado: ally.name })
+      : t('DESORDEM.Efeito.Nota.interceptarSemAlvo'),
+  });
 }
 
 // ---------- Análise ----------
@@ -222,17 +260,17 @@ export async function gainAnalysisMarkers(actor, itemId = null, effectId = null)
   const after = Math.min(defs[chave].maximo, values[chave] + gain.params.quantidade);
   await actor.update(resourceUpdates({ [chave]: after }));
   const valor = after - values[chave];
-  return abilityNote(
-    actor,
-    gain.id === LEGACY.ganho
-      ? t('DESORDEM.Habilidade.AnaliseGanha', { valor })
-      : t('DESORDEM.Efeito.Nota.ganho', {
-          nome: gain.itemName,
-          valor,
-          recurso: defs[chave].nome,
-        }),
-    `${after}/${defs[chave].maximo}`,
-  );
+  return abilityNote(actor, {
+    entry: gain,
+    text:
+      gain.id === LEGACY.ganho
+        ? t('DESORDEM.Habilidade.AnaliseGanha', { valor })
+        : t('DESORDEM.Efeito.Nota.ganho', {
+            valor,
+            recurso: resourceName(defs[chave], t),
+          }),
+    detail: `${after}/${defs[chave].maximo}`,
+  });
 }
 
 // ---------- Esquiva ----------
@@ -242,14 +280,17 @@ export async function gainAnalysisMarkers(actor, itemId = null, effectId = null)
  * @param {Actor} actor
  * @param {Object} [options] Escolhas da janela pré-teste.
  * @param {string} [skill] Perícia do efeito (sem ela, a do primeiro efeito de defesa livre).
+ * @param {string} [name] Nome da habilidade (título da rolagem; sem ele, «Esquiva»).
  */
-export function rollDodge(actor, options = {}, skill = null) {
-  const key = skill || firstEffect(actor, 'defesaLivre')?.params.pericia || 'acrobacia';
+export function rollDodge(actor, options = {}, skill = null, name = '') {
+  const dodge = firstEffect(actor, 'defesaLivre');
+  const key = skill || dodge?.params.pericia || 'acrobacia';
+  const title = name || dodge?.itemName || t('DESORDEM.Habilidade.EsquivaTitulo');
   return rollTest({
     ...skillTestOptions(actor, key, undefined, {
       ...options,
       showDt: false,
-      label: `${actor.name}: ${t('DESORDEM.Habilidade.EsquivaTitulo')}`,
+      label: `${actor.name}: ${title}`,
     }),
     actor,
   });
@@ -318,14 +359,85 @@ export async function combatStartGains(combat) {
     const actor = combatant.actor;
     if (!actor || seen.has(actor.uuid)) continue;
     seen.add(actor.uuid);
+    const before = actorResources(actor).values;
     const updates = triggerUpdates(actor, 'inicioCombate');
-    if (Object.keys(updates).length) await actor.update(updates);
+    if (!Object.keys(updates).length) continue;
+    await actor.update(updates);
+    await announceGains(actor, before, resourceChanges(updates), 'inicioCombate');
   }
 }
 
-/** Registra o hook do início do combate (chamar uma vez, no `init`). */
+/**
+ * Avisa no chat cada ganho automático de recurso: «Ímpeto +1 ao falhar um teste com DT (3/5)».
+ * @param {Actor} actor
+ * @param {Object<string, number>} before Valores antes do ganho.
+ * @param {Object<string, number>} changes Valores novos (só os que mudaram).
+ * @param {string} trigger Gatilho (falha, perdeOposto, defender, inicioCena, inicioCombate).
+ */
+export async function announceGains(actor, before, changes, trigger) {
+  const { defs } = actorResources(actor);
+  for (const [chave, value] of Object.entries(changes)) {
+    const gained = value - (before[chave] ?? 0);
+    if (!defs[chave] || gained <= 0) continue;
+    await abilityNote(actor, {
+      title: resourceName(defs[chave], t),
+      text: t('DESORDEM.Efeito.Nota.ganhoGatilho', {
+        n: gained,
+        quando: t(`DESORDEM.Efeito.Resumo.Quando.${trigger}`),
+      }),
+      detail: `${value}/${defs[chave].maximo}`,
+    });
+  }
+}
+
+/** PV e PD atuais e máximos de um ator (condições dos passos condicionais). */
+const conditionState = (actor) => ({
+  pv: actor.system.pv?.value ?? 0,
+  pvMax: actor.system.pv?.max ?? 0,
+  pd: actor.system.pd?.value ?? 0,
+  pdMax: actor.system.pd?.max ?? 0,
+});
+
+/**
+ * Aviso do passo condicional: quando o PV (ou o PD) cruza a metade, um cartão diz que a habilidade
+ * ativou ou desativou. O estado de antes é guardado no `preUpdateActor`, nas opções da gravação;
+ * só quem fez a gravação avisa (para não repetir em cada navegador).
+ */
+function registerConditionalStepNotes() {
+  const key = `${SYSTEM_ID}CondicaoAntes`;
+  Hooks.on('preUpdateActor', (actor, changes, options) => {
+    if (effectsOfType(actorEffects(actor), 'passoCondicional').length) {
+      options[key] = conditionState(actor);
+    }
+  });
+  Hooks.on('updateActor', async (actor, changes, options, userId) => {
+    if (userId !== game.user.id || !options[key]) return;
+    for (const { entry, active } of conditionFlips(
+      actorEffects(actor),
+      options[key],
+      conditionState(actor),
+    )) {
+      const condicao = t(`DESORDEM.Efeito.Condicoes.${entry.params.condicao}`);
+      await abilityNote(actor, {
+        entry,
+        text: active
+          ? t('DESORDEM.Efeito.Nota.condicaoAtiva', { passos: entry.params.passos, condicao })
+          : t('DESORDEM.Efeito.Nota.condicaoInativa', { condicao }),
+      });
+    }
+  });
+}
+
+/**
+ * Registra os hooks das habilidades (chamar uma vez, no `init`): ganhos do início do combate,
+ * avisos de ganhos vindos de chat.js e o aviso do passo condicional.
+ */
 export function registerAbilityHooks() {
   Hooks.on('combatStart', (combat) => combatStartGains(combat));
+  Hooks.on(GAINS_HOOK, (actor, before, changes, trigger) =>
+    announceGains(actor, before, changes, trigger),
+  );
+  registerConditionalStepNotes();
 }
 
 // ---------- Reinício de cena ----------
@@ -342,15 +454,23 @@ export async function endScene(actors) {
   for (const actor of list) {
     // Recursos das habilidades: esvaziam (se o efeito mandar) e recebem os ganhos de início de cena
     const entries = actorEffects(actor);
+    const { values } = actorResources(actor, entries);
+    const recursos = sceneResources(entries, values);
     await actor.update(
       sceneReset({
         pv: actor.system.pv.value,
         contusao: actor.system.estado.contusao,
         estupor: actor.system.estado.estupor,
         efeitos: actor.toObject().system.efeitos,
-        recursos: sceneResources(entries, actorResources(actor, entries).values),
+        recursos,
       }),
     );
+    // Aviso dos ganhos de início de cena (comparados com a barra já esvaziada)
+    const emptied = sceneResources(
+      entries.filter((e) => !(e.tipo === 'ganharRecurso' && e.params.gatilho === 'inicioCena')),
+      values,
+    );
+    await announceGains(actor, emptied, recursos, 'inicioCena');
   }
   ui.notifications.info(t('DESORDEM.Habilidade.NovaCenaFeita', { n: list.length }));
 }
@@ -460,7 +580,13 @@ async function useAnalysis(message, actor) {
   if (applied.cost === 0) return;
   await actor.update(resourceUpdates({ [resource.chave]: points - applied.cost }));
   await requestRewrite(message, [...applied.values, ...info.values.slice(count)], {
-    notes: [t('DESORDEM.Habilidade.AnaliseNota', { nome: actor.name, pontos: applied.cost })],
+    notes: [
+      t('DESORDEM.Habilidade.AnaliseNota', {
+        nome: actor.name,
+        habilidade: firstEffect(actor, 'ajusteDados')?.itemName ?? '',
+        pontos: applied.cost,
+      }),
+    ],
   });
 }
 
@@ -530,13 +656,18 @@ async function useReroll(message, speaker) {
   const roll = await new Roll(`1d${info.sides[index]}`).evaluate();
   // Paga o custo e marca o uso nesta rodada (fora de combate, nada é marcado)
   await actor.update({ ...payUpdates(entry.params.custo, wallet), ...roundUseUpdate(entry) });
+  const change = { dado: info.sides[index], de: info.values[index], para: roll.total };
+  // No chat: «Prontidão rola de novo...»; no cartão do teste: quem usou e qual habilidade
+  await abilityNote(actor, {
+    entry,
+    text: t('DESORDEM.Habilidade.ProntidaoRolou', change),
+    rolls: [roll],
+  });
   const text = t('DESORDEM.Habilidade.ProntidaoNota', {
     nome: actor.name,
-    dado: info.sides[index],
-    de: info.values[index],
-    para: roll.total,
+    habilidade: entry.itemName,
+    ...change,
   });
-  await abilityNote(actor, text, '', [roll]);
   await requestRewrite(message, replaceDie(info.values, index, roll.total), {
     used: { prontidao: true },
     notes: [text],

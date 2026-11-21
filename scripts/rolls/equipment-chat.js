@@ -62,7 +62,10 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
   // O dado do companheiro é o primeiro dado extra do teste
   if (companion && result.dice[2]?.source === 'extra' && result.dice[2].value === 1) {
     await actor.update({ 'system.cena.animalFerido': true });
-    await abilityNote(actor, t('DESORDEM.Habilidade.AnimalFerido'));
+    await abilityNote(actor, {
+      entry: firstEffect(actor, 'companheiro'),
+      text: t('DESORDEM.Habilidade.AnimalFerido'),
+    });
   }
   if (!result.success) return { result, amount: null };
   const amount = computeDamage(result, system.bonusDano, system.baseDano);

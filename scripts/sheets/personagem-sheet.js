@@ -812,7 +812,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         async (options) => {
           const used = roundUseUpdate(entry);
           if (Object.keys(used).length) await this.document.update(used);
-          return rollDodge(this.document, options, skillKey);
+          return rollDodge(this.document, options, skillKey, entry.itemName);
         },
       );
       return;

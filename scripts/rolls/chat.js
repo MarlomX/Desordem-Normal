@@ -25,11 +25,17 @@ import {
   spendBonusDice
 } from './ability-effects.js';
 import {
+  GAINS_HOOK,
   actorEffects,
   actorResources,
+  resourceChanges,
   resourceUpdates,
   triggerUpdates,
 } from './ability-effects-actor.js';
+import { resourceName, usedSummary } from '../sheets/ability-controls.js';
+
+/** Tradução com ou sem dados (texto da linha «Usou»). */
+const localize = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 import { resolveFearOptions } from './fear.js';
 import { createPending } from './pending-table.js';
 import { isThreat, testResources } from './threat.js';
@@ -130,6 +136,7 @@ export async function executeTest({
   attrLabel,
   skillLabel,
   showDt = true,
+  usos = []
 }) {
   const helped = applyHelpers({ stepMods, extraDice }, helpers);
 
@@ -153,7 +160,7 @@ export async function executeTest({
     rng: sequenceRng(rolls.map((roll) => roll.total)),
   });
 
-  const display = { label, attrLabel, skillLabel, showDt, helpers: helped.notes };
+  const display = { label, attrLabel, skillLabel, showDt, helpers: helped.notes, usos };
   const context = buildChatContext(result, display);
   return {
     result,
@@ -232,6 +239,11 @@ async function settleAbilities(actor, options, result) {
     updates['system.dadosBonus'] = spendBonusDice(actor.system.dadosBonus, options.bonusDiceSpent);
   }
   if (Object.keys(updates).length) await actor.update(updates);
+  // Aviso no chat dos ganhos de «ao falhar» (comparados com os valores já pagos)
+  const gains = impetoFillsOnFailure(result, options.showDt)
+    ? resourceChanges(triggerUpdates(actor, 'falha', null, paid))
+    : {};
+  if (Object.keys(gains).length) Hooks.callAll(GAINS_HOOK, actor, paid, gains, 'falha');
 }
 
 /**
@@ -391,6 +403,19 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   });
   // Dados da reserva de bônus escolhidos na janela (os maiores primeiro)
   const reserveDice = pickBonusDice(system.dadosBonus, useBonusDice);
+  // Linha «Usou» do cartão: habilidades marcadas, Defender-se, não letal e dados da reserva
+  const resourceDefsNow = actorResources(actor, entries).defs;
+  const usos = usedSummary(boosts.used, {
+    diceOptions: dialogDiceOptions(entries, {
+      skillKey,
+      testKind: allowDefense ? 'defesa' : testKind
+    }),
+    reserveDice,
+    resourceNames: Object.fromEntries(
+      Object.values(resourceDefsNow).map((def) => [def.chave, resourceName(def, localize)])
+    ),
+    t: localize
+  });
 
   return {
     ...rest,
@@ -398,6 +423,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     pvCost: boosts.pvCost,
     resourceCosts: boosts.resourceCosts,
     bonusDiceSpent: reserveDice,
+    usos,
     // Contusão (Físico -1 passo), passos temporários e efeitos da ficha e penalidades fixas de lesões e traumas
     stepMods: [
       ...(rest.stepMods ?? []),
@@ -502,8 +528,18 @@ export async function rollOpposed(a, b) {
   // Quem perde a disputa dispara os ganhos de «ao perder um oposto» (ex.: enche o ímpeto)
   const loser = opposedLoser(outcome);
   const loserActor = loser === 'a' ? a.actor : loser === 'b' ? b.actor : null;
+  const loserBefore = loserActor ? actorResources(loserActor).values : {};
   const loserUpdates = loserActor ? triggerUpdates(loserActor, 'perdeOposto') : {};
-  if (Object.keys(loserUpdates).length) await loserActor.update(loserUpdates);
+  if (Object.keys(loserUpdates).length) {
+    await loserActor.update(loserUpdates);
+    Hooks.callAll(
+      GAINS_HOOK,
+      loserActor,
+      loserBefore,
+      resourceChanges(loserUpdates),
+      'perdeOposto'
+    );
+  }
 
   const context = {
     ...buildOpposedContext(outcome),

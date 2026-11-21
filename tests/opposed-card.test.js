@@ -395,3 +395,22 @@ test('esquiva: registra o lado como esquiva, mesmo com outra perícia escolhida 
   // Cartões antigos (sem o campo) continuam sem esquiva
   assert.equal(buildOpposedCardContext(state).b.esquiva, false);
 });
+
+test('esquiva: o lado guarda o nome da habilidade (só na esquiva)', () => {
+  const arco = { id: 'w1', nome: 'Arco', bonusDano: 1, tipo: 'distancia', pericia: 'pontaria' };
+  const state = createOpposedState({
+    tipo: 'defesa',
+    a: { ...A, papel: 'ataque', skill: 'pontaria', arma: arco },
+    b: { ...B },
+  });
+  const dodge = registerSide(state, 'b', {
+    ...B,
+    skill: 'acrobacia',
+    testId: 'm2',
+    esquiva: true,
+    esquivaNome: 'Passo do Lobo',
+  });
+  assert.equal(buildOpposedCardContext(dodge).b.esquivaNome, 'Passo do Lobo');
+  const defend = registerSide(state, 'b', { ...B, skill: 'acrobacia', testId: 'm2', esquivaNome: 'X' });
+  assert.equal(defend.b.esquivaNome, '');
+});

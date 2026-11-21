@@ -247,3 +247,68 @@ test('gatilhos «ao se defender» e «início do combate» enchem o recurso do e
   assert.deepEqual(triggerChanges(entries, { analise: 1 }, 'inicioCombate'), { analise: 3 });
   assert.deepEqual(triggerChanges(entries, { analise: 4 }, 'defender'), {});
 });
+
+// ===== 0.20.8: avisos e linha «Usou» =====
+
+test('usedSummary: dados extras com custo, Defender-se, não letal e dados da reserva', async () => {
+  const { usedSummary } = await import('../scripts/sheets/ability-controls.js');
+  const { dialogDiceOptions } = await import('../scripts/rolls/ability-effects.js');
+  const entries = collectEffects([
+    ability('a', 'Sorrateiro', [], 'sorrateiro'),
+    ability('b', 'Fúria', [
+      {
+        id: 'f',
+        tipo: 'dadoExtra',
+        params: { dado: 6, custo: { tipo: 'recurso', valor: 2, recurso: 'furia' } },
+      },
+    ]),
+  ]);
+  const diceOptions = dialogDiceOptions(entries, { skillKey: 'furtividade' });
+  assert.deepEqual(
+    usedSummary(['sorrateiro', 'f', 'defesa'], {
+      diceOptions,
+      reserveDice: [8, 6, 6],
+      resourceNames: { furia: 'Fúria' },
+      t,
+    }),
+    [
+      'Sorrateiro (+d8 · 3 PD)',
+      'Fúria (+d6 · 2 de Fúria)',
+      t('DESORDEM.Teste.Pre.Hab.defesa', { die: 6 }),
+      'Dados bônus (1d8 + 2d6)',
+    ],
+  );
+  assert.deepEqual(usedSummary([], { diceOptions, t }), []);
+});
+
+test('conditionFlips: avisa quando a condição passa a valer e quando deixa de valer', async () => {
+  const { conditionFlips } = await import('../scripts/rolls/ability-effects.js');
+  const entries = collectEffects([
+    ability('a', 'Instinto', [
+      { id: 'i', tipo: 'passoCondicional', params: { condicao: 'pvMetade' } },
+    ]),
+  ]);
+  const at = (pv) => ({ pv, pvMax: 15, pd: 10, pdMax: 10 });
+  assert.deepEqual(
+    conditionFlips(entries, at(9), at(7)).map((f) => [f.entry.id, f.active]),
+    [['i', true]],
+  );
+  assert.deepEqual(
+    conditionFlips(entries, at(7), at(8)).map((f) => [f.entry.id, f.active]),
+    [['i', false]],
+  );
+  assert.deepEqual(conditionFlips(entries, at(7), at(3)), []);
+  assert.deepEqual(conditionFlips(entries, at(12), at(9)), []);
+});
+
+test('resourceChanges lê os recursos de uma gravação', async () => {
+  const { resourceChanges } = await import('../scripts/rolls/ability-effects-actor.js');
+  assert.deepEqual(
+    resourceChanges({
+      'system.recursosHab.impeto': 3,
+      'system.pd.value': 2,
+      'system.recursosHab.fe': 0,
+    }),
+    { impeto: 3, fe: 0 },
+  );
+});

@@ -141,3 +141,43 @@ export function abilityControls(item, stored, labels) {
     showCompanion: effects.some((effect) => effect.tipo === 'companheiro'),
   };
 }
+
+/**
+ * O que foi usado num teste, para a linha «Usou» do cartão: cada dado extra marcado (nome da
+ * habilidade, dado e custo), o dano não letal, o Defender-se e os dados da reserva de bônus.
+ * @param {string[]} used Chaves marcadas e aceitas (`activeBoosts(...).used`).
+ * @param {Object} context
+ * @param {object[]} context.diceOptions Dados extras do ator (`dialogDiceOptions`).
+ * @param {number[]} [context.reserveDice] Dados da reserva usados.
+ * @param {Object<string, string>} [context.resourceNames] Nome de cada recurso, pela chave.
+ * @param {Function} context.t
+ * @returns {string[]}
+ */
+export function usedSummary(used, { diceOptions, reserveDice = [], resourceNames = {}, t }) {
+  const costParts = (bag) => [
+    ...(bag.pd ? [t('DESORDEM.Efeito.Resumo.Custo.pd', { valor: bag.pd, recurso: '' })] : []),
+    ...(bag.pv ? [t('DESORDEM.Efeito.Resumo.Custo.pv', { valor: bag.pv, recurso: '' })] : []),
+    ...Object.entries(bag.recursos ?? {})
+      .filter(([, valor]) => valor)
+      .map(([key, valor]) =>
+        t('DESORDEM.Efeito.Resumo.Custo.recurso', { valor, recurso: resourceNames[key] ?? key }),
+      ),
+  ];
+  const list = [];
+  for (const key of used) {
+    const option = diceOptions.find((o) => o.key === key);
+    if (option) {
+      const parts = [`+d${option.die}`, ...costParts(option.cost)];
+      list.push(`${option.itemName || key} (${parts.join(' · ')})`);
+    } else if (key === 'naoLetal' || key === 'defesa') {
+      list.push(t(`DESORDEM.Teste.Pre.Hab.${key}`, { die: 6 }));
+    }
+  }
+  if (reserveDice.length) {
+    const counts = new Map();
+    for (const die of reserveDice) counts.set(die, (counts.get(die) ?? 0) + 1);
+    const dados = [...counts.entries()].map(([die, n]) => `${n}d${die}`).join(' + ');
+    list.push(t('DESORDEM.Teste.UsouReserva', { dados }));
+  }
+  return list;
+}

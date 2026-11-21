@@ -25,10 +25,11 @@ function outcomeOf(result) {
  * @param {boolean} [labels.showDt=true] Falso em testes opostos: não há DT, então o cartão
  *   mostra apenas os críticos, sem "sucesso" ou "falha".
  * @param {{name: string, skillLabel: string, die: number}[]} [labels.helpers] Ajudas recebidas.
+ * @param {string[]} [labels.usos] Habilidades e dados usados (linha «Usou» do cartão).
  */
 export function buildChatContext(
   result,
-  { label, attrLabel, skillLabel, showDt = true, helpers = [] } = {},
+  { label, attrLabel, skillLabel, showDt = true, helpers = [], usos = [] } = {},
 ) {
   const outcome = outcomeOf(result);
   const neutral = !showDt && !result.criticalSuccess && !result.criticalFailure;
@@ -61,6 +62,7 @@ export function buildChatContext(
     showDt,
     helpers,
     hasHelpers: helpers.length > 0,
+    usosText: usos.join(', '),
     modifier: result.modifier ?? 0,
     modifierLabel: (result.modifier ?? 0) > 0 ? `+${result.modifier}` : `${result.modifier ?? 0}`,
     total: result.total,
