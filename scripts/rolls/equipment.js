@@ -316,6 +316,20 @@ export function itemUse(item) {
  * Alteração do item ao usá-lo (para `item.update`), ou null se não puder ser usado.
  * @returns {Object<string, number>|null}
  */
+/**
+ * O botão Usar de um item geral: aparece com limite de usos, com consumo ou com efeitos de uso
+ * (`hasEffects`: cura, passo no alvo, ação com aviso). Sem limite nem consumo, usar não gasta.
+ * @param {object} item `item.system`.
+ * @param {boolean} hasEffects O item tem efeitos de uso (`itemUsePlan(...).hasUse`).
+ * @returns {{show: boolean, canUse: boolean, changes: object|null}} `changes`: o gasto a gravar
+ *   (`null` = nada a gastar).
+ */
+export function itemUseState(item, hasEffects) {
+  const use = itemUse(item);
+  if (use.kind === null) return { show: hasEffects, canUse: hasEffects, changes: null };
+  return { show: true, canUse: use.canUse, changes: itemUseChanges(item) };
+}
+
 export function itemUseChanges(item) {
   const use = itemUse(item);
   if (!use.canUse) return null;

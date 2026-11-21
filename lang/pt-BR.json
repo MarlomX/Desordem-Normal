@@ -616,7 +616,8 @@
       "Botao": "Recuperar {valor} {recurso}",
       "Recupera": "recupera {valor} {recurso}",
       "JaAplicada": "Já aplicado por {nome}.",
-      "SemAlvo": "Selecione o token do seu personagem (ou tenha um personagem atribuído) para recuperar."
+      "SemAlvo": "Selecione o token do seu personagem (ou tenha um personagem atribuído) para recuperar.",
+      "QuemRecebe": "Quem recebe a recuperação?"
     },
     "Item": {
       "Ficha": "Ficha de item",
@@ -727,7 +728,14 @@
       "SemProficiencia": "Marcial sem proficiência: o mestre decide se o ataque vale (por exemplo, com desvantagem).",
       "ProficienciaMarcial": "Proficiência marcial",
       "ProficienciaHabilidade": "(já vem de uma habilidade)",
-      "SemProficienciaArmadura": "Marcial sem proficiência: não pode ser vestida nem empunhada."
+      "SemProficienciaArmadura": "Marcial sem proficiência: não pode ser vestida nem empunhada.",
+      "SemCusto": "{nome}: não há o suficiente para pagar o custo do uso.",
+      "FormulaInvalida": "Fórmula inválida ({formula}) em {nome}.",
+      "ReceberPasso": "Receber efeito",
+      "QuemRecebeEfeito": "Quem recebe o efeito?",
+      "PassoDescricao": "Efeito de item: {texto} até o fim da cena.",
+      "PassoRecebido": "{nome} recebeu {texto} ({item}) até o fim da cena.",
+      "PassoJaRecebido": "Efeito já recebido por {nome}."
     },
     "Habilidade": {
       "Confirmar": "Confirmar",
@@ -1480,7 +1488,10 @@
         "passoAtaque": "Passo no ataque",
         "criticoAmpliado": "Crítico ampliado",
         "reducaoEscudo": "Redução do escudo",
-        "armaduraExtra": "Armadura extra"
+        "armaduraExtra": "Armadura extra",
+        "curar": "Curar",
+        "passoAlvo": "Passo no alvo",
+        "ferramenta": "Ferramenta"
       },
       "Campos": {
         "chave": "Chave",
@@ -1511,7 +1522,10 @@
         "quando": "Quando vale",
         "minimo": "Valor mínimo do crítico",
         "somaMinima": "Soma mínima",
-        "pontos": "Pontos"
+        "pontos": "Pontos",
+        "formula": "Fórmula",
+        "recursoCura": "Recupera",
+        "ferramenta": "Ferramenta"
       },
       "Gatilhos": {
         "falha": "Ao falhar um teste com DT",
@@ -1588,7 +1602,10 @@
         "passoAtaque": "+{passos} passo no dado da perícia do ataque ({quando})",
         "criticoAmpliado": "Sucesso crítico com dois dados iguais de {minimo} ou mais",
         "reducaoEscudo": "Perdeu um ataque com soma {soma} ou mais: o dano cai pela rolagem baixa",
-        "armaduraExtra": "+{pontos} ponto na armadura vestida"
+        "armaduraExtra": "+{pontos} ponto na armadura vestida",
+        "curar": "Ao usar: rola {formula} e recupera {recurso}",
+        "passoAlvo": "Ao usar: {atributo} {passos} até o fim da cena, para quem receber",
+        "ferramenta": "Ferramenta: {ferramenta}"
       },
       "Botao": {
         "passoCena": "Passo na cena{custo}",
@@ -1626,13 +1643,20 @@
         "Vazio": "Nenhum efeito: o item serve só de descrição.",
         "arma": "Os efeitos da arma só valem nos ataques com ela.",
         "armadura": "Os efeitos da armadura valem enquanto ela está vestida. A penalidade nas perícias fica nos campos acima, não aqui.",
-        "item": "Os efeitos do item valem enquanto ele está na ficha (na mochila).",
+        "item": "Dado extra e ferramenta valem com o item na ficha (na mochila). Cura, passo no alvo e ação com aviso acontecem ao apertar Usar.",
         "escudo": "Os efeitos do escudo valem enquanto ele está empunhado. A redução do escudo aparece na janela Resolver dano dos testes opostos."
       },
       "QuandoAtaque": {
         "sempre": "Sempre",
         "primeiroCena": "No primeiro ataque da arma na cena",
         "naoAtacou": "Contra quem ainda não me atacou"
+      },
+      "RecursosCura": {
+        "pv": "PV",
+        "pd": "PD"
+      },
+      "Ferramentas": {
+        "medicina": "Medicina (primeiros socorros)"
       }
     },
     "Plano": {

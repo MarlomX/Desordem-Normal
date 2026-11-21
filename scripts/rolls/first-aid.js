@@ -7,6 +7,7 @@
  * recupera 1 PV e, se estava inconsciente, acorda.
  */
 import { sustainReduction, sustainStepMods } from './challenge.js';
+import { collectEffects, hasTool } from './ability-effects.js';
 
 /** DT básica e aumento por uso no mesmo paciente. */
 export const FIRST_AID_DT = 7;
@@ -46,12 +47,16 @@ const plain = (value) =>
     .toLowerCase();
 
 /**
- * O curandeiro tem uma maleta de medicamentos? Procura um item com «maleta» ou «kit médico» no
- * nome (sem acento nem caixa). Só serve para marcar a caixa da janela; quem decide é o jogador.
- * @param {{name: string}[]} items
+ * O curandeiro tem uma maleta de medicamentos? Primeiro procura um item geral com o efeito
+ * `ferramenta` «medicina»; sem ele, um item com «maleta» ou «kit médico» no nome (sem acento nem
+ * caixa), para os itens antigos. Só serve para marcar a caixa da janela; quem decide é o jogador.
+ * @param {{name: string, type?: string, system?: object}[]} items
  */
 export function hasMedicalKit(items) {
-  return (items ?? []).some((item) => {
+  const list = items ?? [];
+  const entries = collectEffects(list.filter((item) => item?.type === 'item'));
+  if (hasTool(entries, 'medicina')) return true;
+  return list.some((item) => {
     const name = plain(item?.name);
     return name.includes('maleta') || name.includes('kit medico') || name.includes('medical kit');
   });

@@ -116,7 +116,17 @@ export async function askDamage(
  * (personagem ou criatura da cena), depois qual. Sem nenhum candidato, avisa.
  * @returns {Promise<Actor|null>} O ator escolhido (numa criatura, o ator do token), ou null.
  */
-export async function pickDamageTarget() {
+export function pickDamageTarget() {
+  return pickReceiver({ title: t('DESORDEM.Dano.Janela.QuemRecebe') });
+}
+
+/**
+ * Janela «Quem recebe»: tipo (personagem ou criatura da cena) e depois qual. Usada no dano sem
+ * alvo e, pelo mestre, nos botões de cura e de efeito de item.
+ * @param {{title: string}} options Título da janela.
+ * @returns {Promise<Actor|null>}
+ */
+export async function pickReceiver({ title }) {
   const tokens = (globalThis.canvas?.tokens?.placeables ?? []).map((token) => ({
     name: token.name,
     hidden: Boolean(token.document?.hidden),
@@ -156,7 +166,7 @@ export async function pickDamageTarget() {
       )
       .join('')}`;
   const uuid = await foundry.applications.api.DialogV2.wait({
-    window: { title: t('DESORDEM.Dano.Janela.QuemRecebe') },
+    window: { title },
     content,
     modal: true,
     rejectClose: false,

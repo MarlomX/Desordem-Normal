@@ -1,0 +1,11 @@
+<div class="desordem-relacao-chat">
+  <p class="desordem-relacao-chat__titulo"><strong>{{actorName}}</strong> {{localize "DESORDEM.Equipamento.Usa" item=item}}</p>
+  {{#if heal}}
+  <p>{{heal.formula}}: {{heal.values}} = <strong>{{heal.total}} {{heal.resourceLabel}}</strong></p>
+  <button type="button" data-desordem-curar>{{localize "DESORDEM.Recuperacao.Botao" valor=heal.total recurso=heal.resourceLabel}}</button>
+  {{/if}}
+  {{#if step}}
+  <p>{{step.text}}</p>
+  <button type="button" data-desordem-receber-passo>{{localize "DESORDEM.Equipamento.ReceberPasso"}}</button>
+  {{/if}}
+</div>

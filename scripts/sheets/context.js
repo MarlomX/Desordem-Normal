@@ -13,11 +13,12 @@ import {
   isMartial,
   isNatural,
   isShield,
-  itemUse,
+  itemUseState,
   weaponReady,
   weaponSkill,
   weaponDamageLabel,
 } from '../rolls/equipment.js';
+import { itemUsePlan, ownEffects } from '../rolls/ability-effects.js';
 import { ALL_ATTRIBUTES, EFFECT_MAX_STEPS } from '../rolls/effects.js';
 import { abilityControls } from './ability-controls.js';
 import { shownDie, stepLimits } from '../rolls/steps.js';
@@ -499,7 +500,8 @@ export function buildEquipmentRows(items, {
     }),
     others: others.map((item) => {
       const { id, name, system } = item;
-      const use = itemUse(system);
+      // Efeitos de uso (cura, passo no alvo, ação com aviso): o botão Usar aparece mesmo sem limite
+      const useState = itemUseState(system, itemUsePlan(ownEffects(item)).hasUse);
       return {
         id,
         name,
@@ -511,8 +513,8 @@ export function buildEquipmentRows(items, {
         hasUsos: system.usosMax > 0,
         handsLabel: handsLabel(handsOf(system)),
         empunhada: system.empunhada,
-        showUse: use.kind !== null,
-        canUse: editable && use.canUse,
+        showUse: useState.show,
+        canUse: editable && useState.canUse,
         locked: !editable,
         blocked: !editable || cannotHold(system),
       };

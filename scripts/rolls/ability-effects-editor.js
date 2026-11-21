@@ -37,7 +37,11 @@ export const CREATURE_EFFECT_TYPES = Object.freeze(['dadoExtra', 'acaoNota', 'co
 const HIDDEN_FIELDS = Object.freeze({
   arma: Object.freeze({ dadoExtra: Object.freeze(['pericias', 'teste', 'grupo']) }),
   armadura: Object.freeze({ dadoExtra: Object.freeze(['grupo']) }),
-  item: Object.freeze({ dadoExtra: Object.freeze(['grupo']) }),
+  // No item, a ação com aviso sai pelo botão Usar: o rótulo de botão da habilidade não se aplica
+  item: Object.freeze({
+    dadoExtra: Object.freeze(['grupo']),
+    acaoNota: Object.freeze(['rotulo']),
+  }),
   escudo: Object.freeze({ dadoExtra: Object.freeze(['grupo']) }),
 });
 
@@ -67,6 +71,8 @@ const CHOICE_GROUPS = Object.freeze({
   resultado: 'Resultados',
   condicao: 'Condicoes',
   quando: 'QuandoAtaque',
+  recursoCura: 'RecursosCura',
+  ferramenta: 'Ferramentas',
 });
 
 /**
@@ -165,6 +171,10 @@ export function effectSupported(effect, itemType = 'habilidade') {
     // na janela Resolver dano do teste oposto
     case 'armaduraExtra':
     case 'reducaoEscudo':
+    // Itens gerais (v0.21.6): ao usar (cura, passo no alvo) e passivo (ferramenta)
+    case 'curar':
+    case 'passoAlvo':
+    case 'ferramenta':
       return true;
     case 'ganharRecurso':
       // Todos os gatilhos têm uso desde a v0.20.7 (ao se defender, início do combate)
@@ -270,6 +280,18 @@ export function describeEffect(effect, { t, skill, itemType = 'habilidade' }) {
       return t(key('reducaoEscudo'), { soma: p.somaMinima });
     case 'armaduraExtra':
       return t(key('armaduraExtra'), { pontos: p.pontos });
+    case 'curar':
+      return t(key('curar'), {
+        formula: p.formula,
+        recurso: t(`DESORDEM.Efeito.RecursosCura.${p.recursoCura}`),
+      });
+    case 'passoAlvo':
+      return t(key('passoAlvo'), {
+        atributo: t(`DESORDEM.Atributos.${p.atributo}`),
+        passos: p.passos > 0 ? `+${p.passos}` : String(p.passos),
+      });
+    case 'ferramenta':
+      return t(key('ferramenta'), { ferramenta: t(`DESORDEM.Efeito.Ferramentas.${p.ferramenta}`) });
     default:
       return '';
   }

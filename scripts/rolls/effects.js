@@ -65,3 +65,24 @@ export function effectStepMods(effects, attrKey) {
     )
     .map((effect) => ({ target: 'attribute', steps: effect.passos }));
 }
+
+/**
+ * Efeito da aba Condição que um item entrega (efeito `passoAlvo`, como um tônico): passos no
+ * atributo até o fim da cena, com o nome do item. Cada uso é um efeito à parte (eles somam; o dado
+ * para em d12).
+ * @param {{nome: string, descricao?: string, atributo: string, passos: number}} data
+ * @returns {{nome: string, descricao: string, atributo: string, passos: number, fimDeCena: boolean,
+ *   origem: string}}
+ */
+export function itemStepEffect({ nome, descricao = '', atributo, passos }) {
+  const steps = Math.max(-EFFECT_MAX_STEPS, Math.min(EFFECT_MAX_STEPS, Math.trunc(passos) || 0));
+  return {
+    ...newEffect(),
+    nome,
+    descricao,
+    atributo: ATRIBUTOS.includes(atributo) ? atributo : '',
+    passos: steps,
+    fimDeCena: true,
+    origem: 'item',
+  };
+}

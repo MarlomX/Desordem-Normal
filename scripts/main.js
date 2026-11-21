@@ -40,7 +40,6 @@ import {
 import { damageActor, rollInjuryTest } from './rolls/health.js';
 import {
   attackWithWeapon,
-  useItem,
   renderEquipmentCard,
   registerEquipmentSocket,
 } from './rolls/equipment-chat.js';
@@ -62,6 +61,7 @@ import {
   renderRelationCard,
   registerRelationSocket,
 } from './rolls/relation-chat.js';
+import { registerItemUseSocket, renderItemUseCard, useItem } from './rolls/item-use-chat.js';
 
 Hooks.once('init', () => {
   console.log(`${SYSTEM_ID} | inicializando o sistema`);
@@ -175,6 +175,7 @@ Hooks.once('init', () => {
 
 Hooks.on('renderChatMessageHTML', (message, html) => {
   renderRelationCard(message, html);
+  renderItemUseCard(message, html);
   renderEquipmentCard(message, html);
   renderTestButtons(message, html);
   renderAdvanceBar(message, html);
@@ -199,6 +200,8 @@ Hooks.once('ready', () => {
   // Assumir ataque nos cartões e o dano aplicado do cartão de ataque (o mestre grava)
   registerGuardianSocket();
   registerEquipmentSocket();
+  // Cartões de passo de item (o mestre marca quem recebeu)
+  registerItemUseSocket();
   registerTableSocket();
   registerChaseSocket();
   registerStealthSocket();

@@ -124,7 +124,13 @@ test('itemEffectTypes: habilidade aceita todos menos os de equipamento; cada equ
     'passoAtaque',
     'criticoAmpliado',
   ]);
-  assert.deepEqual(itemEffectTypes('item'), ['dadoExtra']);
+  assert.deepEqual(itemEffectTypes('item'), [
+    'dadoExtra',
+    'curar',
+    'passoAlvo',
+    'ferramenta',
+    'acaoNota',
+  ]);
   assert.deepEqual(itemEffectTypes('armadura'), ['dadoExtra']);
   assert.deepEqual(itemEffectTypes('escudo'), ['dadoExtra', 'reducaoEscudo']);
   assert.deepEqual(itemEffectTypes('outro'), []);
@@ -152,7 +158,7 @@ test('itemInUse: arma só no ataque com ela, armadura só vestida, item e habili
 
 test('ownEffects descarta tipos que o equipamento não aceita (vindos de macro ou importação)', () => {
   const item = piece('i', 'item', {
-    efeitos: [extraDie('x'), { id: 'y', tipo: 'acaoNota', params: {} }],
+    efeitos: [extraDie('x'), { id: 'y', tipo: 'bonusAtaque', params: {} }],
   });
   assert.deepEqual(
     ownEffects(item).map((e) => e.id),
@@ -238,7 +244,8 @@ test('editorRows: na arma o dado extra esconde perícias e tipo de teste', () =>
 test('effectSupported: tipo que o item não aceita fica marcado como sem uso', () => {
   const note = { id: 'n', tipo: 'acaoNota', params: {} };
   assert.equal(effectSupported(note), true);
-  assert.equal(effectSupported(note, 'item'), false);
+  assert.equal(effectSupported(note, 'item'), true);
+  assert.equal(effectSupported({ id: 'b', tipo: 'bonusAtaque', params: {} }, 'item'), false);
   assert.equal(effectSupported(extraDie('d'), 'item'), true);
   assert.equal(effectSupported(extraDie('d'), 'armadura'), true);
   assert.equal(effectSupported(extraDie('d'), 'outro'), false);

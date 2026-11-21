@@ -616,7 +616,8 @@
       "Botao": "Recover {valor} {recurso}",
       "Recupera": "recovers {valor} {recurso}",
       "JaAplicada": "Already applied by {nome}.",
-      "SemAlvo": "Select your character's token (or have a character assigned) to recover."
+      "SemAlvo": "Select your character's token (or have a character assigned) to recover.",
+      "QuemRecebe": "Who receives the recovery?"
     },
     "Item": {
       "Ficha": "Item sheet",
@@ -727,7 +728,14 @@
       "SemProficiencia": "Martial without proficiency: the GM decides whether the attack counts (for example, with a disadvantage).",
       "ProficienciaMarcial": "Martial proficiency",
       "ProficienciaHabilidade": "(already granted by an ability)",
-      "SemProficienciaArmadura": "Martial without proficiency: cannot be worn or wielded."
+      "SemProficienciaArmadura": "Martial without proficiency: cannot be worn or wielded.",
+      "SemCusto": "{nome}: not enough to pay the cost of using it.",
+      "FormulaInvalida": "Invalid formula ({formula}) on {nome}.",
+      "ReceberPasso": "Receive effect",
+      "QuemRecebeEfeito": "Who receives the effect?",
+      "PassoDescricao": "Item effect: {texto} until the end of the scene.",
+      "PassoRecebido": "{nome} received {texto} ({item}) until the end of the scene.",
+      "PassoJaRecebido": "Effect already received by {nome}."
     },
     "Habilidade": {
       "Confirmar": "Confirm",
@@ -1480,7 +1488,10 @@
         "passoAtaque": "Attack step",
         "criticoAmpliado": "Expanded critical",
         "reducaoEscudo": "Shield reduction",
-        "armaduraExtra": "Extra armor"
+        "armaduraExtra": "Extra armor",
+        "curar": "Heal",
+        "passoAlvo": "Step on target",
+        "ferramenta": "Tool"
       },
       "Campos": {
         "chave": "Key",
@@ -1511,7 +1522,10 @@
         "quando": "Applies when",
         "minimo": "Minimum critical value",
         "somaMinima": "Minimum total",
-        "pontos": "Points"
+        "pontos": "Points",
+        "formula": "Formula",
+        "recursoCura": "Recovers",
+        "ferramenta": "Tool"
       },
       "Gatilhos": {
         "falha": "On failing a test with a DC",
@@ -1588,7 +1602,10 @@
         "passoAtaque": "+{passos} step on the attack skill die ({quando})",
         "criticoAmpliado": "Critical success with two matching dice of {minimo} or higher",
         "reducaoEscudo": "Lost an attack with a total of {soma} or more: the damage drops by the low roll",
-        "armaduraExtra": "+{pontos} point on the worn armor"
+        "armaduraExtra": "+{pontos} point on the worn armor",
+        "curar": "On use: rolls {formula} and recovers {recurso}",
+        "passoAlvo": "On use: {atributo} {passos} until the end of the scene, for whoever receives it",
+        "ferramenta": "Tool: {ferramenta}"
       },
       "Botao": {
         "passoCena": "Scene step{custo}",
@@ -1626,13 +1643,20 @@
         "Vazio": "No effects: the item is description only.",
         "arma": "The weapon effects only apply to attacks made with it.",
         "armadura": "The armor effects apply while it is worn. The skill penalty lives in the fields above, not here.",
-        "item": "The item effects apply while it is on the sheet (in the backpack).",
+        "item": "Extra die and tool apply while the item is on the sheet (in the backpack). Heal, step on target and action with notice happen when you press Use.",
         "escudo": "The shield effects apply while it is wielded. The shield reduction shows up in the Resolve damage window of opposed tests."
       },
       "QuandoAtaque": {
         "sempre": "Always",
         "primeiroCena": "On the weapon's first attack of the scene",
         "naoAtacou": "Against someone who has not attacked me yet"
+      },
+      "RecursosCura": {
+        "pv": "HP",
+        "pd": "DP"
+      },
+      "Ferramentas": {
+        "medicina": "Medicine (first aid)"
       }
     },
     "Plano": {

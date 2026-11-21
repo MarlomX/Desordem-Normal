@@ -7,6 +7,7 @@ import { SYSTEM_ID } from '../config.js';
 import { render, postMessage } from './chat.js';
 import { degreeKey, invokeCheck, updateRelation, buildInvocationContext } from './relation.js';
 import { applyRecovery } from './recovery.js';
+import { pickReceiver } from './damage-dialog.js';
 
 const TEMPLATE_RELACAO = `systems/${SYSTEM_ID}/templates/chat/relacao.hbs`;
 const TEMPLATE_RECUPERACAO = `systems/${SYSTEM_ID}/templates/chat/recuperacao.hbs`;
@@ -99,8 +100,12 @@ async function rollMotivation(message) {
   return true;
 }
 
-/** Personagem que recebe a recuperação: o token selecionado ou, sem ele, o personagem do usuário. */
-function recoveryTarget() {
+/**
+ * Quem recebe a recuperação (ou a cura de um item): o mestre escolhe na janela «Quem recebe»
+ * (personagem ou criatura); o jogador, o token selecionado ou, sem ele, o seu personagem.
+ */
+async function recoveryTarget() {
+  if (game.user.isGM) return pickReceiver({ title: t('DESORDEM.Recuperacao.QuemRecebe') });
   return game.canvas?.tokens?.controlled?.[0]?.actor ?? game.user.character ?? null;
 }
 
@@ -126,7 +131,9 @@ async function applyRecoveryFromMessage(message) {
   const data = message.flags?.[SYSTEM_ID]?.recuperacao;
   if (!data || data.curado) return false;
   // Cartões de cura apontam para o aliado; os de motivar valem para quem clicar
-  const actor = data.alvoUuid ? await foundry.utils.fromUuid(data.alvoUuid) : recoveryTarget();
+  const actor = data.alvoUuid
+    ? await foundry.utils.fromUuid(data.alvoUuid)
+    : await recoveryTarget();
   if (!actor || !actor.isOwner) {
     ui.notifications.warn(t('DESORDEM.Recuperacao.SemAlvo'));
     return false;

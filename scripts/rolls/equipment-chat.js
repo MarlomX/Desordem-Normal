@@ -10,14 +10,7 @@ import { computeDamage, damageBaseValue } from './damage.js';
 import { damageActor } from './health.js';
 import { pickDamageTarget } from './damage-dialog.js';
 import { isThreat } from './threat.js';
-import {
-  weaponSkill,
-  weaponDamageLabel,
-  itemUse,
-  itemUseChanges,
-  weaponAmmoChanges,
-  weaponReady,
-} from './equipment.js';
+import { weaponSkill, weaponDamageLabel, weaponAmmoChanges, weaponReady } from './equipment.js';
 import { firstEffect } from './ability-effects-actor.js';
 import { markWeaponAttack, weaponTestKind } from './ability-effects.js';
 import { abilityNote } from './abilities-chat.js';
@@ -25,7 +18,6 @@ import { guardButtons, registerGuardHandler } from './guardian-chat.js';
 import { canGuardWeaponCard, guardWeaponCard } from './guardian.js';
 
 const TEMPLATE_ATAQUE = `systems/${SYSTEM_ID}/templates/chat/ataque.hbs`;
-const TEMPLATE_USO = `systems/${SYSTEM_ID}/templates/chat/item-uso.hbs`;
 
 const SOCKET = `system.${SYSTEM_ID}`;
 
@@ -143,32 +135,6 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
     flags: { danoArma: { amount, naoLetal: system.naoLetal } },
   });
   return { result, amount };
-}
-
-/**
- * Usa um item: gasta um uso (se tem limite de usos) ou uma unidade (se é consumível) e avisa no chat.
- * @returns {Promise<boolean>} Se o item foi usado.
- */
-export async function useItem(actor, item) {
-  const changes = itemUseChanges(item.system);
-  if (!changes) {
-    ui.notifications.warn(t('DESORDEM.Equipamento.SemUso', { nome: item.name }));
-    return false;
-  }
-  await item.update(changes);
-  const use = itemUse(item.system);
-  await postMessage({
-    actor,
-    content: await render(TEMPLATE_USO, {
-      name: actor.name,
-      item: item.name,
-      descricao: item.system.descricao,
-      byUses: use.kind === 'usos',
-      remaining: use.remaining,
-      max: use.max,
-    }),
-  });
-  return true;
 }
 
 /**

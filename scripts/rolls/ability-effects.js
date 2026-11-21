@@ -51,6 +51,15 @@ export const CONDITIONS = Object.freeze(['pvMetade', 'pdMetade']);
  */
 export const ATTACK_STEP_WHEN = Object.freeze(['sempre', 'primeiroCena', 'naoAtacou']);
 
+/** Recursos que um efeito `curar` recupera. */
+export const HEAL_RESOURCES = Object.freeze(['pv', 'pd']);
+
+/** Atributos de um `passoAlvo` (um só, sem «todos»). */
+export const TARGET_ATTRIBUTES = Object.freeze(['fisico', 'mente', 'emocao']);
+
+/** Ferramentas (efeito `ferramenta`): só a maleta de medicamentos, por enquanto. */
+export const TOOLS = Object.freeze(['medicina']);
+
 /** Atributos de um `passoCondicional` (`todos` = o dado de qualquer atributo). */
 export const STEP_ATTRIBUTE_CHOICES = Object.freeze(['todos', 'fisico', 'mente', 'emocao']);
 
@@ -224,13 +233,32 @@ export const EFFECT_TYPES = Object.freeze({
   reducaoEscudo: { somaMinima: intField(7, 1, 30) },
   // Habilidade: +N pontos na armadura vestida (o gasto fica em `system.armaduraExtraGasta`)
   armaduraExtra: { pontos: intField(1, 1, 3) },
+  // Item geral, ao usar: rola a fórmula e põe no chat o botão «Aplicar cura» (PV ou PD)
+  curar: { formula: textField('2d4'), recursoCura: choiceField(HEAL_RESOURCES, 'pv') },
+  // Item geral, ao usar: botão «Receber efeito»; quem clica ganha um passo no atributo, na aba
+  // Condição, até o fim da cena (usos repetidos somam; o dado para em d12)
+  passoAlvo: { atributo: choiceField(TARGET_ATTRIBUTES, 'fisico'), passos: intField(1, -3, 3) },
+  // Item geral, passivo (na ficha): ferramenta de uma tarefa (só a maleta dos primeiros socorros)
+  ferramenta: { ferramenta: choiceField(TOOLS, 'medicina') },
 });
 
 /** Tipos que só uma arma aceita (a habilidade não os oferece). */
 export const WEAPON_ONLY_TYPES = Object.freeze(['bonusAtaque', 'passoAtaque', 'criticoAmpliado']);
 
-/** Tipos que só um equipamento aceita: os de arma e os de escudo (a habilidade não os oferece). */
-export const EQUIPMENT_ONLY_TYPES = Object.freeze([...WEAPON_ONLY_TYPES, 'reducaoEscudo']);
+/**
+ * Tipos que só um equipamento aceita: os de arma, o de escudo e os do item geral (a habilidade não
+ * os oferece; ela já tem os seus jeitos de curar).
+ */
+export const EQUIPMENT_ONLY_TYPES = Object.freeze([
+  ...WEAPON_ONLY_TYPES,
+  'reducaoEscudo',
+  'curar',
+  'passoAlvo',
+  'ferramenta',
+]);
+
+/** Efeitos do item geral que agem ao apertar Usar (os outros são passivos). */
+export const USE_EFFECT_TYPES = Object.freeze(['curar', 'passoAlvo', 'acaoNota']);
 
 /** Parâmetros padrão de um tipo (cópia nova). */
 export function defaultParams(tipo) {
@@ -358,8 +386,9 @@ export const ITEM_EFFECT_TYPES = Object.freeze({
   armadura: Object.freeze(['dadoExtra']),
   // Escudo (subtipo da armadura): dado extra e redução do escudo, enquanto empunhado
   escudo: Object.freeze(['dadoExtra', 'reducaoEscudo']),
-  // Dado extra com o item na mochila (0.21.4: curar, passo no alvo, ferramenta, ação com aviso)
-  item: Object.freeze(['dadoExtra']),
+  // Item geral: dado extra e ferramenta (passivos, na mochila); cura, passo no alvo e ação com
+  // aviso (ao usar)
+  item: Object.freeze(['dadoExtra', 'curar', 'passoAlvo', 'ferramenta', 'acaoNota']),
 });
 
 /**
@@ -593,6 +622,24 @@ export function addCostBags(a, b) {
 }
 
 /**
+ * Gravação que paga um saco de custos (caminhos `system.*` do ator). Sem conferir se dá: chame
+ * `costShortfall` antes.
+ * @param {CostBag} bag
+ * @param {{pd: number, pv: number, recursos: Object<string, number>}} wallet Valores atuais.
+ * @returns {Object<string, number>}
+ */
+export function bagUpdates(bag, wallet) {
+  const updates = {};
+  if (bag.pd) updates['system.pd.value'] = Math.max(0, (wallet.pd ?? 0) - bag.pd);
+  if (bag.pv) updates['system.pv.value'] = Math.max(0, (wallet.pv ?? 0) - bag.pv);
+  for (const [key, value] of Object.entries(bag.recursos)) {
+    if (value)
+      updates[`system.recursosHab.${key}`] = Math.max(0, (wallet.recursos?.[key] ?? 0) - value);
+  }
+  return updates;
+}
+
+/**
  * O que falta para pagar um saco: 'pd', 'pv' e as chaves dos recursos insuficientes, nesta
  * ordem. Vazio = dá para pagar.
  * @param {CostBag} bag
@@ -702,6 +749,50 @@ export function weaponAttackEffects(entries, { firstAttack = false, notAttacked 
     }
   }
   return { modifier, steps, critMin, lines };
+}
+
+// ---------- Uso de item geral ----------
+
+/**
+ * O que um uso do item faz, a partir dos efeitos dele (`ownEffects`): curas a rolar, passos a
+ * entregar, notas para o cartão e o custo somado das notas (`acaoNota` pode custar PD ou PV).
+ * @param {object[]} effects Efeitos do item, já limpos e filtrados.
+ * @returns {{heals: {formula: string, recurso: string}[], steps: {atributo: string,
+ *   passos: number}[], notes: string[], cost: object, hasUse: boolean}} `hasUse`: o item tem
+ *   algum efeito de uso (o botão Usar aparece mesmo sem limite de usos).
+ */
+export function itemUsePlan(effects) {
+  const heals = [];
+  const steps = [];
+  const notes = [];
+  const bags = [];
+  for (const effect of effects ?? []) {
+    const { params } = effect;
+    if (effect.tipo === 'curar' && params.formula) {
+      heals.push({ formula: params.formula, recurso: params.recursoCura });
+    } else if (effect.tipo === 'passoAlvo' && params.passos) {
+      steps.push({ atributo: params.atributo, passos: params.passos });
+    } else if (effect.tipo === 'acaoNota') {
+      if (params.texto) notes.push(params.texto);
+      bags.push(costBag(params.custo));
+    }
+  }
+  return {
+    heals,
+    steps,
+    notes,
+    cost: bags.reduce(addCostBags, emptyCostBag()),
+    hasUse: (effects ?? []).some((e) => USE_EFFECT_TYPES.includes(e.tipo)),
+  };
+}
+
+/**
+ * O ator tem a ferramenta (efeito `ferramenta` de um item na ficha)?
+ * @param {object[]} entries Efeitos do ator.
+ * @param {string} tool Ex.: `medicina`.
+ */
+export function hasTool(entries, tool) {
+  return entries.some((e) => e.tipo === 'ferramenta' && e.params?.ferramenta === tool);
 }
 
 /**
