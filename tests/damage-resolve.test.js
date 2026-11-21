@@ -72,41 +72,43 @@ test('shieldReduction: vale com a soma no mínimo; precisa do efeito e dos núme
   assert.equal(effectSupported({ tipo: 'reducaoEscudo', params: {} }, 'escudo'), true);
 });
 
-test('damageCandidates: jogador com uma ficha recebe direto; com várias, lista', () => {
+test('damageCandidates: jogador vê as fichas que controla e as criaturas visíveis da cena', () => {
   const actors = [
-    { id: '1', name: 'Rowan', type: 'personagem', isOwner: true },
-    { id: '2', name: 'Anna', type: 'personagem', isOwner: false },
-    { id: '3', name: 'Lobo', type: 'criatura', isOwner: true },
+    { uuid: 'Actor.1', name: 'Rowan', type: 'personagem', isOwner: true },
+    { uuid: 'Actor.2', name: 'Anna', type: 'personagem', isOwner: false },
+    { uuid: 'Actor.3', name: 'Lobo', type: 'criatura', isOwner: false },
   ];
-  const player = damageCandidates(actors, { isGM: false });
-  assert.deepEqual(
-    player.candidates.map((a) => a.id),
-    ['1'],
-  );
-  assert.equal(player.direct.id, '1');
-  const two = damageCandidates(
-    [...actors, { id: '4', name: 'Bran', type: 'personagem', isOwner: true }],
+  const tokens = [
     {
-      isGM: false,
+      name: 'Lobo Cinzento',
+      hidden: false,
+      actor: { uuid: 'Scene.s.Token.a.Actor.3', type: 'criatura' },
     },
-  );
-  assert.equal(two.direct, null);
-  assert.deepEqual(
-    two.candidates.map((a) => a.name),
-    ['Bran', 'Rowan'],
-  );
-});
-
-test('damageCandidates: o mestre sempre escolhe na lista de todos os personagens', () => {
-  const actors = [
-    { id: '1', name: 'Rowan', type: 'personagem', isOwner: true },
-    { id: '3', name: 'Lobo', type: 'criatura', isOwner: true },
+    {
+      name: 'Espreitador',
+      hidden: true,
+      actor: { uuid: 'Scene.s.Token.b.Actor.4', type: 'criatura' },
+    },
+    { name: 'Rowan', hidden: false, actor: { uuid: 'Actor.1', type: 'personagem' } },
+    // O mesmo ator em dois tokens aparece uma vez
+    {
+      name: 'Lobo Cinzento',
+      hidden: false,
+      actor: { uuid: 'Scene.s.Token.a.Actor.3', type: 'criatura' },
+    },
+    { name: 'Sem ator', hidden: false, actor: null },
   ];
-  const gm = damageCandidates(actors, { isGM: true });
-  assert.equal(gm.direct, null);
+  const player = damageCandidates(actors, tokens, { isGM: false });
+  assert.deepEqual(player.personagens, [{ uuid: 'Actor.1', name: 'Rowan' }]);
+  assert.deepEqual(player.criaturas, [{ uuid: 'Scene.s.Token.a.Actor.3', name: 'Lobo Cinzento' }]);
+  const gm = damageCandidates(actors, tokens, { isGM: true });
   assert.deepEqual(
-    gm.candidates.map((a) => a.id),
-    ['1'],
+    gm.personagens.map((c) => c.name),
+    ['Anna', 'Rowan'],
   );
-  assert.deepEqual(damageCandidates([], { isGM: false }), { candidates: [], direct: null });
+  assert.deepEqual(
+    gm.criaturas.map((c) => c.name),
+    ['Espreitador', 'Lobo Cinzento'],
+  );
+  assert.deepEqual(damageCandidates([], [], { isGM: false }), { personagens: [], criaturas: [] });
 });

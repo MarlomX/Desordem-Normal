@@ -112,31 +112,77 @@ export async function askDamage(
 }
 
 /**
- * Sem alvo mirado: quem recebe o dano do cartão de ataque comum. O jogador com uma só ficha recebe
- * direto; com várias (ou o mestre, sempre) escolhe numa lista de personagens.
- * @returns {Promise<Actor|null>}
+ * Sem alvo mirado: quem recebe o dano do cartão de ataque comum. Sempre pergunta: primeiro o tipo
+ * (personagem ou criatura da cena), depois qual. Sem nenhum candidato, avisa.
+ * @returns {Promise<Actor|null>} O ator escolhido (numa criatura, o ator do token), ou null.
  */
 export async function pickDamageTarget() {
-  const { candidates, direct } = damageCandidates([...game.actors], { isGM: game.user.isGM });
-  if (direct) return direct;
-  if (!candidates.length) {
+  const tokens = (globalThis.canvas?.tokens?.placeables ?? []).map((token) => ({
+    name: token.name,
+    hidden: Boolean(token.document?.hidden),
+    actor: token.actor ? { uuid: token.actor.uuid, type: token.actor.type } : null,
+  }));
+  const { personagens, criaturas } = damageCandidates([...game.actors], tokens, {
+    isGM: game.user.isGM,
+  });
+  if (!personagens.length && !criaturas.length) {
     ui.notifications.warn(t('DESORDEM.Equipamento.SemAlvo'));
     return null;
   }
-  const options = candidates
-    .map(
-      (actor) => `<option value="${actor.id}">${Handlebars.escapeExpression(actor.name)}</option>`,
-    )
-    .join('');
-  const id = await foundry.applications.api.DialogV2.prompt({
+  const options = (list) =>
+    list
+      .map((c) => `<option value="${c.uuid}">${Handlebars.escapeExpression(c.name)}</option>`)
+      .join('');
+  const kinds = [
+    ['personagem', personagens],
+    ['criatura', criaturas],
+  ].filter(([, list]) => list.length);
+  // Tipo (rádio) e uma lista por tipo; só a lista do tipo marcado aparece
+  const content = `<p>${t('DESORDEM.Dano.Janela.SemAlvo')}</p>
+    <div class="desordem-dano-janela__tipos">${kinds
+      .map(
+        ([kind], i) =>
+          `<label><input type="radio" name="tipo" value="${kind}" ${i === 0 ? 'checked' : ''}> ${t(
+            `DESORDEM.Dano.Janela.Tipo.${kind}`,
+          )}</label>`,
+      )
+      .join(' ')}</div>
+    ${kinds
+      .map(
+        ([kind, list], i) =>
+          `<select name="alvo-${kind}" data-tipo-lista="${kind}" ${i === 0 ? '' : 'hidden'}>${options(
+            list,
+          )}</select>`,
+      )
+      .join('')}`;
+  const uuid = await foundry.applications.api.DialogV2.wait({
     window: { title: t('DESORDEM.Dano.Janela.QuemRecebe') },
-    content: `<p>${t('DESORDEM.Dano.Janela.SemAlvo')}</p><select name="alvo">${options}</select>`,
-    ok: {
-      label: t('DESORDEM.Dano.Janela.Escolher'),
-      callback: (event, button) => button.form.elements.alvo.value,
-    },
-    rejectClose: false,
+    content,
     modal: true,
+    rejectClose: false,
+    render: (event, dialog) => {
+      const root = dialog.element;
+      root.addEventListener('change', (changed) => {
+        if (changed.target.name !== 'tipo') return;
+        for (const list of root.querySelectorAll('[data-tipo-lista]')) {
+          list.hidden = list.dataset.tipoLista !== changed.target.value;
+        }
+      });
+    },
+    buttons: [
+      {
+        action: 'ok',
+        label: t('DESORDEM.Dano.Janela.Escolher'),
+        default: true,
+        callback: (event, button) => {
+          const kind = button.form.querySelector('[name="tipo"]:checked')?.value;
+          return button.form.elements[`alvo-${kind}`]?.value ?? null;
+        },
+      },
+      { action: 'cancel', label: t('DESORDEM.Dano.Janela.Cancelar') },
+    ],
   });
-  return id ? (game.actors.get(id) ?? null) : null;
+  // Cancelar e fechar devolvem o nome da ação ou null, nunca um uuid de ator
+  if (typeof uuid !== 'string' || !uuid.includes('Actor.')) return null;
+  return (await foundry.utils.fromUuid(uuid)) ?? null;
 }

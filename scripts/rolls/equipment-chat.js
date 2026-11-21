@@ -9,6 +9,7 @@ import { render, postMessage, rollSkill } from './chat.js';
 import { computeDamage, damageBaseValue } from './damage.js';
 import { damageActor } from './health.js';
 import { pickDamageTarget } from './damage-dialog.js';
+import { isThreat } from './threat.js';
 import {
   weaponSkill,
   weaponDamageLabel,
@@ -185,9 +186,10 @@ async function markWeaponDamage(message) {
 
 /**
  * Aplica o dano do cartão de ataque por quem clicou: no Guardião, se alguém assumiu o ataque;
- * senão, nos tokens mirados (alvos); sem alvo mirado, numa ficha de personagem (a única do
- * jogador, ou escolhida numa lista). Cada alvo passa pela janela Resolver dano (Shift+clique:
- * dano cheio, sem janela). O cartão só é marcado se algum dano foi aplicado.
+ * senão, nos tokens mirados (alvos); sem alvo mirado, em quem a pessoa escolher na janela «Quem
+ * recebe» (personagem ou criatura da cena). Cada alvo que a pessoa controla passa pela janela
+ * Resolver dano (Shift+clique: dano cheio, sem janela). Numa criatura que o jogador não controla,
+ * o mestre aplica (com a RD, sem janela). O cartão só é marcado se algum dano foi aplicado.
  * @param {ChatMessage} message
  * @param {boolean} [shift=false] Shift+clique.
  */
@@ -201,7 +203,7 @@ async function applyWeaponDamage(message, shift = false) {
   } else {
     targets = [...game.user.targets].map((token) => token.actor).filter(Boolean);
     if (!targets.length) {
-      // Sem alvo: basta controlar a ficha (o personagem não precisa estar na cena)
+      // Sem alvo: escolher personagem ou criatura (o personagem não precisa estar na cena)
       const picked = await pickDamageTarget();
       targets = picked ? [picked] : [];
     }
@@ -210,6 +212,8 @@ async function applyWeaponDamage(message, shift = false) {
   let applied = false;
   for (const target of targets) {
     if (!target.isOwner) {
+      // Criatura do mestre: pede a ele que aplique (o mestre também marca o cartão)
+      if (isThreat(target) && requestCreatureDamage(message, target)) continue;
       ui.notifications.warn(t('DESORDEM.Equipamento.SoMestre', { nome: target.name }));
       continue;
     }
@@ -277,11 +281,49 @@ registerGuardHandler('arma', {
   },
 });
 
-/** Escuta os pedidos dos jogadores para marcar o dano como aplicado (só o mestre ativo atende). */
+/**
+ * Jogador aplicando o dano numa criatura (que só o mestre controla): manda o pedido ao mestre
+ * ativo. Sem mestre conectado, não dá (devolve `false` para o aviso de sempre).
+ * @returns {boolean} Se o pedido foi enviado.
+ */
+function requestCreatureDamage(message, target) {
+  if (!game.users.activeGM) return false;
+  game.socket.emit(SOCKET, {
+    action: 'weaponDamageCreature',
+    messageId: message.id,
+    actorUuid: target.uuid,
+  });
+  ui.notifications.info(t('DESORDEM.Dano.Janela.PedidoMestre', { nome: target.name }));
+  return true;
+}
+
+/**
+ * Dano de um cartão de ataque numa criatura, a pedido de um jogador: o mestre aplica (a RD vale;
+ * sem janela, já que a criatura não tem armadura nem escudo) e marca o cartão. O valor vem do
+ * cartão, não do pedido.
+ */
+async function applyCreatureDamage(data) {
+  const message = game.messages.get(data.messageId);
+  const flag = weaponFlag(message);
+  if (!flag || flag.aplicado) return;
+  const target = await foundry.utils.fromUuid(data.actorUuid);
+  if (!target || !isThreat(target)) return;
+  await damageActor(target, flag.amount, {
+    nonLethal: flag.naoLetal,
+    choices: { useArmor: false, useShield: false, shield: null },
+  });
+  await message.update({ [`flags.${SYSTEM_ID}.danoArma.aplicado`]: true });
+}
+
+/** Escuta os pedidos dos jogadores (só o mestre ativo atende): marcar o dano e dano em criatura. */
 export function registerEquipmentSocket() {
   game.socket.on(SOCKET, (data) => {
-    if (data?.action !== 'weaponDamageApplied') return;
     if (game.users.activeGM?.id !== game.user.id) return;
+    if (data?.action === 'weaponDamageCreature') {
+      enqueue(() => applyCreatureDamage(data));
+      return;
+    }
+    if (data?.action !== 'weaponDamageApplied') return;
     const message = game.messages.get(data.messageId);
     if (!weaponFlag(message) || weaponFlag(message).aplicado) return;
     enqueue(() => message.update({ [`flags.${SYSTEM_ID}.danoArma.aplicado`]: true }));

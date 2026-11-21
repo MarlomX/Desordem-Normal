@@ -55,18 +55,32 @@ export function resolveDamage({
 }
 
 /**
- * Quem pode receber um dano aplicado sem alvo mirado (cartão de ataque comum).
- * - Jogador: as fichas de personagem que ele controla; com uma só, ela recebe direto.
- * - Mestre: todos os personagens, sempre pela lista.
- * @param {{id: string, name: string, type: string, isOwner: boolean}[]} actors Atores do mundo.
+ * Quem pode receber um dano aplicado sem alvo mirado (cartão de ataque comum), separado em
+ * personagens e criaturas. A janela «Quem recebe» sempre pergunta (primeiro o tipo, depois qual).
+ * - Personagens: o jogador vê as fichas que controla; o mestre, todas.
+ * - Criaturas: as da cena atual (tokens); o jogador não vê as escondidas. O jogador não controla
+ *   criaturas: o dano nelas é gravado pelo mestre (socket).
+ * Cada candidato vem com `uuid` (do ator; nas criaturas, o ator do token) e `name`.
+ * @param {{uuid: string, name: string, type: string, isOwner: boolean}[]} actors Atores do mundo.
+ * @param {{name: string, hidden: boolean, actor: {uuid: string, type: string}|null}[]} tokens
+ *   Tokens da cena atual.
  * @param {{isGM: boolean}} user
- * @returns {{candidates: object[], direct: object|null}} `direct`: o único candidato do jogador
- *   (aplica sem perguntar); senão `null` e a lista decide.
+ * @returns {{personagens: {uuid: string, name: string}[], criaturas: {uuid: string, name: string}[]}}
  */
-export function damageCandidates(actors, { isGM }) {
-  const candidates = (actors ?? [])
+export function damageCandidates(actors, tokens, { isGM }) {
+  const byName = (a, b) => a.name.localeCompare(b.name, 'pt-BR');
+  const personagens = (actors ?? [])
     .filter((actor) => actor.type === 'personagem' && (isGM || actor.isOwner))
-    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-  const direct = !isGM && candidates.length === 1 ? candidates[0] : null;
-  return { candidates, direct };
+    .map(({ uuid, name }) => ({ uuid, name }))
+    .sort(byName);
+  const seen = new Set();
+  const criaturas = [];
+  for (const token of tokens ?? []) {
+    const actor = token.actor;
+    if (actor?.type !== 'criatura' || (!isGM && token.hidden) || seen.has(actor.uuid)) continue;
+    seen.add(actor.uuid);
+    criaturas.push({ uuid: actor.uuid, name: token.name || actor.name });
+  }
+  criaturas.sort(byName);
+  return { personagens, criaturas };
 }

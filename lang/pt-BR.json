@@ -382,8 +382,13 @@
         "Aplicar": "Aplicar",
         "Cancelar": "Cancelar",
         "QuemRecebe": "Quem recebe o dano?",
-        "SemAlvo": "Nenhum alvo mirado: escolha o personagem que recebe o dano.",
-        "Escolher": "Continuar"
+        "SemAlvo": "Nenhum alvo mirado: escolha quem recebe o dano.",
+        "Escolher": "Continuar",
+        "Tipo": {
+          "personagem": "Personagem",
+          "criatura": "Criatura"
+        },
+        "PedidoMestre": "Pedido enviado ao mestre: aplicar o dano em {nome}."
       },
       "EscudoUsado": "Escudo: −{reducao} de dano.",
       "PVZerado": "PV zerado: faça o teste de lesão (DT no cabeçalho da ficha).",

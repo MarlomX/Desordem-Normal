@@ -382,8 +382,13 @@
         "Aplicar": "Apply",
         "Cancelar": "Cancel",
         "QuemRecebe": "Who takes the damage?",
-        "SemAlvo": "No target selected: choose the character who takes the damage.",
-        "Escolher": "Continue"
+        "SemAlvo": "No target selected: choose who takes the damage.",
+        "Escolher": "Continue",
+        "Tipo": {
+          "personagem": "Character",
+          "criatura": "Creature"
+        },
+        "PedidoMestre": "Request sent to the GM: apply the damage to {nome}."
       },
       "EscudoUsado": "Shield: −{reducao} damage.",
       "PVZerado": "HP at zero: make the injury test (DT in the sheet header).",
