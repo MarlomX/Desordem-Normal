@@ -183,6 +183,16 @@
     {{/each}}
   </fieldset>
 
+  {{#if reserva}}
+  <fieldset class="desordem-pre__grupo">
+    <legend><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Teste.Pre.Reserva"}}</legend>
+    <label class="desordem-pre__opcao">
+      <span class="desordem-pre__nome">{{reserva.texto}}</span>
+      <select name="reserva">{{#each reserva.options}}<option value="{{n}}">{{n}}</option>{{/each}}</select>
+    </label>
+  </fieldset>
+  {{/if}}
+
   {{#if fear}}
   <fieldset class="desordem-pre__grupo" data-pavor-bloco>
     <legend><i class="fa-solid fa-ghost" aria-hidden="true"></i> {{fear.title}}</legend>

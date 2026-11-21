@@ -63,7 +63,9 @@
         },
         "Indisponivel": {
           "impeto": "not enough drive",
-          "pd": "not enough DP"
+          "pd": "not enough DP",
+          "pv": "not enough HP",
+          "recurso": "not enough {nome}"
         },
         "CustoPD": "{n} DP",
         "CustoImpeto": "{n} drive",
@@ -74,7 +76,9 @@
         "SemCusto": "No cost.",
         "Erro": {
           "pd": "Not enough DP for these choices.",
-          "impeto": "Not enough drive for these choices."
+          "impeto": "Not enough drive for these choices.",
+          "pv": "Not enough HP for these choices.",
+          "recurso": "Not enough {nome} for these choices."
         },
         "DT": "DC",
         "DTMenos": "Lower DC",
@@ -90,16 +94,22 @@
           "manual": "Bonus",
           "vazio": "Free",
           "defesa": "Defense",
-          "habilidade": "Ability"
+          "habilidade": "Ability",
+          "reserva": "Bonus received"
         },
         "SemEspaco": "no die slot left",
         "Unidade": {
           "pd": "DP",
-          "impeto": "drive"
+          "impeto": "drive",
+          "pv": "HP"
         },
         "Restam": "{n} left",
         "Acoes": "Actions",
-        "HabEfeito": "{nome} (+d{die})"
+        "HabEfeito": "{nome} (+d{die})",
+        "CustoPV": "{n} HP",
+        "CustoRecurso": "{n} {nome}",
+        "Reserva": "Bonus dice",
+        "ReservaTexto": "Use from the pool ({dados}):"
       }
     },
     "Ficha": {

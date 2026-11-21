@@ -19,6 +19,8 @@ test('activeBoosts: dano não letal dá +d6 sem custo, mas só quando o teste o 
   assert.deepEqual(activeBoosts(['naoLetal'], { ...context, allowNonLethal: true }), {
     extraDice: [NON_LETHAL_BONUS_DIE],
     pdCost: 0,
+    pvCost: 0,
+    resourceCosts: {},
     impetoCost: 0,
     used: ['naoLetal'],
   });
@@ -74,7 +76,7 @@ test('janela do teste: "naoLetal" só aparece quando oferecido (teste de lesão)
   assert.deepEqual(ability, {
     key: 'naoLetal',
     die: 6,
-    cost: { impeto: 0, pd: 0 },
+    cost: { pd: 0, pv: 0, recursos: {} },
     available: true,
     reason: null,
   });

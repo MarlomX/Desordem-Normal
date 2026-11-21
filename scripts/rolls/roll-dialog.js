@@ -3,7 +3,14 @@
  * controlar ou abraçar o pavor), com custos e uma prévia dos dados. Lógica pura, sem Foundry.
  */
 import { DEFENSE_BONUS_DIE } from './abilities.js';
-import { dialogDiceOptions, legacyEffects } from './ability-effects.js';
+import {
+  DIE_SIDES,
+  addCostBags,
+  costShortfall,
+  dialogDiceOptions,
+  emptyCostBag,
+  legacyEffects,
+} from './ability-effects.js';
 import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { BONUS_SLOTS, bonusDice, normalizeBonus } from './bonus.js';
 import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } from './fear.js';
@@ -36,7 +43,9 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  *   (+d6, sem custo, já marcado). `impeto` e `sorrateiro` são um atalho para os dados das
  *   automações antigas, usado só quando `diceOptions` não é informado.
  * @param {object[]} [input.diceOptions] Dados extras dos efeitos do ator (`dialogDiceOptions`).
- * @param {{impeto: number, pd: number}} input.resources Espaços de ímpeto e PD atuais.
+ * @param {{pd: number, pv?: number, impeto?: number, recursos?: Object<string, number>,
+ *   dadosBonus?: number[]}} input.resources PD, PV e recursos das habilidades atuais (`impeto`
+ *   sozinho é o atalho antigo para `recursos.impeto`) e a reserva de dados bônus.
  * @param {number} [input.fearDie=0] Dado de pavor guardado na ficha.
  * @param {boolean} [input.ignoreFear=false] Testes que não sofrem o dado de pavor.
  * @param {number} [input.dt=7] DT padrão do teste.
@@ -71,7 +80,8 @@ export function buildRollModel({
   challenges = [],
 }) {
   const abilities = [];
-  // Dados extras dos efeitos (ímpeto, furtividade...): cada um com o seu custo em PD ou ímpeto
+  const wallet = walletFrom(resources);
+  // Dados extras dos efeitos (ímpeto, furtividade...): cada um com o seu custo (PD, PV, recurso)
   const options =
     diceOptions ??
     dialogDiceOptions(
@@ -82,16 +92,12 @@ export function buildRollModel({
       { skillKey },
     );
   for (const option of options) {
-    const reason =
-      option.cost.impeto > resources.impeto
-        ? 'impeto'
-        : option.cost.pd > resources.pd
-          ? 'pd'
-          : null;
+    // Indisponível pelo primeiro saldo que não dá: 'pd', 'pv' ou a chave do recurso
+    const reason = costShortfall(option.cost, wallet)[0] ?? null;
     abilities.push({
       key: option.key,
       die: option.die,
-      cost: { impeto: option.cost.impeto, pd: option.cost.pd },
+      cost: option.cost,
       available: reason === null,
       reason,
       ...(option.itemName ? { itemName: option.itemName } : {}),
@@ -104,7 +110,7 @@ export function buildRollModel({
     abilities.push({
       key: 'defesa',
       die: DEFENSE_BONUS_DIE,
-      cost: { impeto: 0, pd: 0 },
+      cost: emptyCostBag(),
       available: true,
       reason: null,
       checked: true,
@@ -116,7 +122,7 @@ export function buildRollModel({
     abilities.push({
       key: 'naoLetal',
       die: NON_LETHAL_BONUS_DIE,
-      cost: { impeto: 0, pd: 0 },
+      cost: emptyCostBag(),
       available: true,
       reason: null,
     });
@@ -148,6 +154,9 @@ export function buildRollModel({
     abilities,
     fear,
     resources,
+    wallet,
+    // Reserva de dados bônus (os maiores primeiro, que são os usados antes)
+    reserva: wallet.dadosBonus.length ? { dice: wallet.dadosBonus } : null,
     dt,
     showDt,
     avanco,
@@ -179,11 +188,27 @@ export function buildRollModel({
   };
 }
 
+/**
+ * Saldos da janela a partir dos recursos informados: PD, PV, recursos das habilidades (com o
+ * atalho antigo `impeto`) e a reserva de dados bônus válida, em ordem decrescente.
+ */
+function walletFrom(resources = {}) {
+  return {
+    pd: resources.pd ?? 0,
+    pv: resources.pv ?? 0,
+    recursos: { impeto: resources.impeto ?? 0, ...(resources.recursos ?? {}) },
+    dadosBonus: (resources.dadosBonus ?? [])
+      .filter((die) => DIE_SIDES.includes(die))
+      .sort((a, b) => b - a),
+  };
+}
+
 /** Escolha inicial: nada marcado e a DT padrão do teste. */
 export function emptySelection(dt) {
   return {
     bonus: normalizeBonus([]),
     active: [],
+    reserva: 0,
     controlFear: false,
     embraceFear: false,
     dt,
@@ -200,11 +225,12 @@ export function emptySelection(dt) {
  *
  * Todo dado extra ocupa um dos dois espaços (limite de 4 dados rolados com atributo e perícia),
  * nesta ordem: dados fixos do teste (companheiro, não letal), fôlego do avanço, habilidades
- * marcadas, pavor abraçado e, por último, os bônus escolhidos à mão. O que não cabe é ignorado. O dado de pavor normal
- * não ocupa espaço.
+ * marcadas, dados da reserva de bônus, pavor abraçado e, por último, os bônus escolhidos à mão. O
+ * que não cabe é ignorado. O dado de pavor normal não ocupa espaço.
  * @returns {{
- *   selection: object, dt: number|null, pdCost: number, impetoCost: number, pdLeft: number,
- *   impetoLeft: number, fear: {die: number|null, bonusDie: number|null}|null,
+ *   selection: object, dt: number|null, pdCost: number, pvCost: number, impetoCost: number,
+ *   resourceCosts: Object<string, number>, pdLeft: number, pvLeft: number, impetoLeft: number,
+ *   resourceLeft: Object<string, number>, reserva: number[], fear: {die: number|null, bonusDie: number|null}|null,
  *   slots: {kind: string, sides: number, locked: boolean}[], blocked: {abilities: string[],
  *   embrace: boolean}, rolledSides: number[], summedDice: number, errors: string[], valid: boolean
  * }}
@@ -278,6 +304,18 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     active.push(key);
     locked.push({ kind: key, sides: ability.die, locked: true });
   }
+  // Dados bônus da reserva: os maiores primeiro, até onde couber
+  const reserve = model.reserva?.dice ?? [];
+  const reserveCount = Math.max(
+    0,
+    Math.min(
+      Math.trunc(Number(selection.reserva) || 0),
+      reserve.length,
+      EXTRA_SLOTS - locked.length,
+    ),
+  );
+  const reserveDice = reserve.slice(0, reserveCount);
+  for (const sides of reserveDice) locked.push({ kind: 'reserva', sides, locked: true });
   let fear = null;
   let embrace = false;
   if (model.fear && !hide) {
@@ -301,16 +339,19 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
   ].slice(0, Math.max(EXTRA_SLOTS, locked.length));
   const roomLeft = free - manual.length > 0;
 
-  let pdCost = 0;
-  let impetoCost = 0;
-  for (const key of active) {
-    pdCost += usable.get(key).cost.pd;
-    impetoCost += usable.get(key).cost.impeto;
-  }
+  let total = emptyCostBag();
+  for (const key of active) total = addCostBags(total, usable.get(key).cost);
   if (model.fear && !hide) {
-    if (control) pdCost += model.fear.controlCost;
-    if (embrace) pdCost += model.fear.embraceCost;
+    if (control) total.pd += model.fear.controlCost;
+    if (embrace) total.pd += model.fear.embraceCost;
   }
+  const wallet = model.wallet ?? walletFrom(model.resources);
+  const resourceLeft = Object.fromEntries(
+    Object.entries(total.recursos).map(([key, value]) => [
+      key,
+      (wallet.recursos[key] ?? 0) - value,
+    ]),
+  );
 
   const lockedSides = (kinds) => locked.filter((d) => kinds(d.kind)).map((d) => d.sides);
   // Sustentar: como as rodadas já sustentadas se dividem entre o atributo e a perícia
@@ -332,9 +373,8 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       ...sustainStepMods(reduction),
     ],
   });
-  const errors = [];
-  if (pdCost > model.resources.pd) errors.push('pd');
-  if (impetoCost > model.resources.impeto) errors.push('impeto');
+  // Saldos que não dão: 'pd', 'pv' e as chaves dos recursos
+  const errors = costShortfall(total, wallet);
 
   // Sem DT no teste de esconderijo (o campo some da janela enquanto a opção está marcada); no
   // esconder-se e no distrair, a DT é a da ação (7 + 3 por uso), e não a do campo
@@ -372,6 +412,7 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
     selection: {
       bonus: normalizeBonus(manual),
       active,
+      reserva: reserveCount,
       controlFear: control && !hide,
       embraceFear: embrace,
       dt: testDt,
@@ -387,10 +428,15 @@ export function evaluateSelection(model, selection = emptySelection(model.dt)) {
       },
     },
     dt: testDt,
-    pdCost,
-    impetoCost,
-    pdLeft: model.resources.pd - pdCost,
-    impetoLeft: model.resources.impeto - impetoCost,
+    pdCost: total.pd,
+    pvCost: total.pv,
+    impetoCost: total.recursos.impeto ?? 0,
+    resourceCosts: total.recursos,
+    pdLeft: wallet.pd - total.pd,
+    pvLeft: wallet.pv - total.pv,
+    impetoLeft: wallet.recursos.impeto - (total.recursos.impeto ?? 0),
+    resourceLeft,
+    reserva: reserveDice,
     fear,
     slots,
     blocked: {
@@ -418,6 +464,8 @@ export function selectionToOptions(model, selection) {
   const options = {
     extraDice: bonusDice(evaluated.selection.bonus),
     active: evaluated.selection.active,
+    // Dados da reserva de bônus: a ficha tira estes da reserva quando o teste rola
+    ...(evaluated.reserva.length ? { useBonusDice: evaluated.reserva.length } : {}),
     controlFear: evaluated.selection.controlFear,
     embraceFear: evaluated.selection.embraceFear,
   };

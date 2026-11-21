@@ -91,12 +91,16 @@ test('activeBoosts: ímpeto dá +d4 por 1 espaço; a furtiva dá +d8 por 3 PD s�
   assert.deepEqual(activeBoosts(['impetoDado'], { skillKey: 'luta', impeto: 2, pd: 0 }), {
     extraDice: [4],
     pdCost: 0,
+    pvCost: 0,
+    resourceCosts: { impeto: 1 },
     impetoCost: 1,
     used: ['impetoDado'],
   });
   assert.deepEqual(activeBoosts(['sorrateiro'], { skillKey: 'furtividade', impeto: 0, pd: 5 }), {
     extraDice: [8],
     pdCost: 3,
+    pvCost: 0,
+    resourceCosts: {},
     impetoCost: 0,
     used: ['sorrateiro'],
   });
@@ -153,8 +157,8 @@ test('sceneReset mantém o PV de quem tem vida e grava os recursos calculados', 
 
 test('activeBoosts usa os dados extras informados (efeitos) no lugar dos antigos', () => {
   const diceOptions = [
-    { key: 'e1', die: 10, cost: { pd: 2, impeto: 0 } },
-    { key: 'e2', die: 6, cost: { pd: 0, impeto: 0 } },
+    { key: 'e1', die: 10, cost: { pd: 2, pv: 0, recursos: {} } },
+    { key: 'e2', die: 6, cost: { pd: 0, pv: 0, recursos: {} } },
   ];
   const boosts = activeBoosts(['e1', 'e2', 'impetoDado'], {
     skillKey: 'luta',
@@ -163,7 +167,14 @@ test('activeBoosts usa os dados extras informados (efeitos) no lugar dos antigos
     diceOptions,
   });
   // `impetoDado` não está entre as opções informadas: não vale
-  assert.deepEqual(boosts, { extraDice: [10, 6], pdCost: 2, impetoCost: 0, used: ['e1', 'e2'] });
+  assert.deepEqual(boosts, {
+    extraDice: [10, 6],
+    pdCost: 2,
+    pvCost: 0,
+    resourceCosts: {},
+    impetoCost: 0,
+    used: ['e1', 'e2'],
+  });
   assert.deepEqual(
     activeBoosts(['e1'], { skillKey: 'luta', impeto: 0, pd: 1, diceOptions }).used,
     [],

@@ -7,6 +7,7 @@ import { computeDamage, damageBaseValue } from './damage.js';
 import { damageActor } from './health.js';
 import { weaponSkill, weaponDamageLabel, itemUse, itemUseChanges } from './equipment.js';
 import { firstEffect } from './ability-effects-actor.js';
+import { weaponTestKind } from './ability-effects.js';
 import { abilityNote } from './abilities-chat.js';
 
 const TEMPLATE_ATAQUE = `systems/${SYSTEM_ID}/templates/chat/ataque.hbs`;
@@ -42,6 +43,8 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
   const companion = companionDice.length > 0;
   const result = await rollSkill(actor, weaponSkill(system), {
     dt: 7,
+    // Tipo do ataque para os filtros dos dados extras (a janela pré-teste já manda o mesmo)
+    testKind: weaponTestKind(system),
     ...options,
     extraDice: [...companionDice, ...(options.extraDice ?? [])],
   });

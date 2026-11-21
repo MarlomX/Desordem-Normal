@@ -23,7 +23,7 @@ import {
   updateExtra,
 } from '../rolls/extras.js';
 import { useAbilityEffect, rollDodge, endScene } from '../rolls/abilities-chat.js';
-import { groupBonusDice } from '../rolls/ability-effects.js';
+import { groupBonusDice, weaponTestKind } from '../rolls/ability-effects.js';
 import { resourceBars } from './ability-controls.js';
 import {
   addRelation,
@@ -754,6 +754,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       event,
       {
         skillKey: weaponSkill(weapon.system),
+        // Dados extras só de ataque corpo a corpo ou à distância aparecem conforme a arma
+        testKind: weaponTestKind(weapon.system),
         baseExtraDice: weaponCompanionDice(this.document, weapon),
       },
       (options) => attackWithWeapon(this.document, weapon, options),

@@ -11,7 +11,10 @@ import {
   COSTS,
   IMPETO_MAX,
   SNEAK_SKILLS,
+  addCostBags,
+  costShortfall,
   dialogDiceOptions,
+  emptyCostBag,
   legacyEffects,
 } from './ability-effects.js';
 
@@ -111,41 +114,62 @@ const LEGACY_DICE = [...legacyEffects('impeto'), ...legacyEffects('sorrateiro')]
  * @param {string[]} active Opções marcadas (ids dos efeitos `dadoExtra`, 'naoLetal', 'defesa').
  * @param {Object} context
  * @param {string} context.skillKey Perícia do teste.
- * @param {number} context.impeto Espaços de ímpeto.
  * @param {number} context.pd PD disponíveis (já descontado o custo do pavor).
+ * @param {number} [context.pv] PV disponíveis.
+ * @param {Object<string, number>} [context.recursos] Recursos das habilidades (ímpeto...).
+ * @param {number} [context.impeto] Atalho antigo: espaços de ímpeto (se `recursos` faltar).
  * @param {object[]} [context.diceOptions] Dados extras do ator (`dialogDiceOptions`); sem isso,
  *   valem os das automações antigas de ímpeto e furtividade.
  * @param {boolean} [context.allowNonLethal=false] Só o teste de lesão aceita o dano não letal.
  * @param {boolean} [context.allowDefense=false] Só o teste de Defender-se aceita o d6 da defesa.
- * @returns {{extraDice: number[], pdCost: number, impetoCost: number, used: string[]}}
+ * @returns {{extraDice: number[], pdCost: number, pvCost: number,
+ *   resourceCosts: Object<string, number>, impetoCost: number, used: string[]}}
  */
 export function activeBoosts(
   active,
-  { skillKey, impeto, pd, diceOptions, allowNonLethal = false, allowDefense = false },
+  {
+    skillKey,
+    impeto = 0,
+    pd,
+    pv = 0,
+    recursos,
+    diceOptions,
+    allowNonLethal = false,
+    allowDefense = false,
+  },
 ) {
-  const boosts = { extraDice: [], pdCost: 0, impetoCost: 0, used: [] };
+  const wallet = { pd, pv, recursos: recursos ?? { impeto } };
+  const extraDice = [];
+  const used = [];
+  let total = emptyCostBag();
   const options = diceOptions ?? dialogDiceOptions(LEGACY_DICE, { skillKey });
   for (const option of options) {
     if (!active.includes(option.key)) continue;
-    // Cada opção confere o recurso inteiro (como a janela pré-teste)
-    if (option.cost.impeto > impeto || option.cost.pd > pd) continue;
-    boosts.extraDice.push(option.die);
-    boosts.pdCost += option.cost.pd;
-    boosts.impetoCost += option.cost.impeto;
-    boosts.used.push(option.key);
+    // Cada opção confere o saldo inteiro (como a janela pré-teste)
+    if (costShortfall(option.cost, wallet).length) continue;
+    extraDice.push(option.die);
+    total = addCostBags(total, option.cost);
+    used.push(option.key);
   }
   // Dano não letal (só no teste de lesão): +1d6, sem custo
   if (allowNonLethal && active.includes('naoLetal')) {
-    boosts.extraDice.push(NON_LETHAL_BONUS_DIE);
-    boosts.used.push('naoLetal');
+    extraDice.push(NON_LETHAL_BONUS_DIE);
+    used.push('naoLetal');
   }
   // Defender-se (só no teste de defesa do teste oposto): +d6, sem custo. Desmarcado na janela,
   // o mesmo teste serve para uma esquiva sem o dado (poderes parecidos com defender-se)
   if (allowDefense && active.includes('defesa')) {
-    boosts.extraDice.push(DEFENSE_BONUS_DIE);
-    boosts.used.push('defesa');
+    extraDice.push(DEFENSE_BONUS_DIE);
+    used.push('defesa');
   }
-  return boosts;
+  return {
+    extraDice,
+    pdCost: total.pd,
+    pvCost: total.pv,
+    resourceCosts: total.recursos,
+    impetoCost: total.recursos.impeto ?? 0,
+    used,
+  };
 }
 
 /**

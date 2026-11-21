@@ -3688,3 +3688,16 @@ button.desordem-desafios-cartao__nome:hover {
   border-color: var(--dn-gold);
   background: color-mix(in srgb, var(--dn-gold) 18%, transparent);
 }
+
+/* ===== Janela pré-teste genérica (v0.20.5) ===== */
+
+.desordem-custo--pv {
+  border-color: var(--dn-pv);
+  color: var(--dn-pv);
+}
+
+/* Custo em outro recurso de habilidade (o nome vai na unidade) */
+.desordem-custo--recurso {
+  border-color: var(--dn-mental);
+  color: var(--dn-mental);
+}

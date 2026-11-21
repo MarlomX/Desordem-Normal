@@ -9,6 +9,7 @@
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS } from '../config.js';
 import { rollSkill, rollExtraSkill, testDicePreview } from '../rolls/chat.js';
 import { attackWithWeapon } from '../rolls/equipment-chat.js';
+import { weaponTestKind } from '../rolls/ability-effects.js';
 import { weaponSkill } from '../rolls/equipment.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { proposeOpposed } from '../opposed/opposed-chat.js';
@@ -433,8 +434,10 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
   static async #onAttackWeapon(event, target) {
     const weapon = this.document.items.get(target.dataset.itemId);
     if (!weapon) return;
-    await this.#rollWithChoices(event, { skillKey: weaponSkill(weapon.system) }, (options) =>
-      attackWithWeapon(this.document, weapon, options),
+    await this.#rollWithChoices(
+      event,
+      { skillKey: weaponSkill(weapon.system), testKind: weaponTestKind(weapon.system) },
+      (options) => attackWithWeapon(this.document, weapon, options),
     );
   }
 

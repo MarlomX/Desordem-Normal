@@ -18,7 +18,12 @@ import {
   activeBoosts,
   resolveWithValues,
 } from './abilities.js';
-import { dialogDiceOptions } from './ability-effects.js';
+import {
+  conditionalStepMods,
+  dialogDiceOptions,
+  pickBonusDice,
+  spendBonusDice
+} from './ability-effects.js';
 import {
   actorEffects,
   actorResources,
@@ -189,6 +194,10 @@ export async function runTest(actor, options) {
   if (actor && options.pdCost > 0) {
     await actor.update({ 'system.pd.value': Math.max(0, actor.system.pd.value - options.pdCost) });
   }
+  // PV gastos por habilidades marcadas na janela pré-teste
+  if (actor && options.pvCost > 0) {
+    await actor.update({ 'system.pv.value': Math.max(0, actor.system.pv.value - options.pvCost) });
+  }
   const outcome = await executeTest(options);
   if (actor && options.fearStored && outcome.result.fear?.ended) {
     await actor.update({ 'system.estado.pavor': 0 });
@@ -198,24 +207,30 @@ export async function runTest(actor, options) {
 }
 
 /**
- * Efeitos das habilidades depois de um teste: paga o ímpeto gasto na janela pré-teste e dispara
- * os ganhos de «ao falhar» (efeitos `ganharRecurso`; ex.: enche a barra de ímpeto) se o teste
- * com DT falhou.
+ * Efeitos das habilidades depois de um teste: paga os recursos gastos na janela pré-teste
+ * (ímpeto e outros), tira da reserva os dados bônus usados e dispara os ganhos de «ao falhar»
+ * (efeitos `ganharRecurso`; ex.: enche a barra de ímpeto) se o teste com DT falhou.
  */
 async function settleAbilities(actor, options, result) {
   // Ameaças (criaturas) não têm recursos de habilidade
   if (!actor.system.recursosHab) return;
   const { values } = actorResources(actor);
   const paid = { ...values };
-  if (options.impetoCost && paid.impeto !== undefined) {
-    paid.impeto = Math.max(0, paid.impeto - options.impetoCost);
+  const changed = {};
+  for (const [key, cost] of Object.entries(options.resourceCosts ?? {})) {
+    if (!cost || paid[key] === undefined) continue;
+    paid[key] = Math.max(0, paid[key] - cost);
+    changed[key] = paid[key];
   }
   const updates = {
-    ...resourceUpdates(paid.impeto !== values.impeto ? { impeto: paid.impeto } : {}),
+    ...resourceUpdates(changed),
     ...(impetoFillsOnFailure(result, options.showDt)
       ? triggerUpdates(actor, 'falha', null, paid)
       : {}),
   };
+  if (options.bonusDiceSpent?.length) {
+    updates['system.dadosBonus'] = spendBonusDice(actor.system.dadosBonus, options.bonusDiceSpent);
+  }
   if (Object.keys(updates).length) await actor.update(updates);
 }
 
@@ -289,6 +304,16 @@ export async function rollTest({
   return result;
 }
 
+/** PV e PD atuais e máximos (condições dos passos condicionais). */
+function conditionState(system) {
+  return {
+    pv: system.pv?.value ?? 0,
+    pvMax: system.pv?.max ?? 0,
+    pd: system.pd?.value ?? 0,
+    pdMax: system.pd?.max ?? 0
+  };
+}
+
 /**
  * Dados finais de um teste (atributo e perícia já com contusão, passos e efeitos), sem rolar.
  * Serve para a prévia da janela pré-teste.
@@ -305,6 +330,7 @@ export function testDicePreview(actor, skillKey, attribute, extraStepMods = []) 
       ...extraStepMods,
       ...contusionStepMods(system.estado, attrKey),
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
+      ...conditionalStepMods(actorEffects(actor), conditionState(system)),
     ],
   });
   return {
@@ -330,6 +356,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     active = [],
     allowNonLethal = false,
     allowDefense = false,
+    testKind = 'qualquer',
+    useBonusDice = 0,
     ...rest
   } = options;
   let fear;
@@ -347,30 +375,41 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   }
 
   // Habilidades escolhidas na janela pré-teste (efeitos `dadoExtra`: ímpeto, dado furtivo...)
+  const entries = actorEffects(actor);
   const boosts = activeBoosts(active, {
     skillKey,
-    impeto: resources.impeto,
     pd: resources.pd - fear.pdCost,
-    diceOptions: dialogDiceOptions(actorEffects(actor), {
+    pv: system.pv?.value ?? 0,
+    recursos: actorResources(actor, entries).values,
+    diceOptions: dialogDiceOptions(entries, {
       skillKey,
-      testKind: allowDefense ? 'defesa' : 'qualquer',
+      // Tipo do teste para os filtros dos dados extras (defesa, ataque corpo a corpo...)
+      testKind: allowDefense ? 'defesa' : testKind,
     }),
     allowNonLethal,
     allowDefense,
   });
+  // Dados da reserva de bônus escolhidos na janela (os maiores primeiro)
+  const reserveDice = pickBonusDice(system.dadosBonus, useBonusDice);
 
   return {
     ...rest,
     impetoCost: boosts.impetoCost,
+    pvCost: boosts.pvCost,
+    resourceCosts: boosts.resourceCosts,
+    bonusDiceSpent: reserveDice,
     // Contusão (Físico -1 passo), passos temporários e efeitos da ficha e penalidades fixas de lesões e traumas
     stepMods: [
       ...(rest.stepMods ?? []),
       ...contusionStepMods(system.estado, attrKey),
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
+      // Passos condicionais das habilidades (ex.: com PV na metade ou menos)
+      ...conditionalStepMods(entries, conditionState(system)),
     ],
     extraDice: [
       ...(rest.extraDice ?? []),
       ...boosts.extraDice,
+      ...reserveDice,
       ...(fear.bonusDie ? [fear.bonusDie] : []),
     ],
     modifier:

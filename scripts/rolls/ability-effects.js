@@ -447,13 +447,59 @@ export function payUpdates(cost, wallet) {
 // ---------- Janela pré-teste ----------
 
 /**
+ * Custo agregado («saco» de custos): PD, PV e cada recurso pela chave. É a forma em que a janela
+ * pré-teste soma o que as opções marcadas gastam.
+ * @typedef {{pd: number, pv: number, recursos: Object<string, number>}} CostBag
+ */
+
+/** Saco vazio (nada a pagar). */
+export function emptyCostBag() {
+  return { pd: 0, pv: 0, recursos: {} };
+}
+
+/** Custo de um efeito no formato de saco. */
+export function costBag(cost) {
+  const { tipo, valor, recurso } = normalizeCost(cost);
+  const bag = emptyCostBag();
+  if (tipo === 'pd') bag.pd = valor;
+  else if (tipo === 'pv') bag.pv = valor;
+  else if (tipo === 'recurso' && valor > 0) bag.recursos[recurso] = valor;
+  return bag;
+}
+
+/** Soma de dois sacos de custo. */
+export function addCostBags(a, b) {
+  const recursos = { ...a.recursos };
+  for (const [key, value] of Object.entries(b.recursos)) {
+    recursos[key] = (recursos[key] ?? 0) + value;
+  }
+  return { pd: a.pd + b.pd, pv: a.pv + b.pv, recursos };
+}
+
+/**
+ * O que falta para pagar um saco: 'pd', 'pv' e as chaves dos recursos insuficientes, nesta
+ * ordem. Vazio = dá para pagar.
+ * @param {CostBag} bag
+ * @param {{pd: number, pv: number, recursos: Object<string, number>}} wallet
+ */
+export function costShortfall(bag, wallet) {
+  const missing = [];
+  if (bag.pd > (wallet.pd ?? 0)) missing.push('pd');
+  if (bag.pv > (wallet.pv ?? 0)) missing.push('pv');
+  for (const [key, value] of Object.entries(bag.recursos)) {
+    if (value > (wallet.recursos?.[key] ?? 0)) missing.push(key);
+  }
+  return missing;
+}
+
+/**
  * Dados extras que a janela pré-teste oferece (efeitos `dadoExtra`), no formato de
- * `buildRollModel`. Por enquanto a janela só conhece custos em PD e no recurso `impeto`; os
- * outros custos chegam com a janela genérica.
+ * `buildRollModel`. O custo vem como saco (PD, PV ou um recurso).
  * @param {object[]} entries Efeitos do ator.
- * @param {{skillKey: string, testKind?: string}} context
- * @returns {{key: string, die: number, cost: {pd: number, impeto: number}, itemName: string,
- *   group: string, checked: boolean}[]}
+ * @param {{skillKey: string, testKind?: string}} context `testKind`: qualquer, ataqueCorpo,
+ *   ataqueDistancia ou defesa. Um efeito de «qualquer teste» vale em todos.
+ * @returns {{key: string, die: number, cost: CostBag, itemName: string, group: string,
+ *   checked: boolean}[]}
  */
 export function dialogDiceOptions(entries, { skillKey, testKind = 'qualquer' }) {
   const seen = new Set();
@@ -463,23 +509,59 @@ export function dialogDiceOptions(entries, { skillKey, testKind = 'qualquer' }) 
     if (seen.has(entry.id)) continue;
     if (pericias.length && !pericias.includes(skillKey)) continue;
     if (teste !== 'qualquer' && teste !== testKind) continue;
-    let cost;
-    if (custo.tipo === 'nenhum') cost = { pd: 0, impeto: 0 };
-    else if (custo.tipo === 'pd') cost = { pd: custo.valor, impeto: 0 };
-    else if (custo.tipo === 'recurso' && custo.recurso === 'impeto') {
-      cost = { pd: 0, impeto: custo.valor };
-    } else continue;
     seen.add(entry.id);
     options.push({
       key: entry.id,
       die: dado,
-      cost,
+      cost: costBag(custo),
       itemName: entry.itemName ?? '',
       group: grupo,
       checked: marcado,
     });
   }
   return options;
+}
+
+/** Tipo de teste de um ataque com a arma (filtro dos dados extras). */
+export function weaponTestKind(weaponSystem) {
+  return weaponSystem?.tipo === 'corpo' ? 'ataqueCorpo' : 'ataqueDistancia';
+}
+
+/**
+ * Passos dos efeitos `passoCondicional` cuja condição vale agora: um aumento de passo no dado da
+ * perícia (o mesmo dado que a ajuda e o esforço extra mudam) por efeito.
+ * @param {object[]} entries Efeitos do ator.
+ * @param {{pv: number, pvMax: number, pd: number, pdMax: number}} state
+ * @returns {{target: string, steps: number}[]}
+ */
+export function conditionalStepMods(entries, { pv, pvMax, pd, pdMax }) {
+  const holds = {
+    pvMetade: halfOrLess(pv, pvMax),
+    pdMetade: halfOrLess(pd, pdMax),
+  };
+  return effectsOfType(entries, 'passoCondicional')
+    .filter((entry) => holds[entry.params.condicao])
+    .map((entry) => ({ target: 'skill', steps: entry.params.passos }));
+}
+
+/**
+ * Os `count` maiores dados da reserva de dados bônus (os que a janela usa primeiro).
+ * @param {number[]} reserve `system.dadosBonus`.
+ */
+export function pickBonusDice(reserve, count) {
+  const valid = (Array.isArray(reserve) ? reserve : []).filter((die) => DIE_SIDES.includes(die));
+  const n = Math.max(0, Math.min(Math.trunc(Number(count) || 0), valid.length));
+  return [...valid].sort((a, b) => b - a).slice(0, n);
+}
+
+/** Reserva depois de gastar os dados usados (tira um de cada, na ordem da reserva). */
+export function spendBonusDice(reserve, used) {
+  const left = [...(Array.isArray(reserve) ? reserve : [])];
+  for (const die of used) {
+    const index = left.indexOf(die);
+    if (index >= 0) left.splice(index, 1);
+  }
+  return left;
 }
 
 // ---------- Limite por rodada ----------

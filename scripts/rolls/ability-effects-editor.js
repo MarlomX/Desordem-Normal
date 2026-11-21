@@ -99,8 +99,10 @@ export function templateEffects(key) {
 export function effectSupported(effect) {
   const { params } = effect;
   switch (effect.tipo) {
-    // Barras, botões da ficha e cartão do teste (desde a v0.20.4, para qualquer recurso)
+    // Barras e botões da ficha (v0.20.4), janela pré-teste genérica (v0.20.5) e cartão do teste
     case 'recurso':
+    case 'dadoExtra':
+    case 'passoCondicional':
     case 'ajusteDados':
     case 'rerrolar':
     case 'defesaLivre':
@@ -111,15 +113,6 @@ export function effectSupported(effect) {
     case 'ganharRecurso':
       // «Ao se defender» e «início do combate» chegam com os gatilhos
       return ['falha', 'perdeOposto', 'inicioCena', 'acao'].includes(params.gatilho);
-    case 'dadoExtra': {
-      // Até a janela pré-teste genérica: custo em PD, ímpeto ou nenhum; teste qualquer ou defesa
-      const cost = params.custo;
-      const payable =
-        cost.tipo === 'nenhum' ||
-        cost.tipo === 'pd' ||
-        (cost.tipo === 'recurso' && cost.recurso === 'impeto');
-      return payable && ['qualquer', 'defesa'].includes(params.teste);
-    }
     case 'companheiro':
       return params.teste !== 'defesa';
     default:

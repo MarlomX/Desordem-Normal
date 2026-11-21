@@ -285,8 +285,8 @@ test('dialogDiceOptions: furtivo só em Crime e Furtividade; ímpeto em qualquer
   assert.deepEqual(
     dialogDiceOptions(entries, { skillKey: 'crime' }).map((o) => [o.key, o.die, o.cost]),
     [
-      ['impetoDado', 4, { pd: 0, impeto: 1 }],
-      ['sorrateiro', 8, { pd: 3, impeto: 0 }],
+      ['impetoDado', 4, { pd: 0, pv: 0, recursos: { impeto: 1 } }],
+      ['sorrateiro', 8, { pd: 3, pv: 0, recursos: {} }],
     ],
   );
   assert.deepEqual(
@@ -295,7 +295,7 @@ test('dialogDiceOptions: furtivo só em Crime e Furtividade; ímpeto em qualquer
   );
 });
 
-test('dialogDiceOptions filtra pelo tipo de teste, ignora repetidos e custos que a janela não paga', () => {
+test('dialogDiceOptions filtra pelo tipo de teste, ignora repetidos e aceita qualquer custo', () => {
   const entries = collectEffects([
     ability('a', 'Escudo', {
       efeitos: [
@@ -311,13 +311,19 @@ test('dialogDiceOptions filtra pelo tipo de teste, ignora repetidos e custos que
       ],
     }),
   ]);
+  const options = dialogDiceOptions(entries, { skillKey: 'luta' });
   assert.deepEqual(
-    dialogDiceOptions(entries, { skillKey: 'luta' }).map((o) => o.key),
-    ['d1', 'd4'],
+    options.map((o) => [o.key, o.cost]),
+    [
+      ['d1', { pd: 0, pv: 0, recursos: {} }],
+      ['d2', { pd: 0, pv: 1, recursos: {} }],
+      ['d3', { pd: 0, pv: 0, recursos: { fe: 1 } }],
+      ['d4', { pd: 0, pv: 0, recursos: {} }],
+    ],
   );
-  assert.equal(dialogDiceOptions(entries, { skillKey: 'luta' })[0].die, 12);
+  assert.equal(options[0].die, 12);
   assert.equal(dialogDiceOptions(entries, { skillKey: 'luta', testKind: 'defesa' })[0].die, 6);
-  const last = dialogDiceOptions(entries, { skillKey: 'luta' })[1];
+  const last = options[3];
   assert.deepEqual([last.group, last.checked, last.itemName], ['acao', true, 'Escudo']);
 });
 

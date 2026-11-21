@@ -4,8 +4,9 @@
  * pavor antes de rolar. A lógica (opções, custos, prévia) está em `roll-dialog.js`.
  */
 import { SYSTEM_ID } from '../config.js';
-import { dialogDiceOptions } from './ability-effects.js';
-import { actorEffects } from './ability-effects-actor.js';
+import { dialogDiceOptions, groupBonusDice } from './ability-effects.js';
+import { actorEffects, actorResources } from './ability-effects-actor.js';
+import { resourceName } from '../sheets/ability-controls.js';
 import { advanceDtField } from './chase.js';
 import { render, testDicePreview } from './chat.js';
 import { buildFearDie } from '../sheets/dado-pavor.js';
@@ -23,7 +24,7 @@ const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localiz
 
 /** Opções da janela com rótulo e origem próprios no idioma; as outras usam os genéricos. */
 const KNOWN_OPTIONS = ['impetoDado', 'sorrateiro', 'naoLetal', 'defesa'];
-const KNOWN_ORIGINS = [...KNOWN_OPTIONS, 'base', 'pavor', 'folego', 'manual', 'vazio'];
+const KNOWN_ORIGINS = [...KNOWN_OPTIONS, 'base', 'pavor', 'folego', 'manual', 'vazio', 'reserva'];
 
 /** Opção marcada na seção de furtividade ('' = teste comum). */
 const stealthChoice = (form) =>
@@ -35,6 +36,8 @@ function readSelection(form) {
   return {
     bonus: [Number(fields.bonus0?.value), Number(fields.bonus1?.value)],
     active: [...form.querySelectorAll('input[name="active"]:checked')].map((box) => box.value),
+    // Dados da reserva de bônus a usar (quantidade)
+    reserva: Number(fields.reserva?.value ?? 0),
     controlFear: Boolean(fields.controlFear?.checked),
     embraceFear: Boolean(fields.embraceFear?.checked),
     dt: fields.dt?.value,
@@ -121,16 +124,23 @@ function slotElement(slot, manualIndex) {
   return wrapper;
 }
 
-/** Bloco de custo com número grande (PD ou ímpeto): "−3 PD · restam 7". */
-function costBlock(kind, spent, left) {
+/**
+ * Bloco de custo com número grande (PD, PV, ímpeto ou outro recurso): "−3 PD · restam 7".
+ * @param {string} kind 'pd', 'pv', 'impeto' ou a chave de outro recurso.
+ * @param {number} spent
+ * @param {number} left
+ * @param {string} [unitText] Nome do recurso (para os que não têm unidade própria no idioma).
+ */
+function costBlock(kind, spent, left, unitText = '') {
+  const known = ['pd', 'pv', 'impeto'].includes(kind);
   const block = document.createElement('div');
-  block.className = `desordem-custo desordem-custo--${kind}`;
+  block.className = `desordem-custo desordem-custo--${known ? kind : 'recurso'}`;
   block.classList.toggle('is-negativo', left < 0);
   const amount = document.createElement('strong');
   amount.textContent = `−${spent}`;
   const unit = document.createElement('span');
   unit.className = 'desordem-custo__unidade';
-  unit.textContent = t(`DESORDEM.Teste.Pre.Unidade.${kind}`);
+  unit.textContent = known ? t(`DESORDEM.Teste.Pre.Unidade.${kind}`) : unitText;
   const remaining = document.createElement('small');
   remaining.textContent = t('DESORDEM.Teste.Pre.Restam', { n: left });
   block.append(amount, unit, remaining);
@@ -301,8 +311,12 @@ function refresh(form, root, model) {
   const costs = root.querySelector('[data-custos]');
   const blocks = [];
   if (evaluation.pdCost) blocks.push(costBlock('pd', evaluation.pdCost, evaluation.pdLeft));
-  if (evaluation.impetoCost) {
-    blocks.push(costBlock('impeto', evaluation.impetoCost, evaluation.impetoLeft));
+  if (evaluation.pvCost) blocks.push(costBlock('pv', evaluation.pvCost, evaluation.pvLeft));
+  for (const [key, spent] of Object.entries(evaluation.resourceCosts)) {
+    if (!spent) continue;
+    blocks.push(
+      costBlock(key, spent, evaluation.resourceLeft[key], model.resourceNames?.[key] ?? key),
+    );
   }
   if (blocks.length) {
     costs.replaceChildren(...blocks);
@@ -313,8 +327,18 @@ function refresh(form, root, model) {
     costs.replaceChildren(none);
   }
   root.querySelector('[data-erro]').textContent = evaluation.errors
-    .map((key) => t(`DESORDEM.Teste.Pre.Erro.${key}`))
+    .map((key) =>
+      ['pd', 'pv', 'impeto'].includes(key)
+        ? t(`DESORDEM.Teste.Pre.Erro.${key}`)
+        : t('DESORDEM.Teste.Pre.Erro.recurso', { nome: model.resourceNames?.[key] ?? key }),
+    )
     .join(' ');
+
+  // Dados bônus: a quantidade escolhida pode cair para caber nos espaços livres
+  const reserveField = form.elements.reserva;
+  if (reserveField && Number(reserveField.value) !== evaluation.reserva.length) {
+    reserveField.value = String(evaluation.reserva.length);
+  }
   root.classList.toggle('tem-erro', !evaluation.valid);
 
   const roll = root.closest('.application')?.querySelector('[data-action="roll"]');
@@ -340,6 +364,8 @@ function refresh(form, root, model) {
  * @param {{id: string, nome: string, dt: number}[]} [config.challenges] Testes estendidos ativos
  *   de que o personagem participa: com algum, a janela oferece «usar no desafio».
  * @param {boolean} [config.allowDefense] Teste de Defender-se: oferece o +d6 já marcado.
+ * @param {string} [config.testKind] Tipo do teste para os filtros dos dados extras: qualquer,
+ *   ataqueCorpo ou ataqueDistancia (a defesa vem de `allowDefense`). Volta nas escolhas.
  * @param {object[]} [config.stepMods] Passos próprios deste teste, só para a prévia dos dados
  *   (quem rola precisa passar os mesmos passos ao teste).
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
@@ -358,15 +384,21 @@ export async function askRollChoices(
     stealth = null,
     challenges = [],
     allowDefense = false,
+    testKind = 'qualquer',
     stepMods = [],
     shift = false,
   },
 ) {
+  // O tipo do teste volta nas escolhas, para a rolagem filtrar os dados extras do mesmo jeito
+  const kind = testKind === 'qualquer' ? {} : { testKind };
   // Pular a janela usa as escolhas padrão: na defesa, o +d6 (que vem marcado)
-  if (shift) return allowDefense ? { active: ['defesa'] } : {};
+  if (shift) return allowDefense ? { active: ['defesa'], ...kind } : { ...kind };
   const dice = testDicePreview(actor, skillKey, attribute, stepMods);
   // PD, ímpeto e pavor (0 numa criatura: a janela não mostra pavor nem custos)
   const resources = testResources(actor.system);
+  // Recursos das habilidades (valores e nomes) e reserva de dados bônus
+  const entries = actorEffects(actor);
+  const abilityResources = actorResources(actor, entries);
   const model = buildRollModel({
     skillKey,
     attrDie: dice.attrDie,
@@ -374,11 +406,16 @@ export async function askRollChoices(
     baseExtraDice,
     has: { naoLetal: allowNonLethal, defesa: allowDefense },
     // Dados extras dos efeitos das habilidades (ímpeto, furtivo...), filtrados pela perícia
-    diceOptions: dialogDiceOptions(actorEffects(actor), {
+    diceOptions: dialogDiceOptions(entries, {
       skillKey,
-      testKind: allowDefense ? 'defesa' : 'qualquer',
+      testKind: allowDefense ? 'defesa' : testKind,
     }),
-    resources: { impeto: resources.impeto, pd: resources.pd },
+    resources: {
+      pd: resources.pd,
+      pv: actor.system.pv?.value ?? 0,
+      recursos: abilityResources.values,
+      dadosBonus: actor.system.dadosBonus ?? [],
+    },
     fearDie: resources.fearDie,
     ignoreFear,
     dt,
@@ -388,13 +425,28 @@ export async function askRollChoices(
     challenges,
   });
 
+  // Nomes dos recursos (custos, erros e motivos de indisponível)
+  model.resourceNames = Object.fromEntries(
+    Object.values(abilityResources.defs).map((def) => [def.chave, resourceName(def, t)]),
+  );
+  const resourceText = (key, n) =>
+    key === 'impeto'
+      ? t('DESORDEM.Teste.Pre.CustoImpeto', { n })
+      : t('DESORDEM.Teste.Pre.CustoRecurso', { n, nome: model.resourceNames[key] ?? key });
   const costText = (cost) =>
     [
       cost.pd ? t('DESORDEM.Teste.Pre.CustoPD', { n: cost.pd }) : '',
-      cost.impeto ? t('DESORDEM.Teste.Pre.CustoImpeto', { n: cost.impeto }) : '',
+      cost.pv ? t('DESORDEM.Teste.Pre.CustoPV', { n: cost.pv }) : '',
+      ...Object.entries(cost.recursos ?? {}).map(([key, n]) => (n ? resourceText(key, n) : '')),
     ]
       .filter(Boolean)
       .join(' · ');
+  const reasonText = (reason) =>
+    ['pd', 'pv', 'impeto'].includes(reason)
+      ? t(`DESORDEM.Teste.Pre.Indisponivel.${reason}`)
+      : t('DESORDEM.Teste.Pre.Indisponivel.recurso', {
+          nome: model.resourceNames[reason] ?? reason,
+        });
   const abilityRows = model.abilities.map((ability) => ({
     ...ability,
     // As opções conhecidas têm rótulo próprio; as outras, o nome da habilidade e o dado
@@ -402,7 +454,7 @@ export async function askRollChoices(
       ? t(`DESORDEM.Teste.Pre.Hab.${ability.key}`, { die: ability.die })
       : t('DESORDEM.Teste.Pre.HabEfeito', { nome: ability.itemName ?? '', die: ability.die }),
     costText: costText(ability.cost),
-    reasonText: ability.reason ? t(`DESORDEM.Teste.Pre.Indisponivel.${ability.reason}`) : '',
+    reasonText: ability.reason ? reasonText(ability.reason) : '',
   }));
   const content = await render(TEMPLATE, {
     titulo: `${dice.attrLabel} + ${dice.skillLabel}`,
@@ -458,6 +510,15 @@ export async function askRollChoices(
           ? entry.nome
           : t('DESORDEM.Desafio.Pre.Opcao', { nome: entry.nome, dt: entry.dt }),
       })),
+    },
+    // Reserva de dados bônus: escolher quantos usar (os maiores primeiro)
+    reserva: model.reserva && {
+      texto: t('DESORDEM.Teste.Pre.ReservaTexto', {
+        dados: groupBonusDice(model.reserva.dice)
+          .map(({ die, count }) => `${count}d${die}`)
+          .join(' + '),
+      }),
+      options: Array.from({ length: model.reserva.dice.length + 1 }, (_, n) => ({ n })),
     },
     // Habilidades e ações (ex.: Defender-se) usam o mesmo campo `active`; só a seção muda
     abilities: abilityRows.filter((ability) => ability.group !== 'acao'),
@@ -535,7 +596,7 @@ export async function askRollChoices(
   // Só o botão Rolar confirma. Cancelar e fechar a janela devolvem outra coisa (o nome da ação
   // ou null) e não podem rolar.
   if (answer?.confirmed !== true) return null;
-  return selectionToOptions(model, answer.selection);
+  return { ...selectionToOptions(model, answer.selection), ...kind };
 }
 
 export { emptySelection };

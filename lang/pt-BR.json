@@ -63,7 +63,9 @@
         },
         "Indisponivel": {
           "impeto": "sem ímpeto suficiente",
-          "pd": "sem PD suficiente"
+          "pd": "sem PD suficiente",
+          "pv": "sem PV suficiente",
+          "recurso": "sem {nome} suficiente"
         },
         "CustoPD": "{n} PD",
         "CustoImpeto": "{n} de ímpeto",
@@ -74,7 +76,9 @@
         "SemCusto": "Sem custo.",
         "Erro": {
           "pd": "PD insuficientes para estas escolhas.",
-          "impeto": "Ímpeto insuficiente para estas escolhas."
+          "impeto": "Ímpeto insuficiente para estas escolhas.",
+          "pv": "PV insuficientes para estas escolhas.",
+          "recurso": "{nome} insuficiente para estas escolhas."
         },
         "DT": "DT",
         "DTMenos": "Reduzir DT",
@@ -90,16 +94,22 @@
           "manual": "Bônus",
           "vazio": "Livre",
           "defesa": "Defesa",
-          "habilidade": "Habilidade"
+          "habilidade": "Habilidade",
+          "reserva": "Bônus recebido"
         },
         "SemEspaco": "sem espaço de dado",
         "Unidade": {
           "pd": "PD",
-          "impeto": "ímpeto"
+          "impeto": "ímpeto",
+          "pv": "PV"
         },
         "Restam": "restam {n}",
         "Acoes": "Ações",
-        "HabEfeito": "{nome} (+d{die})"
+        "HabEfeito": "{nome} (+d{die})",
+        "CustoPV": "{n} PV",
+        "CustoRecurso": "{n} de {nome}",
+        "Reserva": "Dados bônus",
+        "ReservaTexto": "Usar da reserva ({dados}):"
       }
     },
     "Ficha": {

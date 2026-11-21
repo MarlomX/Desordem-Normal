@@ -22,6 +22,7 @@ import { resolveWithValues } from '../rolls/abilities.js';
 import { triggerUpdates } from '../rolls/ability-effects-actor.js';
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
 import { weaponCompanionDice } from '../rolls/equipment-chat.js';
+import { weaponTestKind } from '../rolls/ability-effects.js';
 import { abilityNote } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
 import {
@@ -352,14 +353,16 @@ async function rollSide(message, side, event) {
 
   // Defender-se: o +d6 aparece na janela pré-teste já marcado (desmarcar = esquiva sem o dado)
   const allowDefense = data.papel === 'defesa';
+  const weapon = arma ? actor.items.get(arma.id) : null;
   const options = await askRollChoices(actor, {
     skillKey: skill,
     showDt: false,
     allowDefense,
+    // Ataque com arma: os dados extras de ataque corpo a corpo ou à distância entram
+    ...(weapon ? { testKind: weaponTestKind(weapon.system) } : {}),
     shift: event?.shiftKey,
   });
   if (!options) return;
-  const weapon = arma ? actor.items.get(arma.id) : null;
   const companion = weapon ? weaponCompanionDice(actor, weapon) : [];
   const test = skillTestOptions(actor, skill, undefined, {
     ...options,
