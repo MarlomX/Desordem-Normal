@@ -6,6 +6,7 @@
 import { SYSTEM_ID, ATRIBUTOS } from '../config.js';
 import { render, postMessage, rebuildTest, rollTest, skillTestOptions } from './chat.js';
 import { startGroupDice } from './bonus-dice-chat.js';
+import { adjustLabel } from '../sheets/ability-controls.js';
 import { applyAnalysis, rerollCandidates, replaceDie, sceneReset } from './abilities.js';
 import { canPay, payUpdates, sceneResources } from './ability-effects.js';
 import {
@@ -91,6 +92,8 @@ export async function useAbilityEffect(actor, itemId, effectId) {
       return entry.params.resultado === 'curarPV'
         ? healAlly(actor, itemId, effectId)
         : startGroupDice(actor, entry);
+    case 'interceptar':
+      return interceptAttack(actor, entry);
     default:
       return undefined;
   }
@@ -172,6 +175,29 @@ export async function impetoAction(actor, itemId = null, effectId = null) {
         t('DESORDEM.Habilidade.ImpetoAcaoDetalhe'),
       )
     : abilityNote(actor, t('DESORDEM.Efeito.Nota.acaoNota', { nome: entry.itemName }));
+}
+
+/**
+ * Assumir um ataque contra um aliado (efeito `interceptar`): gasta o custo, marca o uso da rodada
+ * e avisa no chat. O aliado é o token mirado (sem ele, o aviso não diz quem). A mesa redireciona
+ * o ataque e o dano (quem aplica o dano escolhe o alvo).
+ */
+async function interceptAttack(actor, entry) {
+  if (!usableThisRound(actor, entry)) {
+    return warn('DESORDEM.Efeito.Aviso.Rodada', { nome: entry.itemName });
+  }
+  const wallet = walletOf(actor);
+  if (!canPay(entry.params.custo, wallet)) return warnCost(entry, null);
+  const ally = [...game.user.targets][0]?.actor ?? null;
+  if (ally?.id === actor.id) return warn('DESORDEM.Efeito.Aviso.AliadoSiMesmo');
+  const updates = { ...payUpdates(entry.params.custo, wallet), ...roundUseUpdate(entry) };
+  if (Object.keys(updates).length) await actor.update(updates);
+  return abilityNote(
+    actor,
+    ally
+      ? t('DESORDEM.Efeito.Nota.interceptar', { nome: entry.itemName, aliado: ally.name })
+      : t('DESORDEM.Efeito.Nota.interceptarSemAlvo', { nome: entry.itemName }),
+  );
 }
 
 // ---------- Análise ----------
@@ -525,9 +551,7 @@ export function renderTestButtons(message, html) {
   const owner = game.actors.get(message.speaker?.actor);
   const adjust = owner?.isOwner ? adjustResource(owner) : null;
   if (adjust && adjust.points > 0) {
-    addButton(bar, t('DESORDEM.Habilidade.AnaliseBotao', { pontos: adjust.points }), () =>
-      useAnalysis(message, owner),
-    );
+    addButton(bar, adjustLabel(adjust, t), () => useAnalysis(message, owner));
   }
 
   // Repetir dado (Prontidão): um botão só, se algum personagem do usuário estiver pronto para usar

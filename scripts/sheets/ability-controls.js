@@ -28,7 +28,7 @@ const LEGACY_BUTTONS = Object.freeze({
 /** O efeito vira um botão na linha da habilidade? */
 export function isButtonEffect(effect) {
   if (effect.tipo === 'ganharRecurso') return effect.params.gatilho === 'acao';
-  return ['passoCena', 'acaoNota', 'testeAcao', 'defesaLivre'].includes(effect.tipo);
+  return ['passoCena', 'acaoNota', 'testeAcao', 'defesaLivre', 'interceptar'].includes(effect.tipo);
 }
 
 /** Nome de um recurso na ficha: o do efeito; sem nome, o padrão (ímpeto, marcadores) ou a chave. */
@@ -68,6 +68,21 @@ export function buttonLabel(effect, { t, skill }) {
     default:
       return t(key, { custo });
   }
+}
+
+/**
+ * Texto do botão de ajuste de dados no cartão (efeito `ajusteDados`): o da análise, como antes;
+ * com outro recurso, «Ajustar dados: Fúria (3)».
+ * @param {{chave: string, points: number, def: object}} adjust Veja `adjustResource`.
+ */
+export function adjustLabel(adjust, t) {
+  if (adjust.chave === 'analise') {
+    return t('DESORDEM.Habilidade.AnaliseBotao', { pontos: adjust.points });
+  }
+  return t('DESORDEM.Efeito.Botao.ajusteDados', {
+    nome: resourceName(adjust.def, t),
+    pontos: adjust.points,
+  });
 }
 
 /** Bolinhas de uma barra: n de 1 a máximo, cheias até o valor. */

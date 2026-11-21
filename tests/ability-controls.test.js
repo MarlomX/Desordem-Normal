@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {
   MAX_PIPS,
   abilityControls,
+  adjustLabel,
   buttonLabel,
   isButtonEffect,
   resourceBars,
@@ -175,4 +176,26 @@ test('groupBonusDice agrupa a reserva por tamanho e ignora valores estranhos', (
 test('sceneReset esvazia a reserva de dados bônus', () => {
   const changes = sceneReset({ pv: 3, contusao: false, estupor: false, efeitos: [] });
   assert.deepEqual(changes['system.dadosBonus'], []);
+});
+
+test('interceptar vira botão «Assumir ataque» com o custo; ajuste de dados usa o nome do recurso', () => {
+  assert.equal(isButtonEffect(one('interceptar')), true);
+  assert.equal(
+    buttonLabel(one('interceptar', { custo: { tipo: 'pd', valor: 2 } }), { t, skill }),
+    'Assumir ataque (2 PD)',
+  );
+  assert.equal(
+    adjustLabel(
+      { chave: 'analise', points: 3, def: { chave: 'analise', nome: 'A', itemName: 'A' } },
+      t,
+    ),
+    t('DESORDEM.Habilidade.AnaliseBotao', { pontos: 3 }),
+  );
+  assert.equal(
+    adjustLabel(
+      { chave: 'furia', points: 2, def: { chave: 'furia', nome: 'Fúria', itemName: 'X' } },
+      t,
+    ),
+    'Ajustar dados: Fúria (2)',
+  );
 });

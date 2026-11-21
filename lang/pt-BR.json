@@ -332,7 +332,9 @@
       "PorRA": "Total empatado: decidido pela maior rolagem alta (RA).",
       "PorSegunda": "Total e RA empatados: decidido pela segunda maior rolagem.",
       "PorDefesa": "Empate completo: a defesa vence.",
-      "LutaContraDistancia": "A defesa usou Luta contra um ataque à distância (a regra só permite Acrobacia): o mestre decide."
+      "LutaContraDistancia": "A defesa usou Luta contra um ataque à distância (a regra só permite Acrobacia): o mestre decide.",
+      "Esquiva": "Esquiva",
+      "Esquivar": "Esquivar"
     },
     "Ajuda": {
       "Recebida": "Ajuda de",
@@ -1495,16 +1497,22 @@
         "acaoNota": "Usar{custo}",
         "ganharRecurso": "+{quantidade} {recurso}{custo}",
         "testeAcao": "Teste de {pericia}{custo}",
-        "defesaLivre": "Defesa livre"
+        "defesaLivre": "Defesa livre",
+        "interceptar": "Assumir ataque{custo}",
+        "ajusteDados": "Ajustar dados: {nome} ({pontos})"
       },
       "Nota": {
         "passoCena": "usa {nome}: {atributo} sobe {passos} passo(s) até o fim da cena.",
         "passoDescricao": "O dado do atributo sobe {passos} passo(s) até o fim da cena.",
         "acaoNota": "usa {nome}.",
-        "ganho": "usa {nome} e ganha {valor} de {recurso}."
+        "ganho": "usa {nome} e ganha {valor} de {recurso}.",
+        "interceptar": "usa {nome} e assume o ataque contra {aliado}.",
+        "interceptarSemAlvo": "usa {nome} e assume um ataque contra um aliado."
       },
       "Aviso": {
-        "SemCusto": "Recursos insuficientes para usar {nome}."
+        "SemCusto": "Recursos insuficientes para usar {nome}.",
+        "Rodada": "{nome} já foi usada nesta rodada.",
+        "AliadoSiMesmo": "Mire o aliado que vai ser protegido, não você mesmo."
       }
     },
     "Plano": {

@@ -10,7 +10,13 @@ import { weaponSkill } from '../rolls/equipment.js';
 import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
-import { actorEffects, actorResources, effectById } from '../rolls/ability-effects-actor.js';
+import {
+  actorEffects,
+  actorResources,
+  effectById,
+  roundUseUpdate,
+  usableThisRound,
+} from '../rolls/ability-effects-actor.js';
 import { proposeOpposed } from '../opposed/opposed-chat.js';
 import { startFirstAid } from '../rolls/first-aid-chat.js';
 import { attributeChoiceUpdate } from '../rolls/attribute.js';
@@ -792,9 +798,22 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const entry = effectById(this.document, itemId, efeitoId);
     if (!entry) return;
     if (entry.tipo === 'defesaLivre') {
+      // Esquiva livre: 1×/rodada em combate (marcada ao rolar, como no cartão do teste oposto)
+      if (!usableThisRound(this.document, entry)) {
+        ui.notifications.warn(
+          game.i18n.format('DESORDEM.Efeito.Aviso.Rodada', { nome: entry.itemName }),
+        );
+        return;
+      }
       const skillKey = entry.params.pericia || 'acrobacia';
-      await this.#rollWithChoices(event, { skillKey, showDt: false }, (options) =>
-        rollDodge(this.document, options, skillKey),
+      await this.#rollWithChoices(
+        event,
+        { skillKey, showDt: false, testKind: 'defesa' },
+        async (options) => {
+          const used = roundUseUpdate(entry);
+          if (Object.keys(used).length) await this.document.update(used);
+          return rollDodge(this.document, options, skillKey);
+        },
       );
       return;
     }

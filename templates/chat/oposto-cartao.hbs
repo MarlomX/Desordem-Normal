@@ -8,7 +8,7 @@
       <strong>{{#if aberto}}{{localize "DESORDEM.Oposto.QuemAceitar"}}{{else}}{{nome}}{{/if}}</strong>
       <span class="desordem-oposto__pericia">
         {{#if ataque}}<i class="fa-solid fa-hand-fist" aria-hidden="true"></i> {{#if armaNome}}{{armaNome}}{{else}}{{localize "DESORDEM.Oposto.ArmaLivre"}}{{/if}}
-        {{else if defesa}}<i class="fa-solid fa-shield" aria-hidden="true"></i> {{localize "DESORDEM.Oposto.Defender"}}{{#if skillLabel}} ({{skillLabel}}){{/if}}
+        {{else if defesa}}<i class="fa-solid fa-shield" aria-hidden="true"></i> {{#if esquiva}}{{localize "DESORDEM.Oposto.Esquiva"}}{{else}}{{localize "DESORDEM.Oposto.Defender"}}{{/if}}{{#if skillLabel}} ({{skillLabel}}){{/if}}
         {{else}}{{#if skillLabel}}{{skillLabel}}{{else}}{{localize "DESORDEM.Oposto.PericiaLivre"}}{{/if}}{{/if}}
       </span>
     </div>

@@ -72,7 +72,8 @@ export function actorResources(actor, entries = actorEffects(actor)) {
 /**
  * Recurso gasto no ajuste dos dados depois de rolar (efeito `ajusteDados`; na análise, os
  * marcadores) e quanto o ator tem dele. `null` se o ator não tem o efeito ou o recurso.
- * @returns {{chave: string, points: number}|null}
+ * @returns {{chave: string, points: number, def: object}|null} `def`: definição do recurso
+ *   (nome, máximo), para o texto do botão.
  */
 export function adjustResource(actor) {
   const entries = actorEffects(actor);
@@ -80,7 +81,7 @@ export function adjustResource(actor) {
   if (!entry) return null;
   const { defs, values } = actorResources(actor, entries);
   const chave = entry.params.recurso;
-  return defs[chave] ? { chave, points: values[chave] } : null;
+  return defs[chave] ? { chave, points: values[chave], def: defs[chave] } : null;
 }
 
 /**

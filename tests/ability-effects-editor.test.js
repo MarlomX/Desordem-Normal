@@ -135,8 +135,8 @@ test('effectSupported marca o que ainda não tem uso nesta versão', () => {
   assert.equal(effectSupported(one('dadoExtra', { teste: 'ataqueCorpo' })), true);
   assert.equal(effectSupported(one('dadoExtra', { custo: { tipo: 'pd', valor: 2 } })), true);
   assert.equal(effectSupported(one('passoCondicional')), true);
-  assert.equal(effectSupported(one('interceptar')), false);
-  assert.equal(effectSupported(one('companheiro', { teste: 'defesa' })), false);
+  assert.equal(effectSupported(one('interceptar')), true);
+  assert.equal(effectSupported(one('companheiro', { teste: 'defesa' })), true);
 });
 
 // ---------- Textos ----------

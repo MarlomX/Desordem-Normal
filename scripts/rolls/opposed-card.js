@@ -20,8 +20,8 @@
  *   dano: {a: Dano|null, b: Dano|null},   // dano causado PELO lado (no outro lado)
  *   impetoAplicado: boolean,
  * }
- * Lado = {actorUuid, nome, papel, skill, skillLabel, arma, testId}; papel = 'pericia' | 'ataque'
- * | 'defesa'; arma = {id, nome, bonusDano, naoLetal, tipo} ou null. No lado B, `actorUuid` vazio =
+ * Lado = {actorUuid, nome, papel, skill, skillLabel, arma, testId, esquiva}; papel = 'pericia' |
+ * 'ataque' | 'defesa'; `esquiva` = a defesa foi uma esquiva livre (efeito `defesaLivre`, sem o d6); arma = {id, nome, bonusDano, naoLetal, tipo} ou null. No lado B, `actorUuid` vazio =
  * aberto a quem aceitar; `skill`/`arma` vazios = o oponente escolhe ao rolar.
  * Dano = {valor, naoLetal, estado: 'pendente' | 'aplicado', por: id do usuário que aplicou}.
  */
@@ -86,6 +86,7 @@ function cleanSide(side = {}) {
     skillLabel: text(side.skillLabel),
     arma: cleanWeapon(side.arma),
     testId: text(side.testId, 64),
+    esquiva: papelOf(side) === 'defesa' && Boolean(side.esquiva),
   };
 }
 
@@ -105,9 +106,10 @@ function rolesFor(tipo, papelA) {
  * @param {string} papel
  * @param {{skill?: string, arma?: object|null}} choice
  */
-export function validChoice(tipo, papel, { skill, arma } = {}) {
+export function validChoice(tipo, papel, { skill, arma, esquiva = false } = {}) {
   if (papel === 'pericia') return Boolean(skill);
-  if (papel === 'defesa') return DEFENSE_SKILLS.includes(skill);
+  // Esquiva livre: a perícia vem do efeito (Acrobacia, por padrão); Defender-se: Acrobacia ou Luta
+  if (papel === 'defesa') return esquiva ? Boolean(skill) : DEFENSE_SKILLS.includes(skill);
   if (papel !== 'ataque' || !arma?.id) return false;
   if (tipo === 'corpo' && arma.tipo !== 'corpo') return false;
   return skill === weaponSkill({ pericia: arma.pericia ?? '', tipo: arma.tipo });
@@ -162,14 +164,16 @@ export function canRollSide(state, side, actorUuid) {
  * @param {object} state
  * @param {'a'|'b'} side
  * @param {{actorUuid: string, nome: string, skill: string, skillLabel: string, testId: string,
- *   arma?: object|null}} entry `arma` com `pericia`, para conferir a perícia do ataque.
+ *   arma?: object|null, esquiva?: boolean}} entry `arma` com `pericia`, para conferir a perícia
+ *   do ataque. `esquiva`: defesa livre (a perícia escolhida na proposta não precisa bater).
  */
 export function registerSide(state, side, entry) {
   if (!canRollSide(state, side, entry?.actorUuid) || !entry.testId) return null;
   const current = state[side];
   const papel = papelOf(current);
   if (!validChoice(cardType(state), papel, entry)) return null;
-  if (papel !== 'ataque' && current.skill && current.skill !== entry.skill) return null;
+  const dodge = papel === 'defesa' && Boolean(entry.esquiva);
+  if (papel !== 'ataque' && !dodge && current.skill && current.skill !== entry.skill) return null;
   if (papel === 'ataque' && current.arma && current.arma.id !== entry.arma?.id) return null;
   return { ...state, [side]: cleanSide({ ...current, ...entry, papel }) };
 }
@@ -369,6 +373,7 @@ export function buildOpposedCardContext(state) {
       papel: papelOf(data),
       ataque: papelOf(data) === 'ataque',
       defesa: papelOf(data) === 'defesa',
+      esquiva: Boolean(data.esquiva),
       armaNome: data.arma?.nome ?? '',
       skillLabel: data.skillLabel,
       rolou: Boolean(data.testId),

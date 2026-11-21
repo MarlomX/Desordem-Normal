@@ -14,6 +14,7 @@
 import { SYSTEM_ID } from '../config.js';
 import { postMessage, render } from '../rolls/chat.js';
 import { askReroll, rerollLabel } from '../rolls/abilities-chat.js';
+import { adjustLabel } from '../sheets/ability-controls.js';
 import { applyAnalysis } from '../rolls/abilities.js';
 import { canPay, payUpdates } from '../rolls/ability-effects.js';
 import {
@@ -473,10 +474,8 @@ export function renderBalanceCard(message, html) {
   }
   if (view.showAnalyse) {
     bar.append(
-      cardButton(
-        doc,
-        t('DESORDEM.Habilidade.AnaliseBotao', { pontos: analysis?.points ?? 0 }),
-        () => requestAnalysis(message, actor),
+      cardButton(doc, analysis ? adjustLabel(analysis, t) : '', () =>
+        requestAnalysis(message, actor),
       ),
     );
   }

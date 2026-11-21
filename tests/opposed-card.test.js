@@ -356,3 +356,42 @@ test('weaponChoices e defenseChoices oferecem só o que serve para o cartão', (
   );
   assert.deepEqual(defenseChoices({ tipo: 'corpo' })[1], { key: 'luta', soCorpo: false });
 });
+
+// ===== 0.20.6: esquiva livre no lado da defesa =====
+
+test('esquiva: a defesa livre aceita a perícia do efeito; Defender-se continua Acrobacia ou Luta', () => {
+  assert.equal(validChoice('defesa', 'defesa', { skill: 'atletismo', esquiva: true }), true);
+  assert.equal(validChoice('defesa', 'defesa', { skill: '', esquiva: true }), false);
+  assert.equal(validChoice('defesa', 'defesa', { skill: 'atletismo' }), false);
+  // `esquiva` só muda o lado da defesa
+  assert.equal(validChoice('simples', 'pericia', { skill: 'crime', esquiva: true }), true);
+});
+
+test('esquiva: registra o lado como esquiva, mesmo com outra perícia escolhida na proposta', () => {
+  const arco = { id: 'w1', nome: 'Arco', bonusDano: 1, tipo: 'distancia', pericia: 'pontaria' };
+  const state = createOpposedState({
+    tipo: 'defesa',
+    a: { ...A, papel: 'ataque', skill: 'pontaria', arma: arco },
+    b: { ...B, skill: 'luta', skillLabel: 'Luta' },
+  });
+  // Defender-se com outra perícia: recusado; esquiva com a perícia do efeito: aceita
+  assert.equal(registerSide(state, 'b', { ...B, skill: 'acrobacia', testId: 'm2' }), null);
+  const next = registerSide(state, 'b', {
+    ...B,
+    skill: 'acrobacia',
+    skillLabel: 'Acrobacia',
+    testId: 'm2',
+    esquiva: true,
+  });
+  assert.equal(next.b.esquiva, true);
+  assert.equal(next.b.skill, 'acrobacia');
+  assert.equal(buildOpposedCardContext(next).b.esquiva, true);
+  // O ataque nunca vira esquiva
+  assert.equal(
+    registerSide(state, 'a', { ...A, skill: 'pontaria', arma: arco, testId: 'm1', esquiva: true }).a
+      .esquiva,
+    false,
+  );
+  // Cartões antigos (sem o campo) continuam sem esquiva
+  assert.equal(buildOpposedCardContext(state).b.esquiva, false);
+});

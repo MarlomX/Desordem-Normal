@@ -109,12 +109,12 @@ export function effectSupported(effect) {
     case 'passoCena':
     case 'acaoNota':
     case 'testeAcao':
+    case 'companheiro':
+    case 'interceptar':
       return true;
     case 'ganharRecurso':
       // «Ao se defender» e «início do combate» chegam com os gatilhos
       return ['falha', 'perdeOposto', 'inicioCena', 'acao'].includes(params.gatilho);
-    case 'companheiro':
-      return params.teste !== 'defesa';
     default:
       return false;
   }

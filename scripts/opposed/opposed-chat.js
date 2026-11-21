@@ -19,9 +19,14 @@ import { SYSTEM_ID } from '../config.js';
 import { postMessage, render, skillName, skillTestOptions, rollTest } from '../rolls/chat.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { resolveWithValues } from '../rolls/abilities.js';
-import { triggerUpdates } from '../rolls/ability-effects-actor.js';
+import {
+  firstEffect,
+  roundUseUpdate,
+  triggerUpdates,
+  usableThisRound,
+} from '../rolls/ability-effects-actor.js';
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
-import { weaponCompanionDice } from '../rolls/equipment-chat.js';
+import { defenseCompanionDice, weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
 import { abilityNote } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
@@ -263,8 +268,10 @@ export async function proposeOpposed(actor) {
 const inFlight = new Set();
 
 /** Escolhe o ator de um lado em aberto (pergunta só se houver mais de um candidato). */
-async function pickActor(state, side) {
-  const candidates = candidateActors(state[otherSide(side)].actorUuid);
+async function pickActor(state, side, filter = null) {
+  const candidates = candidateActors(state[otherSide(side)].actorUuid).filter(
+    (actor) => !filter || filter(actor),
+  );
   if (!candidates.length) {
     ui.notifications.warn(t('DESORDEM.Oposto.SemCandidatos'));
     return null;
@@ -335,35 +342,53 @@ async function pickChoice(state, side, actor) {
  * pré-teste e publica o teste comum com a marca do cartão. Ataque: perícia da arma (com o dado
  * do companheiro animal, como no ataque comum); Defender-se: a perícia + d6.
  */
-async function rollSide(message, side, event) {
+async function rollSide(message, side, event, { dodge = false } = {}) {
   const state = cardState(message);
   const data = state?.[side];
   if (!data) return;
+  // Esquiva: só o lado da defesa, e só quem tem o efeito de defesa livre
+  if (dodge && data.papel !== 'defesa') return;
   const actor = data.actorUuid
     ? await foundry.utils.fromUuid(data.actorUuid)
-    : await pickActor(state, side);
+    : await pickActor(state, side, dodge ? hasDodge : null);
   if (!actor) return;
   if (!actor.isOwner || !canRollSide(state, side, actor.uuid)) {
     ui.notifications.warn(t('DESORDEM.Oposto.SemPermissao'));
     return;
   }
-  const choice = await pickChoice(state, side, actor);
+  // Esquiva livre: a perícia vem do efeito, sem o d6 do Defender-se; 1×/rodada em combate
+  const dodgeEffect = dodge ? firstEffect(actor, 'defesaLivre') : null;
+  if (dodge && !dodgeEffect) return;
+  if (dodgeEffect && !usableThisRound(actor, dodgeEffect)) {
+    ui.notifications.warn(t('DESORDEM.Efeito.Aviso.Rodada', { nome: dodgeEffect.itemName }));
+    return;
+  }
+  const choice = dodgeEffect
+    ? { skill: dodgeEffect.params.pericia || 'acrobacia', arma: null }
+    : await pickChoice(state, side, actor);
   if (!choice) return;
   const { skill, arma } = choice;
 
   // Defender-se: o +d6 aparece na janela pré-teste já marcado (desmarcar = esquiva sem o dado)
-  const allowDefense = data.papel === 'defesa';
+  const allowDefense = data.papel === 'defesa' && !dodgeEffect;
   const weapon = arma ? actor.items.get(arma.id) : null;
   const options = await askRollChoices(actor, {
     skillKey: skill,
     showDt: false,
     allowDefense,
-    // Ataque com arma: os dados extras de ataque corpo a corpo ou à distância entram
+    // Ataque com arma: os dados extras de ataque corpo a corpo ou à distância entram; na esquiva,
+    // os de defesa
     ...(weapon ? { testKind: weaponTestKind(weapon.system) } : {}),
+    ...(dodgeEffect ? { testKind: 'defesa' } : {}),
     shift: event?.shiftKey,
   });
   if (!options) return;
-  const companion = weapon ? weaponCompanionDice(actor, weapon) : [];
+  // Companheiro: o dado dele no ataque (conforme a arma) ou na defesa (Defender-se e esquiva)
+  const companion = weapon
+    ? weaponCompanionDice(actor, weapon)
+    : data.papel === 'defesa'
+      ? defenseCompanionDice(actor)
+      : [];
   const test = skillTestOptions(actor, skill, undefined, {
     ...options,
     showDt: false,
@@ -374,8 +399,13 @@ async function rollSide(message, side, event) {
     data.papel === 'ataque'
       ? weapon.name
       : data.papel === 'defesa'
-        ? t('DESORDEM.Oposto.Defender')
+        ? t(dodgeEffect ? 'DESORDEM.Oposto.Esquiva' : 'DESORDEM.Oposto.Defender')
         : `${test.attrLabel} + ${test.skillLabel}`;
+  // Marca o uso da esquiva nesta rodada antes de rolar (um segundo clique já é recusado)
+  if (dodgeEffect) {
+    const used = roundUseUpdate(dodgeEffect);
+    if (Object.keys(used).length) await actor.update(used);
+  }
   const result = await rollTest({
     ...test,
     actor,
@@ -387,6 +417,7 @@ async function rollSide(message, side, event) {
       actorUuid: actor.uuid,
       skill,
       armaId: arma?.id ?? '',
+      ...(dodgeEffect ? { esquiva: true } : {}),
     },
   });
   // Companheiro animal: o primeiro dado extra em 1 fere o animal (como no ataque comum)
@@ -395,6 +426,9 @@ async function rollSide(message, side, event) {
     await abilityNote(actor, t('DESORDEM.Habilidade.AnimalFerido'));
   }
 }
+
+/** O ator tem esquiva livre (efeito `defesaLivre`)? */
+const hasDodge = (actor) => Boolean(firstEffect(actor, 'defesaLivre'));
 
 /** O mestre (ou o autor do cartão) cancela um cartão ainda aberto. */
 async function cancelCard(message) {
@@ -492,6 +526,20 @@ function userCanRoll(state, side) {
   return candidateActors(state[otherSide(side)].actorUuid).length > 0;
 }
 
+/**
+ * O usuário pode esquivar por este lado? O ator do lado (ou, com o lado aberto, algum candidato
+ * dele) tem a defesa livre e ainda pode usá-la nesta rodada.
+ */
+function userCanDodge(state, side) {
+  const data = state[side];
+  const ready = (actor) => {
+    const entry = actor?.isOwner ? firstEffect(actor, 'defesaLivre') : null;
+    return Boolean(entry) && usableThisRound(actor, entry);
+  };
+  if (data.actorUuid) return ready(foundry.utils.fromUuidSync(data.actorUuid));
+  return candidateActors(state[otherSide(side)].actorUuid).some(ready);
+}
+
 /** Hook renderChatMessageHTML: põe os botões do cartão (rolar, aceitar, dano, cancelar, repetir). */
 export function renderOpposedCard(message, html) {
   const state = cardState(message);
@@ -509,6 +557,18 @@ export function renderOpposedCard(message, html) {
         (event) => rollSide(message, side, event),
       ),
     );
+    // Esquiva livre: botão separado no lado da defesa, para quem tem o efeito
+    if (state[side].papel === 'defesa' && userCanDodge(state, side)) {
+      slot.append(
+        cardButton(
+          message,
+          `esquiva-${side}`,
+          t('DESORDEM.Oposto.Esquivar'),
+          'fa-person-running',
+          (event) => rollSide(message, side, event, { dodge: true }),
+        ),
+      );
+    }
   }
   // Dano: só para o dono do alvo (o mestre, nas criaturas), enquanto pendente
   for (const side of ['a', 'b']) {
@@ -601,6 +661,10 @@ async function registerAnswer(test) {
   if (!actor || !test.author || !actor.testUserPermission(test.author, 'OWNER')) return;
   if (test.speaker?.actor && test.speaker.actor !== actor.id) return;
   const display = test.flags?.[SYSTEM_ID]?.teste?.display ?? {};
+  // Esquiva: só vale se o ator tem a defesa livre com essa perícia (conferido pelo mestre)
+  const dodge = firstEffect(actor, 'defesaLivre');
+  const esquiva =
+    Boolean(flag.esquiva) && Boolean(dodge) && (dodge.params.pericia || 'acrobacia') === flag.skill;
   const next = registerSide(state, flag.lado, {
     actorUuid: actor.uuid,
     nome: actor.name,
@@ -608,6 +672,7 @@ async function registerAnswer(test) {
     skillLabel: display.skillLabel ?? '',
     arma: weaponOf(actor, flag.armaId),
     testId: test.id,
+    esquiva,
   });
   if (next) await saveCard(card, next);
 }

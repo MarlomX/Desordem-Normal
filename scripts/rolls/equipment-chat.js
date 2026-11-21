@@ -37,6 +37,17 @@ export function weaponCompanionDice(actor, weapon) {
   return fits ? [companion.params.dado] : [];
 }
 
+/**
+ * Companheiro na defesa (efeito `companheiro` de «Defesa» ou «Qualquer teste»): o dado dele no
+ * teste de defesa do cartão (Defender-se ou esquiva), até o animal se ferir.
+ * @returns {number[]} [dado] se o companheiro ajuda na defesa, senão [].
+ */
+export function defenseCompanionDice(actor) {
+  const companion = firstEffect(actor, 'companheiro');
+  if (!companion || actor.system.cena?.animalFerido) return [];
+  return ['defesa', 'qualquer'].includes(companion.params.teste) ? [companion.params.dado] : [];
+}
+
 export async function attackWithWeapon(actor, weapon, options = {}) {
   const { system } = weapon;
   const companionDice = weaponCompanionDice(actor, weapon);

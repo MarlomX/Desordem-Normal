@@ -332,7 +332,9 @@
       "PorRA": "Tied total: decided by the higher high roll (HR).",
       "PorSegunda": "Tied total and HR: decided by the second highest roll.",
       "PorDefesa": "Complete tie: the defense wins.",
-      "LutaContraDistancia": "The defense used Fighting against a ranged attack (the rule only allows Acrobatics): the GM decides."
+      "LutaContraDistancia": "The defense used Fighting against a ranged attack (the rule only allows Acrobatics): the GM decides.",
+      "Esquiva": "Dodge",
+      "Esquivar": "Dodge"
     },
     "Ajuda": {
       "Recebida": "Help from",
@@ -1495,16 +1497,22 @@
         "acaoNota": "Use{custo}",
         "ganharRecurso": "+{quantidade} {recurso}{custo}",
         "testeAcao": "{pericia} test{custo}",
-        "defesaLivre": "Free defense"
+        "defesaLivre": "Free defense",
+        "interceptar": "Take the attack{custo}",
+        "ajusteDados": "Adjust dice: {nome} ({pontos})"
       },
       "Nota": {
         "passoCena": "uses {nome}: {atributo} goes up {passos} step(s) until the end of the scene.",
         "passoDescricao": "The attribute die goes up {passos} step(s) until the end of the scene.",
         "acaoNota": "uses {nome}.",
-        "ganho": "uses {nome} and gains {valor} {recurso}."
+        "ganho": "uses {nome} and gains {valor} {recurso}.",
+        "interceptar": "uses {nome} and takes the attack against {aliado}.",
+        "interceptarSemAlvo": "uses {nome} and takes an attack against an ally."
       },
       "Aviso": {
-        "SemCusto": "Not enough resources to use {nome}."
+        "SemCusto": "Not enough resources to use {nome}.",
+        "Rodada": "{nome} was already used this round.",
+        "AliadoSiMesmo": "Target the ally you are protecting, not yourself."
       }
     },
     "Plano": {
