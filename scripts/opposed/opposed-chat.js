@@ -425,6 +425,12 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
     await actor.update({ 'system.cena.animalFerido': true });
     await abilityNote(actor, t('DESORDEM.Habilidade.AnimalFerido'));
   }
+  // Gastou a ação para se defender (Defender-se com o d6; a esquiva livre não conta): ganhos de
+  // «ao se defender» (ex.: um marcador de análise)
+  if (result && allowDefense && options.active?.includes('defesa')) {
+    const gains = triggerUpdates(actor, 'defender');
+    if (Object.keys(gains).length) await actor.update(gains);
+  }
 }
 
 /** O ator tem esquiva livre (efeito `defesaLivre`)? */

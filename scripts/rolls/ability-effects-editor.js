@@ -8,6 +8,7 @@
  */
 import {
   COST_KINDS,
+  TRIGGERS,
   EFFECT_TYPES,
   defaultParams,
   itemEffects,
@@ -17,6 +18,12 @@ import {
 
 /** Máximo de efeitos numa habilidade. */
 export const MAX_EFFECTS = 20;
+
+/**
+ * Tipos de efeito numa habilidade de criatura: os que não dependem de PD, pavor ou recursos de
+ * personagem (dado extra, ação com aviso e companheiro), sempre sem custo.
+ */
+export const CREATURE_EFFECT_TYPES = Object.freeze(['dadoExtra', 'acaoNota', 'companheiro']);
 
 /** Grupo de textos de cada campo de opções (`DESORDEM.Efeito.<grupo>.<valor>`). */
 const CHOICE_GROUPS = Object.freeze({
@@ -113,8 +120,8 @@ export function effectSupported(effect) {
     case 'interceptar':
       return true;
     case 'ganharRecurso':
-      // «Ao se defender» e «início do combate» chegam com os gatilhos
-      return ['falha', 'perdeOposto', 'inicioCena', 'acao'].includes(params.gatilho);
+      // Todos os gatilhos têm uso desde a v0.20.7 (ao se defender, início do combate)
+      return TRIGGERS.includes(params.gatilho);
     default:
       return false;
   }
@@ -219,8 +226,9 @@ function costText(cost, t) {
  * @param {(key: string, data?: object) => string} options.t
  * @param {{key: string, label: string}[]} options.skills Perícias, já em ordem alfabética.
  * @param {string|null} options.openId Efeito aberto para edição.
+ * @param {boolean} [options.creature=false] Habilidade de criatura: o custo só tem «sem custo».
  */
-export function editorRows(effects, { t, skills, openId }) {
+export function editorRows(effects, { t, skills, openId, creature = false }) {
   const skillLabel = (key) => skills.find((s) => s.key === key)?.label ?? key;
   return effects.map((effect, index) => ({
     index,
@@ -232,12 +240,12 @@ export function editorRows(effects, { t, skills, openId }) {
     open: effect.id === openId,
     first: index === 0,
     last: index === effects.length - 1,
-    fields: effect.id === openId ? effectFields(effect, index, { t, skills }) : [],
+    fields: effect.id === openId ? effectFields(effect, index, { t, skills, creature }) : [],
   }));
 }
 
 /** Campos de um efeito aberto (um por parâmetro, na ordem do catálogo). */
-function effectFields(effect, index, { t, skills }) {
+function effectFields(effect, index, { t, skills, creature = false }) {
   const option = (value, label, current) => ({
     value: String(value),
     label,
@@ -274,7 +282,7 @@ function effectFields(effect, index, { t, skills }) {
       case 'cost':
         return {
           ...base,
-          kinds: COST_KINDS.map((kind) =>
+          kinds: (creature ? ['nenhum'] : COST_KINDS).map((kind) =>
             option(kind, t(`DESORDEM.Efeito.Custos.${kind}`), value.tipo),
           ),
           paid: value.tipo !== 'nenhum',

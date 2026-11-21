@@ -1513,7 +1513,8 @@
         "SemCusto": "Recursos insuficientes para usar {nome}.",
         "Rodada": "{nome} já foi usada nesta rodada.",
         "AliadoSiMesmo": "Mire o aliado que vai ser protegido, não você mesmo."
-      }
+      },
+      "DicaCriatura": "Habilidade de criatura: os efeitos aceitos são dado extra, ação com aviso e companheiro, sempre sem custo."
     },
     "Plano": {
       "Distribuir": "Distribuir {n}d{dado} ao grupo",

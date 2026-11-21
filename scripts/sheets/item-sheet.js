@@ -6,6 +6,7 @@ import { isThreat } from '../rolls/threat.js';
 import { DAMAGE_BASES } from '../rolls/damage.js';
 import { EFFECT_TYPES } from '../rolls/ability-effects.js';
 import {
+  CREATURE_EFFECT_TYPES,
   MAX_EFFECTS,
   addEffect,
   editorEffects,
@@ -110,17 +111,21 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const item = this.document;
     const { effects, legacy } = editorEffects(item.system);
     const owner = item.parent?.documentName === 'Actor' ? item.parent : null;
+    // Habilidade de criatura: só os tipos sem PD, pavor ou recursos, e sem custo
+    const creature = isThreat(owner);
     return {
-      rows: editorRows(effects, { t, skills, openId: this.#openId }),
+      rows: editorRows(effects, { t, skills, openId: this.#openId, creature }),
       empty: effects.length === 0,
       legacy,
       legacyName: legacy ? t(`DESORDEM.Item.Automacoes.${item.system.automacao}`) : '',
       canAdd: effects.length < MAX_EFFECTS,
       max: MAX_EFFECTS,
-      typeChoices: Object.keys(EFFECT_TYPES).map((tipo) => ({
-        value: tipo,
-        label: t(`DESORDEM.Efeito.Tipos.${tipo}`),
-      })),
+      typeChoices: Object.keys(EFFECT_TYPES)
+        .filter((tipo) => !creature || CREATURE_EFFECT_TYPES.includes(tipo))
+        .map((tipo) => ({
+          value: tipo,
+          label: t(`DESORDEM.Efeito.Tipos.${tipo}`),
+        })),
       modelChoices: AUTOMATIONS.map((key) => ({
         value: key,
         label: t(`DESORDEM.Item.Automacoes.${key}`),

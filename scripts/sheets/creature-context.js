@@ -3,6 +3,8 @@
  * perícias treinadas e etiquetas do cabeçalho). As linhas de atributos, perícias e efeitos vêm
  * dos mesmos construtores da ficha de personagem (`context.js`).
  */
+import { abilityControls } from './ability-controls.js';
+import { CREATURE_EFFECT_TYPES } from '../rolls/ability-effects-editor.js';
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
 
 /** Abas da ficha de criatura, na ordem de exibição (`icon` é uma classe do Font Awesome). */
@@ -62,20 +64,30 @@ export function buildAttackRows(items, { kindLabel, skillLabel, diceOf, editable
 }
 
 /**
- * Linhas das habilidades especiais da criatura (texto livre), por nome.
+ * Linhas das habilidades especiais da criatura, por nome: o texto e os botões dos efeitos de ação
+ * (só os tipos permitidos em criaturas; hoje, a ação com aviso).
  * @param {{id: string, name: string, type: string, system: Object}[]} items Itens da criatura.
- * @param {{openIds?: string[], editable?: boolean}} [options]
+ * @param {{openIds?: string[], editable?: boolean, t?: Function,
+ *   skill?: (key: string) => string}} [options]
  */
-export function buildCreatureAbilityRows(items, { openIds = [], editable = true } = {}) {
+export function buildCreatureAbilityRows(
+  items,
+  { openIds = [], editable = true, t = (key) => key, skill = (key) => key } = {},
+) {
   return items
     .filter((item) => item.type === 'habilidade')
-    .map(({ id, name, system }) => ({
-      id,
-      name,
-      descricao: system.descricao,
-      open: openIds.includes(id),
-      locked: !editable,
-    }))
+    .map((item) => {
+      const { id, name, system } = item;
+      const { buttons } = abilityControls(item, {}, { t, skill });
+      return {
+        id,
+        name,
+        descricao: system.descricao,
+        open: openIds.includes(id),
+        locked: !editable,
+        buttons: buttons.filter((button) => CREATURE_EFFECT_TYPES.includes(button.tipo)),
+      };
+    })
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 }
 

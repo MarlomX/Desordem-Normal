@@ -30,6 +30,11 @@
       </summary>
       <p class="desordem-ficha__dica desordem-criatura__texto">{{#if descricao}}{{descricao}}{{else}}{{localize "DESORDEM.Ficha.Hab.SemDescricao"}}{{/if}}</p>
     </details>
+    {{#if buttons.length}}
+    <div class="desordem-habilidade__controles">
+      {{#each buttons}}<button type="button" data-action="useEffect" data-item-id="{{../id}}" data-efeito-id="{{effectId}}">{{label}}</button>{{/each}}
+    </div>
+    {{/if}}
   </div>
   {{else}}
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Criatura.SemHabilidades"}}</p>

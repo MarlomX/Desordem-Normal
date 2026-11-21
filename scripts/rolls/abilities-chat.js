@@ -19,6 +19,7 @@ import {
   resourceUpdates,
   roundUseUpdate,
   rerollActors,
+  triggerUpdates,
   usableThisRound,
   walletOf,
 } from './ability-effects-actor.js';
@@ -303,7 +304,29 @@ export async function healAlly(actor, itemId = null, effectId = null) {
   return result;
 }
 
-// ---------- Reinício de cena ----------
+// ---------- Início do combate ----------
+
+/**
+ * Ganhos de «início do combate» (efeitos `ganharRecurso`): quando um combate começa, o mestre
+ * que o iniciou soma os ganhos de cada personagem do encontro (uma vez por ator).
+ * @param {Combat} combat
+ */
+export async function combatStartGains(combat) {
+  if (!game.user.isGM) return;
+  const seen = new Set();
+  for (const combatant of combat?.combatants ?? []) {
+    const actor = combatant.actor;
+    if (!actor || seen.has(actor.uuid)) continue;
+    seen.add(actor.uuid);
+    const updates = triggerUpdates(actor, 'inicioCombate');
+    if (Object.keys(updates).length) await actor.update(updates);
+  }
+}
+
+/** Registra o hook do início do combate (chamar uma vez, no `init`). */
+export function registerAbilityHooks() {
+  Hooks.on('combatStart', (combat) => combatStartGains(combat));
+}
 
 // ---------- Reinício de cena ----------
 

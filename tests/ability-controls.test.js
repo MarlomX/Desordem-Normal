@@ -16,6 +16,7 @@ import {
   groupBonusDice,
   legacyEffects,
   normalizeEffect,
+  triggerChanges,
 } from '../scripts/rolls/ability-effects.js';
 import { sceneReset } from '../scripts/rolls/abilities.js';
 
@@ -198,4 +199,51 @@ test('interceptar vira botão «Assumir ataque» com o custo; ajuste de dados us
     ),
     'Ajustar dados: Fúria (2)',
   );
+});
+
+// ===== 0.20.7: criaturas e gatilhos =====
+
+test('criatura: o editor só oferece «sem custo» e a ficha só mostra botões dos tipos permitidos', async () => {
+  const { editorRows, CREATURE_EFFECT_TYPES } =
+    await import('../scripts/rolls/ability-effects-editor.js');
+  const { buildCreatureAbilityRows } = await import('../scripts/sheets/creature-context.js');
+  assert.deepEqual(CREATURE_EFFECT_TYPES, ['dadoExtra', 'acaoNota', 'companheiro']);
+  const list = [one('acaoNota', {}, 'n')];
+  const [row] = editorRows(list, { t, skills: [], openId: 'n', creature: true });
+  const cost = row.fields.find((f) => f.key === 'custo');
+  assert.deepEqual(
+    cost.kinds.map((k) => k.value),
+    ['nenhum'],
+  );
+  const rows = buildCreatureAbilityRows(
+    [
+      ability('a', 'Grito', [{ id: 'g', tipo: 'acaoNota', params: { rotulo: 'Gritar' } }]),
+      // Um passo na cena não é de criatura: sem botão
+      ability('b', 'Fúria', [{ id: 'p', tipo: 'passoCena', params: {} }]),
+    ],
+    { t, skill },
+  );
+  const by = Object.fromEntries(rows.map((r) => [r.name, r]));
+  assert.deepEqual(
+    by.Grito.buttons.map((b) => [b.effectId, b.label]),
+    [['g', 'Gritar']],
+  );
+  assert.deepEqual(by['Fúria'].buttons, []);
+});
+
+test('gatilhos «ao se defender» e «início do combate» enchem o recurso do efeito', () => {
+  const entries = collectEffects([
+    ability('a', 'Leitura', [
+      { id: 'r', tipo: 'recurso', params: { chave: 'analise', maximo: 4 } },
+      { id: 'd', tipo: 'ganharRecurso', params: { recurso: 'analise', gatilho: 'defender' } },
+      {
+        id: 'c',
+        tipo: 'ganharRecurso',
+        params: { recurso: 'analise', quantidade: 2, gatilho: 'inicioCombate' },
+      },
+    ]),
+  ]);
+  assert.deepEqual(triggerChanges(entries, { analise: 1 }, 'defender'), { analise: 2 });
+  assert.deepEqual(triggerChanges(entries, { analise: 1 }, 'inicioCombate'), { analise: 3 });
+  assert.deepEqual(triggerChanges(entries, { analise: 4 }, 'defender'), {});
 });

@@ -129,8 +129,8 @@ test('effectSupported marca o que ainda não tem uso nesta versão', () => {
   assert.equal(effectSupported(one('acaoNota')), true);
   assert.equal(effectSupported(one('testeAcao', { resultado: 'concederDados' })), true);
   assert.equal(effectSupported(one('ganharRecurso', { recurso: 'furia', gatilho: 'acao' })), true);
-  assert.equal(effectSupported(one('ganharRecurso', { gatilho: 'defender' })), false);
-  assert.equal(effectSupported(one('ganharRecurso', { gatilho: 'inicioCombate' })), false);
+  assert.equal(effectSupported(one('ganharRecurso', { gatilho: 'defender' })), true);
+  assert.equal(effectSupported(one('ganharRecurso', { gatilho: 'inicioCombate' })), true);
   assert.equal(effectSupported(one('dadoExtra', { custo: { tipo: 'pv', valor: 1 } })), true);
   assert.equal(effectSupported(one('dadoExtra', { teste: 'ataqueCorpo' })), true);
   assert.equal(effectSupported(one('dadoExtra', { custo: { tipo: 'pd', valor: 2 } })), true);

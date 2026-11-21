@@ -40,6 +40,7 @@ import { damageActor, rollInjuryTest } from './rolls/health.js';
 import { attackWithWeapon, useItem, renderEquipmentCard } from './rolls/equipment-chat.js';
 import { registerEquipmentGuards } from './rolls/equipment-guard.js';
 import {
+  registerAbilityHooks,
   registerAbilitySocket,
   renderTestButtons,
   endScene,
@@ -113,6 +114,8 @@ Hooks.once('init', () => {
   registerFirstAidHooks();
   // Dados bônus ao grupo: o mestre distribui pelo botão do teste
   registerBonusDiceHooks();
+  // Ganhos de «início do combate» das habilidades
+  registerAbilityHooks();
   // Tabelas de ações das criaturas: configuração do mundo, editada pelo mestre
   registerCreatureTables();
   // Desafios (teste estendido): configuração do mundo e a guia nova da barra lateral

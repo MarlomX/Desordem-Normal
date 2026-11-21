@@ -1513,7 +1513,8 @@
         "SemCusto": "Not enough resources to use {nome}.",
         "Rodada": "{nome} was already used this round.",
         "AliadoSiMesmo": "Target the ally you are protecting, not yourself."
-      }
+      },
+      "DicaCriatura": "Creature ability: the accepted effects are extra die, action with notice and companion, always without cost."
     },
     "Plano": {
       "Distribuir": "Give {n}d{dado} to the group",

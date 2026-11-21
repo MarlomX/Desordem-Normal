@@ -8,7 +8,8 @@
  */
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS } from '../config.js';
 import { rollSkill, rollExtraSkill, testDicePreview } from '../rolls/chat.js';
-import { attackWithWeapon } from '../rolls/equipment-chat.js';
+import { attackWithWeapon, weaponCompanionDice } from '../rolls/equipment-chat.js';
+import { useAbilityEffect } from '../rolls/abilities-chat.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
 import { weaponSkill } from '../rolls/equipment.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
@@ -85,6 +86,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       createItem: CriaturaSheet.#onCreateItem,
       editItem: CriaturaSheet.#onEditItem,
       deleteItem: CriaturaSheet.#onDeleteItem,
+      useEffect: CriaturaSheet.#onUseEffect,
       attackWeapon: CriaturaSheet.#onAttackWeapon,
       toggleAbilities: CriaturaSheet.#onToggleAbilities,
       toggleElementPicker: CriaturaSheet.#onToggleElementPicker,
@@ -182,6 +184,8 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       abilities: buildCreatureAbilityRows(items, {
         openIds: CriaturaSheet.#openAbilities.get(actor.id) ?? [],
         editable: this.isEditable,
+        t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
+        skill: (key) => (PERICIAS[key] ? t(`DESORDEM.Pericias.${key}`) : key),
       }),
     };
   }
@@ -400,6 +404,11 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     });
   }
 
+  /** Botão de um efeito de habilidade (ação com aviso): avisa no chat. */
+  static async #onUseEffect(event, target) {
+    await useAbilityEffect(this.document, target.dataset.itemId, target.dataset.efeitoId);
+  }
+
   /** Cria um ataque (arma natural) ou uma habilidade e abre a ficha do item. */
   static async #onCreateItem(event, target) {
     const { type } = target.dataset;
@@ -436,7 +445,12 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     if (!weapon) return;
     await this.#rollWithChoices(
       event,
-      { skillKey: weaponSkill(weapon.system), testKind: weaponTestKind(weapon.system) },
+      {
+        skillKey: weaponSkill(weapon.system),
+        testKind: weaponTestKind(weapon.system),
+        // Companheiro da criatura (efeito): o dado dele aparece na prévia do ataque
+        baseExtraDice: weaponCompanionDice(this.document, weapon),
+      },
       (options) => attackWithWeapon(this.document, weapon, options),
     );
   }

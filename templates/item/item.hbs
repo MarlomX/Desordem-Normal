@@ -77,6 +77,9 @@
     {{/if}}
   </div>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.DicaModelo"}}</p>
+  {{else}}
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.DicaCriatura"}}</p>
+  {{/unless}}
 
   <section class="desordem-hab-efeitos">
     <h3 class="desordem-hab-efeitos__titulo">{{localize "DESORDEM.Efeito.Titulo"}}</h3>
@@ -135,7 +138,6 @@
     </div>
     {{else}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Limite" n=effectsEditor.max}}</p>{{/if}}{{/if}}
   </section>
-  {{/unless}}
   {{/if}}
 
   <label class="desordem-ficha__campo desordem-item__descricao"><span>{{localize "DESORDEM.Item.Descricao"}}</span>
