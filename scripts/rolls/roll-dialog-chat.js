@@ -5,6 +5,7 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import {
+  ammoOptions,
   dialogDiceOptions,
   firstWeaponAttack,
   groupBonusDice,
@@ -405,7 +406,17 @@ export async function askRollChoices(
     ...(weaponId ? { weaponId } : {}),
   };
   // Pular a janela usa as escolhas padrão: na defesa, o +d6 (que vem marcado)
-  if (shift) return allowDefense ? { active: ['defesa'], ...kind } : { ...kind };
+  // Munições que valem neste ataque (efeito `municao`, ex.: aljava): a primeira vem marcada; no
+  // Shift+clique, ela é usada direto
+  const weaponItem = weaponId ? actor.items.get(weaponId) : null;
+  const ammo = weaponItem ? ammoOptions([...actor.items], weaponItem.system) : [];
+  const defaultAmmo = ammo[0] ?? null;
+  if (shift) {
+    const withAmmo = defaultAmmo ? { municaoId: defaultAmmo.id } : {};
+    return allowDefense
+      ? { active: ['defesa'], ...kind, ...withAmmo }
+      : { ...kind, ...withAmmo };
+  }
   // Efeitos da arma do ataque (só com `weaponId`): os automáticos já entram na prévia dos dados
   // (o passo no dado da perícia), e a caixa «quem ainda não me atacou» vira uma opção da janela
   const entries = actorEffects(actor, { weaponId });
@@ -419,6 +430,8 @@ export async function askRollChoices(
   const penaltyLines = penalty ? [penalty] : [];
   const dice = testDicePreview(actor, skillKey, attribute, [
     ...stepMods,
+    // Prévia com a munição marcada por padrão (desmarcar não muda a prévia, só a rolagem)
+    ...(defaultAmmo?.passos ? [{ target: 'skill', steps: defaultAmmo.passos }] : []),
     ...(attack.steps ? [{ target: 'skill', steps: attack.steps }] : []),
   ]);
   // PD, ímpeto e pavor (0 numa criatura: a janela não mostra pavor nem custos)
@@ -560,7 +573,21 @@ export async function askRollChoices(
         quando: line.quando ? t(`DESORDEM.Efeito.QuandoAtaque.${line.quando}`).toLowerCase() : '',
       }),
     })),
-    hasItems:
+    // Caixas de munição (só uma vale por ataque: a primeira marcada)
+    ammo: ammo.map((option, index) => ({
+      ...option,
+      checked: index === 0,
+      label: t('DESORDEM.Teste.Pre.Arma.municao', {
+        nome: option.name,
+        passos: option.passos,
+        dano: option.dano,
+      }),
+      remainingText:
+        option.remaining === null
+          ? ''
+          : t('DESORDEM.Teste.Pre.Arma.MunicaoRestam', { n: option.remaining }),
+    })),
+    hasItems: ammo.length > 0 ||
       abilityRows.some((ability) => ability.group === 'item') ||
       attack.lines.length + penaltyLines.length > 0,
     fear: model.fear && {
@@ -633,6 +660,8 @@ export async function askRollChoices(
           selection: readSelection(button.form),
           // Passo da arma contra quem ainda não atacou: a caixa da seção «Itens»
           naoAtacou: Boolean(button.form.querySelector('input[name="naoAtacou"]:checked')),
+          // Munição: a primeira caixa marcada
+          municaoId: button.form.querySelector('input[name="municao"]:checked')?.value ?? null,
         }),
       },
       { action: 'cancel', label: t('DESORDEM.Teste.Pre.Cancelar') },
@@ -645,6 +674,7 @@ export async function askRollChoices(
     ...selectionToOptions(model, answer.selection),
     ...kind,
     ...(answer.naoAtacou ? { naoAtacou: true } : {}),
+    ...(answer.municaoId ? { municaoId: answer.municaoId } : {}),
   };
 }
 

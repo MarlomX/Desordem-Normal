@@ -32,11 +32,13 @@ import {
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
 import {
   afterWeaponAttack,
+  ammoFor,
   canAttackWith,
+  spendAmmo,
   defenseCompanionDice,
   weaponCompanionDice,
 } from '../rolls/equipment-chat.js';
-import { weaponTestKind } from '../rolls/ability-effects.js';
+import { ammoEffectOf, weaponTestKind } from '../rolls/ability-effects.js';
 import { abilityNote, announceGains } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
 import { askDamage } from '../rolls/damage-dialog.js';
@@ -435,11 +437,16 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
       actorUuid: actor.uuid,
       skill,
       armaId: arma?.id ?? '',
+      // Munição marcada (o mestre confere no ator e soma o bônus de dano dela no cartão)
+      ...(weapon && options.municaoId ? { municaoId: options.municaoId } : {}),
       ...(dodgeEffect ? { esquiva: true } : {}),
     },
   });
   // Ataque com arma: marca o ataque da cena e gasta a unidade da arma consumível
   if (result && weapon) await afterWeaponAttack(actor, weapon);
+  // Munição usada: gasta uma unidade, acertando ou não
+  const usedAmmo = result && weapon ? ammoFor(actor, weapon, options.municaoId) : null;
+  if (usedAmmo) await spendAmmo(actor, usedAmmo.id);
   // Companheiro animal: o primeiro dado extra em 1 fere o animal (como no ataque comum)
   if (companion.length && result?.dice?.[2]?.source === 'extra' && result.dice[2].value === 1) {
     await actor.update({ 'system.cena.animalFerido': true });
@@ -699,14 +706,20 @@ async function saveCard(card, state) {
   await card.update({ content: await renderCard(next), [`flags.${SYSTEM_ID}.oposto`]: next });
 }
 
-/** Arma do teste, lida do próprio ator (nunca do pedido), no formato do cartão. */
-function weaponOf(actor, armaId) {
+/**
+ * Arma do teste, lida do próprio ator (nunca do pedido), no formato do cartão. Com munição, o
+ * bônus de dano dela entra no `bonusDano` (o efeito é lido do item do ator, não do pedido).
+ */
+function weaponOf(actor, armaId, municaoId = null) {
   const item = armaId ? actor.items.get(armaId) : null;
   if (item?.type !== 'arma') return null;
+  // A munição já foi gasta ao rolar: confere só o efeito (alcance e bônus), não as unidades
+  const ammoItem = municaoId ? actor.items.get(municaoId) : null;
+  const ammoEffect = ammoItem ? ammoEffectOf(ammoItem, item.system) : null;
   return {
     id: item.id,
     nome: item.name,
-    bonusDano: item.system.bonusDano,
+    bonusDano: item.system.bonusDano + (ammoEffect?.dano ?? 0),
     baseDano: item.system.baseDano,
     naoLetal: Boolean(item.system.naoLetal),
     tipo: item.system.tipo,
@@ -734,7 +747,7 @@ async function registerAnswer(test) {
     nome: actor.name,
     skill: flag.skill,
     skillLabel: display.skillLabel ?? '',
-    arma: weaponOf(actor, flag.armaId),
+    arma: weaponOf(actor, flag.armaId, flag.municaoId ?? null),
     testId: test.id,
     esquiva,
     // Nome da habilidade de esquiva, mostrado no lugar de «Esquiva»

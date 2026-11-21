@@ -117,7 +117,9 @@
           "critico": "{nome}: crítico com {valor}+",
           "Automatico": "automático",
           "JaAtacou": "esta arma já atacou nesta cena",
-          "penalidade": "{nome}: −{valor} passo"
+          "penalidade": "{nome}: −{valor} passo",
+          "municao": "Usar {nome}: +{passos} passo, +{dano} dano",
+          "MunicaoRestam": "restam {n}"
         }
       },
       "Usou": "Usou",
@@ -126,7 +128,8 @@
         "bonus": "{nome} (+{valor} no ataque)",
         "passo": "{nome} (+{valor} passo)",
         "critico": "{nome} (crítico com {valor}+)",
-        "penalidade": "{nome} (−{valor} passo)"
+        "penalidade": "{nome} (−{valor} passo)",
+        "municao": "{nome} (+{passos} passo, +{dano} dano)"
       }
     },
     "Ficha": {
@@ -736,7 +739,9 @@
       "PassoDescricao": "Efeito de item: {texto} até o fim da cena.",
       "PassoRecebido": "{nome} recebeu {texto} ({item}) até o fim da cena.",
       "PassoJaRecebido": "Efeito já recebido por {nome}.",
-      "UnidadesRestantes": "Unidades restantes: {n}."
+      "UnidadesRestantes": "Unidades restantes: {n}.",
+      "DadoBonusRecebido": "{nome} recebeu +d{dado} na reserva de dados bônus (vale em um teste).",
+      "MunicaoUsada": "{nome}: 1 unidade gasta automaticamente no ataque (restam {restantes})."
     },
     "Habilidade": {
       "Confirmar": "Confirmar",
@@ -1492,7 +1497,9 @@
         "armaduraExtra": "Armadura extra",
         "curar": "Curar",
         "passoAlvo": "Passo no alvo",
-        "ferramenta": "Ferramenta"
+        "ferramenta": "Ferramenta",
+        "concederDado": "Dado bônus",
+        "municao": "Munição"
       },
       "Campos": {
         "chave": "Chave",
@@ -1526,7 +1533,9 @@
         "pontos": "Pontos",
         "formula": "Fórmula",
         "recursoCura": "Recupera",
-        "ferramenta": "Ferramenta"
+        "ferramenta": "Ferramenta",
+        "alcance": "Vale em armas",
+        "dano": "Bônus de dano"
       },
       "Gatilhos": {
         "falha": "Ao falhar um teste com DT",
@@ -1606,7 +1615,9 @@
         "armaduraExtra": "+{pontos} ponto na armadura vestida",
         "curar": "Ao usar: rola {formula} e recupera {recurso}",
         "passoAlvo": "Ao usar: {atributo} {passos} até o fim da cena, para quem receber",
-        "ferramenta": "Ferramenta: {ferramenta}"
+        "ferramenta": "Ferramenta: {ferramenta}",
+        "concederDado": "Ao usar: +d{dado} na reserva de dados bônus (vale em um teste)",
+        "municao": "Munição de armas {alcance}: +{passos} passo no ataque, +{dano} no dano; gasta uma unidade por ataque"
       },
       "Botao": {
         "passoCena": "Passo na cena{custo}",
@@ -1658,6 +1669,9 @@
       },
       "Ferramentas": {
         "medicina": "Medicina (primeiros socorros)"
+      },
+      "Alcances": {
+        "distancia": "à distância"
       }
     },
     "Plano": {

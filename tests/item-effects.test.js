@@ -130,6 +130,8 @@ test('itemEffectTypes: habilidade aceita todos menos os de equipamento; cada equ
     'passoAlvo',
     'ferramenta',
     'acaoNota',
+    'concederDado',
+    'municao',
   ]);
   assert.deepEqual(itemEffectTypes('armadura'), ['dadoExtra']);
   assert.deepEqual(itemEffectTypes('escudo'), ['dadoExtra', 'reducaoEscudo']);

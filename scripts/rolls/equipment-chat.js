@@ -10,9 +10,15 @@ import { computeDamage, damageBaseValue } from './damage.js';
 import { damageActor } from './health.js';
 import { pickDamageTarget } from './damage-dialog.js';
 import { isThreat } from './threat.js';
-import { weaponSkill, weaponDamageLabel, weaponAmmoChanges, weaponReady } from './equipment.js';
+import {
+  itemUseChanges,
+  weaponSkill,
+  weaponDamageLabel,
+  weaponAmmoChanges,
+  weaponReady,
+} from './equipment.js';
 import { firstEffect } from './ability-effects-actor.js';
-import { markWeaponAttack, weaponTestKind } from './ability-effects.js';
+import { ammoOptions, markWeaponAttack, weaponTestKind } from './ability-effects.js';
 import { abilityNote } from './abilities-chat.js';
 import { guardButtons, registerGuardHandler } from './guardian-chat.js';
 import { canGuardWeaponCard, guardWeaponCard } from './guardian.js';
@@ -95,6 +101,38 @@ export async function afterWeaponAttack(actor, weapon) {
   });
 }
 
+/**
+ * Munição escolhida para o ataque (efeito `municao`), conferida no próprio ator: precisa valer para
+ * o alcance da arma e ter unidade sobrando. `null` sem munição.
+ * @param {Actor} actor
+ * @param {Item} weapon
+ * @param {string|null} ammoId Item de munição marcado na janela pré-teste.
+ */
+export function ammoFor(actor, weapon, ammoId) {
+  if (!ammoId || !weapon) return null;
+  return ammoOptions([...actor.items], weapon.system).find((ammo) => ammo.id === ammoId) ?? null;
+}
+
+/**
+ * Gasta uma unidade da munição usada no ataque (como o uso de um item: unidade, ou uso de uma
+ * unidade) e avisa no chat que o gasto foi automático.
+ * @param {Actor} actor
+ * @param {string} ammoId
+ */
+export async function spendAmmo(actor, ammoId) {
+  const item = actor.items.get(ammoId);
+  const changes = item ? itemUseChanges(item.system) : null;
+  if (!changes) return;
+  // Guarda o número antes de gravar (o `update` reorganiza o objeto recebido)
+  const remaining = changes['system.quantidade'] ?? item.system.quantidade;
+  await item.update(changes);
+  const text = t('DESORDEM.Equipamento.MunicaoUsada', { nome: item.name, restantes: remaining });
+  await postMessage({
+    actor,
+    content: `<p class="desordem-ficha__dica">${Handlebars.escapeExpression(text)}</p>`,
+  });
+}
+
 export async function attackWithWeapon(actor, weapon, options = {}) {
   const { system } = weapon;
   if (!canAttackWith(weapon)) return { result: null, amount: null };
@@ -111,6 +149,9 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
   });
   // O teste foi feito: marca o ataque da cena e gasta a unidade da arma consumível
   await afterWeaponAttack(actor, weapon);
+  // Munição marcada na janela (ex.: aljava): gasta uma unidade, acertando ou não
+  const ammo = ammoFor(actor, weapon, options.municaoId);
+  if (ammo) await spendAmmo(actor, ammo.id);
   // O dado do companheiro é o primeiro dado extra do teste
   if (companion && result.dice[2]?.source === 'extra' && result.dice[2].value === 1) {
     await actor.update({ 'system.cena.animalFerido': true });
@@ -120,7 +161,8 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
     });
   }
   if (!result.success) return { result, amount: null };
-  const amount = computeDamage(result, system.bonusDano, system.baseDano);
+  // Dano: RA (ou RB) + modificador da arma + bônus da munição
+  const amount = computeDamage(result, system.bonusDano + (ammo?.dano ?? 0), system.baseDano);
   await postMessage({
     actor,
     content: await render(TEMPLATE_ATAQUE, {
@@ -129,7 +171,7 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
       amount,
       high: damageBaseValue(result, system.baseDano),
       base: system.baseDano === 'rb' ? 'RB' : 'RA',
-      formula: weaponDamageLabel(system.bonusDano, system.baseDano),
+      formula: weaponDamageLabel(system.bonusDano + (ammo?.dano ?? 0), system.baseDano),
       nonLethal: system.naoLetal,
     }),
     flags: { danoArma: { amount, naoLetal: system.naoLetal } },

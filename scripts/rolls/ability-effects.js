@@ -57,6 +57,9 @@ export const HEAL_RESOURCES = Object.freeze(['pv', 'pd']);
 /** Atributos de um `passoAlvo` (um só, sem «todos»). */
 export const TARGET_ATTRIBUTES = Object.freeze(['fisico', 'mente', 'emocao']);
 
+/** Armas em que uma munição vale (efeito `municao`): por enquanto, qualquer arma à distância. */
+export const AMMO_RANGES = Object.freeze(['distancia']);
+
 /** Ferramentas (efeito `ferramenta`): só a maleta de medicamentos, por enquanto. */
 export const TOOLS = Object.freeze(['medicina']);
 
@@ -240,6 +243,15 @@ export const EFFECT_TYPES = Object.freeze({
   passoAlvo: { atributo: choiceField(TARGET_ATTRIBUTES, 'fisico'), passos: intField(1, -3, 3) },
   // Item geral, passivo (na ficha): ferramenta de uma tarefa (só a maleta dos primeiros socorros)
   ferramenta: { ferramenta: choiceField(TOOLS, 'medicina') },
+  // Item geral, ao usar: um dado na reserva de dados bônus de quem usou (vale em um teste)
+  concederDado: { dado: dieField(10) },
+  // Item geral, munição (ex.: aljava): nos ataques com armas do alcance, caixa na janela pré-teste;
+  // marcada, dá passos no ataque, soma no dano e gasta uma unidade
+  municao: {
+    alcance: choiceField(AMMO_RANGES, 'distancia'),
+    passos: intField(1, 0, 3),
+    dano: intField(1, 0, 10),
+  },
 });
 
 /** Tipos que só uma arma aceita (a habilidade não os oferece). */
@@ -255,10 +267,12 @@ export const EQUIPMENT_ONLY_TYPES = Object.freeze([
   'curar',
   'passoAlvo',
   'ferramenta',
+  'concederDado',
+  'municao',
 ]);
 
 /** Efeitos do item geral que agem ao apertar Usar (os outros são passivos). */
-export const USE_EFFECT_TYPES = Object.freeze(['curar', 'passoAlvo', 'acaoNota']);
+export const USE_EFFECT_TYPES = Object.freeze(['curar', 'passoAlvo', 'acaoNota', 'concederDado']);
 
 /** Parâmetros padrão de um tipo (cópia nova). */
 export function defaultParams(tipo) {
@@ -388,7 +402,15 @@ export const ITEM_EFFECT_TYPES = Object.freeze({
   escudo: Object.freeze(['dadoExtra', 'reducaoEscudo']),
   // Item geral: dado extra e ferramenta (passivos, na mochila); cura, passo no alvo e ação com
   // aviso (ao usar)
-  item: Object.freeze(['dadoExtra', 'curar', 'passoAlvo', 'ferramenta', 'acaoNota']),
+  item: Object.freeze([
+    'dadoExtra',
+    'curar',
+    'passoAlvo',
+    'ferramenta',
+    'acaoNota',
+    'concederDado',
+    'municao',
+  ]),
 });
 
 /**
@@ -758,11 +780,13 @@ export function weaponAttackEffects(entries, { firstAttack = false, notAttacked 
  * entregar, notas para o cartão e o custo somado das notas (`acaoNota` pode custar PD ou PV).
  * @param {object[]} effects Efeitos do item, já limpos e filtrados.
  * @returns {{heals: {formula: string, recurso: string}[], steps: {atributo: string,
- *   passos: number}[], notes: string[], cost: object, hasUse: boolean}} `hasUse`: o item tem
- *   algum efeito de uso (o botão Usar aparece mesmo sem limite de usos).
+ *   passos: number}[], dice: number[], notes: string[], cost: object, hasUse: boolean}} `dice`:
+ *   dados que entram na reserva de dados bônus de quem usou; `hasUse`: o item tem algum efeito de
+ *   uso (o botão Usar aparece mesmo sem limite de usos).
  */
 export function itemUsePlan(effects) {
   const heals = [];
+  const dice = [];
   const steps = [];
   const notes = [];
   const bags = [];
@@ -772,6 +796,8 @@ export function itemUsePlan(effects) {
       heals.push({ formula: params.formula, recurso: params.recursoCura });
     } else if (effect.tipo === 'passoAlvo' && params.passos) {
       steps.push({ atributo: params.atributo, passos: params.passos });
+    } else if (effect.tipo === 'concederDado') {
+      dice.push(params.dado);
     } else if (effect.tipo === 'acaoNota') {
       if (params.texto) notes.push(params.texto);
       bags.push(costBag(params.custo));
@@ -780,10 +806,52 @@ export function itemUsePlan(effects) {
   return {
     heals,
     steps,
+    dice,
     notes,
     cost: bags.reduce(addCostBags, emptyCostBag()),
     hasUse: (effects ?? []).some((e) => USE_EFFECT_TYPES.includes(e.tipo)),
   };
+}
+
+/**
+ * Efeito de munição de um item para uma arma: os parâmetros do `municao` do mesmo alcance da arma,
+ * sem olhar as unidades. `null` se o item não é munição dessa arma.
+ * @param {{type: string, system: object}} item
+ * @param {{tipo: string}} weapon `weapon.system`.
+ * @returns {{alcance: string, passos: number, dano: number}|null}
+ */
+export function ammoEffectOf(item, weapon) {
+  if (item?.type !== 'item') return null;
+  const ammo = ownEffects(item).find(
+    (e) => e.tipo === 'municao' && e.params.alcance === weapon?.tipo,
+  );
+  return ammo ? ammo.params : null;
+}
+
+/**
+ * Munições que valem num ataque com a arma (efeito `municao` de itens gerais na ficha, do mesmo
+ * alcance da arma, com unidade ou uso sobrando). Na ordem dos itens; a janela marca a primeira.
+ * @param {{id: string, name: string, type: string, system: object}[]} items Itens do ator.
+ * @param {{tipo: string}} weapon `weapon.system` (alcance: corpo ou distancia).
+ * @returns {{id: string, name: string, passos: number, dano: number, remaining: number|null}[]}
+ *   `remaining`: unidades que sobram (null se o item não é consumível).
+ */
+export function ammoOptions(items, weapon) {
+  const options = [];
+  for (const item of items ?? []) {
+    const ammo = ammoEffectOf(item, weapon);
+    if (!ammo) continue;
+    const { consumivel, quantidade = 0 } = item.system;
+    if (consumivel && quantidade <= 0) continue;
+    options.push({
+      id: item.id,
+      name: item.name,
+      passos: ammo.passos,
+      dano: ammo.dano,
+      remaining: consumivel ? quantidade : null,
+    });
+  }
+  return options;
 }
 
 /**

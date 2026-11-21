@@ -73,6 +73,7 @@ const CHOICE_GROUPS = Object.freeze({
   quando: 'QuandoAtaque',
   recursoCura: 'RecursosCura',
   ferramenta: 'Ferramentas',
+  alcance: 'Alcances',
 });
 
 /**
@@ -175,6 +176,9 @@ export function effectSupported(effect, itemType = 'habilidade') {
     case 'curar':
     case 'passoAlvo':
     case 'ferramenta':
+    // Itens gerais (v0.21.8): dado bônus ao usar e munição nos ataques
+    case 'concederDado':
+    case 'municao':
       return true;
     case 'ganharRecurso':
       // Todos os gatilhos têm uso desde a v0.20.7 (ao se defender, início do combate)
@@ -292,6 +296,14 @@ export function describeEffect(effect, { t, skill, itemType = 'habilidade' }) {
       });
     case 'ferramenta':
       return t(key('ferramenta'), { ferramenta: t(`DESORDEM.Efeito.Ferramentas.${p.ferramenta}`) });
+    case 'concederDado':
+      return t(key('concederDado'), { dado: p.dado });
+    case 'municao':
+      return t(key('municao'), {
+        alcance: t(`DESORDEM.Efeito.Alcances.${p.alcance}`),
+        passos: p.passos,
+        dano: p.dano,
+      });
     default:
       return '';
   }

@@ -117,7 +117,9 @@
           "critico": "{nome}: critical on {valor}+",
           "Automatico": "automatic",
           "JaAtacou": "this weapon already attacked this scene",
-          "penalidade": "{nome}: −{valor} step"
+          "penalidade": "{nome}: −{valor} step",
+          "municao": "Use {nome}: +{passos} step, +{dano} damage",
+          "MunicaoRestam": "{n} left"
         }
       },
       "Usou": "Used",
@@ -126,7 +128,8 @@
         "bonus": "{nome} (+{valor} to the attack)",
         "passo": "{nome} (+{valor} step)",
         "critico": "{nome} (critical on {valor}+)",
-        "penalidade": "{nome} (−{valor} step)"
+        "penalidade": "{nome} (−{valor} step)",
+        "municao": "{nome} (+{passos} step, +{dano} damage)"
       }
     },
     "Ficha": {
@@ -736,7 +739,9 @@
       "PassoDescricao": "Item effect: {texto} until the end of the scene.",
       "PassoRecebido": "{nome} received {texto} ({item}) until the end of the scene.",
       "PassoJaRecebido": "Effect already received by {nome}.",
-      "UnidadesRestantes": "Units left: {n}."
+      "UnidadesRestantes": "Units left: {n}.",
+      "DadoBonusRecebido": "{nome} received +d{dado} in the bonus dice pool (one test).",
+      "MunicaoUsada": "{nome}: 1 unit spent automatically on the attack ({restantes} left)."
     },
     "Habilidade": {
       "Confirmar": "Confirm",
@@ -1492,7 +1497,9 @@
         "armaduraExtra": "Extra armor",
         "curar": "Heal",
         "passoAlvo": "Step on target",
-        "ferramenta": "Tool"
+        "ferramenta": "Tool",
+        "concederDado": "Bonus die",
+        "municao": "Ammunition"
       },
       "Campos": {
         "chave": "Key",
@@ -1526,7 +1533,9 @@
         "pontos": "Points",
         "formula": "Formula",
         "recursoCura": "Recovers",
-        "ferramenta": "Tool"
+        "ferramenta": "Tool",
+        "alcance": "Applies to weapons",
+        "dano": "Damage bonus"
       },
       "Gatilhos": {
         "falha": "On failing a test with a DC",
@@ -1606,7 +1615,9 @@
         "armaduraExtra": "+{pontos} point on the worn armor",
         "curar": "On use: rolls {formula} and recovers {recurso}",
         "passoAlvo": "On use: {atributo} {passos} until the end of the scene, for whoever receives it",
-        "ferramenta": "Tool: {ferramenta}"
+        "ferramenta": "Tool: {ferramenta}",
+        "concederDado": "On use: +d{dado} to the bonus dice pool (one test)",
+        "municao": "Ammunition for {alcance} weapons: +{passos} step on the attack, +{dano} damage; spends one unit per attack"
       },
       "Botao": {
         "passoCena": "Scene step{custo}",
@@ -1658,6 +1669,9 @@
       },
       "Ferramentas": {
         "medicina": "Medicine (first aid)"
+      },
+      "Alcances": {
+        "distancia": "ranged"
       }
     },
     "Plano": {

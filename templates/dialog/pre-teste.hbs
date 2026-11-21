@@ -195,6 +195,13 @@
       <span class="desordem-pre__motivo" data-motivo></span>
     </label>
     {{/each}}
+    {{#each ammo}}
+    <label class="desordem-pre__opcao">
+      <input type="checkbox" name="municao" value="{{id}}" {{#if checked}}checked{{/if}}>
+      <span class="desordem-pre__nome">{{label}}</span>
+      {{#if remainingText}}<span class="desordem-pre__motivo">{{remainingText}}</span>{{/if}}
+    </label>
+    {{/each}}
     {{#each weaponLines}}
     <label class="desordem-pre__opcao{{#unless optional}}{{#unless applies}} is-indisponivel{{/unless}}{{/unless}}">
       {{#if optional}}<input type="checkbox" name="naoAtacou">{{else}}<input type="checkbox" {{#if applies}}checked{{/if}} disabled>{{/if}}

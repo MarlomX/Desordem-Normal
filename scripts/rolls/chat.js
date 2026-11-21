@@ -21,6 +21,7 @@ import {
 } from './abilities.js';
 import {
   dialogDiceOptions,
+  ammoOptions,
   firstWeaponAttack,
   weaponAttackEffects,
   pickBonusDice,
@@ -368,6 +369,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     testKind = 'qualquer',
     weaponId = null,
     naoAtacou = false,
+    municaoId = null,
     useBonusDice = 0,
     ...rest
   } = options;
@@ -427,6 +429,16 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   });
   // Penalidade passiva das armaduras e escudos em uso nesta perícia (passos a menos)
   const penaltyLine = armorPenaltyLine(armorSkillPenalties(actor.items), skillKey);
+  // Munição marcada na janela (ex.: aljava): passos no ataque (o dano fica no cartão de ataque)
+  const weaponItem = weaponId ? actor.items.get(weaponId) : null;
+  const ammo = municaoId && weaponItem
+    ? ammoOptions([...actor.items], weaponItem.system).find((a) => a.id === municaoId) ?? null
+    : null;
+  if (ammo) usos.push(localize('DESORDEM.Teste.UsouArma.municao', {
+    nome: ammo.name,
+    passos: ammo.passos,
+    dano: ammo.dano
+  }));
   // Linha «Usou» do cartão: também os efeitos da arma que entraram neste ataque e a penalidade
   usos.push(...attackUsedLines([...attack.lines, ...(penaltyLine ? [penaltyLine] : [])], localize));
 
@@ -444,6 +456,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
       ...(attack.steps ? [{ target: 'skill', steps: attack.steps }] : []),
       // Penalidade das armaduras e escudos em uso (passos a menos no dado da perícia)
       ...(penaltyLine ? [{ target: 'skill', steps: -penaltyLine.value }] : []),
+      // Munição: passos no dado da perícia do ataque
+      ...(ammo?.passos ? [{ target: 'skill', steps: ammo.passos }] : []),
       ...contusionStepMods(system.estado, attrKey),
       // (os passos condicionais das habilidades chegam como efeitos da ficha, na aba Condição)
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),

@@ -62,6 +62,18 @@ export async function useItem(actor, item) {
       units: use.kind === 'unidadeUsos' ? use.units : null,
     }),
   });
+  // Dados bônus (ex.: crucifixo): entram na reserva de quem usou e valem em um teste
+  if (plan.dice.length && Array.isArray(actor.system.dadosBonus)) {
+    await actor.update({ 'system.dadosBonus': [...actor.system.dadosBonus, ...plan.dice] });
+    for (const dado of plan.dice) {
+      await postMessage({
+        actor,
+        content: `<p class="desordem-ficha__dica">${Handlebars.escapeExpression(
+          t('DESORDEM.Equipamento.DadoBonusRecebido', { nome: actor.name, dado }),
+        )}</p>`,
+      });
+    }
+  }
   for (const heal of plan.heals) await postHeal(actor, item, heal);
   for (const step of plan.steps) await postStep(actor, item, step);
   return true;
