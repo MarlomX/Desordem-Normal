@@ -81,19 +81,31 @@ export function handsInUse(held) {
   return { used, over: used > HANDS };
 }
 
+/** A arma é marcial (precisa de proficiência para ser empunhada)? */
+export function isMartial(system) {
+  return system?.categoria === 'marcial';
+}
+
 /**
  * Decide se uma mudança em um item do personagem respeita os limites do equipamento: no máximo
- * duas mãos ocupadas (armas e itens empunhados) e uma só armadura vestida.
+ * duas mãos ocupadas (armas e itens empunhados), uma só armadura vestida e, sem proficiência
+ * marcial, nenhuma arma marcial empunhada.
  * @param {{id: string, type: string, system: Object}[]} siblings Os outros itens do personagem.
  * @param {{type: string, system: Object}} next O item, já com a mudança aplicada.
- * @returns {{ok: boolean, reason: ('maos'|'armadura'|null)}}
+ * @param {{proficient?: boolean}} [owner] `proficient`: o dono tem proficiência marcial (padrão
+ *   verdadeiro: criaturas e quem chama sem saber não são travados).
+ * @returns {{ok: boolean, reason: ('maos'|'armadura'|'proficiencia'|null)}}
  */
-export function checkEquipment(siblings, next) {
+export function checkEquipment(siblings, next, { proficient = true } = {}) {
   if (next.type === 'armadura') {
     const other = siblings.some((i) => i.type === 'armadura' && i.system.vestida);
     return next.system.vestida && other
       ? { ok: false, reason: 'armadura' }
       : { ok: true, reason: null };
+  }
+  // Arma marcial sem proficiência: não pode ser empunhada (regra da missão, até uma regra melhor)
+  if (next.type === 'arma' && next.system.empunhada && isMartial(next.system) && !proficient) {
+    return { ok: false, reason: 'proficiencia' };
   }
   if (next.system.empunhada && !isNatural(next.system)) {
     const used = handsInUse(
@@ -102,6 +114,25 @@ export function checkEquipment(siblings, next) {
     if (used + handsOf(next.system) > HANDS) return { ok: false, reason: 'maos' };
   }
   return { ok: true, reason: null };
+}
+
+/**
+ * A arma pode atacar agora? Só a arma consumível (de arremesso) sem unidades não pode.
+ * @param {{consumivel?: boolean, quantidade?: number}} system
+ */
+export function weaponReady(system) {
+  return !system?.consumivel || (system.quantidade ?? 0) > 0;
+}
+
+/**
+ * Gravação que gasta uma unidade da arma consumível ao atacar (para `item.update`), ou `null` se
+ * a arma não é consumível ou já está em 0 (em 0 ela só fica zerada).
+ * @param {{consumivel?: boolean, quantidade?: number}} system
+ * @returns {{'system.quantidade': number}|null}
+ */
+export function weaponAmmoChanges(system) {
+  if (!system?.consumivel || !((system.quantidade ?? 0) > 0)) return null;
+  return { 'system.quantidade': system.quantidade - 1 };
 }
 
 /** Perícia do ataque: a escolhida na arma ou, sem ela, Luta (corpo a corpo) ou Pontaria. */

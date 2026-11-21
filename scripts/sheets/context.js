@@ -10,8 +10,10 @@ import {
   armorSummary,
   handsInUse,
   handsOf,
+  isMartial,
   isNatural,
   itemUse,
+  weaponReady,
   weaponSkill,
   weaponDamageLabel,
 } from '../rolls/equipment.js';
@@ -361,8 +363,10 @@ export function buildEffectRows(
  * @param {(hands: number) => string} options.handsLabel Texto de "uma mão" / "duas mãos".
  * @param {(skillKey: string) => string} options.skillLabel Nome traduzido da perícia.
  * @param {(category: string) => string} [options.categoryLabel] Nome da categoria da arma.
- * @param {(item: Object) => string} [options.effectsText] Resumo dos efeitos do item (dica ao
- *   passar o mouse); vazio = sem efeitos.
+ * @param {(item: Object) => string} [options.effectsText] Resumo dos efeitos do item, um por
+ *   linha (mostrado embaixo do nome); vazio = sem efeitos.
+ * @param {boolean} [options.proficient=true] O personagem tem proficiência marcial (sem ela, a
+ *   caixa de empunhar das armas marciais fica travada).
  * @param {boolean} [options.editable=true]
  */
 export function buildEquipmentRows(items, {
@@ -371,6 +375,7 @@ export function buildEquipmentRows(items, {
   skillLabel,
   categoryLabel = (category) => category,
   effectsText = () => '',
+  proficient = true,
   editable = true,
 }) {
   const of = (type) => items.filter((item) => item.type === type);
@@ -381,16 +386,19 @@ export function buildEquipmentRows(items, {
   const armorWorn = armors.some((a) => a.system.vestida);
   // Equipar fica bloqueado se o item não está equipado e não cabe
   const cannotHold = (system) => !system.empunhada && hands.used + handsOf(system) > HANDS;
-  // Dica da linha: a descrição e, se houver, o resumo dos efeitos numa linha a mais
-  const tooltip = (item) => [item.system.descricao, effectsText(item)].filter(Boolean).join('\n');
+  // Resumo dos efeitos, uma linha por efeito (fica visível embaixo do nome, sem passar o mouse)
+  const effectLines = (item) => String(effectsText(item) ?? '').split('\n').filter(Boolean);
   return {
     weapons: weapons.map((item) => {
       const { id, name, system } = item;
       const natural = isNatural(system);
+      // Marcial sem proficiência: não pode ser empunhada (se já estiver, só um aviso na linha)
+      const lacksProficiency = isMartial(system) && !proficient;
       return {
         id,
         name,
-        descricao: tooltip(item),
+        descricao: system.descricao,
+        effects: effectLines(item),
         kindLabel: kindLabel(system.tipo),
         categoryLabel: categoryLabel(system.categoria),
         handsLabel: handsLabel(handsOf(system)),
@@ -400,8 +408,24 @@ export function buildEquipmentRows(items, {
         naoLetal: system.naoLetal,
         // Arma natural: sem caixa de empunhar (não ocupa as mãos)
         natural,
+        // Arma de arremesso: quantidade na linha; sem unidades, o Atacar fica desativado
+        consumivel: Boolean(system.consumivel),
+        quantidade: system.quantidade ?? 0,
+        canAttack: editable && weaponReady(system),
+        lacksProficiency,
+        // Caixa de empunhar: desativada se não cabe ou se falta proficiência (só para empunhar;
+        // uma arma já empunhada sempre pode ser guardada)
+        blockReason: system.empunhada
+          ? null
+          : lacksProficiency
+            ? 'proficiencia'
+            : !natural && cannotHold(system)
+              ? 'maos'
+              : null,
         locked: !editable,
-        blocked: !editable || (!natural && cannotHold(system)),
+        blocked:
+          !editable ||
+          (!system.empunhada && (lacksProficiency || (!natural && cannotHold(system)))),
       };
     }),
     armors: armors.map((item) => {
@@ -409,7 +433,8 @@ export function buildEquipmentRows(items, {
       return {
         id,
         name,
-        descricao: tooltip(item),
+        descricao: system.descricao,
+        effects: effectLines(item),
         pontos: system.pontos,
         restantes: Math.max(0, Math.min(system.restantes, system.pontos)),
         vestida: system.vestida,
@@ -423,7 +448,8 @@ export function buildEquipmentRows(items, {
       return {
         id,
         name,
-        descricao: tooltip(item),
+        descricao: system.descricao,
+        effects: effectLines(item),
         quantidade: system.quantidade,
         usos: system.usos,
         usosMax: system.usosMax,

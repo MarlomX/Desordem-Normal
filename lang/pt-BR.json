@@ -109,10 +109,23 @@
         "CustoPV": "{n} PV",
         "CustoRecurso": "{n} de {nome}",
         "Reserva": "Dados bônus",
-        "ReservaTexto": "Usar da reserva ({dados}):"
+        "ReservaTexto": "Usar da reserva ({dados}):",
+        "Itens": "Itens",
+        "Arma": {
+          "bonus": "{nome}: +{valor} no ataque",
+          "passo": "{nome}: +{valor} passo ({quando})",
+          "critico": "{nome}: crítico com {valor}+",
+          "Automatico": "automático",
+          "JaAtacou": "já atacou nesta cena"
+        }
       },
       "Usou": "Usou",
-      "UsouReserva": "Dados bônus ({dados})"
+      "UsouReserva": "Dados bônus ({dados})",
+      "UsouArma": {
+        "bonus": "{nome} (+{valor} no ataque)",
+        "passo": "{nome} (+{valor} passo)",
+        "critico": "{nome} (crítico com {valor}+)"
+      }
     },
     "Ficha": {
       "Personagem": "Ficha de Personagem",
@@ -643,7 +656,9 @@
         "Titulo": "Empunhadura",
         "uma": "uma mão",
         "duas": "duas mãos"
-      }
+      },
+      "Arremesso": "Arremesso (consumível)",
+      "DicaArremesso": "Arma de arremesso: cada ataque gasta uma unidade automaticamente, com aviso no chat. Com 0 unidades, ela fica zerada e não ataca."
     },
     "Armadura": {
       "Titulo": "Pontos de armadura",
@@ -661,9 +676,15 @@
       "SemUso": "{nome} não tem usos restantes nem é consumível.",
       "Bloqueio": {
         "maos": "Sem mãos livres: desequipe uma arma ou um item antes.",
-        "armadura": "Só uma armadura pode ser vestida por vez: tire a outra antes."
+        "armadura": "Só uma armadura pode ser vestida por vez: tire a outra antes.",
+        "proficiencia": "Arma marcial: sem proficiência marcial não dá para empunhá-la."
       },
-      "AplicarEm": "Aplicar dano em {nome}"
+      "AplicarEm": "Aplicar dano em {nome}",
+      "SemMunicao": "{nome} não tem unidades: não dá para atacar com ela.",
+      "MunicaoGasta": "{nome}: 1 unidade gasta automaticamente no ataque (restam {restantes}).",
+      "SemProficiencia": "Marcial sem proficiência: o mestre decide se o ataque vale (por exemplo, com desvantagem).",
+      "ProficienciaMarcial": "Proficiência marcial",
+      "ProficienciaHabilidade": "(já vem de uma habilidade)"
     },
     "Habilidade": {
       "Confirmar": "Confirmar",
@@ -1410,7 +1431,11 @@
         "companheiro": "Companheiro",
         "defesaLivre": "Defesa livre",
         "passoCondicional": "Passo condicional",
-        "interceptar": "Assumir ataque"
+        "interceptar": "Assumir ataque",
+        "proficienciaMarcial": "Proficiência marcial",
+        "bonusAtaque": "Bônus de ataque",
+        "passoAtaque": "Passo no ataque",
+        "criticoAmpliado": "Crítico ampliado"
       },
       "Campos": {
         "chave": "Chave",
@@ -1436,7 +1461,10 @@
         "margem": "+1 dado a cada",
         "umaVezPorAlvo": "Uma vez por alvo na cena",
         "condicao": "Condição",
-        "rotulo": "Rótulo do botão"
+        "rotulo": "Rótulo do botão",
+        "valor": "Bônus",
+        "quando": "Quando vale",
+        "minimo": "Valor mínimo do crítico"
       },
       "Gatilhos": {
         "falha": "Ao falhar um teste com DT",
@@ -1507,7 +1535,11 @@
           "pv": "{valor} PV",
           "recurso": "{valor} de {recurso}"
         },
-        "dadoExtraArma": "+d{dado} no ataque com esta arma{custo}"
+        "dadoExtraArma": "+d{dado} no ataque com esta arma{custo}",
+        "proficienciaMarcial": "Pode empunhar armas marciais",
+        "bonusAtaque": "+{valor} no total do ataque",
+        "passoAtaque": "+{passos} passo no dado da perícia do ataque ({quando})",
+        "criticoAmpliado": "Sucesso crítico com dois dados iguais de {minimo} ou mais"
       },
       "Botao": {
         "passoCena": "Passo na cena{custo}",
@@ -1546,6 +1578,11 @@
         "arma": "Os efeitos da arma só valem nos ataques com ela.",
         "armadura": "Os efeitos da armadura valem enquanto ela está vestida. Os tipos de efeito de armadura chegam numa próxima versão.",
         "item": "Os efeitos do item valem enquanto ele está na ficha (na mochila)."
+      },
+      "QuandoAtaque": {
+        "sempre": "Sempre",
+        "primeiroCena": "No primeiro ataque da cena",
+        "naoAtacou": "Contra quem ainda não me atacou"
       }
     },
     "Plano": {

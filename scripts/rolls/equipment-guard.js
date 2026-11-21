@@ -1,8 +1,11 @@
 /**
  * Regras do equipamento aplicadas a qualquer alteração de item (ficha, ficha do item ou macro):
- * no máximo duas mãos ocupadas e uma só armadura vestida.
+ * no máximo duas mãos ocupadas, uma só armadura vestida e nada marcial empunhado sem
+ * proficiência marcial.
  */
 import { checkEquipment } from './equipment.js';
+import { hasMartialProficiency } from './ability-effects.js';
+import { actorEffects } from './ability-effects-actor.js';
 
 const t = (key) => game.i18n.localize(key);
 
@@ -11,6 +14,16 @@ function siblingsOf(item) {
   return item.parent.items
     .filter((other) => other.id !== item.id)
     .map((other) => ({ id: other.id, type: other.type, system: other.system }));
+}
+
+/**
+ * O dono do item tem proficiência marcial? Só o personagem é conferido (criaturas e outros donos
+ * passam sempre).
+ */
+function ownerProficient(item) {
+  const actor = item.parent;
+  if (actor?.type !== 'personagem') return true;
+  return hasMartialProficiency(actor.system, actorEffects(actor));
 }
 
 /** Campo que a regra controla em cada tipo de item (o que o torna "equipado"). */
@@ -26,7 +39,11 @@ function guardUpdate(item, changes) {
     return undefined;
   }
   const merged = foundry.utils.mergeObject(item.toObject().system, system, { inplace: false });
-  const { ok, reason } = checkEquipment(siblingsOf(item), { type: item.type, system: merged });
+  const { ok, reason } = checkEquipment(
+    siblingsOf(item),
+    { type: item.type, system: merged },
+    { proficient: ownerProficient(item) },
+  );
   if (ok) return undefined;
   ui.notifications.warn(t(`DESORDEM.Equipamento.Bloqueio.${reason}`));
   // Redesenha as fichas depois do cancelamento, para a caixa marcada voltar ao estado real
@@ -40,7 +57,11 @@ function guardUpdate(item, changes) {
 /** Um item que chega já empunhado ou vestido, mas sem espaço, entra desequipado. */
 function guardCreate(item) {
   if (!item.parent?.items) return;
-  const { ok } = checkEquipment(siblingsOf(item), { type: item.type, system: item.system });
+  const { ok } = checkEquipment(
+    siblingsOf(item),
+    { type: item.type, system: item.system },
+    { proficient: ownerProficient(item) },
+  );
   if (!ok) item.updateSource({ [`system.${equipField(item.type)}`]: false });
 }
 

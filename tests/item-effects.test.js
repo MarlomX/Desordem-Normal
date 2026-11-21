@@ -8,6 +8,7 @@ import { migrateGearSource, migrateWeaponSource } from '../scripts/data/migratio
 import { checkEquipment, handsInUse, handsOf, isNatural } from '../scripts/rolls/equipment.js';
 import {
   EFFECT_TYPES,
+  WEAPON_ONLY_TYPES,
   collectEffects,
   dialogDiceOptions,
   itemEffectTypes,
@@ -112,9 +113,17 @@ test('handsInUse e checkEquipment usam a empunhadura (natural nunca ocupa mão)'
 
 // ---------- Tipos aceitos e item em uso ----------
 
-test('itemEffectTypes: habilidade aceita todos; arma e item, o dado extra; armadura, nenhum', () => {
-  assert.deepEqual(itemEffectTypes('habilidade'), Object.keys(EFFECT_TYPES));
-  assert.deepEqual(itemEffectTypes('arma'), ['dadoExtra']);
+test('itemEffectTypes: habilidade aceita todos menos os de arma; item, o dado extra; armadura, nenhum', () => {
+  assert.deepEqual(
+    itemEffectTypes('habilidade'),
+    Object.keys(EFFECT_TYPES).filter((tipo) => !WEAPON_ONLY_TYPES.includes(tipo)),
+  );
+  assert.deepEqual(itemEffectTypes('arma'), [
+    'dadoExtra',
+    'bonusAtaque',
+    'passoAtaque',
+    'criticoAmpliado',
+  ]);
   assert.deepEqual(itemEffectTypes('item'), ['dadoExtra']);
   assert.deepEqual(itemEffectTypes('armadura'), []);
   assert.deepEqual(itemEffectTypes('outro'), []);
@@ -254,7 +263,7 @@ test('itemEffectsText: um resumo por linha, só dos tipos aceitos; vazio sem efe
 
 // ---------- Ficha ----------
 
-test('buildEquipmentRows: categoria da arma e efeitos na dica da linha', () => {
+test('buildEquipmentRows: categoria da arma e efeitos numa linha à parte', () => {
   const weapon = piece('w', 'arma', {
     descricao: 'Lâmina curta',
     tipo: 'corpo',
@@ -277,5 +286,6 @@ test('buildEquipmentRows: categoria da arma e efeitos na dica da linha', () => {
   assert.equal(row.categoryLabel, 'cat:marcial');
   assert.equal(row.handsLabel, '1m');
   assert.equal(row.natural, false);
-  assert.equal(row.descricao, 'Lâmina curta\n+d6 no ataque');
+  assert.equal(row.descricao, 'Lâmina curta');
+  assert.deepEqual(row.effects, ['+d6 no ataque']);
 });

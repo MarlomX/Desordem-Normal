@@ -64,6 +64,8 @@ export function planDice({ attrDie, skillDie, extraDice = [], stepMods = [] }) {
  *   ficam). Dados anulados não somam e não formam sucesso crítico, mas continuam valendo para RA
  *   e RB (o pavor só muda a soma); se todos forem anulados, o teste é falha crítica. Fica fora
  *   dos limites de 4 rolados e 3 somados.
+ * @param {number} [opts.critMin=6] Valor mínimo dos dois dados iguais do sucesso crítico (o
+ *   crítico ampliado de uma arma baixa para 5, por exemplo). Fora da faixa 2..6, vale o padrão.
  * @param {(sides: number) => number} [opts.rng]
  */
 export function resolveTest({
@@ -74,8 +76,14 @@ export function resolveTest({
   stepMods = [],
   modifier = 0,
   fearDie = null,
+  critMin = CRIT_MIN_VALUE,
   rng = defaultRng,
 }) {
+  // Mínimo do crítico: só valores inteiros de 2 a 6 (dois 1 nunca são sucesso crítico)
+  const critLimit =
+    Number.isInteger(critMin) && critMin >= 2 && critMin <= CRIT_MIN_VALUE
+      ? critMin
+      : CRIT_MIN_VALUE;
   // 1-2. Dados a rolar (passos aplicados, máximo de 4 rolados)
   const { attrFinal, skillFinal, rolledSides, discardedExtras } = planDice({
     attrDie,
@@ -129,17 +137,15 @@ export function resolveTest({
   //    rolados, o menor já foi descartado (as regras mandam determinar o crítico depois disso).
   const occurrences = new Map();
   for (const { value } of counted) occurrences.set(value, (occurrences.get(value) ?? 0) + 1);
-  const criticalSuccess = [...occurrences].some(([v, n]) => n >= 2 && v >= CRIT_MIN_VALUE);
+  const criticalSuccess = [...occurrences].some(([v, n]) => n >= 2 && v >= critLimit);
   const criticalFailure = devouredAll || counted.every((d) => d.value === 1);
 
-  // Dados em destaque no cartão: os que formam o crítico (valores iguais, 6 ou mais) e os de uma
+  // Dados em destaque no cartão: os que formam o crítico (valores iguais, 6 ou mais, ou o mínimo
+  // do crítico ampliado) e os de uma
   // falha crítica (todos em 1; se foi o pavor que devorou os dados, nenhum é destacado)
   for (const die of dice) {
     die.critical =
-      criticalSuccess &&
-      die.counted &&
-      die.value >= CRIT_MIN_VALUE &&
-      occurrences.get(die.value) >= 2;
+      criticalSuccess && die.counted && die.value >= critLimit && occurrences.get(die.value) >= 2;
     die.fumble = criticalFailure && !devouredAll && die.value === 1;
   }
 

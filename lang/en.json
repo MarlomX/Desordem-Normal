@@ -109,10 +109,23 @@
         "CustoPV": "{n} HP",
         "CustoRecurso": "{n} {nome}",
         "Reserva": "Bonus dice",
-        "ReservaTexto": "Use from the pool ({dados}):"
+        "ReservaTexto": "Use from the pool ({dados}):",
+        "Itens": "Items",
+        "Arma": {
+          "bonus": "{nome}: +{valor} to the attack",
+          "passo": "{nome}: +{valor} step ({quando})",
+          "critico": "{nome}: critical on {valor}+",
+          "Automatico": "automatic",
+          "JaAtacou": "already attacked this scene"
+        }
       },
       "Usou": "Used",
-      "UsouReserva": "Bonus dice ({dados})"
+      "UsouReserva": "Bonus dice ({dados})",
+      "UsouArma": {
+        "bonus": "{nome} (+{valor} to the attack)",
+        "passo": "{nome} (+{valor} step)",
+        "critico": "{nome} (critical on {valor}+)"
+      }
     },
     "Ficha": {
       "Personagem": "Character Sheet",
@@ -643,7 +656,9 @@
         "Titulo": "Grip",
         "uma": "one-handed",
         "duas": "two-handed"
-      }
+      },
+      "Arremesso": "Thrown (consumable)",
+      "DicaArremesso": "Thrown weapon: each attack spends one unit automatically, with a chat notice. At 0 units it stays at zero and cannot attack."
     },
     "Armadura": {
       "Titulo": "Armor points",
@@ -661,9 +676,15 @@
       "SemUso": "{nome} has no uses left and is not consumable.",
       "Bloqueio": {
         "maos": "No free hands: unequip a weapon or an item first.",
-        "armadura": "Only one armor can be worn at a time: take the other off first."
+        "armadura": "Only one armor can be worn at a time: take the other off first.",
+        "proficiencia": "Martial weapon: you cannot wield it without martial proficiency."
       },
-      "AplicarEm": "Apply damage to {nome}"
+      "AplicarEm": "Apply damage to {nome}",
+      "SemMunicao": "{nome} has no units left: you cannot attack with it.",
+      "MunicaoGasta": "{nome}: 1 unit spent automatically on the attack ({restantes} left).",
+      "SemProficiencia": "Martial without proficiency: the GM decides whether the attack counts (for example, with a disadvantage).",
+      "ProficienciaMarcial": "Martial proficiency",
+      "ProficienciaHabilidade": "(already granted by an ability)"
     },
     "Habilidade": {
       "Confirmar": "Confirm",
@@ -1410,7 +1431,11 @@
         "companheiro": "Companion",
         "defesaLivre": "Free defense",
         "passoCondicional": "Conditional step",
-        "interceptar": "Take the attack"
+        "interceptar": "Take the attack",
+        "proficienciaMarcial": "Martial proficiency",
+        "bonusAtaque": "Attack bonus",
+        "passoAtaque": "Attack step",
+        "criticoAmpliado": "Expanded critical"
       },
       "Campos": {
         "chave": "Key",
@@ -1436,7 +1461,10 @@
         "margem": "+1 die for every",
         "umaVezPorAlvo": "Once per target per scene",
         "condicao": "Condition",
-        "rotulo": "Button label"
+        "rotulo": "Button label",
+        "valor": "Bonus",
+        "quando": "Applies when",
+        "minimo": "Minimum critical value"
       },
       "Gatilhos": {
         "falha": "On failing a test with a DC",
@@ -1507,7 +1535,11 @@
           "pv": "{valor} HP",
           "recurso": "{valor} {recurso}"
         },
-        "dadoExtraArma": "+d{dado} on attacks with this weapon{custo}"
+        "dadoExtraArma": "+d{dado} on attacks with this weapon{custo}",
+        "proficienciaMarcial": "Can wield martial weapons",
+        "bonusAtaque": "+{valor} to the attack total",
+        "passoAtaque": "+{passos} step on the attack skill die ({quando})",
+        "criticoAmpliado": "Critical success with two matching dice of {minimo} or higher"
       },
       "Botao": {
         "passoCena": "Scene step{custo}",
@@ -1546,6 +1578,11 @@
         "arma": "The weapon effects only apply to attacks made with it.",
         "armadura": "The armor effects apply while it is worn. Armor effect types arrive in an upcoming version.",
         "item": "The item effects apply while it is on the sheet (in the backpack)."
+      },
+      "QuandoAtaque": {
+        "sempre": "Always",
+        "primeiroCena": "On the first attack of the scene",
+        "naoAtacou": "Against someone who has not attacked me yet"
       }
     },
     "Plano": {

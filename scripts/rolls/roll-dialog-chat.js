@@ -4,7 +4,7 @@
  * pavor antes de rolar. A lógica (opções, custos, prévia) está em `roll-dialog.js`.
  */
 import { SYSTEM_ID } from '../config.js';
-import { dialogDiceOptions, groupBonusDice } from './ability-effects.js';
+import { dialogDiceOptions, groupBonusDice, weaponAttackEffects } from './ability-effects.js';
 import { actorEffects, actorResources } from './ability-effects-actor.js';
 import { resourceName } from '../sheets/ability-controls.js';
 import { advanceDtField } from './chase.js';
@@ -400,12 +400,21 @@ export async function askRollChoices(
   };
   // Pular a janela usa as escolhas padrão: na defesa, o +d6 (que vem marcado)
   if (shift) return allowDefense ? { active: ['defesa'], ...kind } : { ...kind };
-  const dice = testDicePreview(actor, skillKey, attribute, stepMods);
+  // Efeitos da arma do ataque (só com `weaponId`): os automáticos já entram na prévia dos dados
+  // (o passo no dado da perícia), e a caixa «quem ainda não me atacou» vira uma opção da janela
+  const entries = actorEffects(actor, { weaponId });
+  const attack = weaponId
+    ? weaponAttackEffects(entries, {
+        firstAttack: actor.system.cena ? !actor.system.cena.atacou : false,
+      })
+    : { steps: 0, lines: [] };
+  const dice = testDicePreview(actor, skillKey, attribute, [
+    ...stepMods,
+    ...(attack.steps ? [{ target: 'skill', steps: attack.steps }] : []),
+  ]);
   // PD, ímpeto e pavor (0 numa criatura: a janela não mostra pavor nem custos)
   const resources = testResources(actor.system);
-  // Recursos das habilidades (valores e nomes) e reserva de dados bônus; no ataque, os efeitos da
-  // arma também entram
-  const entries = actorEffects(actor, { weaponId });
+  // Recursos das habilidades (valores e nomes) e reserva de dados bônus
   const abilityResources = actorResources(actor, entries);
   const model = buildRollModel({
     skillKey,
@@ -528,9 +537,21 @@ export async function askRollChoices(
       }),
       options: Array.from({ length: model.reserva.dice.length + 1 }, (_, n) => ({ n })),
     },
-    // Habilidades e ações (ex.: Defender-se) usam o mesmo campo `active`; só a seção muda
-    abilities: abilityRows.filter((ability) => ability.group !== 'acao'),
+    // Habilidades, ações (ex.: Defender-se) e itens usam o mesmo campo `active`; só a seção muda
+    abilities: abilityRows.filter((ability) => !['acao', 'item'].includes(ability.group)),
     actions: abilityRows.filter((ability) => ability.group === 'acao'),
+    // Seção «Itens»: dados extras de itens e as linhas dos efeitos da arma do ataque
+    items: abilityRows.filter((ability) => ability.group === 'item'),
+    weaponLines: attack.lines.map((line) => ({
+      ...line,
+      label: t(`DESORDEM.Teste.Pre.Arma.${line.kind}`, {
+        nome: line.itemName,
+        valor: line.value,
+        quando: line.quando ? t(`DESORDEM.Efeito.QuandoAtaque.${line.quando}`).toLowerCase() : '',
+      }),
+    })),
+    hasItems:
+      abilityRows.some((ability) => ability.group === 'item') || attack.lines.length > 0,
     fear: model.fear && {
       ...model.fear,
       title: t('DESORDEM.Teste.Pre.Pavor', { die: model.fear.die }),
@@ -596,7 +617,12 @@ export async function askRollChoices(
         label: t('DESORDEM.Teste.Pre.Rolar'),
         icon: 'fa-solid fa-dice-d20',
         default: true,
-        callback: (event, button) => ({ confirmed: true, selection: readSelection(button.form) }),
+        callback: (event, button) => ({
+          confirmed: true,
+          selection: readSelection(button.form),
+          // Passo da arma contra quem ainda não atacou: a caixa da seção «Itens»
+          naoAtacou: Boolean(button.form.querySelector('input[name="naoAtacou"]:checked')),
+        }),
       },
       { action: 'cancel', label: t('DESORDEM.Teste.Pre.Cancelar') },
     ],
@@ -604,7 +630,11 @@ export async function askRollChoices(
   // Só o botão Rolar confirma. Cancelar e fechar a janela devolvem outra coisa (o nome da ação
   // ou null) e não podem rolar.
   if (answer?.confirmed !== true) return null;
-  return { ...selectionToOptions(model, answer.selection), ...kind };
+  return {
+    ...selectionToOptions(model, answer.selection),
+    ...kind,
+    ...(answer.naoAtacou ? { naoAtacou: true } : {}),
+  };
 }
 
 export { emptySelection };

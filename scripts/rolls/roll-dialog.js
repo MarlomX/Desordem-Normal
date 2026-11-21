@@ -102,7 +102,13 @@ export function buildRollModel({
       reason,
       ...(option.itemName ? { itemName: option.itemName } : {}),
       ...(option.checked ? { checked: true } : {}),
-      ...(option.group === 'acao' ? { group: 'acao' } : {}),
+      // Seção da janela: efeitos de itens vão para «Itens» (mesmo com grupo «Ação»); as ações das
+      // habilidades, para «Ações»; o resto, para «Habilidades»
+      ...(option.source === 'item'
+        ? { group: 'item' }
+        : option.group === 'acao'
+          ? { group: 'acao' }
+          : {}),
     });
   }
   // Defender-se: +d6 já marcado (desmarcar = esquiva sem o dado)

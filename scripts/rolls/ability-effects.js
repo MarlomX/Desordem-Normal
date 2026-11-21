@@ -44,6 +44,13 @@ export const ACTION_RESULTS = Object.freeze(['curarPV', 'concederDados']);
 /** Condições de um `passoCondicional`. */
 export const CONDITIONS = Object.freeze(['pvMetade', 'pdMetade']);
 
+/**
+ * Quando vale um `passoAtaque`: em todo ataque, no primeiro ataque da cena (automático, pelo
+ * marcador `cena.atacou`) ou no primeiro ataque contra quem ainda não atacou o personagem (caixa
+ * que o jogador marca na janela pré-teste).
+ */
+export const ATTACK_STEP_WHEN = Object.freeze(['sempre', 'primeiroCena', 'naoAtacou']);
+
 /** Atributos de um `passoCondicional` (`todos` = o dado de qualquer atributo). */
 export const STEP_ATTRIBUTE_CHOICES = Object.freeze(['todos', 'fisico', 'mente', 'emocao']);
 
@@ -201,7 +208,21 @@ export const EFFECT_TYPES = Object.freeze({
   },
   // Torna-se o alvo de um ataque contra um aliado
   interceptar: { custo: costField(), limite: choiceField(LIMITS, 'rodadaCombate') },
+  // Habilidade: pode usar armas (e, na 0.21.2, armaduras) marciais. Sem parâmetros.
+  proficienciaMarcial: {},
+  // Arma: +N fixo no total dos ataques com ela
+  bonusAtaque: { valor: intField(1, 1, 5) },
+  // Arma: aumento de passo no dado da perícia do ataque, conforme `quando`
+  passoAtaque: {
+    passos: intField(1, 1, 3),
+    quando: choiceField(ATTACK_STEP_WHEN, 'sempre'),
+  },
+  // Arma: sucesso crítico com dois dados iguais de valor `minimo` ou mais (o normal é 6)
+  criticoAmpliado: { minimo: intField(5, 2, 5) },
 });
+
+/** Tipos que só uma arma aceita (a habilidade não os oferece). */
+export const WEAPON_ONLY_TYPES = Object.freeze(['bonusAtaque', 'passoAtaque', 'criticoAmpliado']);
 
 /** Parâmetros padrão de um tipo (cópia nova). */
 export function defaultParams(tipo) {
@@ -323,8 +344,8 @@ export function itemEffects(system) {
  * vindo de uma macro ou de uma importação) e o editor não o oferece.
  */
 export const ITEM_EFFECT_TYPES = Object.freeze({
-  // Dado extra nos ataques com a arma (0.21.1: bônus de ataque, passo, crítico ampliado)
-  arma: Object.freeze(['dadoExtra']),
+  // Efeitos dos ataques com a arma
+  arma: Object.freeze(['dadoExtra', 'bonusAtaque', 'passoAtaque', 'criticoAmpliado']),
   // Nenhum ainda (0.21.2: passo em perícias enquanto vestida, redução do escudo)
   armadura: Object.freeze([]),
   // Dado extra com o item na mochila (0.21.4: curar, passo no alvo, ferramenta, ação com aviso)
@@ -332,13 +353,16 @@ export const ITEM_EFFECT_TYPES = Object.freeze({
 });
 
 /**
- * Tipos de efeito que um item aceita: todos na habilidade, a lista de `ITEM_EFFECT_TYPES` num
- * equipamento, nenhum num tipo desconhecido.
+ * Tipos de efeito que um item aceita: na habilidade, todos menos os de arma
+ * (`WEAPON_ONLY_TYPES`); num equipamento, a lista de `ITEM_EFFECT_TYPES`; num tipo desconhecido,
+ * nenhum.
  * @param {string} itemType `arma`, `armadura`, `item` ou `habilidade`.
  * @returns {string[]}
  */
 export function itemEffectTypes(itemType) {
-  if (itemType === 'habilidade') return Object.keys(EFFECT_TYPES);
+  if (itemType === 'habilidade') {
+    return Object.keys(EFFECT_TYPES).filter((tipo) => !WEAPON_ONLY_TYPES.includes(tipo));
+  }
   return [...(ITEM_EFFECT_TYPES[itemType] ?? [])];
 }
 
@@ -568,7 +592,7 @@ export function costShortfall(bag, wallet) {
  * @param {{skillKey: string, testKind?: string}} context `testKind`: qualquer, ataqueCorpo,
  *   ataqueDistancia ou defesa. Um efeito de «qualquer teste» vale em todos.
  * @returns {{key: string, die: number, cost: CostBag, itemName: string, group: string,
- *   checked: boolean}[]}
+ *   checked: boolean, source: string}[]}
  */
 export function dialogDiceOptions(entries, { skillKey, testKind = 'qualquer' }) {
   const seen = new Set();
@@ -589,9 +613,72 @@ export function dialogDiceOptions(entries, { skillKey, testKind = 'qualquer' }) 
       itemName: entry.itemName ?? '',
       group: grupo,
       checked: marcado,
+      // De onde veio: 'habilidade' ou 'item' (arma, armadura ou item geral, grupo «Itens» da janela)
+      source: entry.itemType && entry.itemType !== 'habilidade' ? 'item' : 'habilidade',
     });
   }
   return options;
+}
+
+// ---------- Ataque com arma ----------
+
+/**
+ * O personagem tem proficiência marcial? Pela caixa da ficha ou por um efeito
+ * `proficienciaMarcial` (de uma habilidade).
+ * @param {{proficienciaMarcial?: boolean}} system `actor.system`.
+ * @param {object[]} entries Efeitos do ator (`collectEffects`).
+ */
+export function hasMartialProficiency(system, entries) {
+  return (
+    Boolean(system?.proficienciaMarcial) || entries.some((e) => e.tipo === 'proficienciaMarcial')
+  );
+}
+
+/**
+ * O que os efeitos da arma fazem num ataque: bônus fixo, passos no dado da perícia e o valor
+ * mínimo do crítico. `entries` já vem de `collectEffects(..., {weaponId})`, então só a arma do
+ * ataque traz efeitos de arma. Cada efeito vira uma linha (`lines`) para a janela pré-teste e para
+ * o cartão; `applies` diz se entra neste ataque, e `optional` marca o passo que depende da caixa
+ * «quem ainda não me atacou».
+ * @param {object[]} entries Efeitos do ator no ataque.
+ * @param {{firstAttack?: boolean, notAttacked?: boolean}} [state] `firstAttack`: o personagem
+ *   ainda não atacou nesta cena; `notAttacked`: o jogador marcou que o alvo ainda não o atacou.
+ * @returns {{modifier: number, steps: number, critMin: number|null, lines: {key: string,
+ *   kind: string, itemName: string, value: number, quando: string|null, applies: boolean,
+ *   optional: boolean}[]}}
+ */
+export function weaponAttackEffects(entries, { firstAttack = false, notAttacked = false } = {}) {
+  let modifier = 0;
+  let steps = 0;
+  let critMin = null;
+  const lines = [];
+  for (const entry of entries) {
+    if (entry.itemType !== 'arma') continue;
+    const { params } = entry;
+    const base = { key: entry.id, itemName: entry.itemName ?? '', quando: null, optional: false };
+    if (entry.tipo === 'bonusAtaque') {
+      modifier += params.valor;
+      lines.push({ ...base, kind: 'bonus', value: params.valor, applies: true });
+    } else if (entry.tipo === 'passoAtaque') {
+      const applies =
+        params.quando === 'sempre' ||
+        (params.quando === 'primeiroCena' && firstAttack) ||
+        (params.quando === 'naoAtacou' && notAttacked);
+      if (applies) steps += params.passos;
+      lines.push({
+        ...base,
+        kind: 'passo',
+        value: params.passos,
+        quando: params.quando,
+        applies,
+        optional: params.quando === 'naoAtacou',
+      });
+    } else if (entry.tipo === 'criticoAmpliado') {
+      critMin = critMin === null ? params.minimo : Math.min(critMin, params.minimo);
+      lines.push({ ...base, kind: 'critico', value: params.minimo, applies: true });
+    }
+  }
+  return { modifier, steps, critMin, lines };
 }
 
 /** Tipo de teste de um ataque com a arma (filtro dos dados extras). */

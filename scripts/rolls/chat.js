@@ -20,6 +20,7 @@ import {
 } from './abilities.js';
 import {
   dialogDiceOptions,
+  weaponAttackEffects,
   pickBonusDice,
   spendBonusDice
 } from './ability-effects.js';
@@ -31,7 +32,7 @@ import {
   resourceUpdates,
   triggerUpdates,
 } from './ability-effects-actor.js';
-import { resourceName, usedSummary } from '../sheets/ability-controls.js';
+import { attackUsedLines, resourceName, usedSummary } from '../sheets/ability-controls.js';
 
 /** Tradução com ou sem dados (texto da linha «Usou»). */
 const localize = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
@@ -130,6 +131,7 @@ export async function executeTest({
   stepMods = [],
   modifier = 0,
   fearDie = null,
+  critMin = undefined,
   helpers = [],
   label,
   attrLabel,
@@ -156,6 +158,7 @@ export async function executeTest({
     stepMods: helped.stepMods,
     modifier,
     fearDie,
+    critMin,
     rng: sequenceRng(rolls.map((roll) => roll.total)),
   });
 
@@ -174,6 +177,8 @@ export async function executeTest({
       stepMods: helped.stepMods,
       modifier,
       fearDie,
+      // Crítico ampliado (arma): refazer o teste (análise, repetir dado) usa o mesmo mínimo
+      ...(critMin ? { critMin } : {}),
     },
     display,
     sides: rolledSides,
@@ -358,6 +363,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     allowDefense = false,
     testKind = 'qualquer',
     weaponId = null,
+    naoAtacou = false,
     useBonusDice = 0,
     ...rest
   } = options;
@@ -391,6 +397,15 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     allowNonLethal,
     allowDefense,
   });
+  // Efeitos da arma do ataque (bônus fixo, passo no dado da perícia, crítico ampliado). O
+  // «primeiro ataque da cena» usa o marcador da ficha (criaturas não têm: nunca é automático); o
+  // «quem ainda não me atacou» vem da caixa da janela pré-teste.
+  const attack = weaponId
+    ? weaponAttackEffects(entries, {
+        firstAttack: system.cena ? !system.cena.atacou : false,
+        notAttacked: Boolean(naoAtacou),
+      })
+    : { modifier: 0, steps: 0, critMin: null, lines: [] };
   // Dados da reserva de bônus escolhidos na janela (os maiores primeiro)
   const reserveDice = pickBonusDice(system.dadosBonus, useBonusDice);
   // Linha «Usou» do cartão: habilidades marcadas, Defender-se, não letal e dados da reserva
@@ -406,6 +421,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     ),
     t: localize
   });
+  // Linha «Usou» do cartão: também os efeitos da arma que entraram neste ataque
+  usos.push(...attackUsedLines(attack.lines, localize));
 
   return {
     ...rest,
@@ -417,6 +434,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     // Contusão (Físico -1 passo), passos temporários e efeitos da ficha e penalidades fixas de lesões e traumas
     stepMods: [
       ...(rest.stepMods ?? []),
+      // Passo no ataque (efeito da arma): no dado da perícia
+      ...(attack.steps ? [{ target: 'skill', steps: attack.steps }] : []),
       ...contusionStepMods(system.estado, attrKey),
       // (os passos condicionais das habilidades chegam como efeitos da ficha, na aba Condição)
       ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
@@ -427,8 +446,12 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
       ...reserveDice,
       ...(fear.bonusDie ? [fear.bonusDie] : []),
     ],
+    // Crítico ampliado da arma (sem ele, o padrão de `resolveTest`)
+    ...(attack.critMin ? { critMin: attack.critMin } : {}),
     modifier:
       (rest.modifier ?? 0) +
+      // Bônus de ataque da arma
+      attack.modifier +
       lesionModifier(system.lesoes, skillKey) +
       traumaModifier(system.traumas, { attrKey, skillKey }),
     fearDie: fear.fearDie,

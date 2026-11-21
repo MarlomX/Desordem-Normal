@@ -183,6 +183,28 @@
     {{/each}}
   </fieldset>
 
+  {{#if hasItems}}
+  <fieldset class="desordem-pre__grupo">
+    <legend><i class="fa-solid fa-toolbox" aria-hidden="true"></i> {{localize "DESORDEM.Teste.Pre.Itens"}}</legend>
+    {{#each items}}
+    <label class="desordem-pre__opcao{{#unless available}} is-indisponivel{{/unless}}" data-opcao="{{key}}">
+      <input type="checkbox" name="active" value="{{key}}" {{#if checked}}checked{{/if}} {{#unless available}}disabled{{/unless}}>
+      <span class="desordem-pre__nome">{{label}}</span>
+      <span class="desordem-pre__custo">{{costText}}</span>
+      {{#if reasonText}}<span class="desordem-pre__motivo">{{reasonText}}</span>{{/if}}
+      <span class="desordem-pre__motivo" data-motivo></span>
+    </label>
+    {{/each}}
+    {{#each weaponLines}}
+    <label class="desordem-pre__opcao{{#unless optional}}{{#unless applies}} is-indisponivel{{/unless}}{{/unless}}">
+      {{#if optional}}<input type="checkbox" name="naoAtacou">{{else}}<input type="checkbox" {{#if applies}}checked{{/if}} disabled>{{/if}}
+      <span class="desordem-pre__nome">{{label}}</span>
+      {{#unless optional}}<span class="desordem-pre__motivo">{{#if applies}}{{localize "DESORDEM.Teste.Pre.Arma.Automatico"}}{{else}}{{localize "DESORDEM.Teste.Pre.Arma.JaAtacou"}}{{/if}}</span>{{/unless}}
+    </label>
+    {{/each}}
+  </fieldset>
+  {{/if}}
+
   {{#if reserva}}
   <fieldset class="desordem-pre__grupo">
     <legend><i class="fa-solid fa-dice" aria-hidden="true"></i> {{localize "DESORDEM.Teste.Pre.Reserva"}}</legend>

@@ -62,6 +62,9 @@ export class ArmaModel extends foundry.abstract.TypeDataModel {
       pericia: texto(),
       naoLetal: new f.BooleanField({ initial: false }),
       empunhada: new f.BooleanField({ initial: false }),
+      // Arma de arremesso (ex.: pote de vespa): cada ataque gasta uma unidade; com 0, não ataca
+      quantidade: contagem(1),
+      consumivel: new f.BooleanField({ initial: false }),
       efeitos: efeitos(),
     };
   }

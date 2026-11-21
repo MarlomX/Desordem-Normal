@@ -30,7 +30,12 @@ import {
   usableThisRound,
 } from '../rolls/ability-effects-actor.js';
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
-import { defenseCompanionDice, weaponCompanionDice } from '../rolls/equipment-chat.js';
+import {
+  afterWeaponAttack,
+  canAttackWith,
+  defenseCompanionDice,
+  weaponCompanionDice,
+} from '../rolls/equipment-chat.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
 import { abilityNote, announceGains } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
@@ -375,10 +380,13 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
     : await pickChoice(state, side, actor);
   if (!choice) return;
   const { skill, arma } = choice;
+  const weaponItem = arma ? actor.items.get(arma.id) : null;
+  // Arma consumível sem unidades: não ataca (avisa)
+  if (weaponItem && !canAttackWith(weaponItem)) return;
 
   // Defender-se: o +d6 aparece na janela pré-teste já marcado (desmarcar = esquiva sem o dado)
   const allowDefense = data.papel === 'defesa' && !dodgeEffect;
-  const weapon = arma ? actor.items.get(arma.id) : null;
+  const weapon = weaponItem;
   const options = await askRollChoices(actor, {
     skillKey: skill,
     showDt: false,
@@ -429,6 +437,8 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
       ...(dodgeEffect ? { esquiva: true } : {}),
     },
   });
+  // Ataque com arma: marca o ataque da cena e gasta a unidade da arma consumível
+  if (result && weapon) await afterWeaponAttack(actor, weapon);
   // Companheiro animal: o primeiro dado extra em 1 fere o animal (como no ataque comum)
   if (companion.length && result?.dice?.[2]?.source === 'extra' && result.dice[2].value === 1) {
     await actor.update({ 'system.cena.animalFerido': true });

@@ -544,6 +544,29 @@
   width: 100%;
 }
 
+/* Ficha do item: nunca passa da altura da tela; o conteúdo (campos e efeitos) rola por dentro */
+.desordem-normal.item .window-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Linha de equipamento: resumo dos efeitos do item, sempre visível embaixo do nome */
+.desordem-item-linha__efeitos {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
+/* Linha de equipamento: aviso (arma marcial sem proficiência) */
+.desordem-item-linha__aviso {
+  flex: 1 1 100%;
+  font-size: 0.85em;
+  color: #c0392b;
+}
+
 .desordem-efeito-ativo {
   display: flex;
   align-items: baseline;

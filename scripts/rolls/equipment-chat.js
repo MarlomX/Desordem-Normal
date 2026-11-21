@@ -8,7 +8,14 @@ import { SYSTEM_ID } from '../config.js';
 import { render, postMessage, rollSkill } from './chat.js';
 import { computeDamage, damageBaseValue } from './damage.js';
 import { damageActor } from './health.js';
-import { weaponSkill, weaponDamageLabel, itemUse, itemUseChanges } from './equipment.js';
+import {
+  weaponSkill,
+  weaponDamageLabel,
+  itemUse,
+  itemUseChanges,
+  weaponAmmoChanges,
+  weaponReady,
+} from './equipment.js';
 import { firstEffect } from './ability-effects-actor.js';
 import { weaponTestKind } from './ability-effects.js';
 import { abilityNote } from './abilities-chat.js';
@@ -61,8 +68,43 @@ export function defenseCompanionDice(actor) {
   return ['defesa', 'qualquer'].includes(companion.params.teste) ? [companion.params.dado] : [];
 }
 
+/**
+ * A arma pode atacar? A consumível sem unidades não pode (avisa e devolve `false`).
+ * @param {Item} weapon
+ */
+export function canAttackWith(weapon) {
+  if (weaponReady(weapon.system)) return true;
+  ui.notifications.warn(t('DESORDEM.Equipamento.SemMunicao', { nome: weapon.name }));
+  return false;
+}
+
+/**
+ * Depois do teste de ataque (feito, acertando ou não): marca que o personagem já atacou nesta cena
+ * (efeito «primeiro ataque da cena») e, na arma consumível, gasta uma unidade e avisa no chat que
+ * o gasto foi automático. Em 0, a arma só fica zerada.
+ * @param {Actor} actor
+ * @param {Item} weapon
+ */
+export async function afterWeaponAttack(actor, weapon) {
+  if (actor.system.cena && !actor.system.cena.atacou) {
+    await actor.update({ 'system.cena.atacou': true });
+  }
+  const changes = weaponAmmoChanges(weapon.system);
+  if (!changes) return;
+  await weapon.update(changes);
+  const text = t('DESORDEM.Equipamento.MunicaoGasta', {
+    nome: weapon.name,
+    restantes: changes['system.quantidade'],
+  });
+  await postMessage({
+    actor,
+    content: `<p class="desordem-ficha__dica">${Handlebars.escapeExpression(text)}</p>`,
+  });
+}
+
 export async function attackWithWeapon(actor, weapon, options = {}) {
   const { system } = weapon;
+  if (!canAttackWith(weapon)) return { result: null, amount: null };
   const companionDice = weaponCompanionDice(actor, weapon);
   const companion = companionDice.length > 0;
   const result = await rollSkill(actor, weaponSkill(system), {
@@ -74,6 +116,8 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
     weaponId: weapon.id,
     extraDice: [...companionDice, ...(options.extraDice ?? [])],
   });
+  // O teste foi feito: marca o ataque da cena e gasta a unidade da arma consumível
+  await afterWeaponAttack(actor, weapon);
   // O dado do companheiro é o primeiro dado extra do teste
   if (companion && result.dice[2]?.source === 'extra' && result.dice[2].value === 1) {
     await actor.update({ 'system.cena.animalFerido': true });

@@ -31,8 +31,15 @@
     </label>
     <label class="desordem-ficha__campo"><input type="checkbox" name="system.naoLetal" {{#if system.naoLetal}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.NaoLetal"}}</span></label>
     {{#unless isNatural}}<label class="desordem-ficha__campo"><input type="checkbox" name="system.empunhada" {{#if system.empunhada}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Empunhada"}}</span></label>{{/unless}}
+    <label class="desordem-ficha__campo"><input type="checkbox" name="system.consumivel" {{#if system.consumivel}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Arremesso"}}</span></label>
+    {{#if system.consumivel}}
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Quantidade"}}</span>
+      <input type="number" name="system.quantidade" value="{{system.quantidade}}" min="0" {{#unless editable}}disabled{{/unless}}>
+    </label>
+    {{/if}}
   </div>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaNatural"}}</p>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaArremesso"}}</p>
   {{/if}}
 
   {{#if isArmor}}

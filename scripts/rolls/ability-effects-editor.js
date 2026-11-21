@@ -60,6 +60,7 @@ const CHOICE_GROUPS = Object.freeze({
   limite: 'Limites',
   resultado: 'Resultados',
   condicao: 'Condicoes',
+  quando: 'QuandoAtaque',
 });
 
 /**
@@ -149,6 +150,11 @@ export function effectSupported(effect, itemType = 'habilidade') {
     case 'testeAcao':
     case 'companheiro':
     case 'interceptar':
+    // Proficiência (trava do equipamento) e efeitos de ataque com arma (v0.21.1)
+    case 'proficienciaMarcial':
+    case 'bonusAtaque':
+    case 'passoAtaque':
+    case 'criticoAmpliado':
       return true;
     case 'ganharRecurso':
       // Todos os gatilhos têm uso desde a v0.20.7 (ao se defender, início do combate)
@@ -239,6 +245,17 @@ export function describeEffect(effect, { t, skill, itemType = 'habilidade' }) {
       });
     case 'interceptar':
       return t(key('interceptar'), { custo: cost, limite: limit });
+    case 'proficienciaMarcial':
+      return t(key('proficienciaMarcial'));
+    case 'bonusAtaque':
+      return t(key('bonusAtaque'), { valor: p.valor });
+    case 'passoAtaque':
+      return t(key('passoAtaque'), {
+        passos: p.passos,
+        quando: t(`DESORDEM.Efeito.QuandoAtaque.${p.quando}`).toLowerCase(),
+      });
+    case 'criticoAmpliado':
+      return t(key('criticoAmpliado'), { minimo: p.minimo });
     default:
       return '';
   }

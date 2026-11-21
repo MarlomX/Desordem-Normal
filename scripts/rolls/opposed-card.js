@@ -29,7 +29,7 @@
 import { PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import { extraKey } from './extras.js';
 import { computeDamage } from './damage.js';
-import { weaponSkill } from './equipment.js';
+import { weaponReady, weaponSkill } from './equipment.js';
 import { resolveDefense, resolveMelee, resolveSimple } from './opposed-rules.js';
 
 /** Tipos de cartão. */
@@ -349,26 +349,31 @@ export function opposedSkillChoices(system, labels) {
 }
 
 /**
- * Armas que o ator pode usar num cartão: no corpo a corpo, só as corpo a corpo.
+ * Armas que o ator pode usar num cartão: no corpo a corpo, só as corpo a corpo; nunca uma arma
+ * consumível sem unidades.
  * @param {{id: string, name: string, type: string, system: object}[]} items
  * @param {string} tipo Tipo do cartão.
  * @returns {{id: string, nome: string, bonusDano: number, naoLetal: boolean, tipo: string,
  *   pericia: string}[]}
  */
 export function weaponChoices(items, tipo) {
-  return items
-    .filter((item) => item.type === 'arma')
-    .filter((item) => tipo !== 'corpo' || item.system.tipo === 'corpo')
-    .map(({ id, name, system }) => ({
-      id,
-      nome: name,
-      bonusDano: system.bonusDano,
-      baseDano: system.baseDano === 'rb' ? 'rb' : 'ra',
-      naoLetal: Boolean(system.naoLetal),
-      tipo: system.tipo,
-      pericia: system.pericia ?? '',
-    }))
-    .sort((x, y) => x.nome.localeCompare(y.nome, 'pt-BR'));
+  return (
+    items
+      .filter((item) => item.type === 'arma')
+      .filter((item) => tipo !== 'corpo' || item.system.tipo === 'corpo')
+      // Arma consumível sem unidades fica fora da escolha
+      .filter((item) => weaponReady(item.system))
+      .map(({ id, name, system }) => ({
+        id,
+        nome: name,
+        bonusDano: system.bonusDano,
+        baseDano: system.baseDano === 'rb' ? 'rb' : 'ra',
+        naoLetal: Boolean(system.naoLetal),
+        tipo: system.tipo,
+        pericia: system.pericia ?? '',
+      }))
+      .sort((x, y) => x.nome.localeCompare(y.nome, 'pt-BR'))
+  );
 }
 
 /**

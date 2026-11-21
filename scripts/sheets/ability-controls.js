@@ -181,3 +181,19 @@ export function usedSummary(used, { diceOptions, reserveDice = [], resourceNames
   }
   return list;
 }
+
+/**
+ * Linhas «Usou» do cartão para os efeitos da arma que entraram no ataque (bônus, passo,
+ * crítico ampliado): «Gládio (+1 no ataque)», «Lança (+1 passo)», «Espada (crítico com 5+)».
+ * @param {{kind: string, itemName: string, value: number, applies: boolean}[]} lines
+ *   `weaponAttackEffects(...).lines`.
+ * @param {Function} t Tradução.
+ * @returns {string[]}
+ */
+export function attackUsedLines(lines, t) {
+  return lines
+    .filter((line) => line.applies)
+    .map((line) =>
+      t(`DESORDEM.Teste.UsouArma.${line.kind}`, { nome: line.itemName, valor: line.value }),
+    );
+}

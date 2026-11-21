@@ -29,7 +29,7 @@ import {
   updateExtra,
 } from '../rolls/extras.js';
 import { useAbilityEffect, rollDodge, endScene } from '../rolls/abilities-chat.js';
-import { groupBonusDice, weaponTestKind } from '../rolls/ability-effects.js';
+import { groupBonusDice, hasMartialProficiency, weaponTestKind } from '../rolls/ability-effects.js';
 import { resourceBars } from './ability-controls.js';
 import { itemEffectsText } from '../rolls/ability-effects-editor.js';
 import {
@@ -299,27 +299,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
           skill: skillName,
         },
       ),
-      equipment: buildEquipmentRows(
-        this.document.items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          type: item.type,
-          system: item.system,
-        })),
-        {
-          kindLabel: (kind) => t(`DESORDEM.Item.Tipo.${kind}`),
-          handsLabel: (hands) => t(`DESORDEM.Item.Maos.${hands}`),
-          skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
-          categoryLabel: (category) => t(`DESORDEM.Item.Categoria.${category}`),
-          // Dica da linha: o resumo dos efeitos do item, um por linha
-          effectsText: (item) =>
-            itemEffectsText(item, {
-              t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
-              skill: skillName,
-            }),
-          editable: this.isEditable,
-        },
-      ),
+      equipment: this.#equipmentContext(t, skillName),
       relations: buildRelationRows(system.relacoes, {
         degreeLabel: (key) => t(`DESORDEM.Relacao.Grau.${key}`),
         editable: this.isEditable,
@@ -759,6 +739,41 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       modal: true,
     });
     if (confirmed === true) await item.delete();
+  }
+
+  /**
+   * Aba Equipamento: linhas das armas, armaduras e itens (`buildEquipmentRows`), com o resumo dos
+   * efeitos de cada item e a proficiência marcial (da caixa ou de uma habilidade).
+   * @param {(key: string) => string} t Tradução simples.
+   * @param {(key: string) => string} skillName Nome de uma perícia.
+   */
+  #equipmentContext(t, skillName) {
+    const actor = this.document;
+    const entries = actorEffects(actor);
+    // Uma habilidade já dá a proficiência? (aviso ao lado da caixa da ficha)
+    const fromAbility = hasMartialProficiency({}, entries);
+    const format = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+    return {
+      ...buildEquipmentRows(
+        actor.items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          type: item.type,
+          system: item.system,
+        })),
+        {
+          kindLabel: (kind) => t(`DESORDEM.Item.Tipo.${kind}`),
+          handsLabel: (hands) => t(`DESORDEM.Item.Maos.${hands}`),
+          skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
+          categoryLabel: (category) => t(`DESORDEM.Item.Categoria.${category}`),
+          // Resumo dos efeitos de cada item, uma linha por efeito, embaixo do nome
+          effectsText: (item) => itemEffectsText(item, { t: format, skill: skillName }),
+          proficient: hasMartialProficiency(actor.system, entries),
+          editable: this.isEditable,
+        },
+      ),
+      proficiencyFromAbility: fromAbility,
+    };
   }
 
   /** Ataca com a arma: teste da perícia da arma e, se acertar, cartão com o dano. */

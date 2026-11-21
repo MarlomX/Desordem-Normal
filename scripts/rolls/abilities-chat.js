@@ -326,7 +326,8 @@ export async function healAlly(actor, itemId = null, effectId = null) {
 
 /**
  * Ganhos de «início do combate» (efeitos `ganharRecurso`): quando um combate começa, o mestre
- * que o iniciou soma os ganhos de cada personagem do encontro (uma vez por ator).
+ * que o iniciou soma os ganhos de cada personagem do encontro (uma vez por ator) e zera o
+ * marcador «já atacou nesta cena».
  * @param {Combat} combat
  */
 export async function combatStartGains(combat) {
@@ -338,9 +339,13 @@ export async function combatStartGains(combat) {
     seen.add(actor.uuid);
     const before = actorResources(actor).values;
     const updates = triggerUpdates(actor, 'inicioCombate');
-    if (!Object.keys(updates).length) continue;
-    await actor.update(updates);
-    await announceGains(actor, before, resourceChanges(updates), 'inicioCombate');
+    // O combate começa: o próximo ataque volta a ser o «primeiro ataque» (efeito passoAtaque)
+    const reset = actor.system.cena?.atacou ? { 'system.cena.atacou': false } : {};
+    if (!Object.keys(updates).length && !Object.keys(reset).length) continue;
+    await actor.update({ ...updates, ...reset });
+    if (Object.keys(updates).length) {
+      await announceGains(actor, before, resourceChanges(updates), 'inicioCombate');
+    }
   }
 }
 
