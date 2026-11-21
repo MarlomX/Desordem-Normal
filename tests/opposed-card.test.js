@@ -78,6 +78,7 @@ test('resolveState compara os dois lados; empate deixa o cartão em «empate»',
   assert.deepEqual(ganhaA.resultado.b, {
     total: 7,
     highRoll: 0,
+    lowRoll: 0,
     criticalSuccess: false,
     criticalFailure: false,
   });

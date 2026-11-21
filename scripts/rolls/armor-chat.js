@@ -1,13 +1,11 @@
 /**
  * Ligação ao Foundry dos pontos de armadura: lê as armaduras do ator (e a Armadura extra das
- * habilidades), pergunta se o jogador quer gastar um ponto contra um dano físico e grava o gasto
- * (no item ou, no ponto extra, no personagem).
+ * habilidades) e grava o gasto de um ponto (no item ou, no ponto extra, no personagem). A escolha
+ * de gastar fica na janela Resolver dano (damage-dialog.js).
  */
-import { ARMOR_EXTRA, ARMOR_REDUCTION, armorSummary, pickArmorToSpend } from './equipment.js';
+import { ARMOR_EXTRA, armorSummary, pickArmorToSpend } from './equipment.js';
 import { armorExtraPoints } from './ability-effects.js';
 import { actorEffects } from './ability-effects-actor.js';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Armaduras e escudos do ator no formato usado pela lógica pura. */
 export function armorList(actor) {
@@ -37,24 +35,6 @@ export function armorBonus(actor) {
 /** Pontos de armadura restantes das armaduras vestidas, com a Armadura extra. */
 export function armorAvailable(actor) {
   return armorSummary(armorList(actor), armorBonus(actor)).available;
-}
-
-/**
- * Pergunta se o jogador quer gastar 1 ponto de armadura para reduzir o dano.
- * @returns {Promise<boolean>}
- */
-export async function askSpendArmor(actor, amount) {
-  const answer = await foundry.applications.api.DialogV2.confirm({
-    window: { title: t('DESORDEM.Armadura.Titulo') },
-    content: `<p>${t('DESORDEM.Armadura.Pergunta', {
-      dano: amount,
-      reducao: ARMOR_REDUCTION,
-      restantes: armorAvailable(actor),
-    })}</p>`,
-    rejectClose: false,
-    modal: true,
-  });
-  return answer === true;
 }
 
 /**

@@ -8,6 +8,7 @@ import { SYSTEM_ID } from '../config.js';
 import { render, postMessage, rollSkill } from './chat.js';
 import { computeDamage, damageBaseValue } from './damage.js';
 import { damageActor } from './health.js';
+import { pickDamageTarget } from './damage-dialog.js';
 import {
   weaponSkill,
   weaponDamageLabel,
@@ -184,9 +185,13 @@ async function markWeaponDamage(message) {
 
 /**
  * Aplica o dano do cartão de ataque por quem clicou: no Guardião, se alguém assumiu o ataque;
- * senão, nos tokens mirados (alvos).
+ * senão, nos tokens mirados (alvos); sem alvo mirado, numa ficha de personagem (a única do
+ * jogador, ou escolhida numa lista). Cada alvo passa pela janela Resolver dano (Shift+clique:
+ * dano cheio, sem janela). O cartão só é marcado se algum dano foi aplicado.
+ * @param {ChatMessage} message
+ * @param {boolean} [shift=false] Shift+clique.
  */
-async function applyWeaponDamage(message) {
+async function applyWeaponDamage(message, shift = false) {
   const data = weaponFlag(message);
   if (!data) return;
   let targets;
@@ -195,19 +200,21 @@ async function applyWeaponDamage(message) {
     targets = guardian ? [guardian] : [];
   } else {
     targets = [...game.user.targets].map((token) => token.actor).filter(Boolean);
+    if (!targets.length) {
+      // Sem alvo: basta controlar a ficha (o personagem não precisa estar na cena)
+      const picked = await pickDamageTarget();
+      targets = picked ? [picked] : [];
+    }
   }
-  if (!targets.length) {
-    ui.notifications.warn(t('DESORDEM.Equipamento.SemAlvo'));
-    return;
-  }
+  if (!targets.length) return;
   let applied = false;
   for (const target of targets) {
     if (!target.isOwner) {
       ui.notifications.warn(t('DESORDEM.Equipamento.SoMestre', { nome: target.name }));
       continue;
     }
-    await damageActor(target, data.amount, { nonLethal: data.naoLetal });
-    applied = true;
+    const result = await damageActor(target, data.amount, { nonLethal: data.naoLetal, shift });
+    if (result) applied = true;
   }
   if (applied) await markWeaponDamage(message);
 }
@@ -234,7 +241,7 @@ export function renderEquipmentCard(message, html) {
     event.preventDefault();
     button.disabled = true;
     try {
-      await applyWeaponDamage(message);
+      await applyWeaponDamage(message, event.shiftKey);
     } finally {
       button.disabled = false;
     }

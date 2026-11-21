@@ -190,6 +190,8 @@ function summary(result) {
   return {
     total: result.total,
     highRoll: result.highRoll ?? 0,
+    // Rolagem baixa: a redução do escudo de quem perdeu o ataque (cartões antigos não têm)
+    lowRoll: result.lowRoll ?? 0,
     criticalSuccess: Boolean(result.criticalSuccess),
     criticalFailure: Boolean(result.criticalFailure),
   };

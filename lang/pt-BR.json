@@ -370,7 +370,24 @@
       "Sofre": "sofre {valor} de dano",
       "NaoLetal": "não letal",
       "SofreEmocional": "sofre {valor} de dano emocional",
-      "ExtraTrauma": "+{extra} por trauma"
+      "ExtraTrauma": "+{extra} por trauma",
+      "Janela": {
+        "Titulo": "Resolver dano",
+        "Chega": "recebe {valor} de dano",
+        "RD": "Redução de dano da criatura: {rd} (já descontada no dano final).",
+        "Armadura": "Gastar 1 ponto de armadura (−{reducao}; restam {restantes})",
+        "Escudo": "Redução do escudo (−{reducao})",
+        "EscudoSoma": "soma {total}, mínimo {minimo}",
+        "Final": "Dano final:",
+        "Aplicar": "Aplicar",
+        "Cancelar": "Cancelar",
+        "QuemRecebe": "Quem recebe o dano?",
+        "SemAlvo": "Nenhum alvo mirado: escolha o personagem que recebe o dano.",
+        "Escolher": "Continuar"
+      },
+      "EscudoUsado": "Escudo: −{reducao} de dano.",
+      "PVZerado": "PV zerado: faça o teste de lesão (DT no cabeçalho da ficha).",
+      "CriaturaPublico": "{nome} sofreu o dano."
     },
     "Lesao": {
       "Titulo": "Teste de lesão",
@@ -683,8 +700,6 @@
       }
     },
     "Armadura": {
-      "Titulo": "Pontos de armadura",
-      "Pergunta": "Gastar 1 ponto de armadura para reduzir em {reducao} um dano de {dano}? (restam {restantes})",
       "Usada": "Ponto de armadura gasto: dano {bruto} reduzido em {reducao}."
     },
     "Equipamento": {
@@ -1607,7 +1622,7 @@
         "arma": "Os efeitos da arma só valem nos ataques com ela.",
         "armadura": "Os efeitos da armadura valem enquanto ela está vestida. A penalidade nas perícias fica nos campos acima, não aqui.",
         "item": "Os efeitos do item valem enquanto ele está na ficha (na mochila).",
-        "escudo": "Os efeitos do escudo valem enquanto ele está empunhado. A redução do escudo passa a valer com a janela Resolver dano."
+        "escudo": "Os efeitos do escudo valem enquanto ele está empunhado. A redução do escudo aparece na janela Resolver dano dos testes opostos."
       },
       "QuandoAtaque": {
         "sempre": "Sempre",

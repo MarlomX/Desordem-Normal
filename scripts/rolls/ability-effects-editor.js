@@ -161,8 +161,10 @@ export function effectSupported(effect, itemType = 'habilidade') {
     case 'bonusAtaque':
     case 'passoAtaque':
     case 'criticoAmpliado':
-    // Armadura extra (v0.21.3): soma nos pontos da armadura vestida
+    // Armadura extra (v0.21.3): soma nos pontos da armadura vestida; redução do escudo (v0.21.4):
+    // na janela Resolver dano do teste oposto
     case 'armaduraExtra':
+    case 'reducaoEscudo':
       return true;
     case 'ganharRecurso':
       // Todos os gatilhos têm uso desde a v0.20.7 (ao se defender, início do combate)

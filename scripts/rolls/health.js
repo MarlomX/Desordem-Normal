@@ -4,8 +4,9 @@
 import { SYSTEM_ID } from '../config.js';
 import { render, postMessage, runTest, skillTestOptions } from './chat.js';
 import { applyDamage } from './damage.js';
-import { reduceDamageWithArmor, ARMOR_REDUCTION } from './equipment.js';
-import { armorAvailable, askSpendArmor, spendArmorPoint } from './armor-chat.js';
+import { armorAvailable, spendArmorPoint } from './armor-chat.js';
+import { resolveDamage } from './damage-resolve.js';
+import { askDamage } from './damage-dialog.js';
 import {
   LESION_DIE,
   LESIONS,
@@ -178,52 +179,71 @@ export async function rollInjuryTest(
 }
 
 /**
- * Aplica dano físico a um personagem. Se ele tiver pontos de armadura, pergunta se quer gastar um
- * (reduz o dano em 10). Se o PV chegar a 0 (ou ele já estava em 0), faz o teste de lesão em seguida.
+ * Aplica dano físico a um personagem ou criatura, com as escolhas da janela Resolver dano.
+ * - Personagem: gasta 1 ponto de armadura (−10) se escolhido e houver; usa a redução do escudo se
+ *   escolhida e valer; o PV desce. Se o PV chegar a 0 (ou já estava em 0), o cartão só avisa: o
+ *   teste de lesão é feito à mão (pelo «DT» do cabeçalho).
+ * - Criatura: desconta a RD (sempre, mesmo no Shift+clique) e manda os números só ao mestre.
  * @param {Actor} actor
  * @param {number} amount Dano já calculado (ex.: RA + modificador da arma).
  * @param {Object} [options]
- * @param {boolean} [options.nonLethal=false] Dano não letal (veja `rollInjuryTest`).
- * @param {boolean} [options.spendArmor] true gasta o ponto sem perguntar, false nunca gasta;
- *   sem valor, pergunta ao jogador quando houver pontos.
+ * @param {boolean} [options.nonLethal=false] Dano não letal (só muda o texto do cartão).
+ * @param {{useArmor: boolean, useShield: boolean, shield: object|null}|null} [options.choices]
+ *   Escolhas já feitas na janela (`askDamage`). Sem elas, a janela abre aqui.
+ * @param {boolean} [options.shift=false] Shift+clique: dano cheio, sem a janela.
+ * @param {{total: number, lowRoll: number}|null} [options.defender] Resumo do teste de quem recebe
+ *   (teste oposto: redução do escudo).
+ * @returns {Promise<object|null>} O que mudou, ou null se a janela foi cancelada.
  */
-export async function damageActor(actor, amount, { nonLethal = false, spendArmor } = {}) {
+export async function damageActor(
+  actor,
+  amount,
+  { nonLethal = false, choices = null, shift = false, defender = null } = {},
+) {
+  const picked = choices ?? (await askDamage(actor, amount, { nonLethal, shift, defender }));
+  if (!picked) return null;
   if (isThreat(actor)) return damageThreat(actor, amount, { nonLethal });
   const rawAmount = Math.trunc(amount);
-  let finalAmount = rawAmount;
-  let armorUsed = false;
-  if (rawAmount > 0 && spendArmor !== false && armorAvailable(actor) > 0) {
-    const confirmed = spendArmor === true ? true : await askSpendArmor(actor, rawAmount);
-    if (confirmed && (await spendArmorPoint(actor))) {
-      finalAmount = reduceDamageWithArmor(rawAmount);
-      armorUsed = true;
-    }
-  }
+  // O ponto só é gasto se a armadura entra na conta (marcado, com pontos, dano maior que 0)
+  let available = armorAvailable(actor);
+  const wantsArmor = picked.useArmor && available > 0 && rawAmount > 0;
+  if (wantsArmor && !(await spendArmorPoint(actor))) available = 0;
+  const resolved = resolveDamage({
+    amount: rawAmount,
+    useArmor: wantsArmor,
+    armorAvailable: available,
+    useShield: picked.useShield,
+    shield: picked.shield,
+  });
   const { before, after, needsInjuryTest } = applyDamage({
     current: actor.system.pv.value,
-    amount: finalAmount,
+    amount: resolved.final,
   });
   await actor.update({ 'system.pv.value': after });
   await postMessage({
     actor,
     content: await render(TEMPLATE_DANO, {
       name: actor.name,
-      amount: finalAmount,
+      amount: resolved.final,
       before,
       after,
       nonLethal,
-      armorUsed,
-      armorReduction: ARMOR_REDUCTION,
+      armorUsed: resolved.armorUsed,
+      armorReduction: resolved.armorAmount,
+      shieldUsed: resolved.shieldUsed,
+      shieldReduction: resolved.shieldAmount,
       rawAmount,
+      // PV zerado (ou já em 0): só o aviso; o teste de lesão é manual
+      injuryWarning: needsInjuryTest,
     }),
   });
-  if (needsInjuryTest) await rollInjuryTest(actor, { nonLethal });
-  return { before, after, needsInjuryTest, armorUsed };
+  return { before, after, needsInjuryTest, armorUsed: resolved.armorUsed };
 }
 
 /**
  * Dano físico numa ameaça (criatura): desconta a redução de dano (RD) e diminui o PV. Não há
- * pontos de armadura nem teste de lesão; com 0 PV o cartão avisa que ela foi derrotada.
+ * pontos de armadura nem teste de lesão; com 0 PV o cartão avisa que ela foi derrotada. O cartão
+ * com os números vai só ao mestre; os jogadores veem só que a criatura sofreu o dano.
  * @param {Actor} actor
  * @param {number} amount Dano já calculado (ex.: RA + modificador da arma).
  * @param {{nonLethal?: boolean}} [options] Só muda o texto do cartão.
@@ -235,8 +255,11 @@ async function damageThreat(actor, amount, { nonLethal = false } = {}) {
     rd: actor.system.rd,
   });
   await actor.update({ 'system.pv.value': outcome.after });
+  // Números (dano, RD, PV, derrotada) só para o mestre; no chat público, só que o dano foi
+  // aplicado
   await postMessage({
     actor,
+    rollMode: 'gmroll',
     content: await render(TEMPLATE_DANO, {
       name: actor.name,
       amount: outcome.amount,
@@ -248,6 +271,13 @@ async function damageThreat(actor, amount, { nonLethal = false } = {}) {
       rawAmount: outcome.rawAmount,
       defeated: outcome.newlyDefeated,
     }),
+  });
+  await postMessage({
+    actor,
+    rollMode: 'publicroll',
+    content: `<p class="desordem-dano__linha">${Handlebars.escapeExpression(
+      game.i18n.format('DESORDEM.Dano.CriaturaPublico', { nome: actor.name }),
+    )}</p>`,
   });
   return {
     before: outcome.before,

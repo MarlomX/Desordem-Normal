@@ -370,7 +370,24 @@
       "Sofre": "takes {valor} damage",
       "NaoLetal": "non-lethal",
       "SofreEmocional": "takes {valor} emotional damage",
-      "ExtraTrauma": "+{extra} from trauma"
+      "ExtraTrauma": "+{extra} from trauma",
+      "Janela": {
+        "Titulo": "Resolve damage",
+        "Chega": "takes {valor} damage",
+        "RD": "Creature damage reduction: {rd} (already subtracted from the final damage).",
+        "Armadura": "Spend 1 armor point (−{reducao}; {restantes} left)",
+        "Escudo": "Shield reduction (−{reducao})",
+        "EscudoSoma": "total {total}, minimum {minimo}",
+        "Final": "Final damage:",
+        "Aplicar": "Apply",
+        "Cancelar": "Cancel",
+        "QuemRecebe": "Who takes the damage?",
+        "SemAlvo": "No target selected: choose the character who takes the damage.",
+        "Escolher": "Continue"
+      },
+      "EscudoUsado": "Shield: −{reducao} damage.",
+      "PVZerado": "HP at zero: make the injury test (DT in the sheet header).",
+      "CriaturaPublico": "{nome} took the damage."
     },
     "Lesao": {
       "Titulo": "Injury test",
@@ -683,8 +700,6 @@
       }
     },
     "Armadura": {
-      "Titulo": "Armor points",
-      "Pergunta": "Spend 1 armor point to reduce a {dano} damage hit by {reducao}? ({restantes} left)",
       "Usada": "Armor point spent: {bruto} damage reduced by {reducao}."
     },
     "Equipamento": {
@@ -1607,7 +1622,7 @@
         "arma": "The weapon effects only apply to attacks made with it.",
         "armadura": "The armor effects apply while it is worn. The skill penalty lives in the fields above, not here.",
         "item": "The item effects apply while it is on the sheet (in the backpack).",
-        "escudo": "The shield effects apply while it is wielded. The shield reduction starts working with the Resolve damage window."
+        "escudo": "The shield effects apply while it is wielded. The shield reduction shows up in the Resolve damage window of opposed tests."
       },
       "QuandoAtaque": {
         "sempre": "Always",

@@ -235,13 +235,13 @@ test('buildSkillRows: dado já reduzido; passo manual e penalidade somam antes (
 
 // ---------- Efeitos ----------
 
-test('escudo é um tipo de efeito próprio; a redução do escudo ainda não tem uso automático', () => {
+test('escudo é um tipo de efeito próprio, com a redução do escudo', () => {
   assert.equal(effectItemType(shield('e')), 'escudo');
   assert.equal(effectItemType(armor('a')), 'armadura');
   assert.ok(itemEffectTypes('escudo').includes('reducaoEscudo'));
   assert.equal(itemEffectTypes('habilidade').includes('reducaoEscudo'), false);
   assert.ok(itemEffectTypes('habilidade').includes('armaduraExtra'));
-  assert.equal(effectSupported({ tipo: 'reducaoEscudo', params: {} }, 'escudo'), false);
+  assert.equal(effectSupported({ tipo: 'reducaoEscudo', params: {} }, 'escudo'), true);
   assert.equal(effectSupported({ tipo: 'armaduraExtra', params: {} }), true);
   const text = describeEffect(
     { tipo: 'reducaoEscudo', params: { somaMinima: 7 } },

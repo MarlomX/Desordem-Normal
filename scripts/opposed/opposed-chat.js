@@ -39,6 +39,7 @@ import {
 import { weaponTestKind } from '../rolls/ability-effects.js';
 import { abilityNote, announceGains } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
+import { askDamage } from '../rolls/damage-dialog.js';
 import { guardButtons, registerGuardHandler } from '../rolls/guardian-chat.js';
 import {
   assignGuardian,
@@ -486,35 +487,56 @@ async function repeatCard(message) {
   await message.update({ content: await renderCard(old), [`flags.${SYSTEM_ID}.oposto`]: old });
 }
 
-/** Danos que este navegador pediu e ainda não aplicou (chave: mensagem + lado). */
-const damageRequests = new Set();
+/**
+ * Danos que este navegador pediu e ainda não aplicou (chave: mensagem + lado), com as escolhas já
+ * feitas na janela Resolver dano.
+ */
+const damageRequests = new Map();
 
-/** Aplica o dano reservado para este usuário (no alvo, com a pergunta da armadura e a lesão). */
-async function applyReservedDamage(message, side) {
+/** Aplica o dano reservado para este usuário (no alvo, com as escolhas da janela). */
+async function applyReservedDamage(message, side, choices) {
   const state = cardState(message);
   const entry = state?.dano?.[side];
   // O alvo do dano: o Guardião, se alguém assumiu o ataque
   const target = await foundry.utils.fromUuid(damageTargetUuid(state, side));
   if (!entry || !target?.isOwner) return;
-  await damageActor(target, entry.valor, { nonLethal: entry.naoLetal });
+  await damageActor(target, entry.valor, { nonLethal: entry.naoLetal, choices });
 }
 
 /**
- * Clique em «Aplicar dano»: quem pode editar o cartão marca e aplica na hora; os outros pedem ao
- * mestre, que reserva o dano para quem pediu (o hook de atualização aplica em seguida).
+ * Resumo do teste de quem recebe o dano (para a redução do escudo): o outro lado do cartão, se
+ * for ele mesmo que recebe (quem assumiu o ataque no lugar dele não rolou este teste).
  */
-async function requestDamage(message, side) {
+function defenderSummary(state, side) {
+  const receiver = otherSide(side);
+  if (state?.dano?.[side]?.guardiao) return null;
+  return state?.resultado?.[receiver] ?? null;
+}
+
+/**
+ * Clique em «Aplicar dano»: primeiro a janela Resolver dano (Shift+clique pula). Confirmado, quem
+ * pode editar o cartão marca e aplica na hora; os outros pedem ao mestre, que reserva o dano para
+ * quem pediu (o hook de atualização aplica em seguida, com as mesmas escolhas).
+ */
+async function requestDamage(message, side, event) {
   const state = cardState(message);
+  const entry = state?.dano?.[side];
   const target = foundry.utils.fromUuidSync(damageTargetUuid(state, side));
-  if (!target?.isOwner || state?.dano?.[side]?.estado !== 'pendente') return;
+  if (!target?.isOwner || entry?.estado !== 'pendente') return;
+  const choices = await askDamage(target, entry.valor, {
+    nonLethal: entry.naoLetal,
+    shift: Boolean(event?.shiftKey),
+    defender: defenderSummary(state, side),
+  });
+  if (!choices) return;
   if (message.canUserModify(game.user, 'update')) {
     const next = markDamage(state, side, game.user.id);
     if (!next) return;
     await message.update({ content: await renderCard(next), [`flags.${SYSTEM_ID}.oposto`]: next });
-    await applyReservedDamage(message, side);
+    await applyReservedDamage(message, side, choices);
     return;
   }
-  damageRequests.add(`${message.id}:${side}`);
+  damageRequests.set(`${message.id}:${side}`, choices);
   game.socket.emit(SOCKET, {
     action: 'opposedDamage',
     messageId: message.id,
@@ -621,7 +643,7 @@ export function renderOpposedCard(message, html) {
         `dano-${side}`,
         t('DESORDEM.Oposto.AplicarDano', { valor: entry.valor, nome: target.name }),
         'fa-heart-crack',
-        () => requestDamage(message, side),
+        (event) => requestDamage(message, side, event),
       ),
     );
   }
@@ -787,8 +809,9 @@ export function registerOpposedHooks() {
       const key = `${message.id}:${side}`;
       const entry = state?.dano?.[side];
       if (!damageRequests.has(key) || entry?.estado !== 'aplicado') continue;
+      const choices = damageRequests.get(key);
       damageRequests.delete(key);
-      if (entry.por === game.user.id) applyReservedDamage(message, side);
+      if (entry.por === game.user.id) applyReservedDamage(message, side, choices);
     }
     if (!isActiveGM() || !answerFlag(message)) return;
     if (!changes?.flags?.[SYSTEM_ID]?.teste) return;

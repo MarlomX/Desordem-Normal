@@ -1,0 +1,21 @@
+<div class="desordem-dano-janela">
+  <p class="desordem-dano-janela__chega"><strong>{{name}}</strong> {{localize "DESORDEM.Dano.Janela.Chega" valor=amount}}{{#if nonLethal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}}</p>
+
+  {{#if threat}}
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Dano.Janela.RD" rd=rd}}</p>
+  {{else}}
+  <label class="desordem-pre__opcao{{#unless armorAvailable}} is-indisponivel{{/unless}}">
+    <input type="checkbox" name="useArmor" {{#unless armorAvailable}}disabled{{/unless}}>
+    <span class="desordem-pre__nome">{{localize "DESORDEM.Dano.Janela.Armadura" reducao=armorReduction restantes=armorAvailable}}</span>
+  </label>
+  {{#if shield}}
+  <label class="desordem-pre__opcao{{#unless shield.applies}} is-indisponivel{{/unless}}">
+    <input type="checkbox" name="useShield" {{#if shield.applies}}checked{{else}}disabled{{/if}}>
+    <span class="desordem-pre__nome">{{localize "DESORDEM.Dano.Janela.Escudo" reducao=shield.reduction}}</span>
+    <span class="desordem-pre__motivo">{{localize "DESORDEM.Dano.Janela.EscudoSoma" total=shield.total minimo=shield.minimum}}</span>
+  </label>
+  {{/if}}
+  {{/if}}
+
+  <p class="desordem-dano-janela__final">{{localize "DESORDEM.Dano.Janela.Final"}} <strong data-dano-final>{{final}}</strong></p>
+</div>
