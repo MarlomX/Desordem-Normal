@@ -28,11 +28,15 @@ export const MAX_EFFECTS = 20;
 export const CREATURE_EFFECT_TYPES = Object.freeze(['dadoExtra', 'acaoNota', 'companheiro']);
 
 /**
- * Campos que o editor esconde em um tipo de efeito conforme o tipo de item. Na arma, o dado extra
- * vale sempre no ataque com ela: os filtros de perícia e de tipo de teste não se aplicam.
+ * Campos que o editor esconde em um tipo de efeito conforme o tipo de item. Nos equipamentos, o
+ * dado extra sempre vai para a seção «Itens» da janela pré-teste: o campo «grupo na janela»
+ * (Habilidades ou Ações) não se aplica. Na arma, ele vale sempre no ataque com ela: os filtros de
+ * perícia e de tipo de teste também não.
  */
 const HIDDEN_FIELDS = Object.freeze({
-  arma: Object.freeze({ dadoExtra: Object.freeze(['pericias', 'teste']) }),
+  arma: Object.freeze({ dadoExtra: Object.freeze(['pericias', 'teste', 'grupo']) }),
+  armadura: Object.freeze({ dadoExtra: Object.freeze(['grupo']) }),
+  item: Object.freeze({ dadoExtra: Object.freeze(['grupo']) }),
 });
 
 /** O campo `key` de um efeito `tipo` fica escondido neste tipo de item? */

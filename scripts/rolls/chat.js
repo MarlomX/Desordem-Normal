@@ -20,6 +20,7 @@ import {
 } from './abilities.js';
 import {
   dialogDiceOptions,
+  firstWeaponAttack,
   weaponAttackEffects,
   pickBonusDice,
   spendBonusDice
@@ -398,11 +399,11 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     allowDefense,
   });
   // Efeitos da arma do ataque (bônus fixo, passo no dado da perícia, crítico ampliado). O
-  // «primeiro ataque da cena» usa o marcador da ficha (criaturas não têm: nunca é automático); o
-  // «quem ainda não me atacou» vem da caixa da janela pré-teste.
+  // «primeiro ataque da cena» é o primeiro desta arma (marcador da ficha; criaturas não têm, então
+  // nunca é automático); o «quem ainda não me atacou» vem da caixa da janela pré-teste.
   const attack = weaponId
     ? weaponAttackEffects(entries, {
-        firstAttack: system.cena ? !system.cena.atacou : false,
+        firstAttack: firstWeaponAttack(system.cena, weaponId),
         notAttacked: Boolean(naoAtacou),
       })
     : { modifier: 0, steps: 0, critMin: null, lines: [] };

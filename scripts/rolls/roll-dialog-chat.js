@@ -4,7 +4,12 @@
  * pavor antes de rolar. A lógica (opções, custos, prévia) está em `roll-dialog.js`.
  */
 import { SYSTEM_ID } from '../config.js';
-import { dialogDiceOptions, groupBonusDice, weaponAttackEffects } from './ability-effects.js';
+import {
+  dialogDiceOptions,
+  firstWeaponAttack,
+  groupBonusDice,
+  weaponAttackEffects,
+} from './ability-effects.js';
 import { actorEffects, actorResources } from './ability-effects-actor.js';
 import { resourceName } from '../sheets/ability-controls.js';
 import { advanceDtField } from './chase.js';
@@ -405,7 +410,7 @@ export async function askRollChoices(
   const entries = actorEffects(actor, { weaponId });
   const attack = weaponId
     ? weaponAttackEffects(entries, {
-        firstAttack: actor.system.cena ? !actor.system.cena.atacou : false,
+        firstAttack: firstWeaponAttack(actor.system.cena, weaponId),
       })
     : { steps: 0, lines: [] };
   const dice = testDicePreview(actor, skillKey, attribute, [

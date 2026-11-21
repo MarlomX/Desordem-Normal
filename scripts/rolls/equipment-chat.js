@@ -17,7 +17,7 @@ import {
   weaponReady,
 } from './equipment.js';
 import { firstEffect } from './ability-effects-actor.js';
-import { weaponTestKind } from './ability-effects.js';
+import { markWeaponAttack, weaponTestKind } from './ability-effects.js';
 import { abilityNote } from './abilities-chat.js';
 import { guardButtons, registerGuardHandler } from './guardian-chat.js';
 import { canGuardWeaponCard, guardWeaponCard } from './guardian.js';
@@ -79,23 +79,22 @@ export function canAttackWith(weapon) {
 }
 
 /**
- * Depois do teste de ataque (feito, acertando ou não): marca que o personagem já atacou nesta cena
+ * Depois do teste de ataque (feito, acertando ou não): marca que ESTA ARMA já atacou nesta cena
  * (efeito «primeiro ataque da cena») e, na arma consumível, gasta uma unidade e avisa no chat que
  * o gasto foi automático. Em 0, a arma só fica zerada.
  * @param {Actor} actor
  * @param {Item} weapon
  */
 export async function afterWeaponAttack(actor, weapon) {
-  if (actor.system.cena && !actor.system.cena.atacou) {
-    await actor.update({ 'system.cena.atacou': true });
-  }
+  const attacked = markWeaponAttack(actor.system.cena, weapon.id);
+  if (attacked) await actor.update({ 'system.cena.armasAtacaram': attacked });
   const changes = weaponAmmoChanges(weapon.system);
   if (!changes) return;
+  // Guarda o número antes de gravar: o `update` do Foundry reorganiza o objeto recebido
+  // (`'system.quantidade'` vira `system.quantidade`), e lê-lo depois dava «undefined»
+  const remaining = changes['system.quantidade'];
   await weapon.update(changes);
-  const text = t('DESORDEM.Equipamento.MunicaoGasta', {
-    nome: weapon.name,
-    restantes: changes['system.quantidade'],
-  });
+  const text = t('DESORDEM.Equipamento.MunicaoGasta', { nome: weapon.name, restantes: remaining });
   await postMessage({
     actor,
     content: `<p class="desordem-ficha__dica">${Handlebars.escapeExpression(text)}</p>`,

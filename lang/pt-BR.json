@@ -116,7 +116,7 @@
           "passo": "{nome}: +{valor} passo ({quando})",
           "critico": "{nome}: crítico com {valor}+",
           "Automatico": "automático",
-          "JaAtacou": "já atacou nesta cena"
+          "JaAtacou": "esta arma já atacou nesta cena"
         }
       },
       "Usou": "Usou",
@@ -1581,7 +1581,7 @@
       },
       "QuandoAtaque": {
         "sempre": "Sempre",
-        "primeiroCena": "No primeiro ataque da cena",
+        "primeiroCena": "No primeiro ataque da arma na cena",
         "naoAtacou": "Contra quem ainda não me atacou"
       }
     },

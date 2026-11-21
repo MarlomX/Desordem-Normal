@@ -73,9 +73,9 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         // Quem já recebeu a cura nesta cena (ids dos aliados) e o animal ferido da cena
         curados: new f.ArrayField(new f.StringField({ required: true, blank: false })),
         animalFerido: new f.BooleanField({ initial: false }),
-        // Já atacou nesta cena (efeito `passoAtaque` do «primeiro ataque da cena»); zera na Nova
-        // cena e no início do combate
-        atacou: new f.BooleanField({ initial: false })
+        // Armas (ids) que já atacaram nesta cena: o «primeiro ataque da cena» do efeito
+        // `passoAtaque` é o primeiro DA ARMA. Zera na Nova cena e no início do combate.
+        armasAtacaram: new f.ArrayField(new f.StringField({ required: true, blank: false }))
       }),
       // Proficiência marcial marcada à mão (também pode vir de uma habilidade, pelo efeito
       // `proficienciaMarcial`). Sem ela, a ficha não deixa empunhar armas marciais.

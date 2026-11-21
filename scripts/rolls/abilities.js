@@ -203,7 +203,7 @@ export function sceneReset(state) {
     'system.cena.testesTrauma': 0,
     'system.cena.curados': [],
     'system.cena.animalFerido': false,
-    'system.cena.atacou': false,
+    'system.cena.armasAtacaram': [],
     // Dados bônus recebidos valem só até o fim da cena
     'system.dadosBonus': [],
     ...resources,

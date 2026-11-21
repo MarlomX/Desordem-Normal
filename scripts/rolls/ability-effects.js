@@ -46,7 +46,7 @@ export const CONDITIONS = Object.freeze(['pvMetade', 'pdMetade']);
 
 /**
  * Quando vale um `passoAtaque`: em todo ataque, no primeiro ataque da cena (automático, pelo
- * marcador `cena.atacou`) ou no primeiro ataque contra quem ainda não atacou o personagem (caixa
+ * marcador `cena.armasAtacaram`, por arma) ou no primeiro ataque contra quem ainda não atacou o personagem (caixa
  * que o jogador marca na janela pré-teste).
  */
 export const ATTACK_STEP_WHEN = Object.freeze(['sempre', 'primeiroCena', 'naoAtacou']);
@@ -641,8 +641,8 @@ export function hasMartialProficiency(system, entries) {
  * o cartão; `applies` diz se entra neste ataque, e `optional` marca o passo que depende da caixa
  * «quem ainda não me atacou».
  * @param {object[]} entries Efeitos do ator no ataque.
- * @param {{firstAttack?: boolean, notAttacked?: boolean}} [state] `firstAttack`: o personagem
- *   ainda não atacou nesta cena; `notAttacked`: o jogador marcou que o alvo ainda não o atacou.
+ * @param {{firstAttack?: boolean, notAttacked?: boolean}} [state] `firstAttack`: esta arma
+ *   ainda não atacou nesta cena (`firstWeaponAttack`); `notAttacked`: o jogador marcou que o alvo ainda não o atacou.
  * @returns {{modifier: number, steps: number, critMin: number|null, lines: {key: string,
  *   kind: string, itemName: string, value: number, quando: string|null, applies: boolean,
  *   optional: boolean}[]}}
@@ -679,6 +679,30 @@ export function weaponAttackEffects(entries, { firstAttack = false, notAttacked 
     }
   }
   return { modifier, steps, critMin, lines };
+}
+
+/**
+ * É o primeiro ataque desta arma na cena? Lê a lista `cena.armasAtacaram` do personagem. Sem a
+ * lista (criaturas, que não têm o marcador), nunca é automático.
+ * @param {{armasAtacaram?: string[]}|undefined} cena `actor.system.cena`.
+ * @param {string|null} weaponId
+ */
+export function firstWeaponAttack(cena, weaponId) {
+  if (!weaponId || !Array.isArray(cena?.armasAtacaram)) return false;
+  return !cena.armasAtacaram.includes(weaponId);
+}
+
+/**
+ * Lista nova de armas que já atacaram na cena, com `weaponId` (ou `null` se ela já estava lá ou se
+ * o ator não tem o marcador).
+ * @param {{armasAtacaram?: string[]}|undefined} cena
+ * @param {string} weaponId
+ * @returns {string[]|null}
+ */
+export function markWeaponAttack(cena, weaponId) {
+  if (!weaponId || !Array.isArray(cena?.armasAtacaram)) return null;
+  if (cena.armasAtacaram.includes(weaponId)) return null;
+  return [...cena.armasAtacaram, weaponId];
 }
 
 /** Tipo de teste de um ataque com a arma (filtro dos dados extras). */

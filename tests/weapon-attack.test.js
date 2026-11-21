@@ -13,12 +13,18 @@ import {
 import {
   collectEffects,
   dialogDiceOptions,
+  firstWeaponAttack,
   hasMartialProficiency,
+  markWeaponAttack,
   itemEffectTypes,
   normalizeEffects,
   weaponAttackEffects,
 } from '../scripts/rolls/ability-effects.js';
-import { describeEffect, effectSupported } from '../scripts/rolls/ability-effects-editor.js';
+import {
+  describeEffect,
+  editorRows,
+  effectSupported,
+} from '../scripts/rolls/ability-effects-editor.js';
 import { attackUsedLines } from '../scripts/sheets/ability-controls.js';
 import { resolveTest } from '../scripts/rolls/test.js';
 import { sequenceRng } from '../scripts/rolls/dice.js';
@@ -266,7 +272,30 @@ test('buildRollModel: dados extras de itens vão para o grupo «item», mesmo co
   assert.equal(group('arma'), 'item');
 });
 
-test('sceneReset zera o marcador «já atacou nesta cena»', () => {
+test('sceneReset zera as armas que já atacaram na cena', () => {
   const reset = sceneReset({ pv: 5, contusao: false, estupor: false, efeitos: [] });
-  assert.equal(reset['system.cena.atacou'], false);
+  assert.deepEqual(reset['system.cena.armasAtacaram'], []);
+});
+
+test('primeiro ataque da cena é por arma: outra arma ainda conta como primeira', () => {
+  const cena = { armasAtacaram: [] };
+  assert.equal(firstWeaponAttack(cena, 'lanca'), true);
+  const after = markWeaponAttack(cena, 'lanca');
+  assert.deepEqual(after, ['lanca']);
+  assert.equal(firstWeaponAttack({ armasAtacaram: after }, 'lanca'), false);
+  assert.equal(firstWeaponAttack({ armasAtacaram: after }, 'arco'), true);
+  // Repetir a mesma arma não grava de novo; criatura (sem marcador) nunca é automática
+  assert.equal(markWeaponAttack({ armasAtacaram: after }, 'lanca'), null);
+  assert.equal(firstWeaponAttack(undefined, 'lanca'), false);
+  assert.equal(markWeaponAttack(undefined, 'lanca'), null);
+});
+
+test('editor: nos equipamentos o dado extra não mostra «grupo na janela»', () => {
+  const effects = normalizeEffects([{ id: 'x', tipo: 'dadoExtra', params: {} }]);
+  const keys = (itemType) =>
+    editorRows(effects, { t, skills: [], openId: 'x', itemType })[0].fields.map((f) => f.key);
+  for (const itemType of ['arma', 'item', 'armadura']) {
+    assert.equal(keys(itemType).includes('grupo'), false, itemType);
+  }
+  assert.equal(keys('habilidade').includes('grupo'), true);
 });

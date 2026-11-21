@@ -116,7 +116,7 @@
           "passo": "{nome}: +{valor} step ({quando})",
           "critico": "{nome}: critical on {valor}+",
           "Automatico": "automatic",
-          "JaAtacou": "already attacked this scene"
+          "JaAtacou": "this weapon already attacked this scene"
         }
       },
       "Usou": "Used",
@@ -1581,7 +1581,7 @@
       },
       "QuandoAtaque": {
         "sempre": "Always",
-        "primeiroCena": "On the first attack of the scene",
+        "primeiroCena": "On the weapon's first attack of the scene",
         "naoAtacou": "Against someone who has not attacked me yet"
       }
     },
