@@ -638,10 +638,10 @@
       "Vestida": "Worn",
       "Pontos": "Armor points",
       "Quantidade": "Quantity",
-      "Consumivel": "Consumable (each use spends one unit)",
+      "Consumivel": "Consumable",
       "UsosMax": "Use limit (0 = no limit)",
       "Usos": "Uses left",
-      "DicaUso": "With a use limit, each use spends one remaining use; with no limit, only consumables are spent from the quantity.",
+      "DicaUso": "With a use limit, each use spends one remaining use. Consumable without a limit: each use spends one unit. Consumable with a limit: when the uses run out, one unit is spent and the uses refill; on the last unit, everything stays at 0.",
       "Descricao": "Description",
       "Editar": "Edit item",
       "Remover": "Remove item",
@@ -689,7 +689,7 @@
         "uma": "one-handed",
         "duas": "two-handed"
       },
-      "Arremesso": "Thrown (consumable)",
+      "Arremesso": "Thrown",
       "DicaArremesso": "Thrown weapon: each attack spends one unit automatically, with a chat notice. At 0 units it stays at zero and cannot attack.",
       "Subtipo": {
         "Titulo": "Kind",
@@ -735,7 +735,8 @@
       "QuemRecebeEfeito": "Who receives the effect?",
       "PassoDescricao": "Item effect: {texto} until the end of the scene.",
       "PassoRecebido": "{nome} received {texto} ({item}) until the end of the scene.",
-      "PassoJaRecebido": "Effect already received by {nome}."
+      "PassoJaRecebido": "Effect already received by {nome}.",
+      "UnidadesRestantes": "Units left: {n}."
     },
     "Habilidade": {
       "Confirmar": "Confirm",

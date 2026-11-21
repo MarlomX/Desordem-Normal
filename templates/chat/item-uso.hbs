@@ -3,4 +3,5 @@
   {{#if descricao}}<p class="desordem-relacao-chat__descricao">{{descricao}}</p>{{/if}}
   {{#each notes}}<p class="desordem-ficha__dica">{{this}}</p>{{/each}}
   {{#if byUses}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Equipamento.UsosRestantes" restantes=remaining max=max}}</p>{{/if}}
+  {{#if units includeZero=true}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Equipamento.UnidadesRestantes" n=units}}</p>{{/if}}
 </div>

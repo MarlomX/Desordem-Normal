@@ -150,7 +150,9 @@ test('itemUse: limite de usos, consumível ou sem uso', () => {
     max: 3,
     canUse: true,
   });
-  assert.equal(itemUse({ usosMax: 3, usos: 0, consumivel: true, quantidade: 5 }).canUse, false);
+  // Consumível com usos: usos em 0 com unidades sobrando = unidade nova, cheia
+  assert.equal(itemUse({ usosMax: 3, usos: 0, consumivel: true, quantidade: 5 }).canUse, true);
+  assert.equal(itemUse({ usosMax: 3, usos: 0, consumivel: true, quantidade: 0 }).canUse, false);
   assert.deepEqual(itemUse({ usosMax: 0, usos: 0, consumivel: true, quantidade: 2 }), {
     kind: 'quantidade',
     remaining: 2,

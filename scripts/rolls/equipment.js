@@ -292,12 +292,21 @@ export function needsUnarmed(items, systemId) {
 }
 
 /**
- * Situação de uso de um item. Se o item tem limite de usos, ele conta os usos restantes; se não
- * tem, mas é consumível, cada uso gasta uma unidade; senão não há o que gastar.
- * @returns {{kind: ('usos'|'quantidade'|null), remaining: number, max: (number|null),
- *   canUse: boolean}}
+ * Situação de uso de um item:
+ * - consumível com limite de usos (`unidadeUsos`): cada unidade tem `usosMax` usos; os usos são
+ *   os da unidade atual (usos em 0 com unidades sobrando = unidade nova, cheia);
+ * - só limite de usos (`usos`): conta os usos restantes;
+ * - só consumível (`quantidade`): cada uso gasta uma unidade;
+ * - nenhum dos dois: não há o que gastar.
+ * @returns {{kind: ('unidadeUsos'|'usos'|'quantidade'|null), remaining: number,
+ *   max: (number|null), units?: number, canUse: boolean}}
  */
 export function itemUse(item) {
+  if (item.usosMax > 0 && item.consumivel) {
+    const units = Math.max(0, item.quantidade ?? 0);
+    const remaining = units > 0 ? (item.usos > 0 ? item.usos : item.usosMax) : 0;
+    return { kind: 'unidadeUsos', remaining, max: item.usosMax, units, canUse: units > 0 };
+  }
   if (item.usosMax > 0) {
     return { kind: 'usos', remaining: item.usos, max: item.usosMax, canUse: item.usos > 0 };
   }
@@ -333,6 +342,14 @@ export function itemUseState(item, hasEffects) {
 export function itemUseChanges(item) {
   const use = itemUse(item);
   if (!use.canUse) return null;
+  if (use.kind === 'unidadeUsos') {
+    // Gasta um uso da unidade atual; se zerou, gasta a unidade e a próxima começa cheia (na
+    // última, tudo fica em 0)
+    const left = use.remaining - 1;
+    if (left > 0) return { 'system.usos': left };
+    const units = use.units - 1;
+    return { 'system.quantidade': units, 'system.usos': units > 0 ? item.usosMax : 0 };
+  }
   return use.kind === 'usos'
     ? { 'system.usos': item.usos - 1 }
     : { 'system.quantidade': item.quantidade - 1 };

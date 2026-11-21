@@ -15,7 +15,7 @@ import {
   collectEffects,
 } from '../scripts/rolls/ability-effects.js';
 import { describeEffect, editorRows } from '../scripts/rolls/ability-effects-editor.js';
-import { itemUseState } from '../scripts/rolls/equipment.js';
+import { itemUse, itemUseChanges, itemUseState } from '../scripts/rolls/equipment.js';
 import { itemStepEffect } from '../scripts/rolls/effects.js';
 import { hasMedicalKit } from '../scripts/rolls/first-aid.js';
 import { buildEquipmentRows } from '../scripts/sheets/context.js';
@@ -162,4 +162,32 @@ test('buildEquipmentRows: item com efeito de uso mostra Usar sem limite de usos'
       ['Tenaz', false, false],
     ],
   );
+});
+
+test('consumível com limite: gasta usos; ao zerar, gasta uma unidade e os usos voltam cheios', () => {
+  const flask = { usosMax: 2, usos: 2, consumivel: true, quantidade: 3 };
+  assert.deepEqual(itemUse(flask), {
+    kind: 'unidadeUsos',
+    remaining: 2,
+    max: 2,
+    units: 3,
+    canUse: true,
+  });
+  assert.deepEqual(itemUseChanges(flask), { 'system.usos': 1 });
+  assert.deepEqual(itemUseChanges({ ...flask, usos: 1 }), {
+    'system.quantidade': 2,
+    'system.usos': 2,
+  });
+  // Última unidade: quantidade e usos ficam em 0, e o item não pode mais ser usado
+  const last = { ...flask, usos: 1, quantidade: 1 };
+  assert.deepEqual(itemUseChanges(last), { 'system.quantidade': 0, 'system.usos': 0 });
+  const empty = { ...flask, usos: 0, quantidade: 0 };
+  assert.equal(itemUse(empty).canUse, false);
+  assert.equal(itemUseChanges(empty), null);
+  assert.equal(itemUseState(empty, true).canUse, false);
+});
+
+test('consumível com limite de 1 uso: cada uso gasta uma unidade', () => {
+  const single = { usosMax: 1, usos: 1, consumivel: true, quantidade: 2 };
+  assert.deepEqual(itemUseChanges(single), { 'system.quantidade': 1, 'system.usos': 1 });
 });

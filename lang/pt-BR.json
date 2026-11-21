@@ -638,10 +638,10 @@
       "Vestida": "Vestida",
       "Pontos": "Pontos de armadura",
       "Quantidade": "Quantidade",
-      "Consumivel": "Consumível (cada uso gasta uma unidade)",
+      "Consumivel": "Consumível",
       "UsosMax": "Limite de usos (0 = sem limite)",
       "Usos": "Usos restantes",
-      "DicaUso": "Com limite de usos, cada uso gasta um uso restante; sem limite, só os consumíveis são gastos pela quantidade.",
+      "DicaUso": "Com limite de usos, cada uso gasta um uso restante. Consumível sem limite: cada uso gasta uma unidade. Consumível com limite: quando os usos acabam, gasta uma unidade e os usos voltam ao máximo; na última unidade, tudo fica em 0.",
       "Descricao": "Descrição",
       "Editar": "Editar item",
       "Remover": "Remover item",
@@ -689,7 +689,7 @@
         "uma": "uma mão",
         "duas": "duas mãos"
       },
-      "Arremesso": "Arremesso (consumível)",
+      "Arremesso": "Arremesso",
       "DicaArremesso": "Arma de arremesso: cada ataque gasta uma unidade automaticamente, com aviso no chat. Com 0 unidades, ela fica zerada e não ataca.",
       "Subtipo": {
         "Titulo": "Tipo",
@@ -735,7 +735,8 @@
       "QuemRecebeEfeito": "Quem recebe o efeito?",
       "PassoDescricao": "Efeito de item: {texto} até o fim da cena.",
       "PassoRecebido": "{nome} recebeu {texto} ({item}) até o fim da cena.",
-      "PassoJaRecebido": "Efeito já recebido por {nome}."
+      "PassoJaRecebido": "Efeito já recebido por {nome}.",
+      "UnidadesRestantes": "Unidades restantes: {n}."
     },
     "Habilidade": {
       "Confirmar": "Confirmar",

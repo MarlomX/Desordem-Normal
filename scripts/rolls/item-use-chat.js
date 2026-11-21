@@ -55,9 +55,11 @@ export async function useItem(actor, item) {
       item: item.name,
       descricao: item.system.descricao,
       notes: plan.notes,
-      byUses: use.kind === 'usos',
+      byUses: use.kind === 'usos' || use.kind === 'unidadeUsos',
       remaining: use.remaining,
       max: use.max,
+      // Consumível com usos: unidades que sobraram (a unidade atual conta)
+      units: use.kind === 'unidadeUsos' ? use.units : null,
     }),
   });
   for (const heal of plan.heals) await postHeal(actor, item, heal);
