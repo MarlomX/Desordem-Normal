@@ -49,10 +49,13 @@ test('compêndio de habilidades: o manifesto aponta para o pacote', () => {
 // ---------- Compêndio «Itens básicos» (v0.21.9) ----------
 
 const itemsDir = path.join(root, 'packs-src', 'itens');
-const itemDocs = fs
+const packDocs = fs
   .readdirSync(itemsDir)
   .filter((file) => file.endsWith('.json'))
   .map((file) => ({ file, doc: JSON.parse(fs.readFileSync(path.join(itemsDir, file), 'utf8')) }));
+// Pastas do compêndio (documentos Folder) e os itens
+const folderDocs = packDocs.filter(({ doc }) => doc._key.startsWith('!folders!'));
+const itemDocs = packDocs.filter(({ doc }) => doc._key.startsWith('!items!'));
 
 test('compêndio de itens: 23 itens com id, chave e nome únicos, de tipos de equipamento', () => {
   assert.equal(itemDocs.length, 23);
@@ -84,6 +87,23 @@ test('compêndio de itens: só o Gládio e a Cota de malha são marciais', () =>
     .map(({ doc }) => doc.name)
     .sort();
   assert.deepEqual(martial, ['Cota de malha', 'Gládio']);
+});
+
+test('compêndio de itens: três pastas, e cada item na pasta do seu tipo', () => {
+  assert.equal(packDocs.length, folderDocs.length + itemDocs.length);
+  const folders = new Map(folderDocs.map(({ doc }) => [doc._id, doc]));
+  assert.deepEqual(
+    [...folders.values()].map((folder) => folder.name),
+    ['Armaduras e escudos', 'Armas', 'Itens gerais'],
+  );
+  for (const { doc } of folderDocs) {
+    assert.equal(doc._key, `!folders!${doc._id}`);
+    assert.equal(doc.type, 'Item');
+  }
+  const expected = { arma: 'Armas', armadura: 'Armaduras e escudos', item: 'Itens gerais' };
+  for (const { file, doc } of itemDocs) {
+    assert.equal(folders.get(doc.folder)?.name, expected[doc.type], file);
+  }
 });
 
 test('compêndio de itens: o manifesto aponta para o pacote', () => {

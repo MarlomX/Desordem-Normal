@@ -1,0 +1,12 @@
+{
+  "_id": "dnPastaArmas0001",
+  "_key": "!folders!dnPastaArmas0001",
+  "name": "Armas",
+  "type": "Item",
+  "folder": null,
+  "description": "",
+  "sorting": "m",
+  "sort": 100000,
+  "color": null,
+  "flags": {}
+}
