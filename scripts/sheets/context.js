@@ -9,6 +9,8 @@ import {
   HANDS,
   armorSummary,
   handsInUse,
+  handsOf,
+  isNatural,
   itemUse,
   weaponSkill,
   weaponDamageLabel,
@@ -358,9 +360,19 @@ export function buildEffectRows(
  * @param {(kind: string) => string} options.kindLabel Nome traduzido do tipo de arma.
  * @param {(hands: number) => string} options.handsLabel Texto de "uma mão" / "duas mãos".
  * @param {(skillKey: string) => string} options.skillLabel Nome traduzido da perícia.
+ * @param {(category: string) => string} [options.categoryLabel] Nome da categoria da arma.
+ * @param {(item: Object) => string} [options.effectsText] Resumo dos efeitos do item (dica ao
+ *   passar o mouse); vazio = sem efeitos.
  * @param {boolean} [options.editable=true]
  */
-export function buildEquipmentRows(items, { kindLabel, handsLabel, skillLabel, editable = true }) {
+export function buildEquipmentRows(items, {
+  kindLabel,
+  handsLabel,
+  skillLabel,
+  categoryLabel = (category) => category,
+  effectsText = () => '',
+  editable = true,
+}) {
   const of = (type) => items.filter((item) => item.type === type);
   const weapons = of('arma');
   const armors = of('armadura');
@@ -368,44 +380,55 @@ export function buildEquipmentRows(items, { kindLabel, handsLabel, skillLabel, e
   const hands = handsInUse([...weapons, ...others].map((i) => i.system));
   const armorWorn = armors.some((a) => a.system.vestida);
   // Equipar fica bloqueado se o item não está equipado e não cabe
-  const cannotHold = (system) => !system.empunhada && hands.used + system.maos > HANDS;
+  const cannotHold = (system) => !system.empunhada && hands.used + handsOf(system) > HANDS;
+  // Dica da linha: a descrição e, se houver, o resumo dos efeitos numa linha a mais
+  const tooltip = (item) => [item.system.descricao, effectsText(item)].filter(Boolean).join('\n');
   return {
-    weapons: weapons.map(({ id, name, system }) => ({
-      id,
-      name,
-      descricao: system.descricao,
-      kindLabel: kindLabel(system.tipo),
-      handsLabel: handsLabel(system.maos),
-      damageLabel: weaponDamageLabel(system.bonusDano, system.baseDano),
-      skillLabel: skillLabel(weaponSkill(system)),
-      empunhada: system.empunhada,
-      naoLetal: system.naoLetal,
-      // Arma natural: sem caixa de empunhar (não ocupa as mãos)
-      natural: Boolean(system.natural),
-      locked: !editable,
-      blocked: !editable || (!system.natural && cannotHold(system)),
-    })),
-    armors: armors.map(({ id, name, system }) => ({
-      id,
-      name,
-      descricao: system.descricao,
-      pontos: system.pontos,
-      restantes: Math.max(0, Math.min(system.restantes, system.pontos)),
-      vestida: system.vestida,
-      locked: !editable,
-      blocked: !editable || (!system.vestida && armorWorn),
-    })),
-    others: others.map(({ id, name, system }) => {
+    weapons: weapons.map((item) => {
+      const { id, name, system } = item;
+      const natural = isNatural(system);
+      return {
+        id,
+        name,
+        descricao: tooltip(item),
+        kindLabel: kindLabel(system.tipo),
+        categoryLabel: categoryLabel(system.categoria),
+        handsLabel: handsLabel(handsOf(system)),
+        damageLabel: weaponDamageLabel(system.bonusDano, system.baseDano),
+        skillLabel: skillLabel(weaponSkill(system)),
+        empunhada: system.empunhada,
+        naoLetal: system.naoLetal,
+        // Arma natural: sem caixa de empunhar (não ocupa as mãos)
+        natural,
+        locked: !editable,
+        blocked: !editable || (!natural && cannotHold(system)),
+      };
+    }),
+    armors: armors.map((item) => {
+      const { id, name, system } = item;
+      return {
+        id,
+        name,
+        descricao: tooltip(item),
+        pontos: system.pontos,
+        restantes: Math.max(0, Math.min(system.restantes, system.pontos)),
+        vestida: system.vestida,
+        locked: !editable,
+        blocked: !editable || (!system.vestida && armorWorn),
+      };
+    }),
+    others: others.map((item) => {
+      const { id, name, system } = item;
       const use = itemUse(system);
       return {
         id,
         name,
-        descricao: system.descricao,
+        descricao: tooltip(item),
         quantidade: system.quantidade,
         usos: system.usos,
         usosMax: system.usosMax,
         hasUsos: system.usosMax > 0,
-        handsLabel: handsLabel(system.maos),
+        handsLabel: handsLabel(handsOf(system)),
         empunhada: system.empunhada,
         showUse: use.kind !== null,
         canUse: editable && use.canUse,

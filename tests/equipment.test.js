@@ -53,36 +53,42 @@ test('pickArmorToSpend escolhe a armadura vestida que ainda tem pontos', () => {
 test('handsInUse soma as mãos de armas e itens empunhados e avisa quando passa de duas', () => {
   assert.deepEqual(
     handsInUse([
-      { maos: 1, empunhada: true },
-      { maos: 1, empunhada: true },
+      { empunhadura: 'uma', empunhada: true },
+      { empunhadura: 'uma', empunhada: true },
     ]),
     { used: 2, over: false },
   );
   assert.deepEqual(
     handsInUse([
-      { maos: 2, empunhada: true },
-      { maos: 1, empunhada: true },
+      { empunhadura: 'duas', empunhada: true },
+      { empunhadura: 'uma', empunhada: true },
     ]),
     { used: 3, over: true },
   );
-  assert.deepEqual(handsInUse([{ maos: 2, empunhada: false }]), { used: 0, over: false });
+  assert.deepEqual(handsInUse([{ empunhadura: 'duas', empunhada: false }]), {
+    used: 0,
+    over: false,
+  });
 });
 
 const piece = (id, type, system) => ({ id, type, system });
 
 test('checkEquipment: duas mãos no máximo, somando armas e itens', () => {
-  const sword = piece('s', 'arma', { maos: 1, empunhada: true });
-  const torch = piece('t', 'item', { maos: 1, empunhada: true });
-  const bow = { type: 'arma', system: { maos: 2, empunhada: true } };
+  const sword = piece('s', 'arma', { empunhadura: 'uma', empunhada: true });
+  const torch = piece('t', 'item', { empunhadura: 'uma', empunhada: true });
+  const bow = { type: 'arma', system: { empunhadura: 'duas', empunhada: true } };
   assert.deepEqual(
-    checkEquipment([sword], { type: 'item', system: { maos: 1, empunhada: true } }),
+    checkEquipment([sword], { type: 'item', system: { empunhadura: 'uma', empunhada: true } }),
     {
       ok: true,
       reason: null,
     },
   );
   assert.deepEqual(
-    checkEquipment([sword, torch], { type: 'item', system: { maos: 1, empunhada: true } }),
+    checkEquipment([sword, torch], {
+      type: 'item',
+      system: { empunhadura: 'uma', empunhada: true },
+    }),
     {
       ok: false,
       reason: 'maos',
@@ -91,10 +97,16 @@ test('checkEquipment: duas mãos no máximo, somando armas e itens', () => {
   assert.deepEqual(checkEquipment([sword], bow), { ok: false, reason: 'maos' });
   // desequipar nunca é bloqueado, e itens fora da mão não contam
   assert.equal(
-    checkEquipment([sword, torch], { type: 'arma', system: { maos: 2, empunhada: false } }).ok,
+    checkEquipment([sword, torch], {
+      type: 'arma',
+      system: { empunhadura: 'duas', empunhada: false },
+    }).ok,
     true,
   );
-  assert.equal(checkEquipment([piece('i', 'item', { maos: 2, empunhada: false })], bow).ok, true);
+  assert.equal(
+    checkEquipment([piece('i', 'item', { empunhadura: 'duas', empunhada: false })], bow).ok,
+    true,
+  );
 });
 
 test('checkEquipment: só uma armadura vestida, e armaduras não ocupam as mãos', () => {
@@ -112,7 +124,7 @@ test('checkEquipment: só uma armadura vestida, e armaduras não ocupam as mãos
     true,
   );
   assert.equal(
-    checkEquipment([worn], { type: 'arma', system: { maos: 2, empunhada: true } }).ok,
+    checkEquipment([worn], { type: 'arma', system: { empunhadura: 'duas', empunhada: true } }).ok,
     true,
   );
 });

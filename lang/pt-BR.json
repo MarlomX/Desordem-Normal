@@ -581,7 +581,6 @@
         "distancia": "à distância"
       },
       "Maos": {
-        "Titulo": "Mãos",
         "1": "uma mão",
         "2": "duas mãos"
       },
@@ -624,7 +623,7 @@
         "sorrateiro": "Dado extra em Crime ou Furtividade (3 PD)"
       },
       "Natural": "Arma natural",
-      "DicaNatural": "Arma natural (garras, mordida, coice): não ocupa as mãos e não precisa ser empunhada. Os ataques das criaturas são armas naturais por padrão.",
+      "DicaNatural": "Categoria natural (garras, mordida, soco): não ocupa as mãos e não precisa ser empunhada. Os ataques das criaturas são naturais por padrão. Marcial e simples ganham regras próprias nas próximas versões.",
       "Desarmado": {
         "Nome": "Desarmado",
         "Descricao": "Socos e chutes: dano RB, não letal."
@@ -633,6 +632,17 @@
       "Base": {
         "ra": "Rolagem alta (RA)",
         "rb": "Rolagem baixa (RB)"
+      },
+      "Categoria": {
+        "Titulo": "Categoria",
+        "natural": "natural",
+        "simples": "simples",
+        "marcial": "marcial"
+      },
+      "Empunhadura": {
+        "Titulo": "Empunhadura",
+        "uma": "uma mão",
+        "duas": "duas mãos"
       }
     },
     "Armadura": {
@@ -1496,7 +1506,8 @@
           "pd": "{valor} PD",
           "pv": "{valor} PV",
           "recurso": "{valor} de {recurso}"
-        }
+        },
+        "dadoExtraArma": "+d{dado} no ataque com esta arma{custo}"
       },
       "Botao": {
         "passoCena": "Passo na cena{custo}",
@@ -1529,6 +1540,12 @@
         "Botao": "{habilidade}: assumir o ataque",
         "BotaoAtor": "{habilidade}: {nome} assume o ataque",
         "SemMestre": "Sem mestre conectado para registrar quem assume o ataque."
+      },
+      "Item": {
+        "Vazio": "Nenhum efeito: o item serve só de descrição.",
+        "arma": "Os efeitos da arma só valem nos ataques com ela.",
+        "armadura": "Os efeitos da armadura valem enquanto ela está vestida. Os tipos de efeito de armadura chegam numa próxima versão.",
+        "item": "Os efeitos do item valem enquanto ele está na ficha (na mochila)."
       }
     },
     "Plano": {

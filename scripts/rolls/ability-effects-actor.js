@@ -15,11 +15,15 @@ import {
 } from './ability-effects.js';
 
 /**
- * Todos os efeitos das habilidades do ator, cada um com `itemId` e `itemName`.
- * `actor.items` é uma Collection do Foundry, que pode ser percorrida como uma lista.
+ * Todos os efeitos do ator que valem agora: os das habilidades e os dos equipamentos em uso
+ * (armadura vestida, itens na ficha e, no ataque, a arma dele), cada um com `itemId`, `itemName` e
+ * `itemType`. `actor.items` é uma Collection do Foundry, que pode ser percorrida como uma lista.
+ * @param {Actor} actor
+ * @param {{weaponId?: string|null}} [context] No ataque com uma arma, o id dela (os efeitos da
+ *   arma só valem nesse ataque).
  */
-export function actorEffects(actor) {
-  return collectEffects(actor?.items ?? []);
+export function actorEffects(actor, context = {}) {
+  return collectEffects(actor?.items ?? [], context);
 }
 
 /** Primeiro efeito de um tipo (de um item, se `itemId` for informado), ou `null`. */

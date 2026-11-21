@@ -9,12 +9,15 @@
 
   {{#if isWeapon}}
   <div class="desordem-item__campos">
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Categoria.Titulo"}}</span>
+      <select name="system.categoria" {{#unless editable}}disabled{{/unless}}>{{#each categoryChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.TipoArma"}}</span>
       <select name="system.tipo" {{#unless editable}}disabled{{/unless}}>{{#each kindChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
-    {{#unless system.natural}}
-    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Maos.Titulo"}}</span>
-      <select name="system.maos" {{#unless editable}}disabled{{/unless}}>{{#each handsChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    {{#unless isNatural}}
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Empunhadura.Titulo"}}</span>
+      <select name="system.empunhadura" {{#unless editable}}disabled{{/unless}}>{{#each gripChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
     {{/unless}}
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.BaseDano"}}</span>
@@ -27,8 +30,7 @@
       <select name="system.pericia" {{#unless editable}}disabled{{/unless}}>{{#each skillChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
     <label class="desordem-ficha__campo"><input type="checkbox" name="system.naoLetal" {{#if system.naoLetal}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.NaoLetal"}}</span></label>
-    <label class="desordem-ficha__campo"><input type="checkbox" name="system.natural" {{#if system.natural}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Natural"}}</span></label>
-    {{#unless system.natural}}<label class="desordem-ficha__campo"><input type="checkbox" name="system.empunhada" {{#if system.empunhada}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Empunhada"}}</span></label>{{/unless}}
+    {{#unless isNatural}}<label class="desordem-ficha__campo"><input type="checkbox" name="system.empunhada" {{#if system.empunhada}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.Empunhada"}}</span></label>{{/unless}}
   </div>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Item.DicaNatural"}}</p>
   {{/if}}
@@ -57,8 +59,8 @@
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Usos"}}</span>
       <input type="number" name="system.usos" value="{{system.usos}}" min="0" {{#unless editable}}disabled{{/unless}}>
     </label>
-    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Maos.Titulo"}}</span>
-      <select name="system.maos" {{#unless editable}}disabled{{/unless}}>{{#each handsChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Item.Empunhadura.Titulo"}}</span>
+      <select name="system.empunhadura" {{#unless editable}}disabled{{/unless}}>{{#each gripChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
     <label class="desordem-ficha__campo"><input type="checkbox" name="system.empunhada" {{#if system.empunhada}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Item.NaMao"}}</span></label>
   </div>
@@ -80,11 +82,14 @@
   {{else}}
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.DicaCriatura"}}</p>
   {{/unless}}
+  {{/if}}
 
+  {{#if effectsEditor}}
   <section class="desordem-hab-efeitos">
     <h3 class="desordem-hab-efeitos__titulo">{{localize "DESORDEM.Efeito.Titulo"}}</h3>
     {{#if effectsEditor.legacy}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Legado" nome=effectsEditor.legacyName}}</p>{{/if}}
-    {{#if effectsEditor.empty}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Vazio"}}</p>{{/if}}
+    {{#if effectsEditor.empty}}<p class="desordem-ficha__dica">{{effectsEditor.emptyText}}</p>{{/if}}
+    {{#if effectsEditor.hint}}<p class="desordem-ficha__dica">{{effectsEditor.hint}}</p>{{/if}}
     <datalist id="{{effectsEditor.datalistId}}">{{#each effectsEditor.resources}}<option value="{{this}}"></option>{{/each}}</datalist>
     {{#each effectsEditor.rows}}
     <div class="desordem-hab-efeito{{#if open}} is-aberto{{/if}}" data-efeito-id="{{id}}">
@@ -131,12 +136,12 @@
       {{/if}}
     </div>
     {{/each}}
-    {{#if editable}}{{#if effectsEditor.canAdd}}
+    {{#if editable}}{{#unless effectsEditor.noTypes}}{{#if effectsEditor.canAdd}}
     <div class="desordem-hab-efeitos__novo">
       <select data-efeito-novo>{{#each effectsEditor.typeChoices}}<option value="{{value}}">{{label}}</option>{{/each}}</select>
       <button type="button" data-action="efeitoAdicionar"><i class="fa-solid fa-plus"></i> {{localize "DESORDEM.Efeito.Adicionar"}}</button>
     </div>
-    {{else}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Limite" n=effectsEditor.max}}</p>{{/if}}{{/if}}
+    {{else}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Efeito.Limite" n=effectsEditor.max}}</p>{{/if}}{{/unless}}{{/if}}
   </section>
   {{/if}}
 

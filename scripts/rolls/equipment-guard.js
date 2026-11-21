@@ -20,7 +20,11 @@ const equipField = (type) => (type === 'armadura' ? 'vestida' : 'empunhada');
 function guardUpdate(item, changes) {
   if (!item.parent?.items) return undefined;
   const { system = {} } = foundry.utils.expandObject(changes);
-  if (!['empunhada', 'vestida', 'maos'].some((key) => key in system)) return undefined;
+  // Só confere mudanças no que equipa o item: empunhar, vestir, empunhadura ou categoria (uma arma
+  // que deixa de ser natural passa a ocupar mãos)
+  if (!['empunhada', 'vestida', 'empunhadura', 'categoria'].some((key) => key in system)) {
+    return undefined;
+  }
   const merged = foundry.utils.mergeObject(item.toObject().system, system, { inplace: false });
   const { ok, reason } = checkEquipment(siblingsOf(item), { type: item.type, system: merged });
   if (ok) return undefined;

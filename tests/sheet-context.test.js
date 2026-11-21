@@ -195,7 +195,16 @@ const wpn = (id, maos, empunhada, tipo = 'corpo', bonusDano = 0) => ({
   id,
   name: id,
   type: 'arma',
-  system: { descricao: '', tipo, maos, bonusDano, pericia: '', naoLetal: false, empunhada },
+  system: {
+    descricao: '',
+    tipo,
+    categoria: 'simples',
+    empunhadura: maos === 2 ? 'duas' : 'uma',
+    bonusDano,
+    pericia: '',
+    naoLetal: false,
+    empunhada,
+  },
 });
 const armr = (id, pontos, restantes, vestida) => ({
   id,
@@ -213,7 +222,7 @@ const itm = (id, extra = {}) => ({
     consumivel: false,
     usosMax: 0,
     usos: 0,
-    maos: 1,
+    empunhadura: 'uma',
     empunhada: false,
     ...extra,
   },

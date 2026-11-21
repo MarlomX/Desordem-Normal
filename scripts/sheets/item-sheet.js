@@ -1,14 +1,13 @@
 import { SYSTEM_ID, PERICIAS } from '../config.js';
-import { WEAPON_KINDS } from '../rolls/equipment.js';
+import { GRIPS, WEAPON_CATEGORIES, WEAPON_KINDS, isNatural } from '../rolls/equipment.js';
 import { AUTOMATIONS } from '../rolls/abilities.js';
 import { buildChoices } from './context.js';
 import { isThreat } from '../rolls/threat.js';
 import { DAMAGE_BASES } from '../rolls/damage.js';
-import { EFFECT_TYPES } from '../rolls/ability-effects.js';
 import {
-  CREATURE_EFFECT_TYPES,
   MAX_EFFECTS,
   addEffect,
+  allowedEffectTypes,
   editorEffects,
   editorRows,
   moveEffect,
@@ -24,14 +23,16 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
 
 /**
- * Ficha dos itens (armas, armaduras, itens em geral e habilidades), uma só para todos. A da
- * habilidade tem o editor de efeitos: os campos dele não têm `name` (não entram no formulário do
- * Foundry); cada mudança passa pelas funções de ability-effects-editor.js e grava a lista inteira.
+ * Ficha dos itens (armas, armaduras, itens em geral e habilidades), uma só para todos. Todos têm
+ * o editor de efeitos, cada tipo com os seus tipos de efeito (`allowedEffectTypes`): os campos
+ * dele não têm `name` (não entram no formulário do Foundry); cada mudança passa pelas funções de
+ * ability-effects-editor.js e grava a lista inteira.
  */
 export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   static DEFAULT_OPTIONS = {
     classes: ['desordem-normal', 'item'],
-    position: { width: 440, height: 'auto' },
+    // Largura para o editor de efeitos (todos os tipos de item têm um desde a v0.21.0)
+    position: { width: 520, height: 'auto' },
     window: { resizable: true },
     form: { submitOnChange: true },
     actions: {
@@ -45,14 +46,6 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
 
   /** Efeito aberto para edição (id), mantido entre os redesenhos da ficha. */
   #openId = null;
-
-  constructor(options = {}) {
-    // A habilidade, com o editor de efeitos, abre mais larga
-    if (options.document?.type === 'habilidade') {
-      options.position = { ...(options.position ?? {}), width: 520 };
-    }
-    super(options);
-  }
 
   static PARTS = {
     body: { template: `systems/${SYSTEM_ID}/templates/item/item.hbs` },
@@ -78,7 +71,12 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       isAbility: item.type === 'habilidade',
       // Habilidade de uma criatura: só nome e texto (sem perfil nem automação)
       ownerIsThreat: isThreat(item.parent),
-      effectsEditor: item.type === 'habilidade' ? this.#effectsContext(t, skills) : null,
+      effectsEditor: this.#effectsContext(t, skills),
+      // Arma natural: sem empunhadura nem caixa de empunhar (não ocupa as mãos)
+      isNatural: item.type === 'arma' && isNatural(item.system),
+      categoryChoices: buildChoices(WEAPON_CATEGORIES, item.system.categoria, (category) =>
+        t(`DESORDEM.Item.Categoria.${category}`),
+      ),
       kindChoices: buildChoices(WEAPON_KINDS, item.system.tipo, (kind) =>
         t(`DESORDEM.Item.Tipo.${kind}`),
       ),
@@ -86,8 +84,9 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       baseChoices: buildChoices(DAMAGE_BASES, item.system.baseDano ?? 'ra', (base) =>
         t(`DESORDEM.Item.Base.${base}`),
       ),
-      handsChoices: buildChoices([1, 2], item.system.maos, (hands) =>
-        t(`DESORDEM.Item.Maos.${hands}`),
+      // Empunhadura da arma e do item geral: uma ou duas mãos
+      gripChoices: buildChoices(GRIPS, item.system.empunhadura, (grip) =>
+        t(`DESORDEM.Item.Empunhadura.${grip}`),
       ),
       skillChoices: [
         {
@@ -106,47 +105,60 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
 
   // ---------- Editor de efeitos ----------
 
-  /** Dados do editor de efeitos para o template. */
+  /**
+   * Dados do editor de efeitos para o template. `itemType` decide os tipos oferecidos, os campos
+   * escondidos e as dicas; o seletor de modelo (automação antiga) só existe na habilidade.
+   */
   #effectsContext(t, skills) {
     const item = this.document;
-    const { effects, legacy } = editorEffects(item.system);
+    const itemType = item.type;
+    const ability = itemType === 'habilidade';
+    const { effects, legacy } = editorEffects(item.system, itemType);
     const owner = item.parent?.documentName === 'Actor' ? item.parent : null;
-    // Habilidade de criatura: só os tipos sem PD, pavor ou recursos, e sem custo
+    // Item de criatura: só os tipos sem PD, pavor ou recursos, e sem custo
     const creature = isThreat(owner);
+    const types = allowedEffectTypes(itemType, { creature });
     return {
-      rows: editorRows(effects, { t, skills, openId: this.#openId, creature }),
+      rows: editorRows(effects, { t, skills, openId: this.#openId, creature, itemType }),
       empty: effects.length === 0,
+      // Texto da lista vazia e dica de quando os efeitos valem (`DESORDEM.Efeito.Item.<tipo>`)
+      emptyText: t(ability ? 'DESORDEM.Efeito.Vazio' : 'DESORDEM.Efeito.Item.Vazio'),
+      hint: ability ? '' : t(`DESORDEM.Efeito.Item.${itemType}`),
+      // Sem tipos aceitos (a armadura, por enquanto): só a dica, sem o botão de acrescentar
+      noTypes: types.length === 0,
       legacy,
       legacyName: legacy ? t(`DESORDEM.Item.Automacoes.${item.system.automacao}`) : '',
       canAdd: effects.length < MAX_EFFECTS,
       max: MAX_EFFECTS,
-      typeChoices: Object.keys(EFFECT_TYPES)
-        .filter((tipo) => !creature || CREATURE_EFFECT_TYPES.includes(tipo))
-        .map((tipo) => ({
-          value: tipo,
-          label: t(`DESORDEM.Efeito.Tipos.${tipo}`),
-        })),
-      modelChoices: AUTOMATIONS.map((key) => ({
-        value: key,
-        label: t(`DESORDEM.Item.Automacoes.${key}`),
+      typeChoices: types.map((tipo) => ({
+        value: tipo,
+        label: t(`DESORDEM.Efeito.Tipos.${tipo}`),
       })),
-      // Sugestões dos campos de recurso: chaves desta habilidade e das outras do personagem
+      modelChoices: ability
+        ? AUTOMATIONS.map((key) => ({
+            value: key,
+            label: t(`DESORDEM.Item.Automacoes.${key}`),
+          }))
+        : [],
+      // Sugestões dos campos de recurso: chaves deste item e dos outros do personagem
       resources: resourceKeys(effects, owner ? actorEffects(owner) : []),
       datalistId: `desordem-recursos-${item.id}`,
     };
   }
 
-  /** Lista atual (a do item ou, se vazia, a da automação antiga). */
+  /** Lista atual (a do item ou, numa habilidade vazia, a da automação antiga). */
   #effects() {
-    return editorEffects(this.document.system).effects;
+    return editorEffects(this.document.system, this.document.type).effects;
   }
 
   /**
    * Grava a lista de efeitos. Na primeira gravação de uma habilidade antiga, os efeitos da
-   * automação viram a lista do item e o campo antigo `automacao` é limpo.
+   * automação viram a lista do item e o campo antigo `automacao` é limpo (só a habilidade tem
+   * esse campo).
    */
   async #saveEffects(list) {
-    await this.document.update({ 'system.efeitos': list, 'system.automacao': '' });
+    const legacy = this.document.type === 'habilidade' ? { 'system.automacao': '' } : {};
+    await this.document.update({ 'system.efeitos': list, ...legacy });
   }
 
   /** Liga os campos do editor (sem `name`) depois de cada desenho da ficha. */

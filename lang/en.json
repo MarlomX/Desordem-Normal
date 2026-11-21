@@ -581,7 +581,6 @@
         "distancia": "ranged"
       },
       "Maos": {
-        "Titulo": "Hands",
         "1": "one-handed",
         "2": "two-handed"
       },
@@ -624,7 +623,7 @@
         "sorrateiro": "Extra die on Crime or Stealth (3 DP)"
       },
       "Natural": "Natural weapon",
-      "DicaNatural": "Natural weapon (claws, bite, kick): takes no hands and does not need to be wielded. Creature attacks are natural weapons by default.",
+      "DicaNatural": "Natural category (claws, bite, punch): takes no hands and does not need to be wielded. Creature attacks are natural by default. Martial and simple get their own rules in upcoming versions.",
       "Desarmado": {
         "Nome": "Unarmed",
         "Descricao": "Punches and kicks: LR damage, non-lethal."
@@ -633,6 +632,17 @@
       "Base": {
         "ra": "High roll (HR)",
         "rb": "Low roll (LR)"
+      },
+      "Categoria": {
+        "Titulo": "Category",
+        "natural": "natural",
+        "simples": "simple",
+        "marcial": "martial"
+      },
+      "Empunhadura": {
+        "Titulo": "Grip",
+        "uma": "one-handed",
+        "duas": "two-handed"
       }
     },
     "Armadura": {
@@ -1496,7 +1506,8 @@
           "pd": "{valor} DP",
           "pv": "{valor} HP",
           "recurso": "{valor} {recurso}"
-        }
+        },
+        "dadoExtraArma": "+d{dado} on attacks with this weapon{custo}"
       },
       "Botao": {
         "passoCena": "Scene step{custo}",
@@ -1529,6 +1540,12 @@
         "Botao": "{habilidade}: take the attack",
         "BotaoAtor": "{habilidade}: {nome} takes the attack",
         "SemMestre": "No GM connected to record who takes the attack."
+      },
+      "Item": {
+        "Vazio": "No effects: the item is description only.",
+        "arma": "The weapon effects only apply to attacks made with it.",
+        "armadura": "The armor effects apply while it is worn. Armor effect types arrive in an upcoming version.",
+        "item": "The item effects apply while it is on the sheet (in the backpack)."
       }
     },
     "Plano": {

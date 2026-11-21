@@ -385,7 +385,7 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
     allowDefense,
     // Ataque com arma: os dados extras de ataque corpo a corpo ou à distância entram; na esquiva,
     // os de defesa
-    ...(weapon ? { testKind: weaponTestKind(weapon.system) } : {}),
+    ...(weapon ? { testKind: weaponTestKind(weapon.system), weaponId: weapon.id } : {}),
     ...(dodgeEffect ? { testKind: 'defesa' } : {}),
     shift: event?.shiftKey,
   });

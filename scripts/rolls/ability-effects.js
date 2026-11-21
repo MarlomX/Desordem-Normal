@@ -318,16 +318,78 @@ export function itemEffects(system) {
 }
 
 /**
- * Efeitos de todas as habilidades de um ator, cada um com o item de onde veio.
- * @param {Iterable<{id: string, name: string, type: string, system: object}>} items
- * @returns {{itemId: string, itemName: string, id: string, tipo: string, params: object}[]}
+ * Tipos de efeito que cada tipo de equipamento aceita (a habilidade aceita todos). A lista cresce
+ * a cada versão da série 0.21.x; um efeito de tipo fora da lista do item é ignorado (pode ter
+ * vindo de uma macro ou de uma importação) e o editor não o oferece.
  */
-export function collectEffects(items) {
+export const ITEM_EFFECT_TYPES = Object.freeze({
+  // Dado extra nos ataques com a arma (0.21.1: bônus de ataque, passo, crítico ampliado)
+  arma: Object.freeze(['dadoExtra']),
+  // Nenhum ainda (0.21.2: passo em perícias enquanto vestida, redução do escudo)
+  armadura: Object.freeze([]),
+  // Dado extra com o item na mochila (0.21.4: curar, passo no alvo, ferramenta, ação com aviso)
+  item: Object.freeze(['dadoExtra']),
+});
+
+/**
+ * Tipos de efeito que um item aceita: todos na habilidade, a lista de `ITEM_EFFECT_TYPES` num
+ * equipamento, nenhum num tipo desconhecido.
+ * @param {string} itemType `arma`, `armadura`, `item` ou `habilidade`.
+ * @returns {string[]}
+ */
+export function itemEffectTypes(itemType) {
+  if (itemType === 'habilidade') return Object.keys(EFFECT_TYPES);
+  return [...(ITEM_EFFECT_TYPES[itemType] ?? [])];
+}
+
+/**
+ * O item está em uso, de modo que os seus efeitos valem agora?
+ * - habilidade: sempre;
+ * - arma: só no ataque com ela (`weaponId` igual ao id dela);
+ * - armadura: só vestida;
+ * - item geral: sempre (basta estar na ficha, «na mochila»).
+ * @param {{id: string, type: string, system: object}} item
+ * @param {{weaponId?: string|null}} [context] Arma do ataque que está sendo feito, se houver.
+ */
+export function itemInUse(item, { weaponId = null } = {}) {
+  switch (item?.type) {
+    case 'habilidade':
+    case 'item':
+      return true;
+    case 'arma':
+      return Boolean(weaponId) && item.id === weaponId;
+    case 'armadura':
+      return Boolean(item.system?.vestida);
+    default:
+      return false;
+  }
+}
+
+/**
+ * Efeitos de um item, já filtrados pelos tipos que ele aceita. Na habilidade, com a lista vazia,
+ * os equivalentes à automação antiga (`itemEffects`).
+ * @param {{type: string, system: object}} item
+ */
+export function ownEffects(item) {
+  if (item?.type === 'habilidade') return itemEffects(item.system);
+  const allowed = itemEffectTypes(item?.type);
+  return normalizeEffects(item?.system?.efeitos).filter((e) => allowed.includes(e.tipo));
+}
+
+/**
+ * Efeitos de um ator: os das habilidades e os dos equipamentos em uso (`itemInUse`), cada um com
+ * o item de onde veio (`itemId`, `itemName`, `itemType`).
+ * @param {Iterable<{id: string, name: string, type: string, system: object}>} items
+ * @param {{weaponId?: string|null}} [context] Arma do ataque que está sendo feito, se houver.
+ * @returns {{itemId: string, itemName: string, itemType: string, id: string, tipo: string,
+ *   params: object}[]}
+ */
+export function collectEffects(items, context = {}) {
   const list = [];
   for (const item of items ?? []) {
-    if (item.type !== 'habilidade') continue;
-    for (const entry of itemEffects(item.system)) {
-      list.push({ itemId: item.id, itemName: item.name, ...entry });
+    if (!itemInUse(item, context)) continue;
+    for (const entry of ownEffects(item)) {
+      list.push({ itemId: item.id, itemName: item.name, itemType: item.type, ...entry });
     }
   }
   return list;
@@ -514,8 +576,11 @@ export function dialogDiceOptions(entries, { skillKey, testKind = 'qualquer' }) 
   for (const entry of effectsOfType(entries, 'dadoExtra')) {
     const { dado, pericias, teste, custo, grupo, marcado } = entry.params;
     if (seen.has(entry.id)) continue;
-    if (pericias.length && !pericias.includes(skillKey)) continue;
-    if (teste !== 'qualquer' && teste !== testKind) continue;
+    // O dado de uma arma só chega aqui no ataque com ela (`collectEffects`): vale sempre, sem os
+    // filtros de perícia e de tipo de teste (o editor nem os mostra na arma)
+    const fromWeapon = entry.itemType === 'arma';
+    if (!fromWeapon && pericias.length && !pericias.includes(skillKey)) continue;
+    if (!fromWeapon && teste !== 'qualquer' && teste !== testKind) continue;
     seen.add(entry.id);
     options.push({
       key: entry.id,

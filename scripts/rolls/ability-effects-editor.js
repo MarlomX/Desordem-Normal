@@ -11,9 +11,11 @@ import {
   TRIGGERS,
   EFFECT_TYPES,
   defaultParams,
+  itemEffectTypes,
   itemEffects,
   legacyEffects,
   normalizeEffects,
+  ownEffects,
 } from './ability-effects.js';
 
 /** Máximo de efeitos numa habilidade. */
@@ -24,6 +26,31 @@ export const MAX_EFFECTS = 20;
  * personagem (dado extra, ação com aviso e companheiro), sempre sem custo.
  */
 export const CREATURE_EFFECT_TYPES = Object.freeze(['dadoExtra', 'acaoNota', 'companheiro']);
+
+/**
+ * Campos que o editor esconde em um tipo de efeito conforme o tipo de item. Na arma, o dado extra
+ * vale sempre no ataque com ela: os filtros de perícia e de tipo de teste não se aplicam.
+ */
+const HIDDEN_FIELDS = Object.freeze({
+  arma: Object.freeze({ dadoExtra: Object.freeze(['pericias', 'teste']) }),
+});
+
+/** O campo `key` de um efeito `tipo` fica escondido neste tipo de item? */
+function hiddenField(itemType, tipo, key) {
+  return HIDDEN_FIELDS[itemType]?.[tipo]?.includes(key) ?? false;
+}
+
+/**
+ * Tipos de efeito que o editor oferece num item: os que o tipo de item aceita
+ * (`itemEffectTypes`); num item de criatura, só os de `CREATURE_EFFECT_TYPES` entre esses.
+ * @param {string} itemType `habilidade`, `arma`, `armadura` ou `item`.
+ * @param {{creature?: boolean}} [options] O item é de uma criatura.
+ * @returns {string[]}
+ */
+export function allowedEffectTypes(itemType, { creature = false } = {}) {
+  const types = itemEffectTypes(itemType);
+  return creature ? types.filter((tipo) => CREATURE_EFFECT_TYPES.includes(tipo)) : types;
+}
 
 /** Grupo de textos de cada campo de opções (`DESORDEM.Efeito.<grupo>.<valor>`). */
 const CHOICE_GROUPS = Object.freeze({
@@ -36,14 +63,16 @@ const CHOICE_GROUPS = Object.freeze({
 });
 
 /**
- * Efeitos que o editor mostra: os da lista do item ou, com a lista vazia, os equivalentes à
- * automação antiga (`legacy` verdadeiro; na primeira edição eles viram a lista do item).
+ * Efeitos que o editor mostra: os da lista do item ou, numa habilidade com a lista vazia, os
+ * equivalentes à automação antiga (`legacy` verdadeiro; na primeira edição eles viram a lista do
+ * item). Equipamentos não têm automação antiga.
  * @param {{efeitos?: object[], automacao?: string}} system
+ * @param {string} [itemType='habilidade']
  * @returns {{effects: object[], legacy: boolean}}
  */
-export function editorEffects(system) {
+export function editorEffects(system, itemType = 'habilidade') {
   const own = normalizeEffects(system?.efeitos);
-  if (own.length) return { effects: own, legacy: false };
+  if (own.length || itemType !== 'habilidade') return { effects: own, legacy: false };
   const effects = itemEffects(system);
   return { effects, legacy: effects.length > 0 };
 }
@@ -99,11 +128,13 @@ export function templateEffects(key) {
 }
 
 /**
- * O efeito já tem uso automático nesta versão? (Os outros ficam gravados e passam a funcionar
- * quando a ficha e a janela pré-teste genéricas chegarem.)
+ * O efeito tem uso automático nesta versão e neste tipo de item? Um tipo que o item não aceita
+ * (`itemEffectTypes`) fica gravado, mas não vale.
  * @param {object} effect
+ * @param {string} [itemType='habilidade']
  */
-export function effectSupported(effect) {
+export function effectSupported(effect, itemType = 'habilidade') {
+  if (!itemEffectTypes(itemType).includes(effect.tipo)) return false;
   const { params } = effect;
   switch (effect.tipo) {
     // Barras e botões da ficha (v0.20.4), janela pré-teste genérica (v0.20.5) e cartão do teste
@@ -135,8 +166,10 @@ export function effectSupported(effect) {
  * @param {object} labels
  * @param {(key: string, data?: object) => string} labels.t Tradução (`game.i18n`).
  * @param {(key: string) => string} labels.skill Nome de uma perícia.
+ * @param {string} [labels.itemType='habilidade'] Tipo do item (na arma, o dado extra é «no ataque
+ *   com esta arma»).
  */
-export function describeEffect(effect, { t, skill }) {
+export function describeEffect(effect, { t, skill, itemType = 'habilidade' }) {
   const p = effect.params;
   const key = (name) => `DESORDEM.Efeito.Resumo.${name}`;
   const cost = costText(p.custo, t);
@@ -157,6 +190,7 @@ export function describeEffect(effect, { t, skill }) {
         quando: t(key(`Quando.${p.gatilho}`)),
       });
     case 'dadoExtra':
+      if (itemType === 'arma') return t(key('dadoExtraArma'), { dado: p.dado, custo: cost });
       return t(key('dadoExtra'), {
         dado: p.dado,
         pericias: skills(p.pericias),
@@ -210,6 +244,19 @@ export function describeEffect(effect, { t, skill }) {
   }
 }
 
+/**
+ * Resumo de todos os efeitos de um equipamento, um por linha (dica da linha do item na ficha).
+ * Só os tipos que o item aceita entram (`ownEffects`). Vazio = sem efeitos.
+ * @param {{type: string, system: object}} item
+ * @param {object} labels Os mesmos de `describeEffect` (`t`, `skill`).
+ */
+export function itemEffectsText(item, { t, skill }) {
+  return ownEffects(item)
+    .map((effect) => describeEffect(effect, { t, skill, itemType: item.type }))
+    .filter(Boolean)
+    .join('\n');
+}
+
 /** « — custa 3 PD» (vazio sem custo). */
 function costText(cost, t) {
   if (!cost || cost.tipo === 'nenhum' || cost.valor === 0) return '';
@@ -230,32 +277,41 @@ function costText(cost, t) {
  * @param {(key: string, data?: object) => string} options.t
  * @param {{key: string, label: string}[]} options.skills Perícias, já em ordem alfabética.
  * @param {string|null} options.openId Efeito aberto para edição.
- * @param {boolean} [options.creature=false] Habilidade de criatura: o custo só tem «sem custo».
+ * @param {boolean} [options.creature=false] Item de criatura: o custo só tem «sem custo».
+ * @param {string} [options.itemType='habilidade'] Tipo do item (campos escondidos, resumo e
+ *   aviso de «sem uso» dependem dele).
  */
-export function editorRows(effects, { t, skills, openId, creature = false }) {
+export function editorRows(
+  effects,
+  { t, skills, openId, creature = false, itemType = 'habilidade' },
+) {
   const skillLabel = (key) => skills.find((s) => s.key === key)?.label ?? key;
   return effects.map((effect, index) => ({
     index,
     id: effect.id,
     tipo: effect.tipo,
     tipoLabel: t(`DESORDEM.Efeito.Tipos.${effect.tipo}`),
-    summary: describeEffect(effect, { t, skill: skillLabel }),
-    supported: effectSupported(effect),
+    summary: describeEffect(effect, { t, skill: skillLabel, itemType }),
+    supported: effectSupported(effect, itemType),
     open: effect.id === openId,
     first: index === 0,
     last: index === effects.length - 1,
-    fields: effect.id === openId ? effectFields(effect, index, { t, skills, creature }) : [],
+    fields:
+      effect.id === openId ? effectFields(effect, index, { t, skills, creature, itemType }) : [],
   }));
 }
 
-/** Campos de um efeito aberto (um por parâmetro, na ordem do catálogo). */
-function effectFields(effect, index, { t, skills, creature = false }) {
+/** Campos de um efeito aberto (um por parâmetro, na ordem do catálogo, sem os escondidos). */
+function effectFields(effect, index, { t, skills, creature = false, itemType = 'habilidade' }) {
   const option = (value, label, current) => ({
     value: String(value),
     label,
     selected: value === current,
   });
-  return Object.entries(EFFECT_TYPES[effect.tipo]).map(([key, field]) => {
+  const entries = Object.entries(EFFECT_TYPES[effect.tipo]).filter(
+    ([key]) => !hiddenField(itemType, effect.tipo, key),
+  );
+  return entries.map(([key, field]) => {
     const value = effect.params[key];
     const base = {
       index,

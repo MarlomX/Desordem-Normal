@@ -39,3 +39,44 @@ export function migrateAbilityResources(source) {
   source.recursosHab = { impeto: count(old.impeto), analise: count(old.analise) };
   return source;
 }
+
+// ---------- Itens (equipamentos) ----------
+
+/**
+ * Até a v0.20.x a arma tinha `natural` (verdadeiro ou falso) e `maos` (1 ou 2). Desde a v0.21.0
+ * ela tem `categoria` (natural, simples ou marcial) e `empunhadura` (uma ou duas mãos).
+ * - Arma natural vira categoria `natural`; qualquer outra vira `simples` (categoria desconhecida
+ *   = simples; marcial só se a pessoa escolher).
+ * - `maos: 2` vira empunhadura `duas`; o resto, `uma`.
+ *
+ * Só preenche o campo novo se ele ainda não existe E o campo antigo está nos dados. Isso importa
+ * porque o Foundry também pode passar por aqui só as mudanças de uma gravação (ex.:
+ * `{empunhada: true}`): sem o campo antigo, nada muda e a categoria já gravada não é tocada.
+ * Os campos antigos ficam no banco, sem uso (o modelo os descarta ao ler).
+ * @param {object} source Dados da arma (`system`), possivelmente de uma versão antiga.
+ */
+export function migrateWeaponSource(source) {
+  if (!source || typeof source !== 'object') return source;
+  if (source.categoria === undefined && 'natural' in source) {
+    source.categoria = source.natural === true ? 'natural' : 'simples';
+  }
+  migrateGrip(source);
+  return source;
+}
+
+/**
+ * Item geral: `maos` (1 ou 2) vira `empunhadura` (uma ou duas), pela mesma regra da arma.
+ * @param {object} source Dados do item (`system`).
+ */
+export function migrateGearSource(source) {
+  if (!source || typeof source !== 'object') return source;
+  migrateGrip(source);
+  return source;
+}
+
+/** `maos` → `empunhadura`, só se a empunhadura ainda não existe e `maos` está nos dados. */
+function migrateGrip(source) {
+  if (source.empunhadura === undefined && 'maos' in source) {
+    source.empunhadura = Number(source.maos) === 2 ? 'duas' : 'uma';
+  }
+}

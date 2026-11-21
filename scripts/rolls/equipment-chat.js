@@ -70,6 +70,8 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
     // Tipo do ataque para os filtros dos dados extras (a janela pré-teste já manda o mesmo)
     testKind: weaponTestKind(system),
     ...options,
+    // Os efeitos da arma só valem no ataque com ela
+    weaponId: weapon.id,
     extraDice: [...companionDice, ...(options.extraDice ?? [])],
   });
   // O dado do companheiro é o primeiro dado extra do teste

@@ -366,6 +366,8 @@ function refresh(form, root, model) {
  * @param {boolean} [config.allowDefense] Teste de Defender-se: oferece o +d6 já marcado.
  * @param {string} [config.testKind] Tipo do teste para os filtros dos dados extras: qualquer,
  *   ataqueCorpo ou ataqueDistancia (a defesa vem de `allowDefense`). Volta nas escolhas.
+ * @param {string|null} [config.weaponId] Ataque com uma arma: o id dela, para os efeitos da arma
+ *   entrarem na janela. Volta nas escolhas (a rolagem usa o mesmo).
  * @param {object[]} [config.stepMods] Passos próprios deste teste, só para a prévia dos dados
  *   (quem rola precisa passar os mesmos passos ao teste).
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
@@ -385,19 +387,25 @@ export async function askRollChoices(
     challenges = [],
     allowDefense = false,
     testKind = 'qualquer',
+    weaponId = null,
     stepMods = [],
     shift = false,
   },
 ) {
-  // O tipo do teste volta nas escolhas, para a rolagem filtrar os dados extras do mesmo jeito
-  const kind = testKind === 'qualquer' ? {} : { testKind };
+  // O tipo do teste (e a arma do ataque) voltam nas escolhas, para a rolagem filtrar os dados
+  // extras do mesmo jeito
+  const kind = {
+    ...(testKind === 'qualquer' ? {} : { testKind }),
+    ...(weaponId ? { weaponId } : {}),
+  };
   // Pular a janela usa as escolhas padrão: na defesa, o +d6 (que vem marcado)
   if (shift) return allowDefense ? { active: ['defesa'], ...kind } : { ...kind };
   const dice = testDicePreview(actor, skillKey, attribute, stepMods);
   // PD, ímpeto e pavor (0 numa criatura: a janela não mostra pavor nem custos)
   const resources = testResources(actor.system);
-  // Recursos das habilidades (valores e nomes) e reserva de dados bônus
-  const entries = actorEffects(actor);
+  // Recursos das habilidades (valores e nomes) e reserva de dados bônus; no ataque, os efeitos da
+  // arma também entram
+  const entries = actorEffects(actor, { weaponId });
   const abilityResources = actorResources(actor, entries);
   const model = buildRollModel({
     skillKey,

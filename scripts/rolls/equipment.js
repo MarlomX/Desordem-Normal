@@ -6,8 +6,32 @@
 /** Cada ponto de armadura gasto reduz o dano físico sofrido em tanto. */
 export const ARMOR_REDUCTION = 10;
 
-/** Tipos de arma. */
+/** Tipos de arma (alcance). */
 export const WEAPON_KINDS = Object.freeze(['corpo', 'distancia']);
+
+/**
+ * Categorias de arma: natural (garras, mordida, soco; não ocupa mãos), simples e marcial (esta
+ * precisa de proficiência, a partir da v0.21.1).
+ */
+export const WEAPON_CATEGORIES = Object.freeze(['natural', 'simples', 'marcial']);
+
+/** Empunhaduras: uma ou duas mãos. */
+export const GRIPS = Object.freeze(['uma', 'duas']);
+
+/** A arma é natural (não ocupa mãos e não precisa ser empunhada)? */
+export function isNatural(system) {
+  return system?.categoria === 'natural';
+}
+
+/**
+ * Quantas mãos uma arma ou item ocupa quando empunhado: 0 na arma natural, 2 na empunhadura
+ * `duas`, 1 no resto (também em dados incompletos).
+ * @param {{categoria?: string, empunhadura?: string}} system
+ */
+export function handsOf(system) {
+  if (isNatural(system)) return 0;
+  return system?.empunhadura === 'duas' ? 2 : 1;
+}
 
 /** Pontos de armadura que ainda restam em uma armadura (nunca mais que o total dela). */
 const remainingPoints = (armor) => Math.max(0, Math.min(armor.restantes, armor.pontos));
@@ -47,14 +71,13 @@ export function reduceDamageWithArmor(amount) {
 export const HANDS = 2;
 
 /**
- * Mãos ocupadas pelos itens e armas empunhados (cada um usa uma ou duas).
- * @param {{maos: number, empunhada: boolean, natural?: boolean}[]} held Armas e itens (os não
- *   empunhados e as armas naturais não contam).
+ * Mãos ocupadas pelos itens e armas empunhados (cada um usa uma ou duas; veja `handsOf`).
+ * @param {{empunhadura: string, empunhada: boolean, categoria?: string}[]} held Armas e itens
+ *   (os não empunhados e as armas naturais não contam).
  * @returns {{used: number, over: boolean}} `over` indica mais de duas mãos em uso.
  */
 export function handsInUse(held) {
-  // Armas naturais (garras, mordida) nunca ocupam as mãos
-  const used = held.filter((h) => h.empunhada && !h.natural).reduce((sum, h) => sum + h.maos, 0);
+  const used = held.filter((h) => h.empunhada).reduce((sum, h) => sum + handsOf(h), 0);
   return { used, over: used > HANDS };
 }
 
@@ -72,11 +95,11 @@ export function checkEquipment(siblings, next) {
       ? { ok: false, reason: 'armadura' }
       : { ok: true, reason: null };
   }
-  if (next.system.empunhada && !next.system.natural) {
+  if (next.system.empunhada && !isNatural(next.system)) {
     const used = handsInUse(
       siblings.filter((i) => i.type === 'arma' || i.type === 'item').map((i) => i.system),
     ).used;
-    if (used + next.system.maos > HANDS) return { ok: false, reason: 'maos' };
+    if (used + handsOf(next.system) > HANDS) return { ok: false, reason: 'maos' };
   }
   return { ok: true, reason: null };
 }
@@ -109,13 +132,13 @@ export function unarmedWeaponData(systemId, { nome, descricao }) {
     type: 'arma',
     system: {
       tipo: 'corpo',
-      maos: 1,
+      categoria: 'natural',
+      empunhadura: 'uma',
       bonusDano: 0,
       baseDano: 'rb',
       pericia: '',
       naoLetal: true,
       empunhada: false,
-      natural: true,
       descricao,
     },
     flags: { [systemId]: { [UNARMED_FLAG]: true } },

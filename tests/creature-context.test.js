@@ -101,13 +101,19 @@ test('creatureStatusTags marca a criatura derrotada com 0 PV', () => {
 
 test('arma natural não ocupa as mãos nem é bloqueada pelo limite', () => {
   const held = [
-    { maos: 2, empunhada: true },
-    { maos: 1, empunhada: true, natural: true },
+    { empunhadura: 'duas', empunhada: true },
+    { empunhadura: 'uma', empunhada: true, categoria: 'natural' },
   ];
   assert.deepEqual(handsInUse(held), { used: 2, over: false });
-  const siblings = [{ id: 'e', type: 'arma', system: { maos: 2, empunhada: true } }];
-  const garras = { type: 'arma', system: { maos: 1, empunhada: true, natural: true } };
+  const siblings = [{ id: 'e', type: 'arma', system: { empunhadura: 'duas', empunhada: true } }];
+  const garras = {
+    type: 'arma',
+    system: { empunhadura: 'uma', empunhada: true, categoria: 'natural' },
+  };
   assert.equal(checkEquipment(siblings, garras).ok, true);
-  const faca = { type: 'arma', system: { maos: 1, empunhada: true, natural: false } };
+  const faca = {
+    type: 'arma',
+    system: { empunhadura: 'uma', empunhada: true, categoria: 'simples' },
+  };
   assert.equal(checkEquipment(siblings, faca).ok, false);
 });

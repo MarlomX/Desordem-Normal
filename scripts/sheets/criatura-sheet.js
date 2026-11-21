@@ -417,7 +417,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     const name = t(
       type === 'arma' ? 'DESORDEM.Criatura.NovoAtaque' : 'DESORDEM.Item.Novo.habilidade',
     );
-    const data = { name, type, ...(type === 'arma' ? { system: { natural: true } } : {}) };
+    const data = { name, type, ...(type === 'arma' ? { system: { categoria: 'natural' } } : {}) };
     const [item] = await this.document.createEmbeddedDocuments('Item', [data]);
     item?.sheet.render(true);
   }
@@ -449,6 +449,8 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       {
         skillKey: weaponSkill(weapon.system),
         testKind: weaponTestKind(weapon.system),
+        // Os efeitos da arma (dado extra) entram na janela só neste ataque
+        weaponId: weapon.id,
         // Companheiro da criatura (efeito): o dado dele aparece na prévia do ataque
         baseExtraDice: weaponCompanionDice(this.document, weapon),
       },

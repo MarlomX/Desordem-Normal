@@ -31,6 +31,7 @@ import {
 import { useAbilityEffect, rollDodge, endScene } from '../rolls/abilities-chat.js';
 import { groupBonusDice, weaponTestKind } from '../rolls/ability-effects.js';
 import { resourceBars } from './ability-controls.js';
+import { itemEffectsText } from '../rolls/ability-effects-editor.js';
 import {
   addRelation,
   removeRelation,
@@ -309,6 +310,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
           kindLabel: (kind) => t(`DESORDEM.Item.Tipo.${kind}`),
           handsLabel: (hands) => t(`DESORDEM.Item.Maos.${hands}`),
           skillLabel: (key) => t(`DESORDEM.Pericias.${key}`),
+          categoryLabel: (category) => t(`DESORDEM.Item.Categoria.${category}`),
+          // Dica da linha: o resumo dos efeitos do item, um por linha
+          effectsText: (item) =>
+            itemEffectsText(item, {
+              t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
+              skill: skillName,
+            }),
           editable: this.isEditable,
         },
       ),
@@ -763,6 +771,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         skillKey: weaponSkill(weapon.system),
         // Dados extras só de ataque corpo a corpo ou à distância aparecem conforme a arma
         testKind: weaponTestKind(weapon.system),
+        // Os efeitos da arma (dado extra) entram na janela só neste ataque
+        weaponId: weapon.id,
         baseExtraDice: weaponCompanionDice(this.document, weapon),
       },
       (options) => attackWithWeapon(this.document, weapon, options),

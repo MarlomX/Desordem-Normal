@@ -83,7 +83,7 @@ test('Desarmado: arma natural corpo a corpo, dano RB não letal, criada uma vez 
   const data = unarmedWeaponData('sys', { nome: 'Desarmado', descricao: 'soco' });
   assert.equal(data.type, 'arma');
   assert.equal(data.system.baseDano, 'rb');
-  assert.equal(data.system.natural, true);
+  assert.equal(data.system.categoria, 'natural');
   assert.equal(data.system.naoLetal, true);
   assert.equal(data.system.tipo, 'corpo');
   assert.equal(data.flags.sys.desarmado, true);

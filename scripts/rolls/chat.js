@@ -357,6 +357,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     allowNonLethal = false,
     allowDefense = false,
     testKind = 'qualquer',
+    weaponId = null,
     useBonusDice = 0,
     ...rest
   } = options;
@@ -374,8 +375,9 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     throw error;
   }
 
-  // Habilidades escolhidas na janela pré-teste (efeitos `dadoExtra`: ímpeto, dado furtivo...)
-  const entries = actorEffects(actor);
+  // Habilidades escolhidas na janela pré-teste (efeitos `dadoExtra`: ímpeto, dado furtivo...); no
+  // ataque, também os efeitos da arma (`weaponId`)
+  const entries = actorEffects(actor, { weaponId });
   const boosts = activeBoosts(active, {
     skillKey,
     pd: resources.pd - fear.pdCost,
