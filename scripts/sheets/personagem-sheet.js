@@ -346,7 +346,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       abilities: buildAbilityRows(
         this.document.items
           .filter((item) => item.type === 'habilidade')
-          .map((item) => ({ id: item.id, name: item.name, system: item.system })),
+          .map((item) => ({ id: item.id, name: item.name, img: item.img, system: item.system })),
         {
           resources: system.recursosHab ?? {},
           hurtCompanion: system.cena.animalFerido,
@@ -826,6 +826,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         actor.items.map((item) => ({
           id: item.id,
           name: item.name,
+          img: item.img,
           type: item.type,
           system: item.system,
         })),

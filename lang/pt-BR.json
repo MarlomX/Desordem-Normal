@@ -724,7 +724,8 @@
         "Passos": "Passos a menos",
         "Dica": "O dado das perícias marcadas desce esses passos enquanto a armadura está vestida (ou o escudo empunhado). A ficha mostra o dado já reduzido.",
         "Resumo": "−{passos} passo em {pericias}"
-      }
+      },
+      "TrocarImagem": "Clique para escolher outra imagem"
     },
     "Armadura": {
       "Usada": "Ponto de armadura gasto: dano {bruto} reduzido em {reducao}."

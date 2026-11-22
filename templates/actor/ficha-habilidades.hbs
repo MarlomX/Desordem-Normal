@@ -7,6 +7,7 @@
   <div class="desordem-habilidade" data-item-id="{{id}}" draggable="true">
     <details class="desordem-habilidade__detalhes" data-habilidade="{{id}}" {{#if open}}open{{/if}}>
       <summary class="desordem-habilidade__titulo">
+        {{#if thumb}}<button type="button" class="desordem-item-miniatura" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}"><img src="{{thumb}}" alt="" draggable="false"></button>{{/if}}
         <strong>{{name}}</strong>{{#if perfil}} <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Item.PerfilEtiqueta"}}</span>{{/if}}
         <span class="desordem-habilidade__acoes">
           <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>

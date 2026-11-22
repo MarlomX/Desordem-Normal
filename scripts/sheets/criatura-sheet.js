@@ -154,6 +154,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     const items = actor.items.map((item) => ({
       id: item.id,
       name: item.name,
+      img: item.img,
       type: item.type,
       system: item.system,
     }));

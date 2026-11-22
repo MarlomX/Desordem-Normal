@@ -4,6 +4,7 @@
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Criatura.DicaAtaques"}}</p>
   {{#each attacks}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
+    {{#if thumb}}<button type="button" class="desordem-item-miniatura" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}"><img src="{{thumb}}" alt="" draggable="false"></button>{{/if}}
     <span class="desordem-item-linha__nome" title="{{descricao}}"><strong>{{name}}</strong> — {{kindLabel}} · {{skillLabel}} ({{localize "DESORDEM.Criatura.Teste"}} {{testLabel}}, {{localize "DESORDEM.Ficha.Dano"}} {{damageLabel}}){{#if naoLetal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}}</span>
     <button type="button" data-action="attackWeapon" data-item-id="{{id}}" {{#if locked}}disabled{{/if}}>{{localize "DESORDEM.Ficha.Atacar"}}</button>
     <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
@@ -22,6 +23,7 @@
   <div class="desordem-habilidade" data-item-id="{{id}}" draggable="true">
     <details class="desordem-habilidade__detalhes" data-habilidade="{{id}}" {{#if open}}open{{/if}}>
       <summary class="desordem-habilidade__titulo">
+        {{#if thumb}}<button type="button" class="desordem-item-miniatura" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}"><img src="{{thumb}}" alt="" draggable="false"></button>{{/if}}
         <strong>{{name}}</strong>
         <span class="desordem-habilidade__acoes">
           <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>

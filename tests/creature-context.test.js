@@ -117,3 +117,31 @@ test('arma natural não ocupa as mãos nem é bloqueada pelo limite', () => {
   };
   assert.equal(checkEquipment(siblings, faca).ok, false);
 });
+
+test('buildAttackRows e buildCreatureAbilityRows levam a miniatura (v0.23.4)', () => {
+  const items = [
+    { ...arma('b', 'Garras', {}), img: 'garras.webp' },
+    {
+      id: 'z',
+      name: 'Presença',
+      type: 'habilidade',
+      img: 'icons/svg/item-bag.svg',
+      system: { descricao: '' },
+    },
+    { id: 'y', name: 'Afogar', type: 'habilidade', img: 'agua.webp', system: { descricao: '' } },
+  ];
+  const attacks = buildAttackRows(items, {
+    kindLabel: (k) => k,
+    skillLabel: (k) => k,
+    diceOf: () => ({ attrDie: 6, skillDie: 4 }),
+  });
+  assert.equal(attacks[0].thumb, 'garras.webp');
+  const abilities = buildCreatureAbilityRows(items, { openIds: [] });
+  assert.deepEqual(
+    abilities.map((r) => [r.name, r.thumb]),
+    [
+      ['Afogar', 'agua.webp'],
+      ['Presença', ''],
+    ],
+  );
+});

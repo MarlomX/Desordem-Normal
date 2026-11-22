@@ -6,6 +6,7 @@
 import { abilityControls } from './ability-controls.js';
 import { CREATURE_EFFECT_TYPES } from '../rolls/ability-effects-editor.js';
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
+import { itemThumb } from './context.js';
 
 /** Abas da ficha de criatura, na ordem de exibição (`icon` é uma classe do Font Awesome). */
 export const CREATURE_TABS = Object.freeze([
@@ -45,12 +46,14 @@ export function visibleSkillRows(rows, showAll) {
 export function buildAttackRows(items, { kindLabel, skillLabel, diceOf, editable = true }) {
   return items
     .filter((item) => item.type === 'arma')
-    .map(({ id, name, system }) => {
+    .map(({ id, name, img, system }) => {
       const skill = weaponSkill(system);
       const dice = diceOf(skill);
       return {
         id,
         name,
+        // Miniatura (vazia com a sacola padrão; v0.23.4)
+        thumb: itemThumb(img),
         descricao: system.descricao,
         kindLabel: kindLabel(system.tipo),
         skillLabel: skillLabel(skill),
@@ -82,6 +85,8 @@ export function buildCreatureAbilityRows(
       return {
         id,
         name,
+        // Miniatura (vazia com a sacola padrão; v0.23.4)
+        thumb: itemThumb(item.img),
         descricao: system.descricao,
         open: openIds.includes(id),
         locked: !editable,

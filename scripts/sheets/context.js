@@ -434,6 +434,20 @@ export function buildEffectPicker(list) {
     .sort((a, b) => byText(a.source, b.source));
 }
 
+/** Ícone padrão do Foundry para itens (a sacola): itens que ainda estão com ele não mostram miniatura. */
+export const DEFAULT_ITEM_ICON = 'icons/svg/item-bag.svg';
+
+/**
+ * Miniatura de um item nas listas da ficha (v0.23.4): a imagem escolhida, ou vazio quando o item
+ * não tem imagem ou ainda está com a sacola padrão (para a lista não ficar cheia de sacolas iguais).
+ * @param {string} img `item.img`.
+ * @returns {string} Caminho da imagem, ou `''` para não mostrar.
+ */
+export function itemThumb(img) {
+  const path = typeof img === 'string' ? img.trim() : '';
+  return path && path !== DEFAULT_ITEM_ICON ? path : '';
+}
+
 /**
  * Equipamento da ficha: armas, armaduras e outros itens, com mãos em uso e pontos de armadura.
  * Itens que não podem ser equipados agora (sem mãos livres, ou já há uma armadura vestida) vêm
@@ -480,12 +494,15 @@ export function buildEquipmentRows(items, {
   return {
     weapons: weapons.map((item) => {
       const { id, name, system } = item;
+      // Miniatura (vazia com a sacola padrão; v0.23.4)
+      const thumb = itemThumb(item.img);
       const natural = isNatural(system);
       // Marcial sem proficiência: não pode ser empunhada (se já estiver, só um aviso na linha)
       const lacksProficiency = isMartial(system) && !proficient;
       return {
         id,
         name,
+        thumb,
         descricao: system.descricao,
         effects: effectLines(item),
         kindLabel: kindLabel(system.tipo),
@@ -519,6 +536,8 @@ export function buildEquipmentRows(items, {
     }),
     armors: armors.map((item) => {
       const { id, name, system } = item;
+      // Miniatura (vazia com a sacola padrão; v0.23.4)
+      const thumb = itemThumb(item.img);
       const shield = isShield(system);
       const lacksProficiency = isMartial(system) && !proficient;
       // Equipado: escudo empunhado ou armadura vestida (várias armaduras podem ser vestidas)
@@ -535,6 +554,7 @@ export function buildEquipmentRows(items, {
       return {
         id,
         name,
+        thumb,
         descricao: system.descricao,
         effects: effectLines(item),
         shield,
@@ -557,11 +577,14 @@ export function buildEquipmentRows(items, {
     }),
     others: others.map((item) => {
       const { id, name, system } = item;
+      // Miniatura (vazia com a sacola padrão; v0.23.4)
+      const thumb = itemThumb(item.img);
       // Efeitos de uso (cura, passo no alvo, ação com aviso): o botão Usar aparece mesmo sem limite
       const useState = itemUseState(system, itemUsePlan(ownEffects(item)).hasUse);
       return {
         id,
         name,
+        thumb,
         descricao: system.descricao,
         effects: effectLines(item),
         quantidade: system.quantidade,
@@ -614,10 +637,13 @@ export function buildAbilityRows(
 ) {
   const rows = items.map((item) => {
     const { id, name, system } = item;
+    // Miniatura (vazia com a sacola padrão; v0.23.4)
+    const thumb = itemThumb(item.img);
     const controls = abilityControls(item, resources ?? {}, { t, skill });
     return {
       id,
       name,
+      thumb,
       descricao: system.descricao,
       perfil: system.perfil,
       locked: !editable,

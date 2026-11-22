@@ -14,6 +14,7 @@
   {{#each equipment.weapons}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
     {{#if natural}}<span class="desordem-item-linha__marca">{{localize "DESORDEM.Item.Natural"}}</span>{{else}}<label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="empunhada" data-item-id="{{id}}" {{#if empunhada}}checked{{/if}} {{#if blocked}}disabled{{#if blockReason}} title="{{localize (concat "DESORDEM.Equipamento.Bloqueio." blockReason)}}"{{/if}}{{/if}}> {{localize "DESORDEM.Item.Empunhada"}}</label>{{/if}}
+    {{#if thumb}}<button type="button" class="desordem-item-miniatura" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}"><img src="{{thumb}}" alt="" draggable="false"></button>{{/if}}
     <span class="desordem-item-linha__nome" {{#if descricao}}data-tooltip="{{descricao}}"{{/if}}><strong>{{name}}</strong> — {{#unless natural}}{{categoryLabel}}, {{/unless}}{{kindLabel}}, {{#unless natural}}{{handsLabel}}, {{/unless}}{{localize "DESORDEM.Ficha.Dano"}} {{damageLabel}}{{#if naoLetal}} ({{localize "DESORDEM.Dano.NaoLetal"}}){{/if}} · {{skillLabel}}</span>
     {{#if consumivel}}<label class="desordem-item-linha__marca">{{localize "DESORDEM.Item.Quantidade"}} <input type="text" inputmode="numeric" class="desordem-item-linha__numero" data-item-campo="quantidade" data-item-id="{{id}}" value="{{quantidade}}" data-relativo title="{{localize "DESORDEM.Ficha.ContaDica"}}" {{#if locked}}disabled{{/if}}></label>{{/if}}
     <button type="button" data-action="attackWeapon" data-item-id="{{id}}" {{#unless canAttack}}disabled{{/unless}}>{{localize "DESORDEM.Ficha.Atacar"}}</button>
@@ -31,6 +32,7 @@
   {{#each equipment.armors}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
     <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="{{equipField}}" data-item-id="{{id}}" {{#if equipped}}checked{{/if}} {{#if blocked}}disabled{{#if blockReason}} title="{{localize (concat "DESORDEM.Equipamento.Bloqueio." blockReason)}}"{{/if}}{{/if}}> {{#if shield}}{{localize "DESORDEM.Item.Empunhada"}}{{else}}{{localize "DESORDEM.Item.Vestida"}}{{/if}}</label>
+    {{#if thumb}}<button type="button" class="desordem-item-miniatura" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}"><img src="{{thumb}}" alt="" draggable="false"></button>{{/if}}
     <span class="desordem-item-linha__nome" {{#if descricao}}data-tooltip="{{descricao}}"{{/if}}><strong>{{name}}</strong> — {{kindLabel}}{{#unless shield}}, {{localize "DESORDEM.Ficha.PontosArmadura" restantes=restantes pontos=pontos}}{{/unless}}</span>
     {{#unless shield}}<label class="desordem-item-linha__marca">{{localize "DESORDEM.Item.Restantes"}} <input type="text" inputmode="numeric" class="desordem-item-linha__numero" data-item-campo="restantes" data-item-id="{{id}}" value="{{restantes}}" data-relativo data-relativo-max="{{pontos}}" title="{{localize "DESORDEM.Ficha.ContaDica"}}" {{#if locked}}disabled{{/if}}></label>{{/unless}}
     <button type="button" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}">✎</button>
@@ -46,6 +48,7 @@
   {{#each equipment.others}}
   <div class="desordem-item-linha" data-item-id="{{id}}" draggable="true">
     <label class="desordem-item-linha__marca"><input type="checkbox" data-item-campo="empunhada" data-item-id="{{id}}" {{#if empunhada}}checked{{/if}} {{#if blocked}}disabled title="{{localize "DESORDEM.Equipamento.Bloqueio.maos"}}"{{/if}}> {{localize "DESORDEM.Item.NaMao"}}</label>
+    {{#if thumb}}<button type="button" class="desordem-item-miniatura" data-action="editItem" data-item-id="{{id}}" title="{{localize "DESORDEM.Item.Editar"}}"><img src="{{thumb}}" alt="" draggable="false"></button>{{/if}}
     <span class="desordem-item-linha__nome" {{#if descricao}}data-tooltip="{{descricao}}"{{/if}}><strong>{{name}}</strong> — {{handsLabel}}</span>
     <label class="desordem-item-linha__marca">{{localize "DESORDEM.Item.Quantidade"}} <input type="text" inputmode="numeric" class="desordem-item-linha__numero" data-item-campo="quantidade" data-item-id="{{id}}" value="{{quantidade}}" data-relativo title="{{localize "DESORDEM.Ficha.ContaDica"}}" {{#if locked}}disabled{{/if}}></label>
     {{#if hasUsos}}<label class="desordem-item-linha__marca">{{localize "DESORDEM.Item.Usos"}} <input type="text" inputmode="numeric" class="desordem-item-linha__numero" data-item-campo="usos" data-item-id="{{id}}" value="{{usos}}" data-relativo data-relativo-max="{{usosMax}}" title="{{localize "DESORDEM.Ficha.ContaDica"}}" {{#if locked}}disabled{{/if}}> / {{usosMax}}</label>{{/if}}

@@ -31,6 +31,7 @@ import {
   filterSkillRows,
   nextOpenIds,
 } from '../scripts/sheets/context.js';
+import { DEFAULT_ITEM_ICON, itemThumb } from '../scripts/sheets/context.js';
 import { stepIndicator } from '../scripts/rolls/steps.js';
 import { newStepEffect } from '../scripts/rolls/effects.js';
 
@@ -345,6 +346,28 @@ test('buildEquipmentRows libera equipar quando há mão livre', () => {
   assert.equal(rows.others[0].blocked, false);
 });
 
+test('itemThumb esconde a sacola padrão e o vazio (v0.23.4)', () => {
+  assert.equal(itemThumb('worlds/x/espada.webp'), 'worlds/x/espada.webp');
+  assert.equal(itemThumb('icons/svg/sword.svg'), 'icons/svg/sword.svg');
+  assert.equal(itemThumb(DEFAULT_ITEM_ICON), '');
+  assert.equal(itemThumb(''), '');
+  assert.equal(itemThumb(undefined), '');
+});
+
+test('buildEquipmentRows leva a miniatura de cada item', () => {
+  const rows = buildEquipmentRows(
+    [
+      { ...wpn('Espada', 1, true), img: 'espada.webp' },
+      { ...itm('Tocha'), img: DEFAULT_ITEM_ICON },
+      { ...armr('A', 1, 1, true), img: 'colete.webp' },
+    ],
+    labels,
+  );
+  assert.equal(rows.weapons[0].thumb, 'espada.webp');
+  assert.equal(rows.others[0].thumb, '');
+  assert.equal(rows.armors[0].thumb, 'colete.webp');
+});
+
 test('buildEquipmentRows permite vestir várias armaduras', () => {
   const rows = buildEquipmentRows([armr('A', 1, 1, true), armr('B', 1, 1, false)], labels);
   assert.deepEqual(
@@ -397,6 +420,20 @@ test('buildAbilityRows põe a de perfil primeiro e ordena as outras por nome', (
   assert.deepEqual(
     rows.map((r) => r.name),
     ['Meio', 'Alfa', 'Zeta'],
+  );
+});
+
+test('buildAbilityRows leva a miniatura (sem a sacola padrão)', () => {
+  const rows = buildAbilityRows(
+    [
+      { ...abl('1', 'Alfa', ''), img: 'alfa.webp' },
+      { ...abl('2', 'Beta', ''), img: DEFAULT_ITEM_ICON },
+    ],
+    { active: [], resources: { impeto: 0, analise: 0 }, hurtCompanion: false },
+  );
+  assert.deepEqual(
+    rows.map((r) => r.thumb),
+    ['alfa.webp', ''],
   );
 });
 

@@ -1,6 +1,7 @@
 <div class="desordem-item">
   <header class="desordem-item__cabecalho">
-    <img class="desordem-item__imagem" src="{{item.img}}" alt="{{item.name}}">
+    {{! Imagem do item (v0.23.4): quem pode editar clica para escolher outra (seletor de arquivos do Foundry) }}
+    <img class="desordem-item__imagem{{#if editable}} is-editavel{{/if}}" src="{{item.img}}" alt="{{item.name}}" {{#if editable}}data-edit="img" data-action="editImage" data-tooltip="{{localize "DESORDEM.Item.TrocarImagem"}}"{{/if}}>
     <div class="desordem-item__identidade">
       <input class="desordem-ficha__nome" type="text" name="name" value="{{item.name}}" {{#unless editable}}disabled{{/unless}}>
       <span class="desordem-ficha__dica">{{typeLabel}}</span>

@@ -724,7 +724,8 @@
         "Passos": "Steps down",
         "Dica": "The die of the checked skills goes down these steps while the armor is worn (or the shield wielded). The sheet shows the reduced die.",
         "Resumo": "−{passos} step on {pericias}"
-      }
+      },
+      "TrocarImagem": "Click to choose another image"
     },
     "Armadura": {
       "Usada": "Armor point spent: {bruto} damage reduced by {reducao}."

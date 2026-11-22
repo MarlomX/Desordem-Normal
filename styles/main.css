@@ -587,6 +587,26 @@
   gap: 4px;
 }
 
+/* Miniatura do item nas listas (v0.23.4): clicar abre a ficha do item */
+.desordem-item-miniatura {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  line-height: 0;
+}
+
+.desordem-item-miniatura img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border: 1px solid var(--dn-border);
+  border-radius: 4px;
+}
+
 /* Proficiência marcial (v0.23.3): botão inteiro; apagado sem ela, azul com ela */
 .desordem-proficiencia {
   display: flex;
@@ -655,6 +675,16 @@
   width: 48px;
   height: 48px;
   object-fit: cover;
+}
+
+/* Quem pode editar troca a imagem clicando nela (v0.23.4) */
+.desordem-item__imagem.is-editavel {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.desordem-item__imagem.is-editavel:hover {
+  outline: 2px solid var(--dn-accent);
 }
 
 .desordem-item__identidade {
