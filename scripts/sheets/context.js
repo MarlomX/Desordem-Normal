@@ -641,6 +641,8 @@ export const SHEET_TABS = [
   { id: 'equipamento', icon: 'fa-shield-halved' },
   { id: 'condicao', icon: 'fa-heart-pulse' },
   { id: 'relacoes', icon: 'fa-people-arrows' },
+  // Descrição, história e anotações do personagem (v0.23.2)
+  { id: 'notas', icon: 'fa-book-open' },
 ];
 
 /**

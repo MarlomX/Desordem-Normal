@@ -1,0 +1,17 @@
+<section class="desordem-aba{{#if tabState.notas}} is-active{{/if}}" data-tab-panel="notas">
+{{! Aba Notas (v0.23.2): descrição, história e anotações, com o editor rico do Foundry.
+  Quem pode editar vê o editor (botão de editar no canto); quem só observa lê o texto enriquecido. }}
+<section class="desordem-ficha__secao desordem-notas">
+  {{#each notes}}
+  <div class="desordem-notas__campo" data-nota="{{key}}">
+    <h3><i class="fa-solid {{icon}}" aria-hidden="true"></i> {{label}}</h3>
+    {{#if hint}}<p class="desordem-ficha__dica">{{hint}}</p>{{/if}}
+    {{#if ../editable}}
+    {{formInput field value=value enriched=enriched toggled=true documentUUID=../actor.uuid}}
+    {{else}}
+    <div class="desordem-notas__texto">{{#if empty}}<em>{{localize "DESORDEM.Notas.Vazio"}}</em>{{else}}{{{enriched}}}{{/if}}</div>
+    {{/if}}
+  </div>
+  {{/each}}
+</section>
+</section>

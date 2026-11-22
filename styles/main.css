@@ -3327,9 +3327,22 @@ button.desordem-desafios-cartao__nome:hover {
   white-space: pre-wrap;
 }
 
-.desordem-criatura__notas textarea {
-  width: 100%;
-  resize: vertical;
+/* Aba Notas (personagem e criatura; v0.23.2): um editor rico do Foundry por campo */
+.desordem-notas__campo {
+  margin-bottom: 12px;
+}
+
+.desordem-notas prose-mirror {
+  min-height: 8em;
+}
+
+/* Texto de leitura (quem só observa a ficha) */
+.desordem-notas__texto {
+  min-height: 2em;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 6px;
+  background: var(--dn-surface);
 }
 
 .desordem-dano__derrota {

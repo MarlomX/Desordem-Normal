@@ -55,6 +55,7 @@ import {
   visibleSkillRows,
 } from './creature-context.js';
 import { resolveRelativeFields } from './relative-input.js';
+import { CREATURE_NOTES, buildNoteRows } from './notes.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -155,8 +156,16 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       system: item.system,
     }));
 
+    // Aba Notas: estratégia e descrição, com o editor rico (v0.23.2)
+    const notes = await buildNoteRows(CREATURE_NOTES, system, {
+      t,
+      enrich: (html) => this.#enrichNote(html),
+      fields: system.schema.fields,
+    });
+
     return {
       ...context,
+      notes,
       actor,
       system,
       editable: this.isEditable,
@@ -209,6 +218,19 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
         skill: (key) => (PERICIAS[key] ? t(`DESORDEM.Pericias.${key}`) : key),
       }),
     };
+  }
+
+  /**
+   * HTML de uma nota pronto para leitura: links de documentos (`@UUID[...]`), rolagens em linha e,
+   * para quem é dono (o mestre), os blocos secretos.
+   * @param {string} html
+   */
+  #enrichNote(html) {
+    return foundry.applications.ux.TextEditor.implementation.enrichHTML(html, {
+      secrets: this.document.isOwner,
+      relativeTo: this.document,
+      rollData: this.document.getRollData?.() ?? {},
+    });
   }
 
   /**

@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { migrateCraftSkill, migrateAbilityResources } from '../scripts/data/migrations.js';
+import {
+  migrateCraftSkill,
+  migrateAbilityResources,
+  migrateThreatNotes,
+} from '../scripts/data/migrations.js';
 import { PERICIAS, OFICIOS, APTIDOES } from '../scripts/config.js';
 
 test('migrateCraftSkill leva pericias.metalurgia para oficios.metalurgia sem perder o dado', () => {
@@ -66,4 +70,21 @@ test('migrateAbilityResources troca valores estranhos por 0 e pode rodar de novo
   migrateAbilityResources(source);
   migrateAbilityResources(source);
   assert.deepEqual(source.recursosHab, { impeto: 0, analise: 0 });
+});
+
+test('migrateThreatNotes: texto simples da criatura vira HTML (v0.23.2)', () => {
+  const source = { estrategia: 'Ataca o mais fraco.\nFoge com PV < 3.', descricao: '' };
+  migrateThreatNotes(source);
+  assert.equal(source.estrategia, '<p>Ataca o mais fraco.<br>Foge com PV &lt; 3.</p>');
+  assert.equal(source.descricao, '');
+});
+
+test('migrateThreatNotes não converte duas vezes nem mexe no que já é HTML', () => {
+  const source = { estrategia: '<p>Já é HTML</p>', descricao: 'Grande' };
+  migrateThreatNotes(source);
+  migrateThreatNotes(source);
+  assert.equal(source.estrategia, '<p>Já é HTML</p>');
+  assert.equal(source.descricao, '<p>Grande</p>');
+  assert.equal(migrateThreatNotes(undefined), undefined);
+  assert.deepEqual(migrateThreatNotes({}), {});
 });

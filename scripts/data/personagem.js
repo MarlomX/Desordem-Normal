@@ -52,6 +52,10 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       // Textos livres do cabeçalho da ficha
       perfil: new f.StringField({ required: true, blank: true, initial: '' }),
       vocacao: new f.StringField({ required: true, blank: true, initial: '' }),
+      // Aba Notas (v0.23.2): textos longos com o editor rico do Foundry (HTML)
+      descricao: new f.HTMLField({ required: true, blank: true, initial: '' }),
+      historia: new f.HTMLField({ required: true, blank: true, initial: '' }),
+      anotacoes: new f.HTMLField({ required: true, blank: true, initial: '' }),
       atributos: new f.SchemaField(mapear(ATRIBUTOS, () => dado(6))),
       pericias: new f.SchemaField(mapear(Object.keys(PERICIAS), () => dado(4))),
       aptidoes: new f.SchemaField(mapear(APTIDOES, () => dado(4))),

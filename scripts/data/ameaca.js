@@ -9,13 +9,16 @@
  */
 import { ATRIBUTOS, PERICIAS, ELEMENTOS } from '../config.js';
 import { MAX_RD } from '../rolls/threat.js';
-import { migrateConditionEffects, migrateThreatBase } from './migrations.js';
+import { migrateConditionEffects, migrateThreatBase, migrateThreatNotes } from './migrations.js';
 import { effectiveMax } from '../rolls/effects.js';
 import { conditionEffectsField } from './condition-effects.js';
 
 const f = foundry.data.fields;
 
 const texto = () => new f.StringField({ required: true, blank: true, initial: '' });
+
+// Texto longo com formatação (editor rico do Foundry; v0.23.2)
+const textoRico = () => new f.HTMLField({ required: true, blank: true, initial: '' });
 
 // Dados vão de d4 a d12 (d20 só com efeitos paranormais); guardamos o número de faces.
 const dado = (inicial = 4) =>
@@ -50,9 +53,9 @@ export class AmeacaModel extends foundry.abstract.TypeDataModel {
       }),
       // Redução de dano: descontada de cada dano físico antes de diminuir o PV
       rd: new f.NumberField({ required: true, integer: true, min: 0, max: MAX_RD, initial: 0 }),
-      // Comportamento padrão (texto livre do mestre) e descrição física
-      estrategia: texto(),
-      descricao: texto(),
+      // Comportamento padrão (notas do mestre) e descrição física, com o editor rico (v0.23.2)
+      estrategia: textoRico(),
+      descricao: textoRico(),
       // Passos temporários e efeitos: mesmo formato do personagem (caído, atordoado, ajuda...)
       passos: new f.SchemaField({
         fisico: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
@@ -68,11 +71,13 @@ export class AmeacaModel extends foundry.abstract.TypeDataModel {
   /**
    * Adapta dados salvos por versões anteriores antes de o Foundry validá-los: até a v0.21.x os
    * efeitos tinham um formato fixo; hoje são modulares (veja `migrateConditionEffects`). Até a
-   * v0.22.1 o PV máximo era gravado; hoje há a base (`migrateThreatBase`).
+   * v0.22.1 o PV máximo era gravado; hoje há a base (`migrateThreatBase`). Até a v0.23.1 as notas
+   * eram texto simples; hoje são HTML (`migrateThreatNotes`).
    */
   static migrateData(source) {
     migrateConditionEffects(source);
     migrateThreatBase(source);
+    migrateThreatNotes(source);
     return super.migrateData(source);
   }
 

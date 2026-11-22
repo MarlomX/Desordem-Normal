@@ -483,7 +483,7 @@ test('buildAbilityRows trava os controles quando a ficha não é editável', () 
 test('as 5 abas estão na ordem combinada e têm ícone', () => {
   assert.deepEqual(
     SHEET_TABS.map((t) => t.id),
-    ['testes', 'habilidades', 'equipamento', 'condicao', 'relacoes'],
+    ['testes', 'habilidades', 'equipamento', 'condicao', 'relacoes', 'notas'],
   );
   assert.ok(SHEET_TABS.every((t) => t.icon.startsWith('fa-')));
 });
@@ -507,6 +507,7 @@ test('buildTabs marca só a aba ativa, na lista e no estado dos painéis', () =>
     equipamento: true,
     condicao: false,
     relacoes: false,
+    notas: false,
   });
 });
 

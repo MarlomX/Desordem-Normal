@@ -228,7 +228,8 @@
         "habilidades": "Habilidades",
         "equipamento": "Equipamento",
         "condicao": "Condição",
-        "relacoes": "Relações"
+        "relacoes": "Relações",
+        "notas": "Notas"
       },
       "Cab": {
         "Perfil": "Perfil",
@@ -1782,6 +1783,15 @@
         "Nome": "Ocultação total",
         "Descricao": "Quem ataca você sofre −2 passos no ataque."
       }
+    },
+    "Notas": {
+      "Descricao": "Descrição",
+      "DescricaoDica": "Aparência, jeito e o que chama atenção no personagem.",
+      "Historia": "História",
+      "HistoriaDica": "De onde o personagem vem, o que viveu e o que o move.",
+      "Anotacoes": "Anotações",
+      "AnotacoesDica": "Notas de jogo: pistas, nomes, lugares e lembretes.",
+      "Vazio": "Nada escrito."
     }
   },
   "TYPES.Item.arma": "Arma",

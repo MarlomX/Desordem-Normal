@@ -110,6 +110,7 @@ import {
   nextOpenIds,
 } from './context.js';
 import { applyRelativeInput, limitsFromDataset, resolveRelativeFields } from './relative-input.js';
+import { CHARACTER_NOTES, buildNoteRows } from './notes.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -203,6 +204,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       template: `systems/${SYSTEM_ID}/templates/actor/ficha-relacoes.hbs`,
       scrollable: [''],
     },
+    notas: {
+      template: `systems/${SYSTEM_ID}/templates/actor/ficha-notas.hbs`,
+      scrollable: [''],
+    },
   };
 
   async _prepareContext(options) {
@@ -241,8 +246,16 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       attrStepOf,
     };
 
+    // Aba Notas: o HTML gravado (o editor edita este) e o enriquecido (links @UUID) para leitura
+    const notes = await buildNoteRows(CHARACTER_NOTES, system, {
+      t,
+      enrich: (html) => this.#enrichNote(html),
+      fields: this.document.system.schema.fields,
+    });
+
     return {
       ...context,
+      notes,
       perseguicao: chaseCardFor(this.document),
       furtividade: stealthCardFor(this.document),
       desafios: challengeCardFor(this.document),
@@ -348,6 +361,19 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         editable: this.isEditable,
       }),
     };
+  }
+
+  /**
+   * HTML de uma nota pronto para leitura: links de documentos (`@UUID[...]`), rolagens em linha e,
+   * para quem é dono, os blocos secretos.
+   * @param {string} html
+   */
+  #enrichNote(html) {
+    return foundry.applications.ux.TextEditor.implementation.enrichHTML(html, {
+      secrets: this.document.isOwner,
+      relativeTo: this.document,
+      rollData: this.document.getRollData?.() ?? {},
+    });
   }
 
   /**

@@ -5,6 +5,7 @@
  */
 import { isLegacyEffect, migrateLegacyEffect } from '../rolls/effects.js';
 import { legacyMaxLoss, legacyTableEffects } from '../rolls/condition-tables.js';
+import { looksLikeHtml, plainTextToHtml } from '../sheets/notes.js';
 
 /**
  * Até a v0.14.4 a perícia `metalurgia` era uma perícia comum. Nas regras 1.1 ela virou uma área
@@ -110,6 +111,27 @@ export function migrateThreatBase(source) {
   if (!pv || typeof pv !== 'object' || pv.base !== undefined) return source;
   const max = Number(pv.max);
   if (Number.isFinite(max)) pv.base = Math.max(0, Math.trunc(max));
+  return source;
+}
+
+/** Notas da criatura que viraram editor rico (HTML) na v0.23.2. */
+const THREAT_NOTE_KEYS = ['estrategia', 'descricao'];
+
+/**
+ * Criatura (e outros tipos de ameaça): até a v0.23.1 a estratégia e a descrição eram texto
+ * simples (`textarea`); desde a v0.23.2 são HTML (editor rico). O texto antigo vira parágrafos,
+ * para as quebras de linha não sumirem. Texto que já começa por marcação não muda (a migração
+ * roda a cada carga e não pode converter duas vezes).
+ * @param {object} source Dados da criatura (`system`).
+ */
+export function migrateThreatNotes(source) {
+  if (!source || typeof source !== 'object') return source;
+  for (const key of THREAT_NOTE_KEYS) {
+    const text = source[key];
+    if (typeof text === 'string' && text.trim() && !looksLikeHtml(text)) {
+      source[key] = plainTextToHtml(text);
+    }
+  }
   return source;
 }
 

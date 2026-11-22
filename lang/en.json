@@ -228,7 +228,8 @@
         "habilidades": "Abilities",
         "equipamento": "Equipment",
         "condicao": "Condition",
-        "relacoes": "Relationships"
+        "relacoes": "Relationships",
+        "notas": "Notes"
       },
       "Cab": {
         "Perfil": "Profile",
@@ -1782,6 +1783,15 @@
         "Nome": "Total concealment",
         "Descricao": "Whoever attacks you takes −2 steps on the attack."
       }
+    },
+    "Notas": {
+      "Descricao": "Description",
+      "DescricaoDica": "Looks, manner and what stands out about the character.",
+      "Historia": "Background",
+      "HistoriaDica": "Where the character comes from, what they lived through and what drives them.",
+      "Anotacoes": "Notes",
+      "AnotacoesDica": "Play notes: clues, names, places and reminders.",
+      "Vazio": "Nothing written."
     }
   },
   "TYPES.Item.arma": "Weapon",
