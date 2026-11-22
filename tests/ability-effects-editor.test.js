@@ -258,3 +258,14 @@ test('passo da aba Condição: «Atributo» e «Perícia» aparecem conforme o a
   // O passo é aceito (sem aviso de «sem uso») no efeito da aba Condição
   assert.equal(effectSupported(passo({}), 'efeito'), true);
 });
+
+test('modificador da aba Condição: «Atributo» e «Perícia» aparecem conforme «Vale em»', () => {
+  const mod = (params) => normalizeEffect({ id: 'm', tipo: 'modificador', params });
+  const keys = (params) =>
+    editorRows([mod(params)], { t, skills, openId: 'm', itemType: 'efeito' })[0].fields.map(
+      (f) => f.key,
+    );
+  assert.deepEqual(keys({ sobre: 'atributo' }), ['sobre', 'atributo', 'mod']);
+  assert.deepEqual(keys({ sobre: 'pericia' }), ['sobre', 'pericia', 'mod']);
+  assert.equal(effectSupported(mod({}), 'efeito'), true);
+});

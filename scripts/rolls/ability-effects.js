@@ -72,6 +72,12 @@ export const STEP_ATTRIBUTE_CHOICES = Object.freeze(['todos', 'fisico', 'mente',
  */
 export const STEP_TARGETS = Object.freeze(['atributo', 'pericias', 'pericia']);
 
+/** Sobre o que um `modificador` vale: os testes com um atributo ou os de uma perícia. */
+export const MODIFIER_TARGETS = Object.freeze(['atributo', 'pericia']);
+
+/** Recursos cujo máximo uma `reducaoMaximo` reduz. */
+export const MAX_RESOURCES = Object.freeze(['pv', 'pd']);
+
 /**
  * Testes em que um `passo` vale: os de `TEST_KINDS` e `ataque` (qualquer ataque, corpo a corpo ou
  * à distância; ex.: agarrado).
@@ -279,10 +285,34 @@ export const EFFECT_TYPES = Object.freeze({
     passos: intField(-1, -3, 3),
     teste: choiceField(CONDITION_TEST_KINDS, 'qualquer'),
   },
+  // Efeito da aba Condição (v0.22.2): modificador fixo somado ao total dos testes com um atributo
+  // ou de uma perícia (as lesões e traumas: Sem Olho −1 em Percepção, Degradação −1 em Mente...)
+  modificador: {
+    sobre: choiceField(MODIFIER_TARGETS, 'pericia'),
+    atributo: choiceField(STEP_ATTRIBUTE_CHOICES, 'todos'),
+    pericia: textField('', 'skill'),
+    mod: intField(-1, -5, 5),
+  },
+  // Efeito da aba Condição: cada dano emocional sofrido aumenta nesse valor (estresse
+  // pós-traumático); vários se somam
+  danoEmocionalExtra: {
+    extra: intField(1, 1, 10),
+  },
+  // Efeito da aba Condição: o PV ou o PD máximo fica menor enquanto o efeito estiver na ficha
+  // (máximo = base − reduções; Laceração Profunda, Chaga da Alma)
+  reducaoMaximo: {
+    recursoMax: choiceField(MAX_RESOURCES, 'pv'),
+    reducao: intField(2, 1, 20),
+  },
 });
 
 /** Tipos que só os efeitos da aba Condição aceitam (habilidades e equipamentos não os oferecem). */
-export const CONDITION_ONLY_TYPES = Object.freeze(['passo']);
+export const CONDITION_ONLY_TYPES = Object.freeze([
+  'passo',
+  'modificador',
+  'danoEmocionalExtra',
+  'reducaoMaximo',
+]);
 
 /** Tipos que só uma arma aceita (a habilidade não os oferece). */
 export const WEAPON_ONLY_TYPES = Object.freeze(['bonusAtaque', 'passoAtaque', 'criticoAmpliado']);
@@ -442,7 +472,7 @@ export const ITEM_EFFECT_TYPES = Object.freeze({
     'municao',
   ]),
   // Efeito da aba Condição (lista `system.efeitos` do ator): por enquanto, só passos
-  efeito: Object.freeze(['passo']),
+  efeito: Object.freeze(['passo', 'modificador', 'danoEmocionalExtra', 'reducaoMaximo']),
 });
 
 /**

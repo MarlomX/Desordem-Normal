@@ -4,6 +4,7 @@
  * Todas podem rodar várias vezes sem estragar nada (idempotentes).
  */
 import { isLegacyEffect, migrateLegacyEffect } from '../rolls/effects.js';
+import { legacyMaxLoss, legacyTableEffects } from '../rolls/condition-tables.js';
 
 /**
  * Até a v0.14.4 a perícia `metalurgia` era uma perícia comum. Nas regras 1.1 ela virou uma área
@@ -58,6 +59,57 @@ export function migrateConditionEffects(source) {
   source.efeitos = source.efeitos.map((effect, i) =>
     isLegacyEffect(effect) ? migrateLegacyEffect(effect, `ef${i}`) : effect,
   );
+  return source;
+}
+
+/**
+ * Até a v0.22.1 o personagem tinha as listas `lesoes` e `traumas` (chaves das tabelas), a caixa
+ * `estado.contusao`, e o PV/PD máximo gravado já com as perdas das lesões e traumas. Desde a
+ * v0.22.2:
+ * - cada lesão, trauma e a contusão viram um efeito da aba Condição (`legacyTableEffects`, com
+ *   ids fixos `les0`, `tra0`, `contusao0`: rodar de novo não duplica);
+ * - a base do PV/PD (`pv.base`, `pd.base`) = máximo antigo + o que as lesões e traumas tinham
+ *   tirado (2 por Laceração Profunda, 2 por Chaga da Alma), para o máximo calculado sair igual;
+ * - os campos antigos saem.
+ * Só roda nos dados completos de antes (que têm as listas antigas): as mudanças de uma gravação
+ * não as têm. A base também não muda se já existir.
+ * @param {object} source Dados do personagem (`system`).
+ */
+export function migrateConditionTables(source) {
+  if (!source || !(Array.isArray(source.lesoes) || Array.isArray(source.traumas))) return source;
+  const old = {
+    lesoes: Array.isArray(source.lesoes) ? source.lesoes : [],
+    traumas: Array.isArray(source.traumas) ? source.traumas : [],
+    contusao: source.estado?.contusao === true,
+  };
+  const loss = legacyMaxLoss(old);
+  for (const key of ['pv', 'pd']) {
+    const resource = source[key];
+    if (resource && typeof resource === 'object' && resource.base === undefined) {
+      const max = Number(resource.max);
+      if (Number.isFinite(max)) resource.base = Math.max(0, Math.trunc(max)) + loss[key];
+    }
+  }
+  const efeitos = Array.isArray(source.efeitos) ? source.efeitos : [];
+  const ids = new Set(efeitos.map((effect) => effect?.id).filter(Boolean));
+  source.efeitos = [...efeitos, ...legacyTableEffects(old, ids)];
+  delete source.lesoes;
+  delete source.traumas;
+  if (source.estado && typeof source.estado === 'object') delete source.estado.contusao;
+  return source;
+}
+
+/**
+ * Criatura (e outros tipos de ameaça): até a v0.22.1 o PV máximo era gravado direto; desde a
+ * v0.22.2 há a base (o máximo sem efeitos). A base nasce igual ao máximo, nos dados completos
+ * (com valor e máximo); mudanças de uma gravação com só o máximo também viram a base.
+ * @param {object} source Dados da criatura (`system`).
+ */
+export function migrateThreatBase(source) {
+  const pv = source?.pv;
+  if (!pv || typeof pv !== 'object' || pv.base !== undefined) return source;
+  const max = Number(pv.max);
+  if (Number.isFinite(max)) pv.base = Math.max(0, Math.trunc(max));
   return source;
 }
 

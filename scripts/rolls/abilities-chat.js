@@ -486,7 +486,6 @@ export async function endScene(actors) {
     await actor.update(
       sceneReset({
         pv: actor.system.pv.value,
-        contusao: actor.system.estado.contusao,
         estupor: actor.system.estado.estupor,
         efeitos: actor.toObject().system.efeitos,
         recursos,

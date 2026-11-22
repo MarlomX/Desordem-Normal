@@ -114,7 +114,6 @@ test('activeBoosts: ímpeto dá +d4 por 1 espaço; a furtiva dá +d8 por 3 PD s�
 test('sceneReset zera a cena, esvazia recursos e dá 1 PV a quem está com 0', () => {
   const changes = sceneReset({
     pv: 0,
-    contusao: true,
     estupor: true,
     efeitos: [
       { nome: 'A', fimDeCena: true },
@@ -123,7 +122,7 @@ test('sceneReset zera a cena, esvazia recursos e dá 1 PV a quem está com 0', (
     recursos: { impeto: 0, analise: 0 },
   });
   assert.equal(changes['system.pv.value'], 1);
-  assert.equal(changes['system.estado.contusao'], false);
+  assert.equal('system.estado.contusao' in changes, false);
   assert.equal(changes['system.cena.testesLesao'], 0);
   assert.equal(changes['system.cena.testesTrauma'], 0);
   assert.equal(changes['system.cena.primeirosSocorros'], 0);
@@ -144,7 +143,6 @@ test('sceneReset zera a cena, esvazia recursos e dá 1 PV a quem está com 0', (
 test('sceneReset mantém o PV de quem tem vida e grava os recursos calculados', () => {
   const changes = sceneReset({
     pv: 7,
-    contusao: false,
     estupor: false,
     efeitos: [],
     recursos: { impeto: 1 },
@@ -152,7 +150,7 @@ test('sceneReset mantém o PV de quem tem vida e grava os recursos calculados', 
   assert.equal(changes['system.pv.value'], 7);
   assert.equal(changes['system.recursosHab.impeto'], 1);
   // Sem recursos (quem não tem habilidades com recurso): nada de recursosHab na gravação
-  const plain = sceneReset({ pv: 3, contusao: false, estupor: false, efeitos: [] });
+  const plain = sceneReset({ pv: 3, estupor: false, efeitos: [] });
   assert.equal(
     Object.keys(plain).some((key) => key.startsWith('system.recursosHab')),
     false,

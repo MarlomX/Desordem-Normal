@@ -11,12 +11,18 @@ import {
   pickLesion,
   lesionRollCount,
   bestLesionRoll,
-  lesionModifier,
-  contusionStepMods,
   applyInjuryOutcome,
   applyLesion,
 } from '../scripts/rolls/injury.js';
 import { fixedRng } from './helpers.js';
+import { tableEffect } from '../scripts/rolls/condition-tables.js';
+
+/** Lesão sorteada com o efeito que a ficha recebe (como faz health.js). */
+const lesion = (state, value) => {
+  const entry = lookupLesion(value);
+  return applyLesion(state, entry, tableEffect('lesao', entry, `id${value}`));
+};
+const keys = (state) => state.efeitos.map((e) => e.chave);
 
 const base = (extra = {}) => ({
   pv: 0,
@@ -25,8 +31,7 @@ const base = (extra = {}) => ({
   moribundo: false,
   morto: false,
   morteLenta: false,
-  contusao: false,
-  lesoes: [],
+  efeitos: [],
   ...extra,
 });
 
@@ -126,24 +131,6 @@ test('dano não letal rola 2d20 e fica o melhor', () => {
   assert.throws(() => bestLesionRoll([]), RangeError);
 });
 
-test('modificadores de lesão por perícia se acumulam', () => {
-  assert.equal(lesionModifier(['semOlho'], 'percepcao'), -1);
-  assert.equal(lesionModifier(['semOlho', 'orgaoSensorialComprometido'], 'percepcao'), -3);
-  assert.equal(lesionModifier(['cicatrizAssustadora'], 'persuasao'), -2);
-  assert.equal(lesionModifier(['cicatrizAssustadora'], 'intimidar'), 1);
-  assert.equal(lesionModifier(['semOlho'], 'luta'), 0);
-  assert.equal(lesionModifier(undefined, 'luta'), 0);
-});
-
-test('contusão reduz o Físico em um passo só quando o atributo é Físico', () => {
-  assert.deepEqual(contusionStepMods({ contusao: true }, 'fisico'), [
-    { target: 'attribute', steps: -1 },
-  ]);
-  assert.deepEqual(contusionStepMods({ contusao: true }, 'mente'), []);
-  assert.deepEqual(contusionStepMods({ contusao: false }, 'fisico'), []);
-  assert.deepEqual(contusionStepMods(undefined, 'fisico'), []);
-});
-
 test('sucesso crítico: recupera 1 PV e sai de inconsciente e moribundo', () => {
   const s = applyInjuryOutcome(base({ inconsciente: true, moribundo: true }), 'criticalSuccess');
   assert.deepEqual([s.pv, s.inconsciente, s.moribundo], [1, false, false]);
@@ -174,11 +161,11 @@ test('morte súbita mata; morte lenta cura 1 PV, acorda, marca a morte lenta e t
 
 test('laceração profunda reduz o PV máximo em 2 (acumula) e tira o moribundo', () => {
   let s = base({ pv: 0, pvMax: 10, moribundo: true });
-  s = applyLesion(s, lookupLesion(10));
-  s = applyLesion(s, lookupLesion(10));
+  s = lesion(s, 10);
+  s = lesion(s, 10);
   assert.deepEqual(
-    [s.pvMax, s.pv, s.lesoes, s.moribundo],
-    [6, 0, ['lacearacaoProfunda', 'lacearacaoProfunda'], false],
+    [s.pvMax, s.pv, keys(s), s.moribundo],
+    [6, 0, ['lesao:lacearacaoProfunda', 'lesao:lacearacaoProfunda'], false],
   );
 });
 
@@ -207,11 +194,19 @@ test('laceração limita o PV atual ao novo máximo e o máximo não fica negati
   assert.equal(applyLesion(base({ pvMax: 1 }), lookupLesion(10)).pvMax, 0);
 });
 
-test('lesões permanentes entram na lista; contusão e adrenalina não', () => {
-  const s = applyLesion(base(), lookupLesion(11));
-  assert.deepEqual(s.lesoes, ['semOlho']);
-  const c = applyLesion(base(), lookupLesion(19));
-  assert.deepEqual([c.contusao, c.lesoes], [true, []]);
+test('lesões permanentes e a contusão viram efeitos; a contusão não se repete; adrenalina não', () => {
+  const s = lesion(base(), 11);
+  assert.deepEqual(keys(s), ['lesao:semOlho']);
+  const c = lesion(base(), 19);
+  assert.deepEqual(keys(c), ['lesao:contusao']);
+  assert.deepEqual(keys(lesion(c, 19)), ['lesao:contusao']);
+  assert.deepEqual(keys(applyLesion(base(), lookupLesion(20))), []);
+  // Sem o efeito (chamada antiga): nada entra na lista
+  assert.deepEqual(keys(applyLesion(base(), lookupLesion(11))), []);
+  // A lista original não muda
+  const original = base();
+  lesion(original, 11);
+  assert.deepEqual(original.efeitos, []);
   const a = applyLesion(base({ pvMax: 1, pv: 1 }), lookupLesion(20));
   assert.equal(a.pv, 1); // limitado ao PV máximo
   assert.equal(applyLesion(base(), lookupLesion(20)).pv, 1);

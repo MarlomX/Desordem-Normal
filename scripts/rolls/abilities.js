@@ -174,13 +174,12 @@ export function activeBoosts(
 }
 
 /**
- * Reinício de cena de um personagem: zera os contadores de testes da cena, tira a contusão e o
- * estupor, remove os efeitos "até o fim da cena", limpa o que foi ativado, e quem está com 0 PV
+ * Reinício de cena de um personagem: zera os contadores de testes da cena, tira o estupor, remove
+ * os efeitos "até o fim da cena" (a contusão é um deles desde a v0.22.2), limpa o que foi ativado, e quem está com 0 PV
  * recupera 1. Os recursos das habilidades (ímpeto, análise...) chegam já calculados por
  * `sceneResources` (esvaziar e ganhos de início de cena).
  * @param {Object} state
  * @param {number} state.pv
- * @param {boolean} state.contusao
  * @param {boolean} state.estupor
  * @param {{duracao: string}[]} state.efeitos `system.efeitos` (formato de effects.js).
  * @param {Object<string, number>} [state.recursos] Valor novo de cada recurso das habilidades.
@@ -195,7 +194,6 @@ export function sceneReset(state) {
   );
   return {
     'system.pv.value': state.pv === 0 ? 1 : state.pv,
-    'system.estado.contusao': false,
     'system.estado.estupor': false,
     // Com o PV de volta (1 PV a quem estava em 0), o personagem deixa de estar moribundo
     'system.estado.moribundo': false,

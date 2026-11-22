@@ -392,6 +392,66 @@ export function attributeStepNet(effects, attrKey) {
   return effectStepMods(effects, attrKey).reduce((sum, mod) => sum + mod.steps, 0);
 }
 
+// ---------- Modificadores, dano emocional e máximo (v0.22.2) ----------
+
+/** Todos os efeitos do catálogo de um tipo, de todos os efeitos da lista (já limpos). */
+function entriesOfType(effects, tipo) {
+  return normalizeSheetEffects(effects).flatMap((effect) =>
+    effect.efeitos.filter((entry) => entry.tipo === tipo),
+  );
+}
+
+/**
+ * Modificador fixo que os efeitos dão ao total de um teste: os de testes com o atributo do teste
+ * (ou com qualquer atributo) e os da perícia do teste. É o que as lesões e os traumas fazem
+ * (Sem Olho −1 em Percepção, Degradação Cognitiva −1 em Mente...).
+ * @param {object[]} effects `system.efeitos`.
+ * @param {{attrKey?: string, skillKey?: string}} test
+ */
+export function conditionModifier(effects, { attrKey = '', skillKey = '' } = {}) {
+  return entriesOfType(effects, 'modificador').reduce((sum, { params }) => {
+    const applies =
+      params.sobre === 'atributo'
+        ? params.atributo === ALL_ATTRIBUTES || (attrKey && params.atributo === attrKey)
+        : Boolean(skillKey) && params.pericia === skillKey;
+    return applies ? sum + params.mod : sum;
+  }, 0);
+}
+
+/** Quanto cada dano emocional aumenta (soma dos `danoEmocionalExtra`, como o estresse). */
+export function emotionalExtra(effects) {
+  return entriesOfType(effects, 'danoEmocionalExtra').reduce((sum, e) => sum + e.params.extra, 0);
+}
+
+/**
+ * Quanto o máximo de um recurso diminui (soma das `reducaoMaximo` dele).
+ * @param {object[]} effects
+ * @param {'pv'|'pd'} resource
+ */
+export function maxReduction(effects, resource) {
+  return entriesOfType(effects, 'reducaoMaximo')
+    .filter((entry) => entry.params.recursoMax === resource)
+    .reduce((sum, entry) => sum + entry.params.reducao, 0);
+}
+
+/**
+ * Máximo de um recurso com os efeitos: base − reduções (nunca abaixo de 0). A ficha guarda só a
+ * base (`pv.base`, `pd.base`); o máximo é calculado sempre que o ator é preparado.
+ */
+export function effectiveMax(base, effects, resource) {
+  const value = Number.isFinite(Number(base)) ? Math.trunc(Number(base)) : 0;
+  return Math.max(0, value - maxReduction(effects, resource));
+}
+
+/**
+ * Base que corresponde a um máximo escolhido (alguém mudou o máximo direto, por exemplo por uma
+ * macro): o máximo mais as reduções atuais, para o máximo calculado sair igual ao escolhido.
+ */
+export function baseForMax(max, effects, resource) {
+  const value = Number.isFinite(Number(max)) ? Math.max(0, Math.trunc(Number(max))) : 0;
+  return value + maxReduction(effects, resource);
+}
+
 // ---------- Efeitos que outros sistemas criam ----------
 
 /**

@@ -338,27 +338,38 @@ export function buildRelationRows(relations, { degreeLabel, editable = true }) {
  * @param {(duracao: string) => string} options.durationLabel Nome traduzido da duração.
  * @param {string} [options.noStepsLabel] Texto do efeito sem passos (só nome e descrição).
  * @param {boolean} [options.editable=true]
+ * @param {(effect: object) => {nome: string, descricao: string, kind: string}} [options.text]
+ *   Nome e descrição para mostrar (as lesões e traumas das tabelas vêm traduzidos pela chave) e
+ *   a tabela de onde o efeito veio (`lesao`, `trauma` ou vazio). Sem ela, os do próprio efeito.
  */
 export function buildEffectRows(
   effects,
-  { describe, durationLabel, noStepsLabel = '', editable = true },
+  { describe, durationLabel, noStepsLabel = '', editable = true, text },
 ) {
-  return normalizeSheetEffects(effects).map((effect, index) => ({
-    index,
-    id: effect.id,
-    nome: effect.nome,
-    descricao: effect.descricao,
-    duracao: effect.duracao,
-    durationLabel: durationLabel(effect.duracao),
-    // Um resumo por efeito do catálogo («−1 passo(s) no dado de Físico; ...»)
-    summary: effect.efeitos.length
-      ? effect.efeitos.map((entry) => describe(entry)).join('; ')
-      : noStepsLabel,
-    locked: !editable,
-    // Criado por uma habilidade (passo condicional): a etiqueta diz «Habilidade», e o efeito
-    // some sozinho quando a condição deixa de valer
-    fromAbility: String(effect.origem ?? '').startsWith('hab:'),
-  }));
+  return normalizeSheetEffects(effects).map((effect, index) => {
+    const shown = text?.(effect) ?? { nome: effect.nome, descricao: effect.descricao, kind: '' };
+    const fromAbility = String(effect.origem ?? '').startsWith('hab:');
+    return {
+      index,
+      id: effect.id,
+      nome: shown.nome,
+      descricao: shown.descricao,
+      duracao: effect.duracao,
+      durationLabel: durationLabel(effect.duracao),
+      // Um resumo por efeito do catálogo («−1 passo(s) no dado de Físico; ...»)
+      summary: effect.efeitos.length
+        ? effect.efeitos.map((entry) => describe(entry)).join('; ')
+        : noStepsLabel,
+      locked: !editable,
+      // Criado por uma habilidade (passo condicional): a etiqueta diz «Habilidade», e o efeito
+      // some sozinho quando a condição deixa de valer
+      fromAbility,
+      // Etiqueta da origem: Lesão, Trauma (pela chave), Habilidade ou Efeito
+      origin: shown.kind || (fromAbility ? 'habilidade' : 'efeito'),
+      // Chave de idioma da etiqueta (`DESORDEM.Ficha.EfeitoOrigem.<origem>`)
+      originKey: `DESORDEM.Ficha.EfeitoOrigem.${shown.kind || (fromAbility ? 'habilidade' : 'efeito')}`,
+    };
+  });
 }
 
 /**

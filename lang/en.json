@@ -148,7 +148,6 @@
       "PrimeirosSocorrosCena": "First aid received in the scene",
       "Lesoes": "Injuries",
       "SemLesoes": "No injuries",
-      "RemoverLesao": "Remove injury",
       "Estado": {
         "inconsciente": "Unconscious",
         "moribundo": "Dying",
@@ -170,7 +169,6 @@
       "TestesTraumaCena": "Trauma tests this scene",
       "Traumas": "Traumas",
       "SemTraumas": "No traumas",
-      "RemoverTrauma": "Remove trauma",
       "Relacoes": "Relationships",
       "DicaRelacoes": "The dots are the bond's degree (click to change). Benefits are applied by hand; invoking marks the bond as used this mission and tells the table (at degrees 2 and 3, the chat card has a motivate button).",
       "AdicionarAptidao": "Add aptitude",
@@ -241,7 +239,10 @@
         "AumentarTestes": "One more test this scene",
         "TesteLesaoDT": "Injury test · DC {dt}",
         "TesteTraumaDT": "Trauma test · DC {dt}",
-        "PavorEtiqueta": "Dread d{dado}"
+        "PavorEtiqueta": "Dread d{dado}",
+        "BaseDica": "Maximum without effects (the base). Effects such as Deep Laceration lower the maximum while they are on the sheet.",
+        "Maximo": "max. {max}",
+        "MaximoDica": "Base {base}; with the Condition tab effects, the maximum is {max}."
       },
       "Hab": {
         "AlternarTodas": "Expand/collapse all",
@@ -296,7 +297,8 @@
         "Mundo": "World",
         "Cancelar": "Cancel",
         "Adicionado": "Effect \"{nome}\" added to the sheet."
-      }
+      },
+      "MigracaoCondicao": "Injuries, traumas and bruises of {n} character(s) converted into Condition tab effects."
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -1511,7 +1513,10 @@
         "ferramenta": "Tool",
         "concederDado": "Bonus die",
         "municao": "Ammunition",
-        "passo": "Step"
+        "passo": "Step",
+        "modificador": "Modifier",
+        "danoEmocionalExtra": "Extra emotional damage",
+        "reducaoMaximo": "Maximum reduction"
       },
       "Campos": {
         "chave": "Key",
@@ -1548,7 +1553,12 @@
         "ferramenta": "Tool",
         "alcance": "Applies to weapons",
         "dano": "Damage bonus",
-        "alvo": "Where"
+        "alvo": "Where",
+        "sobre": "Applies to",
+        "mod": "Modifier",
+        "extra": "Extra damage",
+        "recursoMax": "Maximum of",
+        "reducao": "Reduction"
       },
       "Gatilhos": {
         "falha": "On failing a test with a DC",
@@ -1632,7 +1642,13 @@
         "ferramenta": "Tool: {ferramenta}",
         "concederDado": "On use: +d{dado} to the bonus dice pool (one test)",
         "municao": "Ammunition for {alcance} weapons: +{passos} step on the attack, +{dano} damage; spends one unit per attack",
-        "passo": "{passos} step(s) to the {alvo} die{teste}"
+        "passo": "{passos} step(s) to the {alvo} die{teste}",
+        "modificador": "{mod} to tests {alvo}",
+        "danoEmocionalExtra": "+{extra} to each emotional damage taken",
+        "reducaoMaximo": "−{reducao} to maximum {recurso}",
+        "DePericia": "of {pericia}",
+        "ComAtributo": "with {atributo}",
+        "QualquerAtributo": "any attribute"
       },
       "Botao": {
         "passoCena": "Scene step{custo}",
@@ -1702,7 +1718,15 @@
         "manual": "Until removed"
       },
       "ChaveItem": "Key (optional)",
-      "DicaItemCondicao": "This item is a template: picked from the \"From compendium\" list or dragged onto a sheet, it is copied to the Condition tab. Changing the item later does not change the copies. The key identifies a ready-made effect (injuries and traumas will use it); you can leave it empty."
+      "DicaItemCondicao": "This item is a template: picked from the \"From compendium\" list or dragged onto a sheet, it is copied to the Condition tab. Changing the item later does not change the copies. The key identifies a ready-made effect (injuries and traumas will use it); you can leave it empty.",
+      "Sobre": {
+        "atributo": "Tests with an attribute",
+        "pericia": "Tests of one skill"
+      },
+      "RecursosMax": {
+        "pv": "HP",
+        "pd": "DP"
+      }
     },
     "Plano": {
       "Distribuir": "Give {n}d{dado} to the group",

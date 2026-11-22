@@ -15,10 +15,12 @@ import { SYSTEM_ID, PERICIAS } from '../config.js';
 import {
   CONDITION_ITEM_TYPE,
   addEffect,
+  baseForMax,
   effectFromItem,
   normalizeSheetEffects,
   withEffectIds,
 } from '../rolls/effects.js';
+import { effectText } from '../rolls/condition-tables.js';
 import { normalizeEffects } from '../rolls/ability-effects.js';
 import { describeEffect } from '../rolls/ability-effects-editor.js';
 import { buildEffectPicker, matchesSearch } from './context.js';
@@ -184,4 +186,80 @@ export function registerConditionEffects() {
     if (item.type === CONDITION_ITEM_TYPE && item.parent?.documentName === 'Actor') return false;
     return undefined;
   });
+  Hooks.on('preUpdateActor', (actor, changes) => maxToBase(actor, changes));
+  // Marca de até onde os dados do mundo já foram convertidos (só o mestre grava)
+  game.settings.register(SYSTEM_ID, MIGRATION_SETTING, {
+    scope: 'world',
+    config: false,
+    type: String,
+    default: '',
+  });
 }
+
+/**
+ * Desde a v0.22.2 o PV/PD máximo é calculado (base − reduções dos efeitos). Se uma gravação
+ * mudar o máximo direto (uma macro, outro módulo), a mudança vira mudança na base, para o
+ * máximo calculado sair igual ao escolhido.
+ * @param {Actor} actor
+ * @param {object} changes Mudanças da gravação (o hook `preUpdateActor` deixa alterar).
+ */
+function maxToBase(actor, changes) {
+  for (const key of ['pv', 'pd']) {
+    const max = foundry.utils.getProperty(changes, `system.${key}.max`);
+    if (max === undefined || actor.system?.[key]?.base === undefined) continue;
+    if (foundry.utils.getProperty(changes, `system.${key}.base`) !== undefined) continue;
+    foundry.utils.setProperty(
+      changes,
+      `system.${key}.base`,
+      baseForMax(max, actor.system.efeitos, key),
+    );
+  }
+}
+
+/** Nome da configuração (oculta) com a última conversão feita nos dados do mundo. */
+const MIGRATION_SETTING = 'migracaoCondicao';
+
+/** Versão da conversão das lesões, traumas e contusão em efeitos. */
+const MIGRATION_VERSION = '0.22.2';
+
+/**
+ * Grava, uma vez por mundo, a conversão da v0.22.2 nos personagens do mundo. A conversão em si já
+ * acontece ao carregar cada ficha (`migrateData`), mas só é gravada quando a ficha muda; aqui ela
+ * é gravada de vez, apagando do banco os campos antigos (`lesoes`, `traumas`, `estado.contusao`),
+ * para nada antigo voltar depois. Roda só no navegador do mestre ativo.
+ * (Atores de compêndio e tokens não vinculados continuam com a conversão ao carregar.)
+ */
+export async function migrateWorldConditions() {
+  if (!game.user.isActiveGM) return;
+  if (game.settings.get(SYSTEM_ID, MIGRATION_SETTING) === MIGRATION_VERSION) return;
+  const actors = game.actors.filter((actor) => actor.type === 'personagem');
+  for (const actor of actors) {
+    const { system } = actor.toObject();
+    try {
+      // `diff: false`: grava tudo, mesmo o que o Foundry já vê igual na memória (o banco não está)
+      await actor.update(
+        {
+          'system.efeitos': system.efeitos,
+          'system.pv.base': system.pv.base,
+          'system.pd.base': system.pd.base,
+          'system.-=lesoes': null,
+          'system.-=traumas': null,
+          'system.estado.-=contusao': null,
+        },
+        { diff: false, render: false },
+      );
+    } catch (error) {
+      console.error(`${SYSTEM_ID} | conversão de ${actor.name} falhou`, error);
+    }
+  }
+  await game.settings.set(SYSTEM_ID, MIGRATION_SETTING, MIGRATION_VERSION);
+  if (actors.length) {
+    ui.notifications.info(t('DESORDEM.Ficha.MigracaoCondicao', { n: actors.length }));
+  }
+}
+
+/**
+ * Nome e descrição de um efeito para mostrar (o texto das lesões e traumas inseridos pelas
+ * tabelas vem traduzido da chave enquanto não for editado).
+ */
+export const conditionEffectText = (effect) => effectText(effect, (key) => t(key));

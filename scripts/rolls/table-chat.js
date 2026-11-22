@@ -9,6 +9,7 @@ import { render } from './chat.js';
 import { tableDiceCount, tableDie, nextTableState, tableView } from './pending-table.js';
 import { drawLesion, applyLesionDraw } from './health.js';
 import { drawTrauma, applyTraumaDraw } from './mind.js';
+import { ownedTableKeys } from './condition-tables.js';
 import { drawDisaster, applyDisasterDraw, disasterChoices } from './critical-chat.js';
 
 const TEMPLATE_JANELA = `systems/${SYSTEM_ID}/templates/dialog/tabela.hbs`;
@@ -141,9 +142,12 @@ async function askAndDraw(message, pending, actor) {
           const manualValue = chosen ? Number(chosen) : null;
           try {
             if (pending.kind === 'lesion') {
-              drawn = await drawLesion([...actor.system.lesoes], pending.nonLethal);
+              drawn = await drawLesion(
+                ownedTableKeys(actor.system.efeitos, 'lesao'),
+                pending.nonLethal,
+              );
             } else if (pending.kind === 'trauma') {
-              drawn = await drawTrauma([...actor.system.traumas]);
+              drawn = await drawTrauma(ownedTableKeys(actor.system.efeitos, 'trauma'));
             } else {
               drawn = await drawDisaster(manualValue);
             }

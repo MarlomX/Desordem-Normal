@@ -1299,6 +1299,12 @@
   color: #fff;
 }
 
+/* Máximo calculado ao lado da base, quando um efeito o reduz (Laceração Profunda...) */
+.desordem-barra__maximo {
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
 .desordem-barra input[type='number'] {
   width: 2.8em;
   height: 1.5em;

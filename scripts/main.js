@@ -2,7 +2,7 @@ import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from './config.js';
 import PersonagemModel from './data/personagem.js';
 import { CriaturaModel } from './data/ameaca.js';
 import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel, EfeitoModel } from './data/items.js';
-import { registerConditionEffects } from './sheets/condition-effects-ui.js';
+import { migrateWorldConditions, registerConditionEffects } from './sheets/condition-effects-ui.js';
 import PersonagemSheet from './sheets/personagem-sheet.js';
 import CriaturaSheet from './sheets/criatura-sheet.js';
 import { fearDieHelper } from './sheets/dado-pavor.js';
@@ -201,6 +201,8 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
 });
 
 Hooks.once('ready', () => {
+  // Lesões, traumas e contusão viram efeitos (v0.22.2): o mestre grava a conversão uma vez
+  migrateWorldConditions();
   registerRelationSocket();
   registerAbilitySocket();
   // Assumir ataque nos cartões e o dano aplicado do cartão de ataque (o mestre grava)

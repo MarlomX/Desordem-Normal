@@ -121,8 +121,13 @@ test('itemEffectTypes: habilidade aceita todos menos os de equipamento; cada equ
       (tipo) => !EQUIPMENT_ONLY_TYPES.includes(tipo) && !CONDITION_ONLY_TYPES.includes(tipo),
     ),
   );
-  // Efeitos da aba Condição: só os passos, por enquanto
-  assert.deepEqual(itemEffectTypes('efeito'), ['passo']);
+  // Efeitos da aba Condição: passos, modificadores, dano emocional a mais e redução do máximo
+  assert.deepEqual(itemEffectTypes('efeito'), [
+    'passo',
+    'modificador',
+    'danoEmocionalExtra',
+    'reducaoMaximo',
+  ]);
   assert.deepEqual(itemEffectTypes('arma'), [
     'dadoExtra',
     'bonusAtaque',

@@ -160,19 +160,6 @@ export function pickLesion(value, owned = []) {
   return { entry, reroll };
 }
 
-/** Soma dos modificadores fixos que as lesões do personagem dão a uma perícia. */
-export function lesionModifier(owned = [], skillKey) {
-  return owned.reduce((sum, key) => {
-    const entry = LESIONS.find((e) => e.key === key);
-    return sum + (entry?.mods?.[skillKey] ?? 0);
-  }, 0);
-}
-
-/** Contusão reduz o Físico em um passo (até o fim da cena). */
-export function contusionStepMods(estado, attrKey) {
-  return estado?.contusao && attrKey === 'fisico' ? [{ target: 'attribute', steps: -1 }] : [];
-}
-
 /**
  * Estado de saúde usado nas funções abaixo.
  * @typedef {Object} HealthState
@@ -182,8 +169,7 @@ export function contusionStepMods(estado, attrKey) {
  * @property {boolean} moribundo
  * @property {boolean} morto
  * @property {boolean} morteLenta
- * @property {boolean} contusao
- * @property {string[]} lesoes
+ * @property {object[]} efeitos `system.efeitos` (as lesões que ficam são efeitos desde a v0.22.2).
  */
 
 const heal = (state, amount) => ({ ...state, pv: Math.min(state.pvMax, state.pv + amount) });
@@ -207,21 +193,24 @@ export function applyInjuryOutcome(state, outcome) {
 /**
  * Aplica uma lesão sorteada. Quem sobrevive a ela deixa de estar moribundo (os demais estados,
  * como inconsciente, não mudam, exceto a morte lenta, que também acorda). Morte súbita mata.
+ * As lesões que ficam na ficha (as permanentes e a contusão) entram como o efeito `effect`
+ * (montado por `tableEffect`, em condition-tables.js); a contusão não se repete.
  * @param {HealthState} state
  * @param {(typeof LESIONS)[number]} entry
+ * @param {object} [effect] Efeito da lesão, para as que ficam na ficha.
  */
-export function applyLesion(state, entry) {
-  const next = { ...state, lesoes: [...state.lesoes] };
+export function applyLesion(state, entry, effect = null) {
+  const next = { ...state, efeitos: [...(state.efeitos ?? [])] };
   if (entry.kind === 'death') return { ...next, morto: true };
   next.moribundo = false;
   if (entry.kind === 'slowDeath')
     return { ...heal(next, 1), inconsciente: false, morteLenta: true };
   if (entry.kind === 'adrenaline') return heal(next, 1);
-  if (entry.kind === 'temporary') return { ...next, contusao: true };
-
-  next.lesoes.push(entry.key);
+  const repeatedContusion =
+    entry.kind === 'temporary' && next.efeitos.some((e) => e?.chave === `lesao:${entry.key}`);
+  if (effect && !repeatedContusion) next.efeitos.push(effect);
   if (entry.pvMaxLoss) {
-    // Perda permanente do PV máximo (acumula a cada laceração)
+    // O máximo cai pelo efeito (base − reduções); aqui só o PV atual acompanha o máximo novo
     next.pvMax = Math.max(0, next.pvMax - entry.pvMaxLoss);
     next.pv = Math.min(next.pv, next.pvMax);
   }

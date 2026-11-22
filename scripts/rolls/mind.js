@@ -17,6 +17,9 @@ import { createPending } from './pending-table.js';
 import { isThreat } from './threat.js';
 
 const TEMPLATE_TRAUMA = `systems/${SYSTEM_ID}/templates/chat/trauma.hbs`;
+import { storesEffect, tableEffect } from './condition-tables.js';
+import { emotionalExtra } from './effects.js';
+
 const TEMPLATE_TABELA = `systems/${SYSTEM_ID}/templates/chat/tabela.hbs`;
 const TEMPLATE_DANO = `systems/${SYSTEM_ID}/templates/chat/dano.hbs`;
 const MAX_TRAUMA_REROLLS = 50;
@@ -30,7 +33,8 @@ function mindState(actor) {
     pavor: system.estado.pavor,
     estupor: system.estado.estupor,
     colapso: system.estado.colapso,
-    traumas: [...system.traumas],
+    // Os traumas que ficam são efeitos da aba Condição (v0.22.2)
+    efeitos: actor.toObject().system.efeitos,
   };
 }
 
@@ -40,12 +44,12 @@ function mindState(actor) {
  */
 function mindUpdate(state, testsInScene) {
   return {
+    // O máximo não é gravado: ele sai da base menos as reduções dos efeitos (Chaga da Alma)
     'system.pd.value': state.pd,
-    'system.pd.max': state.pdMax,
     'system.estado.pavor': state.pavor,
     'system.estado.estupor': state.estupor,
     'system.estado.colapso': state.colapso,
-    'system.traumas': state.traumas,
+    'system.efeitos': state.efeitos,
     ...(testsInScene === undefined ? {} : { 'system.cena.testesTrauma': testsInScene }),
   };
 }
@@ -81,7 +85,11 @@ export async function drawTrauma(owned) {
  * @param {{entry: object, rolls: Roll[]}} drawn Retorno de `drawTrauma`.
  */
 export async function applyTraumaDraw(actor, pending, drawn) {
-  const state = applyTrauma(mindState(actor), drawn.entry);
+  // Trauma que fica na ficha: vira um efeito da aba Condição (texto traduzido pela chave)
+  const effect = storesEffect(drawn.entry)
+    ? tableEffect('trauma', drawn.entry, foundry.utils.randomID())
+    : null;
+  const state = applyTrauma(mindState(actor), drawn.entry, effect);
   await actor.update(mindUpdate(state));
   const context = buildTableResultContext({
     kind: 'trauma',
@@ -161,7 +169,8 @@ export async function emotionalDamage(actor, amount) {
   } = applyEmotionalDamage({
     current: actor.system.pd.value,
     amount: base,
-    owned: actor.system.traumas,
+    // Dano a mais dos efeitos da ficha (estresse pós-traumático)
+    extra: emotionalExtra(actor.system.efeitos),
   });
   await actor.update({ 'system.pd.value': after });
   await postMessage({

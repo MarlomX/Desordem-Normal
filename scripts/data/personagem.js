@@ -1,5 +1,11 @@
 import { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
-import { migrateCraftSkill, migrateAbilityResources, migrateConditionEffects } from './migrations.js';
+import {
+  migrateCraftSkill,
+  migrateAbilityResources,
+  migrateConditionEffects,
+  migrateConditionTables
+} from './migrations.js';
+import { effectiveMax } from '../rolls/effects.js';
 import { conditionEffectsField } from './condition-effects.js';
 import { OVERRIDABLE_KEYS } from '../rolls/attribute.js';
 
@@ -16,9 +22,13 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
     const dado = (inicial = 4) =>
       new f.NumberField({ required: true, integer: true, min: 4, max: 20, initial: inicial });
 
+    // PV e PD: valor atual, base (o máximo sem efeitos, o que se edita na ficha) e máximo.
+    // Desde a v0.22.2 o máximo é calculado em `prepareDerivedData` (base − reduções dos efeitos,
+    // como a Laceração Profunda); o campo continua no modelo para as barras do token.
     const recurso = () =>
       new f.SchemaField({
         value: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 }),
+        base: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 }),
         max: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 })
       });
 
@@ -54,13 +64,12 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       oficiosExtras: extras(),
       pv: recurso(),
       pd: recurso(),
-      // Estado de saúde: condições, lesões permanentes e contador de testes de lesão da cena
+      // Estado de saúde: condições (a contusão é um efeito da aba Condição desde a v0.22.2)
       estado: new f.SchemaField({
         inconsciente: new f.BooleanField({ initial: false }),
         moribundo: new f.BooleanField({ initial: false }),
         morto: new f.BooleanField({ initial: false }),
         morteLenta: new f.BooleanField({ initial: false }),
-        contusao: new f.BooleanField({ initial: false }),
         // Estado mental: dado de pavor (0 = sem pavor, ou 4 a 20), estupor e colapso total
         pavor: new f.NumberField({ required: true, integer: true, min: 0, max: 20, initial: 0 }),
         estupor: new f.BooleanField({ initial: false }),
@@ -109,8 +118,7 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       }),
       // Habilidades ativadas para o próximo teste (ex.: dado extra de ímpeto)
       ativas: new f.ArrayField(new f.StringField({ required: true, blank: false })),
-      lesoes: new f.ArrayField(new f.StringField({ required: true, blank: false })),
-      traumas: new f.ArrayField(new f.StringField({ required: true, blank: false })),
+      // (Lesões e traumas são efeitos da aba Condição desde a v0.22.2: veja `efeitos`)
       // Relações: grau 0 a 3 (as bolinhas), descrição narrativa e marcador "usada"
       relacoes: new f.ArrayField(
         new f.SchemaField({
@@ -138,12 +146,27 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
    * Adapta dados salvos por versões anteriores antes de o Foundry validá-los.
    * Até a v0.14.4 existia a perícia `metalurgia`; hoje ela é uma área do Ofício. Até a v0.19.x
    * o ímpeto e a análise ficavam em `recursos`; hoje ficam em `recursosHab`. Até a v0.21.x os
-   * efeitos da aba Condição tinham um formato fixo; hoje são modulares.
+   * efeitos da aba Condição tinham um formato fixo; hoje são modulares. Até a v0.22.1 as lesões e
+   * os traumas eram listas de chaves e a contusão era uma caixa; hoje são efeitos, e o máximo de
+   * PV/PD sai de uma base.
    */
   static migrateData(source) {
     migrateCraftSkill(source);
     migrateAbilityResources(source);
     migrateConditionEffects(source);
+    migrateConditionTables(source);
     return super.migrateData(source);
+  }
+
+  /**
+   * Valores calculados a cada preparo do ator (não gravados): o PV e o PD máximos são a base menos
+   * as reduções dos efeitos da aba Condição (`reducaoMaximo`). Quem lê `system.pv.max` (barras,
+   * cura, dano, token) já recebe o máximo com os efeitos.
+   */
+  prepareDerivedData() {
+    super.prepareDerivedData();
+    for (const key of ['pv', 'pd']) {
+      this[key].max = effectiveMax(this[key].base, this.efeitos, key);
+    }
   }
 }

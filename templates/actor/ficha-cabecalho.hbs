@@ -20,7 +20,9 @@
           <span class="desordem-barra__valores">
             <input type="number" name="system.pv.value" value="{{system.pv.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
             <span>/</span>
-            <input type="number" name="system.pv.max" value="{{system.pv.max}}" min="0" {{#unless editable}}disabled{{/unless}}>
+            {{! Base: o máximo sem efeitos (o que se edita); com redução, o máximo calculado aparece ao lado }}
+            <input type="number" name="system.pv.base" value="{{system.pv.base}}" min="0" title="{{localize "DESORDEM.Ficha.Cab.BaseDica"}}" {{#unless editable}}disabled{{/unless}}>
+            {{#if pvReduced}}<span class="desordem-barra__maximo" title="{{localize "DESORDEM.Ficha.Cab.MaximoDica" base=system.pv.base max=system.pv.max}}">({{localize "DESORDEM.Ficha.Cab.Maximo" max=system.pv.max}})</span>{{/if}}
           </span>
         </div>
         <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-resource="pv" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}" {{#unless editable}}disabled{{/unless}}>+</button>
@@ -40,7 +42,9 @@
           <span class="desordem-barra__valores">
             <input type="number" name="system.pd.value" value="{{system.pd.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
             <span>/</span>
-            <input type="number" name="system.pd.max" value="{{system.pd.max}}" min="0" {{#unless editable}}disabled{{/unless}}>
+            {{! Base: o máximo sem efeitos (o que se edita); com redução, o máximo calculado aparece ao lado }}
+            <input type="number" name="system.pd.base" value="{{system.pd.base}}" min="0" title="{{localize "DESORDEM.Ficha.Cab.BaseDica"}}" {{#unless editable}}disabled{{/unless}}>
+            {{#if pdReduced}}<span class="desordem-barra__maximo" title="{{localize "DESORDEM.Ficha.Cab.MaximoDica" base=system.pd.base max=system.pd.max}}">({{localize "DESORDEM.Ficha.Cab.Maximo" max=system.pd.max}})</span>{{/if}}
           </span>
         </div>
         <button type="button" class="desordem-recurso__passo" data-action="adjustResource" data-resource="pd" data-delta="1" title="{{localize "DESORDEM.Ficha.Cab.Aumentar"}}" {{#unless editable}}disabled{{/unless}}>+</button>

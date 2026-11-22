@@ -148,7 +148,6 @@
       "PrimeirosSocorrosCena": "Primeiros socorros recebidos na cena",
       "Lesoes": "Lesões",
       "SemLesoes": "Nenhuma lesão",
-      "RemoverLesao": "Remover lesão",
       "Estado": {
         "inconsciente": "Inconsciente",
         "moribundo": "Moribundo",
@@ -170,7 +169,6 @@
       "TestesTraumaCena": "Testes de trauma na cena",
       "Traumas": "Traumas",
       "SemTraumas": "Nenhum trauma",
-      "RemoverTrauma": "Remover trauma",
       "Relacoes": "Relações",
       "DicaRelacoes": "As bolinhas são o grau do laço (clique para mudar). Os benefícios são aplicados à mão; invocar marca o laço como usado nesta missão e avisa a mesa (nos graus 2 e 3, o cartão tem o botão de motivar).",
       "AdicionarAptidao": "Adicionar aptidão",
@@ -241,7 +239,10 @@
         "AumentarTestes": "Um teste a mais na cena",
         "TesteLesaoDT": "Teste de lesão · DT {dt}",
         "TesteTraumaDT": "Teste de trauma · DT {dt}",
-        "PavorEtiqueta": "Pavor d{dado}"
+        "PavorEtiqueta": "Pavor d{dado}",
+        "BaseDica": "Máximo sem efeitos (a base). Efeitos como a Laceração Profunda reduzem o máximo enquanto estiverem na ficha.",
+        "Maximo": "máx. {max}",
+        "MaximoDica": "Base {base}; com os efeitos da aba Condição, o máximo é {max}."
       },
       "Hab": {
         "AlternarTodas": "Expandir/recolher todas",
@@ -296,7 +297,8 @@
         "Mundo": "Mundo",
         "Cancelar": "Cancelar",
         "Adicionado": "Efeito «{nome}» acrescentado à ficha."
-      }
+      },
+      "MigracaoCondicao": "Lesões, traumas e contusão de {n} personagem(ns) convertidos em efeitos da aba Condição."
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -1511,7 +1513,10 @@
         "ferramenta": "Ferramenta",
         "concederDado": "Dado bônus",
         "municao": "Munição",
-        "passo": "Passo"
+        "passo": "Passo",
+        "modificador": "Modificador",
+        "danoEmocionalExtra": "Dano emocional a mais",
+        "reducaoMaximo": "Redução do máximo"
       },
       "Campos": {
         "chave": "Chave",
@@ -1548,7 +1553,12 @@
         "ferramenta": "Ferramenta",
         "alcance": "Vale em armas",
         "dano": "Bônus de dano",
-        "alvo": "Onde"
+        "alvo": "Onde",
+        "sobre": "Vale em",
+        "mod": "Modificador",
+        "extra": "Dano a mais",
+        "recursoMax": "Máximo de",
+        "reducao": "Redução"
       },
       "Gatilhos": {
         "falha": "Ao falhar um teste com DT",
@@ -1632,7 +1642,13 @@
         "ferramenta": "Ferramenta: {ferramenta}",
         "concederDado": "Ao usar: +d{dado} na reserva de dados bônus (vale em um teste)",
         "municao": "Munição de armas {alcance}: +{passos} passo no ataque, +{dano} no dano; gasta uma unidade por ataque",
-        "passo": "{passos} passo(s) no dado de {alvo}{teste}"
+        "passo": "{passos} passo(s) no dado de {alvo}{teste}",
+        "modificador": "{mod} em testes {alvo}",
+        "danoEmocionalExtra": "+{extra} em cada dano emocional sofrido",
+        "reducaoMaximo": "−{reducao} no {recurso} máximo",
+        "DePericia": "de {pericia}",
+        "ComAtributo": "com {atributo}",
+        "QualquerAtributo": "qualquer atributo"
       },
       "Botao": {
         "passoCena": "Passo na cena{custo}",
@@ -1702,7 +1718,15 @@
         "manual": "Até remover"
       },
       "ChaveItem": "Chave (opcional)",
-      "DicaItemCondicao": "Este item é um modelo: escolhido na lista «Do compêndio» ou arrastado para uma ficha, ele é copiado para a aba Condição. Mudar o item depois não altera as cópias. A chave identifica um efeito pronto (as lesões e traumas usarão); pode deixar vazia."
+      "DicaItemCondicao": "Este item é um modelo: escolhido na lista «Do compêndio» ou arrastado para uma ficha, ele é copiado para a aba Condição. Mudar o item depois não altera as cópias. A chave identifica um efeito pronto (as lesões e traumas usarão); pode deixar vazia.",
+      "Sobre": {
+        "atributo": "Testes com um atributo",
+        "pericia": "Testes de uma perícia"
+      },
+      "RecursosMax": {
+        "pv": "PV",
+        "pd": "PD"
+      }
     },
     "Plano": {
       "Distribuir": "Distribuir {n}d{dado} ao grupo",

@@ -9,7 +9,8 @@
  */
 import { ATRIBUTOS, PERICIAS, ELEMENTOS } from '../config.js';
 import { MAX_RD } from '../rolls/threat.js';
-import { migrateConditionEffects } from './migrations.js';
+import { migrateConditionEffects, migrateThreatBase } from './migrations.js';
+import { effectiveMax } from '../rolls/effects.js';
 import { conditionEffectsField } from './condition-effects.js';
 
 const f = foundry.data.fields;
@@ -40,8 +41,11 @@ export class AmeacaModel extends foundry.abstract.TypeDataModel {
           atributo: texto(),
         }),
       ),
+      // PV: valor atual, base (o máximo sem efeitos, o que se edita na ficha) e máximo, calculado
+      // em `prepareDerivedData` (base − reduções dos efeitos; v0.22.2)
       pv: new f.SchemaField({
         value: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 }),
+        base: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 }),
         max: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 }),
       }),
       // Redução de dano: descontada de cada dano físico antes de diminuir o PV
@@ -63,11 +67,19 @@ export class AmeacaModel extends foundry.abstract.TypeDataModel {
 
   /**
    * Adapta dados salvos por versões anteriores antes de o Foundry validá-los: até a v0.21.x os
-   * efeitos tinham um formato fixo; hoje são modulares (veja `migrateConditionEffects`).
+   * efeitos tinham um formato fixo; hoje são modulares (veja `migrateConditionEffects`). Até a
+   * v0.22.1 o PV máximo era gravado; hoje há a base (`migrateThreatBase`).
    */
   static migrateData(source) {
     migrateConditionEffects(source);
+    migrateThreatBase(source);
     return super.migrateData(source);
+  }
+
+  /** O PV máximo é a base menos as reduções dos efeitos (`reducaoMaximo` de PV). */
+  prepareDerivedData() {
+    super.prepareDerivedData();
+    this.pv.max = effectiveMax(this.pv.base, this.efeitos, 'pv');
   }
 }
 

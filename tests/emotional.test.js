@@ -6,11 +6,17 @@ import {
   TRAUMAS,
   lookupTrauma,
   pickTrauma,
-  traumaModifier,
-  extraEmotionalDamage,
   applyEmotionalDamage,
   applyTrauma,
 } from '../scripts/rolls/emotional.js';
+import { tableEffect } from '../scripts/rolls/condition-tables.js';
+
+/** Trauma sorteado com o efeito que a ficha recebe (como faz mind.js). */
+const trauma = (state, value) => {
+  const entry = lookupTrauma(value);
+  return applyTrauma(state, entry, tableEffect('trauma', entry, `id${value}`));
+};
+const keys = (state) => state.efeitos.map((e) => e.chave);
 
 const base = (extra = {}) => ({
   pd: 5,
@@ -18,7 +24,7 @@ const base = (extra = {}) => ({
   pavor: 0,
   estupor: false,
   colapso: false,
-  traumas: [],
+  efeitos: [],
   ...extra,
 });
 
@@ -63,31 +69,11 @@ test('trauma persistente repetido pede nova rolagem, exceto chaga da alma e os d
   assert.equal(pickTrauma(18, []).reroll, false);
 });
 
-test('modificadores por atributo e perícia', () => {
-  assert.equal(traumaModifier(['degradacaoCognitiva'], { attrKey: 'mente' }), -1);
-  assert.equal(traumaModifier(['degradacaoCognitiva'], { attrKey: 'fisico' }), 0);
-  assert.equal(traumaModifier(['maculaPsiquica'], { attrKey: 'emocao' }), -1);
-  assert.equal(traumaModifier(['retracaoDefensiva'], { skillKey: 'persuasao' }), -2);
-  assert.equal(traumaModifier(['retracaoDefensiva'], { skillKey: 'intuicao' }), -2);
-  assert.equal(
-    traumaModifier(['maculaPsiquica', 'retracaoDefensiva'], {
-      attrKey: 'emocao',
-      skillKey: 'intuicao',
-    }),
-    -3,
-  );
-  assert.equal(traumaModifier(undefined, { attrKey: 'mente' }), 0);
-});
-
-test('estresse pós-traumático soma 1 a cada dano emocional', () => {
-  assert.equal(extraEmotionalDamage(['estressePosTraumatico']), 1);
-  assert.equal(extraEmotionalDamage([]), 0);
-  const r = applyEmotionalDamage({ current: 5, amount: 2, owned: ['estressePosTraumatico'] });
+test('o dano a mais (estresse pós-traumático) soma em cada dano emocional, não em dano 0', () => {
+  const r = applyEmotionalDamage({ current: 5, amount: 2, extra: 1 });
   assert.deepEqual(r, { before: 5, after: 2, amount: 3, needsTraumaTest: false });
-  assert.equal(
-    applyEmotionalDamage({ current: 5, amount: 0, owned: ['estressePosTraumatico'] }).amount,
-    0,
-  );
+  assert.equal(applyEmotionalDamage({ current: 5, amount: 0, extra: 1 }).amount, 0);
+  assert.equal(applyEmotionalDamage({ current: 5, amount: 2, extra: -3 }).amount, 2);
 });
 
 test('PD em 0 (ou já em 0 e sofrendo dano) exige teste de trauma', () => {
@@ -109,22 +95,22 @@ test('colapso total, estupor e pânico', () => {
 
 test('chaga da alma reduz o PD máximo em 2 e acumula', () => {
   let s = base({ pd: 0, pdMax: 10 });
-  s = applyTrauma(s, lookupTrauma(11));
-  s = applyTrauma(s, lookupTrauma(12));
-  assert.deepEqual([s.pdMax, s.pd, s.traumas], [6, 0, ['chagaAlma', 'chagaAlma']]);
+  s = trauma(s, 11);
+  s = trauma(s, 12);
+  assert.deepEqual([s.pdMax, s.pd, keys(s)], [6, 0, ['trauma:chagaAlma', 'trauma:chagaAlma']]);
   const limitado = applyTrauma(base({ pd: 9, pdMax: 10 }), lookupTrauma(11));
   assert.deepEqual([limitado.pd, limitado.pdMax], [8, 8]);
 });
 
-test('traumas persistentes entram na lista; injeção de ânimo cura 1 PD sem passar do máximo', () => {
-  assert.deepEqual(applyTrauma(base(), lookupTrauma(8)).traumas, ['degradacaoCognitiva']);
-  assert.equal(applyTrauma(base({ pd: 0 }), lookupTrauma(20)).pd, 1);
-  assert.equal(applyTrauma(base({ pd: 10 }), lookupTrauma(20)).pd, 10);
-  assert.deepEqual(applyTrauma(base(), lookupTrauma(20)).traumas, []);
+test('traumas persistentes viram efeitos; injeção de ânimo cura 1 PD sem passar do máximo', () => {
+  assert.deepEqual(keys(trauma(base(), 8)), ['trauma:degradacaoCognitiva']);
+  assert.equal(trauma(base({ pd: 0 }), 20).pd, 1);
+  assert.equal(trauma(base({ pd: 10 }), 20).pd, 10);
+  assert.deepEqual(keys(applyTrauma(base(), lookupTrauma(20))), []);
 });
 
 test('applyTrauma não altera o estado original', () => {
   const original = base();
-  applyTrauma(original, lookupTrauma(8));
-  assert.deepEqual(original.traumas, []);
+  trauma(original, 8);
+  assert.deepEqual(original.efeitos, []);
 });

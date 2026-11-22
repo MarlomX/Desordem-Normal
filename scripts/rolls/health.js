@@ -24,6 +24,8 @@ import { buildInjuryContext, buildTableResultContext } from './presenter.js';
 import { createPending } from './pending-table.js';
 import { isThreat, threatDamage } from './threat.js';
 
+import { storesEffect, tableEffect } from './condition-tables.js';
+
 const TEMPLATE_LESAO = `systems/${SYSTEM_ID}/templates/chat/lesao.hbs`;
 const TEMPLATE_TABELA = `systems/${SYSTEM_ID}/templates/chat/tabela.hbs`;
 const TEMPLATE_DANO = `systems/${SYSTEM_ID}/templates/chat/dano.hbs`;
@@ -39,8 +41,8 @@ function healthState(actor) {
     moribundo: system.estado.moribundo,
     morto: system.estado.morto,
     morteLenta: system.estado.morteLenta,
-    contusao: system.estado.contusao,
-    lesoes: [...system.lesoes],
+    // As lesões que ficam e a contusão são efeitos da aba Condição (v0.22.2)
+    efeitos: actor.toObject().system.efeitos,
   };
 }
 
@@ -50,14 +52,13 @@ function healthState(actor) {
  */
 function healthUpdate(state, testsInScene) {
   return {
+    // O máximo não é gravado: ele sai da base menos as reduções dos efeitos (Laceração Profunda)
     'system.pv.value': state.pv,
-    'system.pv.max': state.pvMax,
     'system.estado.inconsciente': state.inconsciente,
     'system.estado.moribundo': state.moribundo,
     'system.estado.morto': state.morto,
     'system.estado.morteLenta': state.morteLenta,
-    'system.estado.contusao': state.contusao,
-    'system.lesoes': state.lesoes,
+    'system.efeitos': state.efeitos,
     ...(testsInScene === undefined ? {} : { 'system.cena.testesLesao': testsInScene }),
   };
 }
@@ -98,7 +99,11 @@ export async function drawLesion(owned, nonLethal) {
  */
 export async function applyLesionDraw(actor, pending, drawn) {
   const before = healthState(actor);
-  const state = applyLesion(before, drawn.entry);
+  // Lesão que fica na ficha: vira um efeito da aba Condição (texto traduzido pela chave)
+  const effect = storesEffect(drawn.entry)
+    ? tableEffect('lesao', drawn.entry, foundry.utils.randomID())
+    : null;
+  const state = applyLesion(before, drawn.entry, effect);
   await actor.update(healthUpdate(state));
   const context = buildTableResultContext({
     kind: 'lesion',

@@ -5,14 +5,14 @@
   {{#if fromAbility}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.EfeitoJanela.DicaHabilidade"}}</p>{{/if}}
   <div class="desordem-item__campos">
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Ficha.EfeitoNome"}}</span>
-      <input type="text" data-condicao-campo="nome" value="{{effect.nome}}" {{#unless editable}}disabled{{/unless}}>
+      <input type="text" data-condicao-campo="nome" value="{{effect.nome}}" placeholder="{{placeholder.nome}}" {{#unless editable}}disabled{{/unless}}>
     </label>
     <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Efeito.Duracao.Titulo"}}</span>
       <select data-condicao-campo="duracao" {{#unless editable}}disabled{{/unless}}>{{#each durationChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
     </label>
   </div>
   <label class="desordem-ficha__campo desordem-item__descricao"><span>{{localize "DESORDEM.Ficha.EfeitoDescricao"}}</span>
-    <textarea data-condicao-campo="descricao" rows="3" {{#unless editable}}disabled{{/unless}}>{{effect.descricao}}</textarea>
+    <textarea data-condicao-campo="descricao" rows="3" placeholder="{{placeholder.descricao}}" {{#unless editable}}disabled{{/unless}}>{{effect.descricao}}</textarea>
   </label>
   {{> "desordem-normal.efeitos-editor"}}
   {{/unless}}

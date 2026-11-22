@@ -32,6 +32,7 @@ import {
   toggleEffectSkill,
 } from '../rolls/ability-effects-editor.js';
 import { buildChoices } from './context.js';
+import { effectText } from '../rolls/condition-tables.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -92,10 +93,14 @@ export default class ConditionEffectApp extends HandlebarsApplicationMixin(Appli
     return app;
   }
 
-  /** Título da janela: o nome do efeito (ou «Efeito», sem nome). */
+  /**
+   * Título da janela: o nome do efeito (o traduzido pela chave, numa lesão ou trauma sem nome
+   * escrito), ou «Efeito».
+   */
   get title() {
     const effect = this.#effect();
-    return effect?.nome || t('DESORDEM.Ficha.EfeitoJanela.Titulo');
+    const shown = effect ? effectText(effect, t) : null;
+    return shown?.nome || t('DESORDEM.Ficha.EfeitoJanela.Titulo');
   }
 
   /** Lista atual de efeitos do ator, já limpa. */
@@ -129,6 +134,9 @@ export default class ConditionEffectApp extends HandlebarsApplicationMixin(Appli
     return {
       ...context,
       effect,
+      // Texto traduzido pela chave (lesões e traumas): aparece apagado nos campos vazios, e
+      // escrever algo neles passa a valer no lugar
+      placeholder: effectText({ ...effect, nome: '', descricao: '' }, t),
       editable: this.actor.isOwner,
       // Criado por uma habilidade (passo condicional): a dica avisa que ele some sozinho
       fromAbility: effect.origem.startsWith('hab:'),

@@ -9,8 +9,7 @@ import { planDice, resolveTest } from './test.js';
 import { canHelp, applyHelp } from './help.js';
 import { resolveOpposed } from './opposed.js';
 import { buildChatContext, buildOpposedContext } from './presenter.js';
-import { lesionModifier, contusionStepMods } from './injury.js';
-import { traumaModifier } from './emotional.js';
+import { conditionModifier } from './effects.js';
 import { collectStepMods } from './steps.js';
 import { armorPenaltyLine, armorSkillPenalties, armorStepMods } from './equipment.js';
 import {
@@ -339,7 +338,6 @@ export function testDicePreview(actor, skillKey, attribute, extraStepMods = [], 
       ...extraStepMods,
       // Penalidade passiva das armaduras vestidas e dos escudos empunhados nesta perícia
       ...armorStepMods(armorSkillPenalties(actor.items), skillKey),
-      ...contusionStepMods(system.estado, attrKey),
       // Passos manuais e da aba Condição (os de uma perícia só e os de um tipo de teste também)
       ...collectStepMods({
         steps: system.passos,
@@ -456,7 +454,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     resourceCosts: boosts.resourceCosts,
     bonusDiceSpent: reserveDice,
     usos,
-    // Contusão (Físico -1 passo), passos temporários e efeitos da ficha e penalidades fixas de lesões e traumas
+    // Passos temporários e dos efeitos da aba Condição (a contusão é um deles desde a v0.22.2)
     stepMods: [
       ...(rest.stepMods ?? []),
       // Passo no ataque (efeito da arma): no dado da perícia
@@ -465,7 +463,6 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
       ...(penaltyLine ? [{ target: 'skill', steps: -penaltyLine.value }] : []),
       // Munição: passos no dado da perícia do ataque
       ...(ammo?.passos ? [{ target: 'skill', steps: ammo.passos }] : []),
-      ...contusionStepMods(system.estado, attrKey),
       // (os passos condicionais das habilidades chegam como efeitos da ficha, na aba Condição)
       ...collectStepMods({
         steps: system.passos,
@@ -487,8 +484,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
       (rest.modifier ?? 0) +
       // Bônus de ataque da arma
       attack.modifier +
-      lesionModifier(system.lesoes, skillKey) +
-      traumaModifier(system.traumas, { attrKey, skillKey }),
+      // Modificadores fixos dos efeitos da aba Condição (lesões, traumas e os feitos à mão)
+      conditionModifier(system.efeitos, { attrKey, skillKey }),
     fearDie: fear.fearDie,
     fearStored: fear.fearDie !== null, // o dado rolado é o pavor guardado na ficha
     pdCost: fear.pdCost + boosts.pdCost,

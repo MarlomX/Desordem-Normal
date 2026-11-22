@@ -58,36 +58,18 @@ export function pickTrauma(value, owned = []) {
   return { entry, reroll };
 }
 
-const entryOf = (key) => TRAUMAS.find((e) => e.key === key);
-
-/**
- * Modificador fixo que os traumas dão a um teste, pelo atributo-base e pela perícia usados.
- * @param {string[]} owned
- * @param {{attrKey?: string, skillKey?: string}} test
- */
-export function traumaModifier(owned = [], { attrKey, skillKey } = {}) {
-  return owned.reduce((sum, key) => {
-    const entry = entryOf(key);
-    return sum + (entry?.attrMods?.[attrKey] ?? 0) + (entry?.mods?.[skillKey] ?? 0);
-  }, 0);
-}
-
-/** Dano extra por dano emocional sofrido (estresse pós-traumático). */
-export function extraEmotionalDamage(owned = []) {
-  return owned.reduce((sum, key) => sum + (entryOf(key)?.extraDamage ?? 0), 0);
-}
-
 /**
  * Aplica dano emocional (PD), já somando o dano extra dos traumas.
  * Exige teste de trauma quando o PD chega a 0 ou quando o personagem já estava em 0.
  * Gastar PD (custos de habilidades, pavor...) não é dano e não passa por aqui.
- * @param {{current: number, amount: number, owned?: string[]}} opts
+ * @param {{current: number, amount: number, extra?: number}} opts `extra`: dano a mais por dano
+ *   emocional (os efeitos `danoEmocionalExtra` da ficha, veja `emotionalExtra` em effects.js).
  * @returns {{before: number, after: number, amount: number, needsTraumaTest: boolean}}
  */
-export function applyEmotionalDamage({ current, amount, owned = [] }) {
+export function applyEmotionalDamage({ current, amount, extra = 0 }) {
   if (!Number.isInteger(amount) || amount < 0) throw new RangeError(`Dano inválido: ${amount}`);
   if (!Number.isInteger(current) || current < 0) throw new RangeError(`PD inválido: ${current}`);
-  const total = amount > 0 ? amount + extraEmotionalDamage(owned) : 0;
+  const total = amount > 0 ? amount + Math.max(0, Math.trunc(Number(extra) || 0)) : 0;
   const after = Math.max(0, current - total);
   return { before: current, after, amount: total, needsTraumaTest: total > 0 && after === 0 };
 }
@@ -100,19 +82,26 @@ export function applyEmotionalDamage({ current, amount, owned = [] }) {
  * @property {number} pavor Dado de pavor (0 = sem pavor).
  * @property {boolean} estupor
  * @property {boolean} colapso
- * @property {string[]} traumas
+ * @property {object[]} efeitos `system.efeitos` (os traumas que ficam são efeitos desde a v0.22.2).
  */
 
-/** Aplica um trauma sorteado, sem alterar o estado original. */
-export function applyTrauma(state, entry) {
-  const next = { ...state, traumas: [...state.traumas] };
+/**
+ * Aplica um trauma sorteado, sem alterar o estado original. Os traumas que ficam na ficha entram
+ * como o efeito `effect` (montado por `tableEffect`, em condition-tables.js).
+ * @param {MindState} state
+ * @param {object} entry Entrada da tabela.
+ * @param {object} [effect] Efeito do trauma, para os que ficam na ficha.
+ */
+export function applyTrauma(state, entry, effect = null) {
+  const next = { ...state, efeitos: [...(state.efeitos ?? [])] };
   if (entry.kind === 'collapse') return { ...next, colapso: true };
   if (entry.kind === 'fear') return { ...next, pavor: increaseFear(next.pavor) };
   if (entry.kind === 'stupor') return { ...next, estupor: true };
   if (entry.kind === 'morale') return { ...next, pd: Math.min(next.pdMax, next.pd + 1) };
 
-  next.traumas.push(entry.key);
+  if (effect) next.efeitos.push(effect);
   if (entry.pdMaxLoss) {
+    // O máximo cai pelo efeito (base − reduções); aqui só o PD atual acompanha o máximo novo
     next.pdMax = Math.max(0, next.pdMax - entry.pdMaxLoss);
     next.pd = Math.min(next.pd, next.pdMax);
   }

@@ -9,9 +9,11 @@ import { attackWithWeapon, weaponCompanionDice } from '../rolls/equipment-chat.j
 import { useItem } from '../rolls/item-use-chat.js';
 import { armorSkillPenalties, weaponSkill } from '../rolls/equipment.js';
 import { removeEffect } from '../rolls/effects.js';
+import { hasContusion } from '../rolls/condition-tables.js';
 import {
   addEffectFromItem,
   createConditionEffect,
+  conditionEffectText,
   describeConditionEntry,
   openConditionEffect,
   pickConditionEffect,
@@ -88,7 +90,6 @@ import {
   buildAreaRows,
   buildExtraRows,
   addRowAttributes,
-  buildLesionRows,
   buildFearChoices,
   buildRelationRows,
   buildEffectRows,
@@ -138,9 +139,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       addExtra: PersonagemSheet.#onAddExtra,
       removeExtra: PersonagemSheet.#onRemoveExtra,
       rollInjury: PersonagemSheet.#onRollInjury,
-      removeLesion: PersonagemSheet.#onRemoveLesion,
       rollTrauma: PersonagemSheet.#onRollTrauma,
-      removeTrauma: PersonagemSheet.#onRemoveTrauma,
       addRelation: PersonagemSheet.#onAddRelation,
       removeRelation: PersonagemSheet.#onRemoveRelation,
       setRelationDegree: PersonagemSheet.#onSetRelationDegree,
@@ -246,10 +245,17 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       pdPercent: resourcePercent(system.pd.value, system.pd.max),
       pvLow: isResourceLow(system.pv.value, system.pv.max),
       pdLow: isResourceLow(system.pd.value, system.pd.max),
-      statusTags: buildStatusTags(system.estado, {
-        stateLabel: (key) => t(`DESORDEM.Ficha.Estado.${key}`),
-        fearLabel: (die) => game.i18n.format('DESORDEM.Ficha.Cab.PavorEtiqueta', { dado: die }),
-      }),
+      // Máximo abaixo da base (Laceração Profunda, Chaga da Alma...): o cabeçalho mostra os dois
+      pvReduced: system.pv.max < system.pv.base,
+      pdReduced: system.pd.max < system.pd.base,
+      // A contusão é um efeito desde a v0.22.2: a etiqueta vem dele
+      statusTags: buildStatusTags(
+        { ...system.estado, contusao: hasContusion(system.efeitos) },
+        {
+          stateLabel: (key) => t(`DESORDEM.Ficha.Estado.${key}`),
+          fearLabel: (die) => game.i18n.format('DESORDEM.Ficha.Cab.PavorEtiqueta', { dado: die }),
+        },
+      ),
       // Barras dos recursos das habilidades (uma por efeito `recurso`) e a reserva de dados bônus
       resourceBars: resourceBars(actorEffects(this.document), system.recursosHab ?? {}, t),
       bonusDice: groupBonusDice(system.dadosBonus)
@@ -306,20 +312,12 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       maxExtras: MAX_EXTRAS,
       nextInjuryDT: injuryDT(system.cena.testesLesao),
       nextTraumaDT: traumaDT(system.cena.testesTrauma),
-      traumas: buildLesionRows(
-        system.traumas,
-        (key) => t(`DESORDEM.Traumas.${key}.Nome`),
-        (key) => t(`DESORDEM.Traumas.${key}.Descricao`),
-      ),
       fearChoices: buildFearChoices(system.estado.pavor, t('DESORDEM.Ficha.SemPavor')),
-      lesions: buildLesionRows(
-        system.lesoes,
-        (key) => t(`DESORDEM.Lesoes.${key}.Nome`),
-        (key) => t(`DESORDEM.Lesoes.${key}.Descricao`),
-      ),
-      // Efeitos da aba Condição, em linhas compactas (a edição é na janela do efeito)
+      // Efeitos da aba Condição, em linhas compactas (a edição é na janela do efeito); as lesões
+      // e os traumas também são efeitos, com o texto traduzido pela chave
       effects: buildEffectRows(system.efeitos, {
         describe: describeConditionEntry,
+        text: conditionEffectText,
         durationLabel: (key) => t(`DESORDEM.Efeito.Duracao.${key}`),
         editable: this.isEditable,
       }),
@@ -691,15 +689,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     );
   }
 
-  /** Remove uma lesão da lista (uma ocorrência, se ela se repete). */
-  static async #onRemoveLesion(event, target) {
-    const lesoes = [...this.document.system.lesoes];
-    const index = lesoes.indexOf(target.dataset.lesion);
-    if (index < 0) return;
-    lesoes.splice(index, 1);
-    await this.document.update({ 'system.lesoes': lesoes });
-  }
-
   /** Teste de trauma manual. */
   static async #onRollTrauma(event) {
     await this.#rollWithChoices(
@@ -712,15 +701,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       },
       (options) => rollTraumaTest(this.document, options),
     );
-  }
-
-  /** Remove um trauma da lista (cura manual; uma ocorrência, se ele se repete). */
-  static async #onRemoveTrauma(event, target) {
-    const traumas = [...this.document.system.traumas];
-    const index = traumas.indexOf(target.dataset.trauma);
-    if (index < 0) return;
-    traumas.splice(index, 1);
-    await this.document.update({ 'system.traumas': traumas });
   }
 
   /** Acrescenta uma relação nova (grau 1) à ficha. */

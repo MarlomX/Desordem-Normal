@@ -51,16 +51,18 @@ function hiddenField(itemType, tipo, key) {
 }
 
 /**
- * Campo escondido pelo valor de outro campo do mesmo efeito. Hoje só no `passo` da aba Condição:
- * «Atributo» só aparece quando o passo vale no dado do atributo, e «Perícia», quando vale numa
- * perícia só (no dado de qualquer perícia, nenhum dos dois).
+ * Campo escondido pelo valor de outro campo do mesmo efeito, nos tipos da aba Condição: no `passo`,
+ * «Atributo» só aparece quando ele vale no dado do atributo, e «Perícia», quando vale numa perícia
+ * só (no dado de qualquer perícia, nenhum dos dois); no `modificador`, o mesmo pelo campo `sobre`.
  * @param {{tipo: string, params: object}} effect Efeito já limpo.
  * @param {string} key Campo.
  */
 export function hiddenByValue(effect, key) {
-  if (effect.tipo !== 'passo') return false;
-  if (key === 'atributo') return effect.params.alvo !== 'atributo';
-  if (key === 'pericia') return effect.params.alvo !== 'pericia';
+  // `passo` escolhe pelo `alvo`; `modificador`, pelo `sobre` (os dois com atributo / perícia)
+  const chooser = { passo: 'alvo', modificador: 'sobre' }[effect.tipo];
+  if (!chooser) return false;
+  if (key === 'atributo') return effect.params[chooser] !== 'atributo';
+  if (key === 'pericia') return effect.params[chooser] !== 'pericia';
   return false;
 }
 
@@ -89,6 +91,8 @@ const CHOICE_GROUPS = Object.freeze({
   ferramenta: 'Ferramentas',
   alcance: 'Alcances',
   alvo: 'Alvos',
+  sobre: 'Sobre',
+  recursoMax: 'RecursosMax',
 });
 
 /**
@@ -194,8 +198,11 @@ export function effectSupported(effect, itemType = 'habilidade') {
     // Itens gerais (v0.21.8): dado bônus ao usar e munição nos ataques
     case 'concederDado':
     case 'municao':
-    // Efeitos da aba Condição (v0.22.0): passos nos testes
+    // Efeitos da aba Condição: passos e modificadores nos testes, dano emocional a mais, máximo
     case 'passo':
+    case 'modificador':
+    case 'danoEmocionalExtra':
+    case 'reducaoMaximo':
       return true;
     case 'ganharRecurso':
       // Todos os gatilhos têm uso desde a v0.20.7 (ao se defender, início do combate)
@@ -328,6 +335,18 @@ export function describeEffect(effect, { t, skill, itemType = 'habilidade' }) {
         alvo: stepTargetText(p, { t, skill }),
         teste: p.teste === 'qualquer' ? '' : ` (${t(`DESORDEM.Efeito.Testes.${p.teste}`)})`,
       });
+    case 'modificador':
+      return t(key('modificador'), {
+        mod: p.mod > 0 ? `+${p.mod}` : String(p.mod),
+        alvo: modifierTargetText(p, { t, skill }),
+      });
+    case 'danoEmocionalExtra':
+      return t(key('danoEmocionalExtra'), { extra: p.extra });
+    case 'reducaoMaximo':
+      return t(key('reducaoMaximo'), {
+        reducao: p.reducao,
+        recurso: t(`DESORDEM.Efeito.RecursosMax.${p.recursoMax}`),
+      });
     default:
       return '';
   }
@@ -343,6 +362,24 @@ function stepTargetText(params, { t, skill }) {
   return params.atributo === 'todos'
     ? t('DESORDEM.Efeito.TodosAtributos')
     : t(`DESORDEM.Atributos.${params.atributo}`);
+}
+
+/**
+ * Testes de um `modificador`, em texto: «com Mente», «com qualquer atributo» ou «de Acrobacia»
+ * («?» se nenhuma perícia foi escolhida).
+ */
+function modifierTargetText(params, { t, skill }) {
+  if (params.sobre === 'pericia') {
+    return t('DESORDEM.Efeito.Resumo.DePericia', {
+      pericia: params.pericia ? skill(params.pericia) : '?',
+    });
+  }
+  return t('DESORDEM.Efeito.Resumo.ComAtributo', {
+    atributo:
+      params.atributo === 'todos'
+        ? t('DESORDEM.Efeito.Resumo.QualquerAtributo')
+        : t(`DESORDEM.Atributos.${params.atributo}`),
+  });
 }
 
 /**

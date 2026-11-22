@@ -18,6 +18,7 @@ import { attributeChoiceUpdate } from '../rolls/attribute.js';
 import { removeEffect } from '../rolls/effects.js';
 import {
   addEffectFromItem,
+  conditionEffectText,
   createConditionEffect,
   describeConditionEntry,
   openConditionEffect,
@@ -156,6 +157,8 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       tabState: tabs.state,
       pvPercent: resourcePercent(system.pv.value, system.pv.max),
       pvLow: isResourceLow(system.pv.value, system.pv.max),
+      // Máximo abaixo da base (efeito de redução): o cabeçalho mostra os dois
+      pvReduced: system.pv.max < system.pv.base,
       statusTags: creatureStatusTags(system, (key) => t(`DESORDEM.Criatura.Estado.${key}`)),
       elements: buildElementRows(system.elementos, (key) => t(`DESORDEM.Elementos.${key}`)),
       secondary: secondaryElementChoices(system.elementos, (key) => t(`DESORDEM.Elementos.${key}`)),
@@ -181,6 +184,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       // Efeitos da aba Condição, em linhas compactas (a edição é na janela do efeito)
       effects: buildEffectRows(system.efeitos, {
         describe: describeConditionEntry,
+        text: conditionEffectText,
         durationLabel: (key) => t(`DESORDEM.Efeito.Duracao.${key}`),
         editable: this.isEditable,
       }),
