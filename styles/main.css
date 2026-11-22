@@ -4191,8 +4191,17 @@ button.desordem-desafios-cartao__nome:hover {
   font-weight: bold;
   opacity: 0.85;
 }
-.desordem-ponto__campo prose-mirror {
-  min-height: 3em;
+/* Editores ricos da edição (descrição, linhas, contexto, desafio): altura mínima que cabe a
+   barra de ferramentas E o texto. Até a v0.24.1 o da linha tinha 3em, e ao abrir para escrever
+   a barra ocupava tudo (v0.24.2). A área do texto cresce com o que for escrito. */
+.desordem-ponto--edicao prose-mirror {
+  display: flex;
+  flex-direction: column;
+  min-height: 10em;
+}
+.desordem-ponto--edicao prose-mirror .editor-content {
+  flex: 1;
+  min-height: 6em;
 }
 .desordem-ponto__adicionar {
   align-self: flex-start;
