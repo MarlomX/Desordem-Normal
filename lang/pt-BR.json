@@ -1792,6 +1792,14 @@
       "Anotacoes": "Anotações",
       "AnotacoesDica": "Notas de jogo: pistas, nomes, lugares e lembretes.",
       "Vazio": "Nada escrito."
+    },
+    "Cena": {
+      "SoMestre": "Só o mestre pode iniciar uma nova cena para todos.",
+      "SemPersonagens": "Nenhum personagem com dono jogador para iniciar a nova cena.",
+      "ConfirmarTodos": "Iniciar uma nova cena para {n} personagem(ns)? Para cada um: zera os testes de lesão e trauma da cena, esvazia os recursos das habilidades que esvaziam e os dados bônus, remove efeitos até o fim da cena e recupera 1 PV se estiver com 0.",
+      "ConfirmarCriatura": "Reiniciar a cena desta criatura? Zera os passos temporários e remove os efeitos que duram até o fim da cena.",
+      "CriaturaFeita": "Cena reiniciada para {nome}.",
+      "DicaCriatura": "Passos temporários a 0 e sem os efeitos de cena. A macro «Nova cena» do mestre não mexe em criaturas."
     }
   },
   "TYPES.Item.arma": "Arma",

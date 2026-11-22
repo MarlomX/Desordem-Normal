@@ -1792,6 +1792,14 @@
       "Anotacoes": "Notes",
       "AnotacoesDica": "Play notes: clues, names, places and reminders.",
       "Vazio": "Nothing written."
+    },
+    "Cena": {
+      "SoMestre": "Only the GM can start a new scene for everyone.",
+      "SemPersonagens": "No player-owned character to start the new scene.",
+      "ConfirmarTodos": "Start a new scene for {n} character(s)? For each one: resets the scene injury and trauma tests, empties the ability resources that empty and the bonus dice, removes until-end-of-scene effects and recovers 1 HP if at 0.",
+      "ConfirmarCriatura": "Reset the scene for this creature? Clears temporary steps and removes the effects that last until the end of the scene.",
+      "CriaturaFeita": "Scene reset for {nome}.",
+      "DicaCriatura": "Temporary steps back to 0 and no scene effects. The GM's «New scene» macro does not touch creatures."
     }
   },
   "TYPES.Item.arma": "Weapon",

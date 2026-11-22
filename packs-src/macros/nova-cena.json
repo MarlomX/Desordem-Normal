@@ -1,0 +1,15 @@
+{
+  "_id": "dnMacroNovaCena1",
+  "_key": "!macros!dnMacroNovaCena1",
+  "name": "Nova cena",
+  "type": "script",
+  "img": "icons/svg/clockwork.svg",
+  "scope": "global",
+  "command": "// Nova cena para todos (Desordem-Normal, v0.23.3): reinicia a cena de todos os personagens\n// com dono jogador e avisa no chat. Só o mestre pode rodar. A lógica fica no sistema:\n// veja scripts/rolls/scene-macro.js (newSceneForAll).\ngame.desordem.newSceneForAll();\n",
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

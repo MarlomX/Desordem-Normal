@@ -11,6 +11,8 @@ import {
   resolveWithValues,
   activeBoosts,
   sceneReset,
+  creatureSceneReset,
+  sceneTargets,
 } from '../scripts/rolls/abilities.js';
 
 test('só testes com DT que falharam enchem o ímpeto; o perdedor do oposto também', () => {
@@ -181,4 +183,36 @@ test('activeBoosts usa os dados extras informados (efeitos) no lugar dos antigos
     activeBoosts(['e1'], { skillKey: 'luta', impeto: 0, pd: 1, diceOptions }).used,
     [],
   );
+});
+
+test('creatureSceneReset zera os passos e tira só os efeitos de cena (v0.23.3)', () => {
+  const efeitos = [
+    { id: 'a', nome: 'Caído', duracao: 'cena', efeitos: [] },
+    { id: 'b', nome: 'Maldição', duracao: 'permanente', efeitos: [] },
+  ];
+  const update = creatureSceneReset(efeitos);
+  assert.deepEqual(
+    [
+      update['system.passos.fisico'],
+      update['system.passos.mente'],
+      update['system.passos.emocao'],
+      update['system.passos.pericias'],
+    ],
+    [0, 0, 0, 0],
+  );
+  assert.deepEqual(
+    update['system.efeitos'].map((e) => e.id),
+    ['b'],
+  );
+  assert.equal('system.pv.value' in update, false);
+});
+
+test('sceneTargets: só personagens com dono jogador', () => {
+  const ana = { name: 'Ana', type: 'personagem', hasPlayerOwner: true };
+  const npc = { name: 'Vilão', type: 'personagem', hasPlayerOwner: false };
+  const fera = { name: 'Fera', type: 'criatura', hasPlayerOwner: true };
+  const bia = { name: 'Bia', type: 'personagem', hasPlayerOwner: true };
+  assert.deepEqual(sceneTargets([ana, npc, fera, bia]), [ana, bia]);
+  assert.deepEqual(sceneTargets([]), []);
+  assert.deepEqual(sceneTargets(undefined), []);
 });

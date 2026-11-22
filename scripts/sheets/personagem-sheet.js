@@ -158,6 +158,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       useEffect: PersonagemSheet.#onUseEffect,
       stepAbilityResource: PersonagemSheet.#onStepAbilityResource,
       newScene: PersonagemSheet.#onNewScene,
+      toggleMartial: PersonagemSheet.#onToggleMartial,
       openChase: PersonagemSheet.#onOpenChase,
       recoverBreath: PersonagemSheet.#onRecoverBreath,
       openStealth: PersonagemSheet.#onOpenStealth,
@@ -855,6 +856,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         },
       ),
       proficiencyFromAbility: fromAbility,
+      // O botão fica azul com a marcação manual ou com uma habilidade que dá a proficiência
+      martialActive: Boolean(actor.system.proficienciaMarcial) || fromAbility,
     };
   }
 
@@ -1005,5 +1008,15 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       modal: true,
     });
     if (confirmed === true) await endScene(this.document);
+  }
+
+  /**
+   * Botão da proficiência marcial (v0.23.3): liga e desliga a marcação manual. Quando a
+   * proficiência vem de uma habilidade, o botão fica travado na ficha e não chega aqui.
+   */
+  static async #onToggleMartial() {
+    await this.document.update({
+      'system.proficienciaMarcial': !this.document.system.proficienciaMarcial,
+    });
   }
 }

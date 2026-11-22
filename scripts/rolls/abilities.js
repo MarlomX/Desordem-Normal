@@ -215,3 +215,32 @@ export function sceneReset(state) {
     'system.efeitos': keepAfterScene(state.efeitos),
   };
 }
+
+/**
+ * Nova cena de uma criatura (botão da ficha, v0.23.3): os passos temporários voltam a 0 e saem os
+ * efeitos que duram até o fim da cena. PV e o resto ficam como estão (a criatura não tem testes
+ * de lesão, recursos de habilidade nem dados bônus).
+ * @param {object[]} efeitos `system.efeitos` gravados (`toObject()`).
+ * @returns {Object} Valores novos, nas chaves da ficha (`system.*`).
+ */
+export function creatureSceneReset(efeitos) {
+  return {
+    'system.passos.fisico': 0,
+    'system.passos.mente': 0,
+    'system.passos.emocao': 0,
+    'system.passos.pericias': 0,
+    'system.efeitos': keepAfterScene(efeitos),
+  };
+}
+
+/**
+ * Quem entra na nova cena da macro do mestre (v0.23.3): os personagens que têm dono jogador
+ * (`hasPlayerOwner`). Criaturas e personagens só do mestre (NPCs) ficam de fora.
+ * @param {{type: string, hasPlayerOwner: boolean}[]} actors Atores do mundo (`game.actors`).
+ * @returns {object[]} Os mesmos objetos, na ordem recebida.
+ */
+export function sceneTargets(actors) {
+  return [...(actors ?? [])].filter(
+    (actor) => actor?.type === 'personagem' && actor.hasPlayerOwner,
+  );
+}

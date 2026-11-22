@@ -199,3 +199,30 @@ test('compêndio de efeitos: o manifesto aponta para o pacote', () => {
   assert.equal(pack.type, 'Item');
   assert.ok(manifest.documentTypes.Item.efeito);
 });
+
+// ---------- Compêndio «Macros do mestre» (v0.23.3) ----------
+
+const macrosDir = path.join(root, 'packs-src', 'macros');
+const macroDocs = fs
+  .readdirSync(macrosDir)
+  .filter((file) => file.endsWith('.json'))
+  .map((file) => ({ file, doc: JSON.parse(fs.readFileSync(path.join(macrosDir, file), 'utf8')) }));
+
+test('compêndio de macros: a macro «Nova cena» chama o sistema', () => {
+  assert.equal(macroDocs.length, 1);
+  const [{ file, doc }] = macroDocs;
+  assert.match(doc._id, /^[A-Za-z0-9]{16}$/, file);
+  assert.equal(doc._key, `!macros!${doc._id}`, file);
+  assert.equal(doc.name, 'Nova cena');
+  assert.equal(doc.type, 'script');
+  // A lógica fica no código do sistema (atualiza junto); a macro só chama a função
+  assert.match(doc.command, /game\.desordem\.newSceneForAll\(\)/);
+});
+
+test('compêndio de macros: o manifesto aponta para o pacote, escondido dos jogadores', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'system.json'), 'utf8'));
+  const pack = manifest.packs.find((entry) => entry.name === 'macros');
+  assert.equal(pack.path, 'packs/macros');
+  assert.equal(pack.type, 'Macro');
+  assert.equal(pack.ownership.PLAYER, 'NONE');
+});

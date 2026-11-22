@@ -54,6 +54,7 @@ import {
   healAlly,
   gainAnalysisMarkers,
 } from './rolls/abilities-chat.js';
+import { newSceneForAll } from './rolls/scene-macro.js';
 import { computeDamage } from './rolls/damage.js';
 import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
 import { renderTableCard, registerTableSocket } from './rolls/table-chat.js';
@@ -171,6 +172,8 @@ Hooks.once('init', () => {
     attackWithWeapon,
     useItem,
     endScene,
+    // Macro do mestre: nova cena para os personagens dos jogadores (v0.23.3)
+    newSceneForAll,
     healAlly,
     gainAnalysisMarkers,
     perseguicao: chaseApi,

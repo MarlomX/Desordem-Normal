@@ -6,7 +6,9 @@
     · {{localize "DESORDEM.Ficha.MaosEmUso" usadas=equipment.hands.used}}{{#if equipment.hands.over}} <strong class="desordem-ficha__alerta">{{localize "DESORDEM.Ficha.MaosDemais"}}</strong>{{/if}}
   </p>
 
-  <label class="desordem-ficha__campo"><input type="checkbox" name="system.proficienciaMarcial" {{#if system.proficienciaMarcial}}checked{{/if}} {{#unless editable}}disabled{{/unless}}> <span>{{localize "DESORDEM.Equipamento.ProficienciaMarcial"}}</span>{{#if equipment.proficiencyFromAbility}} <span class="desordem-ficha__dica">{{localize "DESORDEM.Equipamento.ProficienciaHabilidade"}}</span>{{/if}}</label>
+  {{! Proficiência marcial (v0.23.3): botão inteiro, apagado sem a proficiência e azul com ela.
+    Vinda de uma habilidade, fica azul e travado (desmarcar a manual não mudaria nada). }}
+  <button type="button" class="desordem-proficiencia{{#if equipment.martialActive}} is-ativa{{/if}}" data-action="toggleMartial" aria-pressed="{{#if equipment.martialActive}}true{{else}}false{{/if}}"{{#if equipment.proficiencyFromAbility}} disabled data-tooltip="{{localize "DESORDEM.Equipamento.ProficienciaHabilidade"}}"{{else}}{{#unless editable}} disabled{{/unless}}{{/if}}><i class="fa-solid fa-medal" aria-hidden="true"></i> <span>{{localize "DESORDEM.Equipamento.ProficienciaMarcial"}}</span>{{#if equipment.proficiencyFromAbility}} <span class="desordem-proficiencia__origem">{{localize "DESORDEM.Equipamento.ProficienciaHabilidade"}}</span>{{/if}}</button>
 
   <h4>{{localize "DESORDEM.Ficha.Armas"}}</h4>
   {{#each equipment.weapons}}

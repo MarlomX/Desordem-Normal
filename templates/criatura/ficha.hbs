@@ -98,5 +98,7 @@
   {{#each effects}}{{> "desordem-normal.efeito-linha"}}{{/each}}
   {{#unless effects.length}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemEfeitos"}}</p>{{/unless}}
   {{#if editable}}{{> "desordem-normal.efeitos-botoes"}}{{/if}}
+  {{! Nova cena da criatura (v0.23.3): passos a 0 e sem os efeitos de cena; a macro do mestre não mexe em criaturas }}
+  {{#if editable}}<button type="button" class="desordem-criatura__nova-cena" data-action="newScene" data-tooltip="{{localize "DESORDEM.Cena.DicaCriatura"}}"><i class="fa-solid fa-clapperboard" aria-hidden="true"></i> {{localize "DESORDEM.Habilidade.NovaCena"}}</button>{{/if}}
 </section>
 </section>

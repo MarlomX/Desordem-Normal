@@ -10,6 +10,7 @@ import { SYSTEM_ID, ATRIBUTOS, PERICIAS } from '../config.js';
 import { rollSkill, rollExtraSkill, testDicePreview } from '../rolls/chat.js';
 import { attackWithWeapon, weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { useAbilityEffect } from '../rolls/abilities-chat.js';
+import { endCreatureScene } from '../rolls/scene-macro.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
 import { weaponSkill } from '../rolls/equipment.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
@@ -104,6 +105,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       toggleElementPicker: CriaturaSheet.#onToggleElementPicker,
       addSecondaryElement: CriaturaSheet.#onSecondaryElement,
       removeSecondaryElement: CriaturaSheet.#onSecondaryElement,
+      newScene: CriaturaSheet.#onNewScene,
     },
     // Itens podem ser arrastados da barra lateral ou de outra ficha para esta
     dragDrop: [{ dragSelector: '[data-item-id]', dropSelector: null }],
@@ -518,5 +520,10 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     const all = [...this.element.querySelectorAll('details[data-habilidade]')];
     const open = all.some((details) => !details.open);
     for (const details of all) details.open = open;
+  }
+
+  /** Botão «Nova cena» (v0.23.3): passos a 0 e sem os efeitos de cena, depois de confirmar. */
+  static async #onNewScene() {
+    await endCreatureScene(this.document);
   }
 }
