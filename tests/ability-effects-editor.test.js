@@ -8,6 +8,7 @@ import {
   editorEffects,
   editorRows,
   effectSupported,
+  hiddenByValue,
   moveEffect,
   removeEffect,
   resourceKeys,
@@ -240,4 +241,20 @@ test('resourceKeys junta as chaves de recursos definidos e usados, sem repetir',
   const actor = [one('dadoExtra', { custo: { tipo: 'recurso', valor: 1, recurso: 'furia' } })];
   assert.deepEqual(resourceKeys(ability, actor), ['furia', 'impeto']);
   assert.deepEqual(resourceKeys([], []), []);
+});
+
+test('passo da aba Condição: «Atributo» e «Perícia» aparecem conforme o alvo', () => {
+  const passo = (params) => normalizeEffect({ id: 'p', tipo: 'passo', params });
+  const keys = (params) =>
+    editorRows([passo(params)], { t, skills, openId: 'p', itemType: 'efeito' })[0].fields.map(
+      (f) => f.key,
+    );
+  assert.deepEqual(keys({ alvo: 'atributo' }), ['alvo', 'atributo', 'passos', 'teste']);
+  assert.deepEqual(keys({ alvo: 'pericia' }), ['alvo', 'pericia', 'passos', 'teste']);
+  assert.deepEqual(keys({ alvo: 'pericias' }), ['alvo', 'passos', 'teste']);
+  assert.equal(hiddenByValue(passo({ alvo: 'pericias' }), 'pericia'), true);
+  // Outros tipos não mudam
+  assert.equal(hiddenByValue(one('dadoExtra'), 'dado'), false);
+  // O passo é aceito (sem aviso de «sem uso») no efeito da aba Condição
+  assert.equal(effectSupported(passo({}), 'efeito'), true);
 });

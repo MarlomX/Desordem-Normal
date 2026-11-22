@@ -74,7 +74,8 @@
       "arma": {},
       "armadura": {},
       "item": {},
-      "habilidade": {}
+      "habilidade": {},
+      "efeito": {}
     }
   },
   "socket": true,

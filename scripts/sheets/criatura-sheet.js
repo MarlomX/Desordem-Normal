@@ -11,12 +11,18 @@ import { rollSkill, rollExtraSkill, testDicePreview } from '../rolls/chat.js';
 import { attackWithWeapon, weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { useAbilityEffect } from '../rolls/abilities-chat.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
-import { describeEffect } from '../rolls/ability-effects-editor.js';
 import { weaponSkill } from '../rolls/equipment.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { proposeOpposed } from '../opposed/opposed-chat.js';
 import { attributeChoiceUpdate } from '../rolls/attribute.js';
-import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
+import { removeEffect } from '../rolls/effects.js';
+import {
+  addEffectFromItem,
+  createConditionEffect,
+  describeConditionEntry,
+  openConditionEffect,
+  pickConditionEffect,
+} from './condition-effects-ui.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { addExtra, canAddExtra, removeExtra, updateExtra } from '../rolls/extras.js';
 import {
@@ -83,6 +89,8 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       adjustResource: CriaturaSheet.#onAdjustResource,
       stepSteps: CriaturaSheet.#onStepSteps,
       addEffect: CriaturaSheet.#onAddEffect,
+      editEffect: CriaturaSheet.#onEditEffect,
+      pickEffect: CriaturaSheet.#onPickEffect,
       removeEffect: CriaturaSheet.#onRemoveEffect,
       createItem: CriaturaSheet.#onCreateItem,
       editItem: CriaturaSheet.#onEditItem,
@@ -170,19 +178,11 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       ),
       canAddExtraSkill: canAddExtra(system.periciasExtras, MAX_THREAT_SKILLS),
       maxExtraSkills: MAX_THREAT_SKILLS,
+      // Efeitos da aba Condição, em linhas compactas (a edição é na janela do efeito)
       effects: buildEffectRows(system.efeitos, {
-        attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
-        noAttrLabel: t('DESORDEM.Ficha.EfeitoSemAtributo'),
-        allAttrLabel: t('DESORDEM.Ficha.EfeitoTodosAtributos'),
-        attributes: ATRIBUTOS,
+        describe: describeConditionEntry,
+        durationLabel: (key) => t(`DESORDEM.Efeito.Duracao.${key}`),
         editable: this.isEditable,
-        // Resumo dos passos que a linha simples ainda não mostra (perícia, tipo de teste)
-        describe: (entry) =>
-          describeEffect(entry, {
-            t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
-            skill: (key) => (PERICIAS[key] ? t(`DESORDEM.Pericias.${key}`) : key),
-            itemType: 'efeito',
-          }),
       }),
       attacks: buildAttackRows(items, {
         kindLabel: (kind) => t(`DESORDEM.Item.Tipo.${kind}`),
@@ -209,7 +209,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     };
     bind('[data-attr-campo]', this.#onAttributeField);
     bind('[data-extra-campo]', this.#onExtraField);
-    bind('[data-efeito-campo]', this.#onEffectField);
     bind('[data-elemento-principal]', this.#onPrimaryElement);
     for (const details of this.element.querySelectorAll('details[data-habilidade]')) {
       details.addEventListener('toggle', () => this.#rememberAbility(details));
@@ -218,9 +217,15 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
 
   /**
    * A criatura só recebe armas (ataques) e habilidades; outros itens arrastados são recusados.
+   * Um Item de efeito é copiado para a lista de efeitos.
    * Depois de aceitar, abre a aba de ações.
    */
   async _onDropItem(event, item) {
+    // Item de efeito da aba Condição: vira uma cópia na lista de efeitos da criatura
+    if (item?.type === 'efeito') {
+      if (this.isEditable) await addEffectFromItem(this.document, item);
+      return false;
+    }
     const tab = creatureTabForItemType(item?.type);
     if (!tab) {
       ui.notifications.warn(t('DESORDEM.Criatura.ItemRecusado'));
@@ -278,17 +283,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     const list = this.document.toObject().system[EXTRA_FIELD];
     await this.document.update({
       [`system.${EXTRA_FIELD}`]: updateExtra(list, id, { [extraCampo]: value }),
-    });
-  }
-
-  /** Edição de um campo de um efeito temporário (nome, descrição, atributo, passos, fim de cena). */
-  async #onEffectField(field) {
-    const value = field.type === 'checkbox' ? field.checked : field.value;
-    const effects = this.document.toObject().system.efeitos;
-    await this.document.update({
-      'system.efeitos': updateEffect(effects, Number(field.dataset.index), {
-        [field.dataset.efeitoCampo]: value,
-      }),
     });
   }
 
@@ -399,13 +393,20 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     await this.document.update({ [`system.passos.${key}`]: next[key] });
   }
 
-  /** Acrescenta um efeito temporário vazio (caído, atordoado...). */
+  /** Cria um efeito vazio (caído, atordoado...) e abre a janela dele. */
   static async #onAddEffect() {
-    const effects = this.document.toObject().system.efeitos;
-    // Id novo do efeito (o Foundry gera um texto aleatório de 16 letras)
-    await this.document.update({
-      'system.efeitos': addEffect(effects, foundry.utils.randomID()),
-    });
+    // Efeito vazio no fim da lista, já aberto na janela de edição
+    await createConditionEffect(this.document);
+  }
+
+  /** Abre a janela de edição do efeito clicado. */
+  static async #onEditEffect(event, target) {
+    await openConditionEffect(this.document, Number(target.dataset.index));
+  }
+
+  /** Lista «Do compêndio»: escolhe um Item de efeito e o copia para a ficha. */
+  static async #onPickEffect() {
+    await pickConditionEffect(this.document);
   }
 
   /** Remove o efeito temporário clicado. */

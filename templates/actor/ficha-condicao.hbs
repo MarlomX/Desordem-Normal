@@ -1,4 +1,44 @@
 <section class="desordem-aba{{#if tabState.condicao}} is-active{{/if}}" data-tab-panel="condicao">
+{{! Ordem da aba (v0.22.1): Medo, Efeitos, Saúde, Trauma, barras temporárias (furtividade) e Reiniciar cena }}
+<section class="desordem-ficha__secao desordem-ficha__medo">
+  <h3><i class="fa-solid fa-ghost" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Medo"}}</h3>
+
+  <div class="desordem-ficha__estado">
+    <label class="desordem-ficha__campo">
+      <span>{{localize "DESORDEM.Ficha.DadoPavor"}}</span>
+      <span class="desordem-dado-campo">
+        {{#if system.estado.pavor}}{{dadoPavor system.estado.pavor}}{{else}}<span class="desordem-dado-campo__vazio">—</span>{{/if}}
+        <select class="desordem-forma__select" name="system.estado.pavor" {{#unless editable}}disabled{{/unless}}>
+          {{#each fearChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </span>
+    </label>
+  </div>
+
+</section>
+<section class="desordem-ficha__secao desordem-ficha__efeitos">
+  <h3><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Efeitos"}}</h3>
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaEfeitos"}}</p>
+
+  {{#each lesions}}
+  <div class="desordem-efeito-ativo">
+    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.lesao"}}</span>
+    <span class="desordem-efeito-ativo__texto"><strong>{{label}}{{#if repeated}} ×{{count}}{{/if}}</strong> — {{description}}</span>
+    {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeLesion" data-lesion="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverLesao"}}">×</button>{{/if}}
+  </div>
+  {{/each}}
+  {{#each traumas}}
+  <div class="desordem-efeito-ativo">
+    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.trauma"}}</span>
+    <span class="desordem-efeito-ativo__texto"><strong>{{label}}{{#if repeated}} ×{{count}}{{/if}}</strong> — {{description}}</span>
+    {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeTrauma" data-trauma="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverTrauma"}}">×</button>{{/if}}
+  </div>
+  {{/each}}
+
+  {{#each effects}}{{> "desordem-normal.efeito-linha"}}{{/each}}
+  {{#unless lesions.length}}{{#unless traumas.length}}{{#unless effects.length}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemEfeitos"}}</p>{{/unless}}{{/unless}}{{/unless}}
+  {{#if editable}}{{> "desordem-normal.efeitos-botoes"}}{{/if}}
+</section>
 <section class="desordem-ficha__secao desordem-ficha__saude">
   <h3><i class="fa-solid fa-heart-pulse" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Saude"}}</h3>
 
@@ -19,22 +59,6 @@
     <span>{{localize "DESORDEM.Ficha.PrimeirosSocorrosCena"}}</span>
     <input type="number" name="system.cena.primeirosSocorros" value="{{system.cena.primeirosSocorros}}" min="0" {{#unless editable}}disabled{{/unless}}>
   </label>
-
-</section>
-<section class="desordem-ficha__secao desordem-ficha__medo">
-  <h3><i class="fa-solid fa-ghost" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Medo"}}</h3>
-
-  <div class="desordem-ficha__estado">
-    <label class="desordem-ficha__campo">
-      <span>{{localize "DESORDEM.Ficha.DadoPavor"}}</span>
-      <span class="desordem-dado-campo">
-        {{#if system.estado.pavor}}{{dadoPavor system.estado.pavor}}{{else}}<span class="desordem-dado-campo__vazio">—</span>{{/if}}
-        <select class="desordem-forma__select" name="system.estado.pavor" {{#unless editable}}disabled{{/unless}}>
-          {{#each fearChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
-        </select>
-      </span>
-    </label>
-  </div>
 
 </section>
 <section class="desordem-ficha__secao desordem-ficha__trauma">
@@ -66,44 +90,6 @@
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Furtividade.Condicao.Dica" dt=furtividade.esconderDt}}</p>
 </section>
 {{/if}}
-<section class="desordem-ficha__secao desordem-ficha__efeitos">
-  <h3><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Efeitos"}}</h3>
-  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaEfeitos"}}</p>
-
-  {{#each lesions}}
-  <div class="desordem-efeito-ativo">
-    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.lesao"}}</span>
-    <span class="desordem-efeito-ativo__texto"><strong>{{label}}{{#if repeated}} ×{{count}}{{/if}}</strong> — {{description}}</span>
-    {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeLesion" data-lesion="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverLesao"}}">×</button>{{/if}}
-  </div>
-  {{/each}}
-  {{#each traumas}}
-  <div class="desordem-efeito-ativo">
-    <span class="desordem-efeito-ativo__origem">{{localize "DESORDEM.Ficha.EfeitoOrigem.trauma"}}</span>
-    <span class="desordem-efeito-ativo__texto"><strong>{{label}}{{#if repeated}} ×{{count}}{{/if}}</strong> — {{description}}</span>
-    {{#if ../editable}}<button type="button" class="desordem-ficha__remover" data-action="removeTrauma" data-trauma="{{key}}" title="{{localize "DESORDEM.Ficha.RemoverTrauma"}}">×</button>{{/if}}
-  </div>
-  {{/each}}
-
-  {{#each effects}}
-  <div class="desordem-efeito">
-    <span class="desordem-efeito-ativo__origem">{{#if fromAbility}}{{localize "DESORDEM.Ficha.EfeitoOrigem.habilidade"}}{{else}}{{localize "DESORDEM.Ficha.EfeitoOrigem.efeito"}}{{/if}}</span>
-    <input type="text" class="desordem-efeito__nome" data-efeito-campo="nome" data-index="{{index}}" value="{{nome}}" title="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.EfeitoNome"}}" {{#if locked}}disabled{{/if}}>
-    {{#if bridge}}
-    <select data-efeito-campo="atributo" data-index="{{index}}" {{#if locked}}disabled{{/if}}>{{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
-    <select data-efeito-campo="passos" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.EfeitoPassos"}}" {{#if locked}}disabled{{/if}}>{{#each stepOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
-    {{else}}
-    {{! Passos que a linha simples não mostra (numa perícia, só em ataques...): só o resumo, até o editor da 0.22.1 }}
-    <span class="desordem-efeito__resumo" title="{{localize "DESORDEM.Ficha.EfeitoResumoDica"}}">{{summary}}</span>
-    {{/if}}
-    <label class="desordem-item-linha__marca"><input type="checkbox" data-efeito-campo="fimDeCena" data-index="{{index}}" {{#if fimDeCena}}checked{{/if}} {{#if locked}}disabled{{/if}}> {{localize "DESORDEM.Ficha.EfeitoFimDeCena"}}</label>
-    <input type="text" class="desordem-efeito__descricao" data-efeito-campo="descricao" data-index="{{index}}" value="{{descricao}}" placeholder="{{localize "DESORDEM.Ficha.EfeitoDescricao"}}" {{#if locked}}disabled{{/if}}>
-    {{#unless locked}}<button type="button" class="desordem-ficha__remover" data-action="removeEffect" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.RemoverEfeito"}}">×</button>{{/unless}}
-  </div>
-  {{/each}}
-  {{#unless lesions.length}}{{#unless traumas.length}}{{#unless effects.length}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.SemEfeitos"}}</p>{{/unless}}{{/unless}}{{/unless}}
-  {{#if editable}}<button type="button" data-action="addEffect">{{localize "DESORDEM.Ficha.AdicionarEfeito"}}</button>{{/if}}
-</section>
 <section class="desordem-ficha__secao desordem-ficha__cena">
   <h3><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.Cena"}}</h3>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.DicaCena"}}</p>

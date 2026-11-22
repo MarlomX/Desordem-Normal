@@ -1,0 +1,20 @@
+{{!-- Lista «Do compêndio» (sheets/condition-effects-ui.js): Items de efeito do mundo e dos
+  compêndios, agrupados pela fonte, com busca. Clicar numa entrada copia o efeito para a ficha. --}}
+<div class="desordem-efeito-lista__corpo">
+  {{#if empty}}
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Ficha.EfeitoCompendio.Vazio"}}</p>
+  {{else}}
+  <input type="search" class="desordem-efeito-lista__busca" data-efeito-busca placeholder="{{localize "DESORDEM.Ficha.EfeitoCompendio.Buscar"}}">
+  {{#each groups}}
+  <section class="desordem-efeito-lista__grupo" data-efeito-grupo>
+    <h4>{{source}}</h4>
+    {{#each entries}}
+    <button type="button" class="desordem-efeito-lista__entrada" data-efeito-uuid="{{uuid}}" data-search="{{search}}">
+      <strong>{{name}}</strong>{{#if folder}} <span class="desordem-efeito-lista__pasta">{{folder}}</span>{{/if}}
+      {{#if summary}}<span class="desordem-efeito-lista__resumo">{{summary}}</span>{{/if}}
+    </button>
+    {{/each}}
+  </section>
+  {{/each}}
+  {{/if}}
+</div>

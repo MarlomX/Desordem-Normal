@@ -8,7 +8,14 @@ import { invokeRelation } from '../rolls/relation-chat.js';
 import { attackWithWeapon, weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { useItem } from '../rolls/item-use-chat.js';
 import { armorSkillPenalties, weaponSkill } from '../rolls/equipment.js';
-import { addEffect, removeEffect, updateEffect } from '../rolls/effects.js';
+import { removeEffect } from '../rolls/effects.js';
+import {
+  addEffectFromItem,
+  createConditionEffect,
+  describeConditionEntry,
+  openConditionEffect,
+  pickConditionEffect,
+} from './condition-effects-ui.js';
 import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import {
@@ -37,7 +44,7 @@ import {
   weaponTestKind,
 } from '../rolls/ability-effects.js';
 import { resourceBars } from './ability-controls.js';
-import { describeEffect, itemEffectsText } from '../rolls/ability-effects-editor.js';
+import { itemEffectsText } from '../rolls/ability-effects-editor.js';
 
 /**
  * Texto da penalidade passiva de uma armadura ou escudo («−1 passo em Atletismo, Furtividade»),
@@ -144,6 +151,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       attackWeapon: PersonagemSheet.#onAttackWeapon,
       useItem: PersonagemSheet.#onUseItem,
       addEffect: PersonagemSheet.#onAddEffect,
+      editEffect: PersonagemSheet.#onEditEffect,
+      pickEffect: PersonagemSheet.#onPickEffect,
       removeEffect: PersonagemSheet.#onRemoveEffect,
       useEffect: PersonagemSheet.#onUseEffect,
       stepAbilityResource: PersonagemSheet.#onStepAbilityResource,
@@ -308,19 +317,11 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         (key) => t(`DESORDEM.Lesoes.${key}.Nome`),
         (key) => t(`DESORDEM.Lesoes.${key}.Descricao`),
       ),
+      // Efeitos da aba Condição, em linhas compactas (a edição é na janela do efeito)
       effects: buildEffectRows(system.efeitos, {
-        attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
-        noAttrLabel: t('DESORDEM.Ficha.EfeitoSemAtributo'),
-        allAttrLabel: t('DESORDEM.Ficha.EfeitoTodosAtributos'),
-        attributes: ATRIBUTOS,
+        describe: describeConditionEntry,
+        durationLabel: (key) => t(`DESORDEM.Efeito.Duracao.${key}`),
         editable: this.isEditable,
-        // Resumo dos passos que a linha simples ainda não mostra (perícia, tipo de teste)
-        describe: (entry) =>
-          describeEffect(entry, {
-            t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
-            skill: skillName,
-            itemType: 'efeito',
-          }),
       }),
       abilities: buildAbilityRows(
         this.document.items
@@ -354,9 +355,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     }
     for (const field of this.element.querySelectorAll('[data-extra-campo]')) {
       field.addEventListener('change', (event) => this.#onExtraField(event.currentTarget));
-    }
-    for (const field of this.element.querySelectorAll('[data-efeito-campo]')) {
-      field.addEventListener('change', (event) => this.#onEffectField(event.currentTarget));
     }
     for (const field of this.element.querySelectorAll('[data-item-campo]')) {
       field.addEventListener('change', (event) => this.#onItemField(event.currentTarget));
@@ -408,10 +406,17 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /**
-   * Depois de arrastar um item para a ficha, abre a aba onde ele aparece.
+   * Depois de arrastar um item para a ficha, abre a aba onde ele aparece. Um Item de efeito é
+   * copiado para a aba Condição.
    * (Se a versão do Foundry não tiver este método, o comportamento padrão continua valendo.)
    */
   async _onDropItem(event, item) {
+    // Item de efeito da aba Condição: vira uma cópia na lista de efeitos (não fica como item)
+    if (item?.type === 'efeito') {
+      if (this.isEditable && (await addEffectFromItem(this.document, item)))
+        this.#setTab('condicao');
+      return false;
+    }
     const result = await super._onDropItem?.(event, item);
     const tab = tabForItemType(item?.type);
     if (tab) this.#setTab(tab);
@@ -502,16 +507,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       button.classList.toggle('is-active', active);
       button.setAttribute('aria-selected', String(active));
     }
-  }
-
-  /** Edição de um campo de um efeito temporário (nome, descrição, atributo ou passos). */
-  async #onEffectField(field) {
-    const value = field.type === 'checkbox' ? field.checked : field.value;
-    const changes = { [field.dataset.efeitoCampo]: value };
-    const effects = this.document.toObject().system.efeitos;
-    await this.document.update({
-      'system.efeitos': updateEffect(effects, Number(field.dataset.index), changes),
-    });
   }
 
   /** Edição rápida de um campo do item na ficha (empunhada, vestida, quantidade, usos). */
@@ -851,13 +846,20 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     if (item) await useItem(this.document, item);
   }
 
-  /** Acrescenta um efeito temporário vazio à ficha. */
+  /** Cria um efeito vazio na aba Condição e abre a janela dele. */
   static async #onAddEffect() {
-    const effects = this.document.toObject().system.efeitos;
-    // Id novo do efeito (o Foundry gera um texto aleatório de 16 letras)
-    await this.document.update({
-      'system.efeitos': addEffect(effects, foundry.utils.randomID()),
-    });
+    // Efeito vazio no fim da lista, já aberto na janela de edição
+    await createConditionEffect(this.document);
+  }
+
+  /** Abre a janela de edição do efeito clicado. */
+  static async #onEditEffect(event, target) {
+    await openConditionEffect(this.document, Number(target.dataset.index));
+  }
+
+  /** Lista «Do compêndio»: escolhe um Item de efeito e o copia para a ficha. */
+  static async #onPickEffect() {
+    await pickConditionEffect(this.document);
   }
 
   /** Remove o efeito temporário clicado. */

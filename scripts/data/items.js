@@ -1,9 +1,11 @@
 /**
- * Modelos de dados dos Items: armas, armaduras e itens em geral.
+ * Modelos de dados dos Items: armas, armaduras, itens em geral, habilidades e efeitos da aba
+ * Condição.
  */
 import { AUTOMATIONS } from '../rolls/abilities.js';
 import { ARMOR_KINDS, GRIPS, WEAPON_CATEGORIES } from '../rolls/equipment.js';
 import { migrateGearSource, migrateWeaponSource } from './migrations.js';
+import { DURATIONS } from '../rolls/effects.js';
 
 const f = foundry.data.fields;
 
@@ -170,5 +172,26 @@ export class HabilidadeModel extends foundry.abstract.TypeDataModel {
 
   static get automations() {
     return AUTOMATIONS;
+  }
+}
+
+/**
+ * Efeito da aba Condição como Item (v0.22.1): o modelo que o mestre guarda no mundo ou num
+ * compêndio. Ele não fica no personagem: escolher na lista «Do compêndio» ou arrastar para a ficha
+ * copia os dados para `system.efeitos` do ator (rolls/effects.js, `effectFromItem`).
+ * - `descricao`: texto da mecânica (o nome é o do item);
+ * - `duracao`: `cena`, `permanente` ou `manual` (a cópia começa com ela);
+ * - `chave`: identificador fixo do efeito pronto (as lesões e traumas da 0.22.2 usarão); vazio =
+ *   a cópia guarda o endereço do item;
+ * - `efeitos`: lista do catálogo, só com os tipos da aba Condição (`itemEffectTypes('efeito')`).
+ */
+export class EfeitoModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    return {
+      descricao: texto(),
+      duracao: new f.StringField({ required: true, choices: DURATIONS, initial: 'manual' }),
+      chave: texto(),
+      efeitos: efeitos(),
+    };
   }
 }

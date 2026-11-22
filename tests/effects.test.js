@@ -19,6 +19,10 @@ import {
   effectView,
   keepAfterScene,
   endsAtScene,
+  effectFromItem,
+  replaceEffectEntries,
+  findEffectIndex,
+  withEffectIds,
 } from '../scripts/rolls/effects.js';
 import { normalizeEffect } from '../scripts/rolls/ability-effects.js';
 import { migrateConditionEffects } from '../scripts/data/migrations.js';
@@ -307,4 +311,86 @@ test('attributeStep: passo simples já limpo pelo catálogo', () => {
     passos: -3,
     teste: 'qualquer',
   });
+});
+
+// ---------- Janela do efeito e compêndio (v0.22.1) ----------
+
+test('effectFromItem: copia nome, descrição, duração e passos; chave do item ou o endereço', () => {
+  const item = {
+    name: 'Caído',
+    system: {
+      descricao: 'No chão.',
+      duracao: 'cena',
+      chave: '',
+      efeitos: [
+        { id: 'p', tipo: 'passo', params: { atributo: 'fisico', passos: -1 } },
+        { id: 'x', tipo: 'dadoExtra', params: {} },
+      ],
+    },
+  };
+  const effect = effectFromItem(item, { id: 'n1', uuid: 'Compendium.x.Item.y' });
+  assert.equal(effect.id, 'n1');
+  assert.equal(effect.nome, 'Caído');
+  assert.equal(effect.descricao, 'No chão.');
+  assert.equal(effect.duracao, 'cena');
+  assert.equal(effect.chave, 'Compendium.x.Item.y');
+  assert.equal(effect.origem, '');
+  // Só os tipos da aba Condição (o dado extra é de habilidade)
+  assert.deepEqual(
+    effect.efeitos.map((e) => e.tipo),
+    ['passo'],
+  );
+  assert.equal(effect.efeitos[0].params.passos, -1);
+  // Chave do próprio item vale mais que o endereço; duração desconhecida vira manual
+  const keyed = effectFromItem(
+    { name: 'Sem Olho', system: { chave: 'lesao:semOlho', duracao: '?' } },
+    { uuid: 'u' },
+  );
+  assert.equal(keyed.chave, 'lesao:semOlho');
+  assert.equal(keyed.duracao, 'manual');
+  assert.deepEqual(keyed.efeitos, []);
+});
+
+test('replaceEffectEntries troca só a lista do efeito escolhido e filtra os tipos', () => {
+  const list = [step('fisico', 1, { id: 'a' }), step('mente', 1, { id: 'b' })];
+  const next = replaceEffectEntries(list, 1, [
+    { id: 'q', tipo: 'passo', params: { alvo: 'pericia', pericia: 'luta', passos: 2 } },
+    { id: 'z', tipo: 'acaoNota', params: {} },
+  ]);
+  assert.deepEqual(next[0], normalizeSheetEffect(list[0]));
+  assert.deepEqual(
+    next[1].efeitos.map((e) => [e.id, e.params.pericia]),
+    [['q', 'luta']],
+  );
+  assert.equal(list[1].efeitos[0].params.atributo, 'mente'); // a original não muda
+});
+
+test('findEffectIndex acha pelo id (−1 se não houver)', () => {
+  const list = [step('fisico', 1, { id: 'a' }), step('mente', 1, { id: 'b' })];
+  assert.equal(findEffectIndex(list, 'b'), 1);
+  assert.equal(findEffectIndex(list, 'c'), -1);
+  // Os antigos têm o id da posição até a primeira gravação
+  assert.equal(findEffectIndex([{ nome: 'x', atributo: 'fisico', passos: 1 }], 'ef0'), 0);
+});
+
+test('withEffectIds dá id novo aos sem id gravado e aos repetidos', () => {
+  let n = 0;
+  const makeId = () => `novo${n++}`;
+  const raw = [
+    { nome: 'Antigo', atributo: 'fisico', passos: 1 },
+    { ...newEffect('a'), nome: 'A' },
+    { ...newEffect('a'), nome: 'A2' },
+    { ...newEffect('b'), nome: 'B' },
+  ];
+  const { list, changed } = withEffectIds(raw, makeId);
+  assert.equal(changed, true);
+  assert.deepEqual(
+    list.map((e) => e.id),
+    ['novo0', 'a', 'novo1', 'b'],
+  );
+  assert.equal(list[0].nome, 'Antigo');
+  const again = withEffectIds(list, makeId);
+  assert.equal(again.changed, false);
+  assert.deepEqual(again.list, list);
+  assert.deepEqual(withEffectIds(undefined, makeId), { list: [], changed: false });
 });

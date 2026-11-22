@@ -51,6 +51,20 @@ function hiddenField(itemType, tipo, key) {
 }
 
 /**
+ * Campo escondido pelo valor de outro campo do mesmo efeito. Hoje só no `passo` da aba Condição:
+ * «Atributo» só aparece quando o passo vale no dado do atributo, e «Perícia», quando vale numa
+ * perícia só (no dado de qualquer perícia, nenhum dos dois).
+ * @param {{tipo: string, params: object}} effect Efeito já limpo.
+ * @param {string} key Campo.
+ */
+export function hiddenByValue(effect, key) {
+  if (effect.tipo !== 'passo') return false;
+  if (key === 'atributo') return effect.params.alvo !== 'atributo';
+  if (key === 'pericia') return effect.params.alvo !== 'pericia';
+  return false;
+}
+
+/**
  * Tipos de efeito que o editor oferece num item: os que o tipo de item aceita
  * (`itemEffectTypes`); num item de criatura, só os de `CREATURE_EFFECT_TYPES` entre esses.
  * @param {string} itemType `habilidade`, `arma`, `armadura` ou `item`.
@@ -396,7 +410,7 @@ function effectFields(effect, index, { t, skills, creature = false, itemType = '
     selected: value === current,
   });
   const entries = Object.entries(EFFECT_TYPES[effect.tipo]).filter(
-    ([key]) => !hiddenField(itemType, effect.tipo, key),
+    ([key]) => !hiddenField(itemType, effect.tipo, key) && !hiddenByValue(effect, key),
   );
   return entries.map(([key, field]) => {
     const value = effect.params[key];

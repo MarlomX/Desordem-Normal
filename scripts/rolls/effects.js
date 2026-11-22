@@ -17,8 +17,10 @@
  * origem}`. `migrateLegacyEffect` converte esse formato (o atributo e os passos viram um efeito
  * `passo`; `fimDeCena` vira a duração `cena`).
  *
- * A linha da ficha ainda mostra um seletor de atributo e um de passos (a «ponte» até o editor
- * modular da v0.22.1): eles leem e gravam o primeiro `passo` simples do efeito (`bridgeEntry`).
+ * Desde a v0.22.1 a ficha edita cada efeito numa janela própria (sheets/condition-effect-app.js),
+ * com o mesmo editor dos itens. As funções da «ponte» da v0.22.0 (`bridgeEntry`, `isBridgeable`,
+ * `effectView` e os campos `atributo`/`passos` de `updateEffect`) continuam para quem lê um efeito
+ * simples (testes, macros), mas a ficha não as usa mais.
  */
 import { ATRIBUTOS } from '../config.js';
 import { itemEffectTypes, normalizeEffect, normalizeEffects } from './ability-effects.js';
@@ -250,6 +252,78 @@ export function updateEffect(effects, index, changes) {
     }
     return next;
   });
+}
+
+/**
+ * Garante que cada efeito tem um id próprio e único, para a janela de edição achar o efeito mesmo
+ * se a lista mudar de ordem. Efeitos sem id gravado (os antigos, até a primeira gravação) ou com
+ * id repetido ganham um novo.
+ * @param {object[]} effects `system.efeitos` como está no banco.
+ * @param {() => string} makeId Gera um id novo (no Foundry, `foundry.utils.randomID`).
+ * @returns {{list: object[], changed: boolean}} Lista limpa e se algum id mudou (precisa gravar).
+ */
+export function withEffectIds(effects, makeId) {
+  const raw = Array.isArray(effects) ? effects : [];
+  const seen = new Set();
+  let changed = false;
+  const list = normalizeSheetEffects(raw).map((effect, i) => {
+    const stored = text(raw[i]?.id);
+    if (stored && !seen.has(stored)) {
+      seen.add(stored);
+      return effect;
+    }
+    changed = true;
+    let id = makeId();
+    while (seen.has(id)) id = makeId();
+    seen.add(id);
+    return { ...effect, id };
+  });
+  return { list, changed };
+}
+
+/** Posição do efeito com este id na lista (−1 se não houver). */
+export function findEffectIndex(effects, id) {
+  return normalizeSheetEffects(effects).findIndex((effect) => effect.id === id);
+}
+
+/**
+ * Troca a lista do catálogo (`efeitos`) de um efeito da aba Condição, por exemplo depois de uma
+ * mudança no editor. Os tipos que a aba não aceita são descartados (devolve uma lista nova).
+ * @param {object[]} effects `system.efeitos`.
+ * @param {number} index Posição do efeito.
+ * @param {object[]} entries Lista nova do catálogo (`{id, tipo, params}`).
+ */
+export function replaceEffectEntries(effects, index, entries) {
+  const allowed = itemEffectTypes(CONDITION_ITEM_TYPE);
+  return normalizeSheetEffects(effects).map((effect, i) =>
+    i === index
+      ? { ...effect, efeitos: normalizeEffects(entries).filter((e) => allowed.includes(e.tipo)) }
+      : effect,
+  );
+}
+
+/**
+ * Efeito da aba Condição copiado de um Item do tipo `efeito` (do mundo ou de um compêndio). A cópia
+ * não fica ligada ao item: mudar o item depois não muda a ficha. A `chave` diz de onde veio: a do
+ * próprio item, se tiver (as lesões e traumas prontos terão, na 0.22.2), senão o endereço (uuid)
+ * dele. A origem fica vazia: para a ficha, é um efeito comum.
+ * @param {{name: string, system: object}} itemData Dados do item (`item.toObject()`).
+ * @param {{id?: string, uuid?: string}} [options] Id do efeito novo e endereço do item.
+ */
+export function effectFromItem(itemData, { id = '', uuid = '' } = {}) {
+  const system = itemData?.system ?? {};
+  return normalizeSheetEffect(
+    {
+      id,
+      nome: itemData?.name,
+      descricao: system.descricao,
+      chave: text(system.chave) || uuid,
+      origem: '',
+      duracao: system.duracao,
+      efeitos: system.efeitos,
+    },
+    id,
+  );
 }
 
 // ---------- Fim de cena ----------

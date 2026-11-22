@@ -9,6 +9,8 @@ import {
   buildFearChoices,
   buildRelationRows,
   buildEffectRows,
+  buildEffectPicker,
+  matchesSearch,
   buildEquipmentRows,
   buildChoices,
   buildAbilityRows,
@@ -165,30 +167,72 @@ test('buildLesionRows acrescenta a descrição só quando há uma função para 
   assert.equal(row.description, 'desc:semOlho');
 });
 
-test('buildEffectRows monta os seletores de atributo e de passos', () => {
-  const [row] = buildEffectRows(
-    [{ nome: 'Tônico', descricao: 'd', atributo: 'mente', passos: 2 }],
+test('buildEffectRows: linha compacta com resumo, duração e descrição', () => {
+  const [row, plain, old] = buildEffectRows(
+    [
+      {
+        id: 'g',
+        nome: 'Agarrado',
+        descricao: 'Imóvel.',
+        duracao: 'cena',
+        efeitos: [
+          { id: 'p0', tipo: 'passo', params: { alvo: 'pericias', passos: -1, teste: 'ataque' } },
+          { id: 'p1', tipo: 'passo', params: { alvo: 'atributo', atributo: 'fisico', passos: -1 } },
+        ],
+      },
+      { id: 'n', nome: 'Nota', duracao: 'permanente', efeitos: [] },
+      { nome: 'Antigo', atributo: 'mente', passos: 1, fimDeCena: false },
+    ],
     {
-      attrLabel: (k) => k.toUpperCase(),
-      noAttrLabel: '—',
-      attributes: ['fisico', 'mente', 'emocao'],
+      describe: (entry) => `${entry.params.alvo}:${entry.params.passos}`,
+      durationLabel: (key) => `D:${key}`,
+      noStepsLabel: '(só texto)',
     },
   );
-  assert.deepEqual(
-    row.attrOptions.map((o) => [o.value, o.selected]),
-    [
-      ['', false],
-      ['fisico', false],
-      ['mente', true],
-      ['emocao', false],
-    ],
-  );
-  assert.deepEqual(
-    row.stepOptions.map((o) => o.label),
-    ['-3', '-2', '-1', '0', '+1', '+2', '+3'],
-  );
-  assert.equal(row.stepOptions.find((o) => o.selected).value, 2);
+  assert.equal(row.id, 'g');
+  assert.equal(row.summary, 'pericias:-1; atributo:-1');
+  assert.equal(row.durationLabel, 'D:cena');
+  assert.equal(row.descricao, 'Imóvel.');
   assert.equal(row.locked, false);
+  assert.equal(plain.summary, '(só texto)');
+  assert.equal(plain.duracao, 'permanente');
+  // O antigo é convertido na hora (id pela posição)
+  assert.equal(old.id, 'ef2');
+  assert.equal(old.summary, 'atributo:1');
+  assert.equal(old.durationLabel, 'D:manual');
+  const [locked] = buildEffectRows([row], {
+    describe: () => '',
+    durationLabel: (k) => k,
+    editable: false,
+  });
+  assert.equal(locked.locked, true);
+});
+
+test('matchesSearch: sem acento, sem maiúsculas, em qualquer parte; vazia combina com tudo', () => {
+  assert.equal(matchesSearch(normalizeSearch('Caído Condições'), 'caido'), true);
+  assert.equal(matchesSearch(normalizeSearch('Caído Condições'), 'CONDI'), true);
+  assert.equal(matchesSearch(normalizeSearch('Caído'), 'agarr'), false);
+  assert.equal(matchesSearch('qualquer', '  '), true);
+});
+
+test('buildEffectPicker: agrupa pela fonte, ordena por pasta e nome, com texto de busca', () => {
+  const groups = buildEffectPicker([
+    { uuid: 'c', name: 'Caído', source: 'Efeitos básicos', folder: 'Condições' },
+    { uuid: 'a', name: 'Atordoado', source: 'Efeitos básicos', folder: 'Condições' },
+    { uuid: 'l', name: 'Sem Olho', source: 'Efeitos básicos', folder: 'Lesões', summary: 's' },
+    { uuid: 'm', name: 'Benção', source: 'Mundo' },
+  ]);
+  assert.deepEqual(
+    groups.map((g) => g.source),
+    ['Efeitos básicos', 'Mundo'],
+  );
+  assert.deepEqual(
+    groups[0].entries.map((e) => e.uuid),
+    ['a', 'c', 'l'],
+  );
+  assert.equal(groups[0].entries[2].summary, 's');
+  assert.equal(groups[0].entries[1].search, 'caido condicoes efeitos basicos');
+  assert.deepEqual(buildEffectPicker([]), []);
 });
 
 const wpn = (id, maos, empunhada, tipo = 'corpo', bonusDano = 0) => ({
@@ -742,36 +786,4 @@ test('buildAttributeRows desliga + no dado máximo e − no dado mínimo', () =>
   assert.equal(fisico.canStepDown, false); // d4 não desce
   assert.equal(fisico.canStepUp, true);
   assert.equal(emocao.canStepUp, false);
-});
-
-test('buildEffectRows: efeito que a linha simples não mostra traz o resumo e não a ponte', () => {
-  const rows = buildEffectRows(
-    [
-      {
-        id: 'g',
-        nome: 'Agarrado',
-        duracao: 'cena',
-        efeitos: [
-          { id: 'p0', tipo: 'passo', params: { alvo: 'pericias', passos: -1, teste: 'ataque' } },
-        ],
-      },
-      { nome: 'Antigo', atributo: 'mente', passos: 1, fimDeCena: false },
-    ],
-    {
-      attrLabel: (k) => k,
-      noAttrLabel: '—',
-      attributes: ['fisico', 'mente', 'emocao'],
-      describe: (entry) => `${entry.tipo}:${entry.params.passos}`,
-    },
-  );
-  assert.equal(rows[0].bridge, false);
-  assert.equal(rows[0].summary, 'passo:-1');
-  assert.equal(rows[0].fimDeCena, true);
-  assert.equal(rows[0].attrOptions.find((o) => o.selected).value, '');
-  // O efeito antigo é convertido na hora e a ponte mostra o atributo e os passos dele
-  assert.equal(rows[1].bridge, true);
-  assert.equal(rows[1].summary, '');
-  assert.equal(rows[1].id, 'ef1');
-  assert.equal(rows[1].attrOptions.find((o) => o.selected).value, 'mente');
-  assert.equal(rows[1].stepOptions.find((o) => o.selected).value, 1);
 });

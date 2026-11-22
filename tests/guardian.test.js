@@ -85,30 +85,15 @@ test('updateEffect aceita «todos» e não deixa mudar a origem', () => {
   assert.equal(effectView(updateEffect([newEffect()], 0, { atributo: 'nada' })[0]).atributo, '');
 });
 
-test('buildEffectRows: opção «todos os atributos» e etiqueta de habilidade', () => {
+test('buildEffectRows: etiqueta de habilidade nos passos condicionais', () => {
   const rows = buildEffectRows(
     [
-      newStepEffect({ nome: '', atributo: 'todos', passos: 0, origem: 'hab:i:e' }),
-      newStepEffect({ nome: '', atributo: 'mente', passos: 0 }),
+      newStepEffect({ nome: 'Instinto', atributo: 'todos', passos: 1, origem: 'hab:i:e' }),
+      newStepEffect({ nome: 'Caído', atributo: 'fisico', passos: -1 }),
     ],
-    {
-      attrLabel: (k) => k,
-      noAttrLabel: 'Sem',
-      allAttrLabel: 'Todos',
-      attributes: ['fisico', 'mente', 'emocao'],
-    },
+    { describe: (entry) => entry.params.atributo, durationLabel: (k) => k },
   );
   assert.equal(rows[0].fromAbility, true);
+  assert.equal(rows[0].summary, 'todos');
   assert.equal(rows[1].fromAbility, false);
-  assert.deepEqual(
-    rows[0].attrOptions.map((o) => [o.value, o.selected]),
-    [
-      ['', false],
-      ['todos', true],
-      ['fisico', false],
-      ['mente', false],
-      ['emocao', false],
-    ],
-  );
-  assert.equal(rows[1].attrOptions[1].label, 'Todos');
 });

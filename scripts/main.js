@@ -1,7 +1,8 @@
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from './config.js';
 import PersonagemModel from './data/personagem.js';
 import { CriaturaModel } from './data/ameaca.js';
-import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel } from './data/items.js';
+import { ArmaModel, ArmaduraModel, ItemModel, HabilidadeModel, EfeitoModel } from './data/items.js';
+import { registerConditionEffects } from './sheets/condition-effects-ui.js';
 import PersonagemSheet from './sheets/personagem-sheet.js';
 import CriaturaSheet from './sheets/criatura-sheet.js';
 import { fearDieHelper } from './sheets/dado-pavor.js';
@@ -91,6 +92,8 @@ Hooks.once('init', () => {
     armadura: ArmaduraModel,
     item: ItemModel,
     habilidade: HabilidadeModel,
+    // Efeito da aba Condição (v0.22.1): modelo no mundo ou num compêndio, copiado para a ficha
+    efeito: EfeitoModel,
   };
   // Perseguição: subtipos de Combat e de Combatant (cópia dos objetos existentes, por segurança)
   CONFIG.Combat.dataModels = { ...CONFIG.Combat.dataModels, perseguicao: PerseguicaoModel };
@@ -141,8 +144,11 @@ Hooks.once('init', () => {
     makeDefault: true,
     label: 'DESORDEM.Criatura.Ficha',
   });
+  // Editor de efeitos compartilhado (ficha do item e janela do efeito da aba Condição) e as
+  // proteções dos Items de efeito (eles não ficam embutidos num ator)
+  registerConditionEffects();
   foundry.documents.collections.Items.registerSheet(SYSTEM_ID, ItemSheet, {
-    types: ['arma', 'armadura', 'item', 'habilidade'],
+    types: ['arma', 'armadura', 'item', 'habilidade', 'efeito'],
     makeDefault: true,
     label: 'DESORDEM.Item.Ficha',
   });

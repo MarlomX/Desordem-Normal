@@ -160,7 +160,7 @@
       },
       "Medo": "Fear",
       "Trauma": "Trauma",
-      "Cena": "Scene",
+      "Cena": "Reset scene",
       "DicaCena": "Resets this character's scene: clears the scene's injury and trauma tests, empties drive and analysis and removes until-end-of-scene effects.",
       "DadoPavor": "Dread die",
       "SemPavor": "No dread",
@@ -200,13 +200,10 @@
       "Invocar": "Invoke",
       "LacoUsado": "Used this mission",
       "Efeitos": "Effects",
-      "DicaEfeitos": "Injuries, traumas and temporary effects (a preparation, a blessing...) are listed together here, each with its description. On temporary effects, if you pick an attribute and steps, that attribute's die changes on tests; remove them by hand when they end.",
+      "DicaEfeitos": "Injuries, traumas and effects (a tonic, a condition like prone...) are listed together here, each with its description. Create an effect or pick a ready-made one from a compendium (you can also drag an effect Item onto the sheet); ✎ opens the editing of steps and duration.",
       "EfeitoNome": "Effect name",
       "EfeitoDescricao": "Description",
-      "EfeitoPassos": "Steps on the attribute die",
-      "EfeitoSemAtributo": "No attribute",
       "SemEfeitos": "No effects",
-      "AdicionarEfeito": "Add effect",
       "RemoverEfeito": "Remove effect",
       "Equipamento": "Equipment",
       "ArmaduraResumo": "Armor points: {restantes} of {total}",
@@ -228,7 +225,6 @@
       "Habilidades": "Abilities",
       "DicaHabilidades": "Profile abilities come first. Abilities with an automation show their controls here; the others are just a description.",
       "SemHabilidades": "No abilities",
-      "EfeitoFimDeCena": "Until end of scene",
       "Abas": {
         "testes": "Tests",
         "habilidades": "Abilities",
@@ -278,7 +274,6 @@
       },
       "PrimeirosSocorrosDica": "How many times this character received first aid in this scene. Each adds +3 to the next DC (the GM adds it automatically on each attempt).",
       "DadosBonusDica": "Bonus dice received (lost at New scene).",
-      "EfeitoTodosAtributos": "All attributes",
       "PenalidadeArmadura": "−{passos} step ({itens})",
       "ArmaduraExtra": "Extra armor: +{extra} ({restantes} left).",
       "ArmaduraExtraGasta": "Spent",
@@ -286,7 +281,22 @@
         "armadura": "{categoria} armor",
         "escudo": "{categoria} shield"
       },
-      "EfeitoResumoDica": "This effect has steps the simple row cannot show yet. The full effect editor arrives in the next version."
+      "EfeitoJanela": {
+        "Titulo": "Effect",
+        "DicaHabilidade": "Created by an ability: it goes away on its own when the ability condition stops applying."
+      },
+      "EfeitoSemNome": "Unnamed effect",
+      "EfeitoEditar": "Edit effect",
+      "EfeitoCriar": "Create effect",
+      "EfeitoDoCompendio": "From compendium",
+      "EfeitoCompendio": {
+        "Titulo": "Ready-made effects",
+        "Buscar": "Search effect…",
+        "Vazio": "No effect Items in the world or in compendiums. Create one in the Items sidebar, with the \"Effect\" type.",
+        "Mundo": "World",
+        "Cancelar": "Cancel",
+        "Adicionado": "Effect \"{nome}\" added to the sheet."
+      }
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -1400,7 +1410,7 @@
       "PericiasProprias": "Own skills",
       "DicaPericiasProprias": "Freely named skills (instead of Aptitude and Craft), up to {max}. Default base attribute: Mind; change it with the tag.",
       "AdicionarPericia": "Add skill",
-      "DicaEfeitos": "Temporary conditions (prone, stunned, grabbed...) with steps on an attribute, if you want.",
+      "DicaEfeitos": "Conditions (prone, stunned, grabbed...) with steps, if you want. Create one or pick a ready-made one from a compendium; ✎ opens the editing.",
       "Ataques": "Attacks",
       "DicaAtaques": "Each attack is one of the creature’s weapons: the test uses the attack’s attribute and skill (DC 7) and the damage is the high roll plus the bonus.",
       "Teste": "test",
@@ -1661,7 +1671,9 @@
         "arma": "The weapon effects only apply to attacks made with it.",
         "armadura": "The armor effects apply while it is worn. The skill penalty lives in the fields above, not here.",
         "item": "Extra die and tool apply while the item is on the sheet (in the backpack). Heal, step on target and action with notice happen when you press Use.",
-        "escudo": "The shield effects apply while it is wielded. The shield reduction shows up in the Resolve damage window of opposed tests."
+        "escudo": "The shield effects apply while it is wielded. The shield reduction shows up in the Resolve damage window of opposed tests.",
+        "efeito": "The steps apply to tests while the effect is on the sheet.",
+        "VazioCondicao": "No steps: the effect is only a description."
       },
       "QuandoAtaque": {
         "sempre": "Always",
@@ -1682,7 +1694,15 @@
         "atributo": "Attribute die",
         "pericias": "Any skill die",
         "pericia": "One skill die"
-      }
+      },
+      "Duracao": {
+        "Titulo": "Duration",
+        "cena": "Until end of scene",
+        "permanente": "Permanent",
+        "manual": "Until removed"
+      },
+      "ChaveItem": "Key (optional)",
+      "DicaItemCondicao": "This item is a template: picked from the \"From compendium\" list or dragged onto a sheet, it is copied to the Condition tab. Changing the item later does not change the copies. The key identifies a ready-made effect (injuries and traumas will use it); you can leave it empty."
     },
     "Plano": {
       "Distribuir": "Give {n}d{dado} to the group",
@@ -1697,5 +1717,6 @@
   "TYPES.Item.arma": "Weapon",
   "TYPES.Item.armadura": "Armor",
   "TYPES.Item.item": "Item",
-  "TYPES.Item.habilidade": "Ability"
+  "TYPES.Item.habilidade": "Ability",
+  "TYPES.Item.efeito": "Effect"
 }

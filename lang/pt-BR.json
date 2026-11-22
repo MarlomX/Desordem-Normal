@@ -160,7 +160,7 @@
       },
       "Medo": "Medo",
       "Trauma": "Trauma",
-      "Cena": "Cena",
+      "Cena": "Reiniciar cena",
       "DicaCena": "Reinicia a cena deste personagem: zera os testes de lesão e trauma da cena, esvazia ímpeto e análise e remove os efeitos até o fim da cena.",
       "DadoPavor": "Dado de pavor",
       "SemPavor": "Sem pavor",
@@ -200,13 +200,10 @@
       "Invocar": "Invocar",
       "LacoUsado": "Usada nesta missão",
       "Efeitos": "Efeitos",
-      "DicaEfeitos": "Aqui ficam juntos as lesões, os traumas e os efeitos temporários (um preparado, uma bênção...), cada um com a sua descrição. Nos efeitos temporários, se escolher um atributo e passos, o dado do atributo muda nos testes; remova-os à mão quando acabarem.",
+      "DicaEfeitos": "Aqui ficam juntos as lesões, os traumas e os efeitos (um preparado, uma condição como caído...), cada um com a sua descrição. Crie um efeito ou escolha um pronto do compêndio (também dá para arrastar um Item de efeito para a ficha); ✎ abre a edição dos passos e da duração.",
       "EfeitoNome": "Nome do efeito",
       "EfeitoDescricao": "Descrição",
-      "EfeitoPassos": "Passos no dado do atributo",
-      "EfeitoSemAtributo": "Sem atributo",
       "SemEfeitos": "Nenhum efeito",
-      "AdicionarEfeito": "Adicionar efeito",
       "RemoverEfeito": "Remover efeito",
       "Equipamento": "Equipamento",
       "ArmaduraResumo": "Pontos de armadura: {restantes} de {total}",
@@ -228,7 +225,6 @@
       "Habilidades": "Habilidades",
       "DicaHabilidades": "As habilidades de perfil aparecem primeiro. Habilidades com automação mostram aqui os seus controles; as outras servem de descrição.",
       "SemHabilidades": "Nenhuma habilidade",
-      "EfeitoFimDeCena": "Até o fim da cena",
       "Abas": {
         "testes": "Testes",
         "habilidades": "Habilidades",
@@ -278,7 +274,6 @@
       },
       "PrimeirosSocorrosDica": "Quantas vezes este personagem recebeu primeiros socorros nesta cena. Cada uma soma +3 à DT da próxima (o mestre soma sozinho a cada tentativa).",
       "DadosBonusDica": "Dados bônus recebidos (somem na Nova cena).",
-      "EfeitoTodosAtributos": "Todos os atributos",
       "PenalidadeArmadura": "−{passos} passo ({itens})",
       "ArmaduraExtra": "Armadura extra: +{extra} (restam {restantes}).",
       "ArmaduraExtraGasta": "Gastos",
@@ -286,7 +281,22 @@
         "armadura": "Armadura {categoria}",
         "escudo": "Escudo {categoria}"
       },
-      "EfeitoResumoDica": "Este efeito tem passos que a linha simples ainda não mostra. O editor completo dos efeitos chega na próxima versão."
+      "EfeitoJanela": {
+        "Titulo": "Efeito",
+        "DicaHabilidade": "Criado por uma habilidade: sai sozinho quando a condição dela deixa de valer."
+      },
+      "EfeitoSemNome": "Efeito sem nome",
+      "EfeitoEditar": "Editar efeito",
+      "EfeitoCriar": "Criar efeito",
+      "EfeitoDoCompendio": "Do compêndio",
+      "EfeitoCompendio": {
+        "Titulo": "Efeitos prontos",
+        "Buscar": "Buscar efeito…",
+        "Vazio": "Nenhum Item de efeito no mundo nem nos compêndios. Crie um na barra de Itens, com o tipo «Efeito».",
+        "Mundo": "Mundo",
+        "Cancelar": "Cancelar",
+        "Adicionado": "Efeito «{nome}» acrescentado à ficha."
+      }
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -1400,7 +1410,7 @@
       "PericiasProprias": "Perícias próprias",
       "DicaPericiasProprias": "Perícias com nome livre (no lugar de Aptidão e Ofício), até {max}. Atributo-base padrão: Mente; troque pela etiqueta.",
       "AdicionarPericia": "Adicionar perícia",
-      "DicaEfeitos": "Condições temporárias (caído, atordoado, agarrado...) com passos num atributo, se quiser.",
+      "DicaEfeitos": "Condições (caído, atordoado, agarrado...) com passos, se quiser. Crie uma ou escolha uma pronta do compêndio; ✎ abre a edição.",
       "Ataques": "Ataques",
       "DicaAtaques": "Cada ataque é uma arma da criatura: o teste usa o atributo e a perícia do ataque (DT 7) e o dano é a rolagem alta mais o bônus.",
       "Teste": "teste",
@@ -1661,7 +1671,9 @@
         "arma": "Os efeitos da arma só valem nos ataques com ela.",
         "armadura": "Os efeitos da armadura valem enquanto ela está vestida. A penalidade nas perícias fica nos campos acima, não aqui.",
         "item": "Dado extra e ferramenta valem com o item na ficha (na mochila). Cura, passo no alvo e ação com aviso acontecem ao apertar Usar.",
-        "escudo": "Os efeitos do escudo valem enquanto ele está empunhado. A redução do escudo aparece na janela Resolver dano dos testes opostos."
+        "escudo": "Os efeitos do escudo valem enquanto ele está empunhado. A redução do escudo aparece na janela Resolver dano dos testes opostos.",
+        "efeito": "Os passos valem nos testes enquanto o efeito estiver na ficha.",
+        "VazioCondicao": "Nenhum passo: o efeito serve só de descrição."
       },
       "QuandoAtaque": {
         "sempre": "Sempre",
@@ -1682,7 +1694,15 @@
         "atributo": "Dado do atributo",
         "pericias": "Dado de qualquer perícia",
         "pericia": "Dado de uma perícia"
-      }
+      },
+      "Duracao": {
+        "Titulo": "Duração",
+        "cena": "Até o fim da cena",
+        "permanente": "Permanente",
+        "manual": "Até remover"
+      },
+      "ChaveItem": "Chave (opcional)",
+      "DicaItemCondicao": "Este item é um modelo: escolhido na lista «Do compêndio» ou arrastado para uma ficha, ele é copiado para a aba Condição. Mudar o item depois não altera as cópias. A chave identifica um efeito pronto (as lesões e traumas usarão); pode deixar vazia."
     },
     "Plano": {
       "Distribuir": "Distribuir {n}d{dado} ao grupo",
@@ -1697,5 +1717,6 @@
   "TYPES.Item.arma": "Arma",
   "TYPES.Item.armadura": "Armadura",
   "TYPES.Item.item": "Item",
-  "TYPES.Item.habilidade": "Habilidade"
+  "TYPES.Item.habilidade": "Habilidade",
+  "TYPES.Item.efeito": "Efeito"
 }

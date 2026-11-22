@@ -456,32 +456,92 @@
   padding-left: 1.2em;
 }
 
-/* Efeitos e equipamento */
+/* Efeitos da aba Condição (v0.22.1): linha compacta (resumo, duração, ✎ e ×) */
 
-.desordem-efeito {
+.desordem-efeito-cond__descricao {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.desordem-efeito-cond__duracao {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border: 1px solid var(--dn-border);
+  border-radius: 999px;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+/* Duração «até o fim da cena»: destaque na cor do sistema (sai na Nova cena) */
+.desordem-efeito-cond__duracao[data-duracao='cena'] {
+  border-color: var(--dn-accent-line);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-efeito-cond__editar {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0 6px;
+  line-height: 1.6;
+}
+
+.desordem-efeito-cond__botoes {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  margin-bottom: 6px;
-  padding: 6px 8px;
-  border: 1px solid var(--dn-border);
-  border-radius: 8px;
-  background: var(--dn-surface);
+  gap: 6px;
 }
 
-.desordem-efeito__resumo {
-  flex: 1 1 160px;
+.desordem-efeito-cond__botoes button {
+  flex: 1 1 10em;
+}
+
+/* Janela de um efeito da aba Condição */
+
+.desordem-efeito-janela .window-content {
+  overflow-y: auto;
+}
+
+.desordem-efeito-janela__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Lista «Do compêndio» */
+
+.desordem-efeito-lista__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.desordem-efeito-lista__grupo h4 {
+  margin: 6px 0 4px;
+  border-bottom: 1px solid var(--dn-border);
+}
+
+.desordem-efeito-lista__entrada {
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.desordem-efeito-lista__pasta {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.desordem-efeito-lista__resumo {
+  display: block;
+  font-size: 0.85em;
   opacity: 0.85;
-  font-size: 0.9em;
-}
-
-.desordem-efeito__nome {
-  flex: 1 1 9em;
-}
-
-.desordem-efeito__descricao {
-  flex: 3 1 14em;
 }
 
 .desordem-ficha__equipamento h4 {

@@ -1,0 +1,17 @@
+{{!--
+  Linha de um efeito da aba Condição (fichas de personagem e de criatura), com o contexto de uma
+  linha de `buildEffectRows` (sheets/context.js): origem, nome, resumo dos passos, duração e a
+  descrição embaixo. ✎ abre a janela do efeito (editEffect) e × o remove (removeEffect).
+--}}
+<div class="desordem-efeito-ativo desordem-efeito-cond">
+  <span class="desordem-efeito-ativo__origem">{{#if fromAbility}}{{localize "DESORDEM.Ficha.EfeitoOrigem.habilidade"}}{{else}}{{localize "DESORDEM.Ficha.EfeitoOrigem.efeito"}}{{/if}}</span>
+  <span class="desordem-efeito-ativo__texto">
+    <strong>{{#if nome}}{{nome}}{{else}}{{localize "DESORDEM.Ficha.EfeitoSemNome"}}{{/if}}</strong>{{#if summary}} — {{summary}}{{/if}}
+    {{#if descricao}}<span class="desordem-efeito-cond__descricao">{{descricao}}</span>{{/if}}
+  </span>
+  <span class="desordem-efeito-cond__duracao" data-duracao="{{duracao}}">{{durationLabel}}</span>
+  {{#unless locked}}
+  <button type="button" class="desordem-efeito-cond__editar" data-action="editEffect" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.EfeitoEditar"}}"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+  <button type="button" class="desordem-ficha__remover" data-action="removeEffect" data-index="{{index}}" title="{{localize "DESORDEM.Ficha.RemoverEfeito"}}">×</button>
+  {{/unless}}
+</div>

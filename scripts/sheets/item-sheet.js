@@ -12,6 +12,7 @@ import { AUTOMATIONS } from '../rolls/abilities.js';
 import { buildChoices } from './context.js';
 import { isThreat } from '../rolls/threat.js';
 import { DAMAGE_BASES } from '../rolls/damage.js';
+import { DURATIONS } from '../rolls/effects.js';
 import {
   MAX_EFFECTS,
   addEffect,
@@ -31,7 +32,8 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
 
 /**
- * Ficha dos itens (armas, armaduras, itens em geral e habilidades), uma só para todos. Todos têm
+ * Ficha dos itens (armas, armaduras, itens em geral, habilidades e efeitos da aba Condição), uma
+ * só para todos. Todos têm
  * o editor de efeitos, cada tipo com os seus tipos de efeito (`allowedEffectTypes`): os campos
  * dele não têm `name` (não entram no formulário do Foundry); cada mudança passa pelas funções de
  * ability-effects-editor.js e grava a lista inteira.
@@ -77,6 +79,11 @@ export default class ItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       isArmor: item.type === 'armadura',
       isOther: item.type === 'item',
       isAbility: item.type === 'habilidade',
+      // Efeito da aba Condição (v0.22.1): duração e chave, além do editor de efeitos
+      isCondition: item.type === 'efeito',
+      durationChoices: buildChoices(DURATIONS, item.system.duracao, (key) =>
+        t(`DESORDEM.Efeito.Duracao.${key}`),
+      ),
       // Habilidade de uma criatura: só nome e texto (sem perfil nem automação)
       ownerIsThreat: isThreat(item.parent),
       effectsEditor: this.#effectsContext(t, skills),
