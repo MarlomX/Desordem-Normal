@@ -1,0 +1,131 @@
+{{! Ponto de interesse, modo de edição (v0.24.0). Os campos do quadro usam os ids dos blocos e
+  das linhas no nome (ponto.<bloco>.linhas.<linha>.dt), não a posição; a folha junta tudo em
+  system.blocos ao gravar (veja _processFormData em scripts/journal/point-sheet.js). }}
+<div class="desordem-normal desordem-ponto desordem-ponto--edicao">
+  <fieldset class="desordem-ponto__secao">
+    <legend><i class="fa-solid fa-heading" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Cabecalho"}}</legend>
+    <div class="form-group">
+      <label for="{{page.id}}-numero">{{localize "DESORDEM.Ponto.Numero"}}</label>
+      <div class="form-fields">
+        <input type="text" id="{{page.id}}-numero" name="system.numero" value="{{system.numero}}" placeholder="4.1">
+      </div>
+      <p class="hint">{{localize "DESORDEM.Ponto.NumeroDica"}}</p>
+    </div>
+    <div class="form-group stacked">
+      <label>{{localize "DESORDEM.Ponto.DescricaoBasica"}}</label>
+      {{formInput fields.descricaoBasica name="system.descricaoBasica" value=system.descricaoBasica enriched=enriched.descricaoBasica toggled=true documentUUID=page.uuid}}
+      <p class="hint">{{localize "DESORDEM.Ponto.DescricaoBasicaDica"}}</p>
+    </div>
+    <div class="form-group">
+      <label>{{localize "DESORDEM.Ponto.Imagem"}}</label>
+      <div class="form-fields">
+        {{formInput fields.imagem name="system.imagem" value=system.imagem}}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="{{page.id}}-imagem-visivel">{{localize "DESORDEM.Ponto.ImagemVisivel"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" id="{{page.id}}-imagem-visivel" name="system.imagemVisivel" {{checked system.imagemVisivel}}>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="desordem-ponto__secao">
+    <legend><i class="fa-solid fa-table-list" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Quadro"}}</legend>
+    <p class="hint">{{localize "DESORDEM.Ponto.QuadroDica"}}</p>
+    {{#each blocks}}
+    <section class="desordem-ponto__bloco desordem-ponto__cor-{{cor}}" data-bloco="{{id}}">
+      <header class="desordem-ponto__bloco-topo">
+        <strong class="desordem-ponto__bloco-nome">
+          {{#if oculta}}<i class="fa-solid fa-lock" title="{{localize "DESORDEM.Ponto.Oculta"}}"></i>{{/if}}
+          {{label}}
+        </strong>
+        <span class="desordem-ponto__botoes">
+          <button type="button" class="icon fa-solid fa-arrow-up" data-action="blocoSubir" data-tooltip="{{localize "DESORDEM.Ponto.Subir"}}" aria-label="{{localize "DESORDEM.Ponto.Subir"}}" {{disabled first}}></button>
+          <button type="button" class="icon fa-solid fa-arrow-down" data-action="blocoDescer" data-tooltip="{{localize "DESORDEM.Ponto.Descer"}}" aria-label="{{localize "DESORDEM.Ponto.Descer"}}" {{disabled last}}></button>
+          <button type="button" class="icon fa-solid fa-trash" data-action="blocoRemover" data-tooltip="{{localize "DESORDEM.Ponto.RemoverBloco"}}" aria-label="{{localize "DESORDEM.Ponto.RemoverBloco"}}"></button>
+        </span>
+      </header>
+
+      <div class="desordem-ponto__pericias">
+        {{#each chips}}
+        <span class="desordem-ponto__chip">
+          {{label}}
+          <button type="button" class="icon fa-solid fa-xmark" data-action="periciaRemover" data-pericia="{{key}}" data-tooltip="{{localize "DESORDEM.Ponto.RemoverPericia"}}" aria-label="{{localize "DESORDEM.Ponto.RemoverPericia"}}"></button>
+        </span>
+        {{/each}}
+        <select name="ponto.{{id}}.adicionar" aria-label="{{localize "DESORDEM.Ponto.AdicionarPericia"}}">
+          <option value="">{{localize "DESORDEM.Ponto.AdicionarPericia"}}</option>
+          {{#each groups}}
+          <optgroup label="{{label}}">
+            {{#each options}}<option value="{{key}}">{{label}}</option>{{/each}}
+          </optgroup>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="desordem-ponto__bloco-opcoes">
+        <label class="desordem-ponto__rotulo">
+          <span>{{localize "DESORDEM.Ponto.Rotulo"}}</span>
+          <input type="text" name="ponto.{{id}}.rotulo" value="{{rotulo}}" data-tooltip="{{localize "DESORDEM.Ponto.RotuloDica"}}">
+        </label>
+        <label class="desordem-ponto__oculta" data-tooltip="{{localize "DESORDEM.Ponto.OcultaDica"}}">
+          <input type="checkbox" name="ponto.{{id}}.oculta" {{checked oculta}}>
+          <span>{{localize "DESORDEM.Ponto.Oculta"}}</span>
+        </label>
+      </div>
+
+      {{#each linhas}}
+      <div class="desordem-ponto__linha-edicao" data-linha="{{id}}">
+        <div class="desordem-ponto__linha-topo">
+          <label class="desordem-ponto__dt">
+            <span>{{localize "DESORDEM.Ponto.DT"}}</span>
+            <input type="number" name="ponto.{{../id}}.linhas.{{id}}.dt" value="{{dt}}" min="0" max="99" step="1">
+          </label>
+          <label class="desordem-ponto__condicao">
+            <span>{{localize "DESORDEM.Ponto.Condicao"}}</span>
+            <input type="text" name="ponto.{{../id}}.linhas.{{id}}.condicao" value="{{condicao}}" placeholder="{{localize "DESORDEM.Ponto.CondicaoDica"}}">
+          </label>
+          <span class="desordem-ponto__botoes">
+            <button type="button" class="icon fa-solid fa-arrow-up" data-action="linhaSubir" data-tooltip="{{localize "DESORDEM.Ponto.Subir"}}" aria-label="{{localize "DESORDEM.Ponto.Subir"}}" {{disabled first}}></button>
+            <button type="button" class="icon fa-solid fa-arrow-down" data-action="linhaDescer" data-tooltip="{{localize "DESORDEM.Ponto.Descer"}}" aria-label="{{localize "DESORDEM.Ponto.Descer"}}" {{disabled last}}></button>
+            <button type="button" class="icon fa-solid fa-trash" data-action="linhaRemover" data-tooltip="{{localize "DESORDEM.Ponto.RemoverLinha"}}" aria-label="{{localize "DESORDEM.Ponto.RemoverLinha"}}"></button>
+          </span>
+        </div>
+        <div class="desordem-ponto__campo">
+          <span class="desordem-ponto__campo-nome">{{localize "DESORDEM.Ponto.Texto"}}</span>
+          {{formInput @root.lineTextField name=(concat "ponto." ../id ".linhas." id ".texto") value=texto enriched=enriched toggled=true documentUUID=@root.page.uuid}}
+        </div>
+        <label class="desordem-ponto__campo">
+          <span class="desordem-ponto__campo-nome">{{localize "DESORDEM.Ponto.NotaMestre"}}</span>
+          <textarea name="ponto.{{../id}}.linhas.{{id}}.notaMestre" rows="2" placeholder="{{localize "DESORDEM.Ponto.NotaMestreDica"}}">{{notaMestre}}</textarea>
+        </label>
+      </div>
+      {{/each}}
+
+      {{#if canAddLine}}
+      <button type="button" class="desordem-ponto__adicionar" data-action="linhaAdicionar">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.AdicionarLinha"}}
+      </button>
+      {{/if}}
+    </section>
+    {{else}}
+    <p class="desordem-ponto__vazio">{{localize "DESORDEM.Ponto.Vazio"}}</p>
+    {{/each}}
+    <button type="button" class="desordem-ponto__adicionar" data-action="blocoAdicionar">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.AdicionarBloco"}}
+    </button>
+  </fieldset>
+
+  <fieldset class="desordem-ponto__secao">
+    <legend><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Contexto"}}</legend>
+    <p class="hint">{{localize "DESORDEM.Ponto.SoMestre"}}</p>
+    {{formInput fields.contexto name="system.contexto" value=system.contexto enriched=enriched.contexto toggled=true documentUUID=page.uuid}}
+  </fieldset>
+
+  <fieldset class="desordem-ponto__secao">
+    <legend><i class="fa-solid fa-lock" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.DesafioAcesso"}}</legend>
+    <p class="hint">{{localize "DESORDEM.Ponto.SoMestre"}}</p>
+    {{formInput fields.desafioAcesso name="system.desafioAcesso" value=system.desafioAcesso enriched=enriched.desafioAcesso toggled=true documentUUID=page.uuid}}
+  </fieldset>
+</div>

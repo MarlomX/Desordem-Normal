@@ -3919,3 +3919,268 @@ button.desordem-desafios-cartao__nome:hover {
   border-color: var(--dn-mental);
   color: var(--dn-mental);
 }
+
+/* ===== Ponto de interesse: página do Diário (v0.24.0) ===== */
+
+/* Cores dos blocos do quadro, em rodízio pela ordem (como as faixas coloridas do livro). */
+.desordem-ponto {
+  --dn-ponto-cor: #4f9d69;
+  --dn-ponto-linha: color-mix(in srgb, currentColor 18%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.desordem-ponto__cor-0 {
+  --dn-ponto-cor: #4f9d69;
+}
+.desordem-ponto__cor-1 {
+  --dn-ponto-cor: #d4a017;
+}
+.desordem-ponto__cor-2 {
+  --dn-ponto-cor: #c8453f;
+}
+.desordem-ponto__cor-3 {
+  --dn-ponto-cor: #3b82c4;
+}
+.desordem-ponto__cor-4 {
+  --dn-ponto-cor: #8b5cc7;
+}
+
+/* Cabeçalho da leitura: nome à esquerda e número em destaque à direita */
+.desordem-ponto__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--dn-accent-line);
+}
+.desordem-ponto__nome {
+  margin: 0;
+  border: none;
+}
+.desordem-ponto__numero {
+  font-family: var(--dn-fonte-numeros);
+  font-size: 1.6em;
+  font-weight: bold;
+  color: var(--dn-accent);
+}
+.desordem-ponto__descricao {
+  font-style: italic;
+}
+.desordem-ponto__imagem {
+  margin: 0;
+  text-align: center;
+}
+.desordem-ponto__imagem img {
+  max-width: 100%;
+  max-height: 360px;
+  border: none;
+  border-radius: 6px;
+}
+.desordem-ponto__imagem.is-escondida img {
+  opacity: 0.55;
+}
+.desordem-ponto__imagem figcaption {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+/* Quadro: coluna da perícia, coluna da DT e a informação (a DT só existe para o mestre) */
+.desordem-ponto__quadro {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--dn-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.desordem-ponto__quadro-titulos {
+  display: grid;
+  grid-template-columns: 9em 2.6em 1fr;
+  gap: 0 8px;
+  padding: 4px 8px;
+  font-weight: bold;
+  background: var(--dn-surface-strong);
+}
+.desordem-ponto__grupo {
+  display: grid;
+  grid-template-columns: 9em 1fr;
+  gap: 0 8px;
+  padding: 0 8px;
+  border-top: 1px solid var(--dn-ponto-linha);
+  border-left: 4px solid var(--dn-ponto-cor);
+  background: color-mix(in srgb, var(--dn-ponto-cor) 16%, transparent);
+}
+.desordem-ponto__grupo-nome {
+  align-self: center;
+  padding: 6px 0;
+  font-weight: bold;
+}
+.desordem-ponto__grupo-linhas {
+  display: flex;
+  flex-direction: column;
+}
+.desordem-ponto__linha {
+  display: grid;
+  grid-template-columns: 2.6em 1fr 1.4em;
+  gap: 0 8px;
+  align-items: start;
+  padding: 6px 0;
+  border-left: 1px solid var(--dn-ponto-linha);
+  padding-left: 8px;
+}
+.desordem-ponto__linha + .desordem-ponto__linha {
+  border-top: 1px solid var(--dn-ponto-linha);
+}
+.desordem-ponto__linha-dt {
+  font-family: var(--dn-fonte-numeros);
+  font-weight: bold;
+  text-align: center;
+}
+.desordem-ponto__linha-texto > :first-child {
+  margin-top: 0;
+}
+.desordem-ponto__linha-texto > :last-child {
+  margin-bottom: 0;
+}
+.desordem-ponto__linha-condicao,
+.desordem-ponto__linha-nota,
+.desordem-ponto__sem-texto {
+  font-style: italic;
+  opacity: 0.8;
+}
+.desordem-ponto__linha-estado {
+  text-align: center;
+  opacity: 0.75;
+}
+
+/* Jogador: sem a coluna da DT nem a do estado; perícia sem linha fica só com o nome */
+.desordem-ponto__quadro--jogador .desordem-ponto__grupo {
+  grid-template-columns: 1fr;
+}
+.desordem-ponto__quadro--jogador .desordem-ponto__linha {
+  grid-template-columns: 1fr;
+  border-left: none;
+  padding-left: 1em;
+}
+
+.desordem-ponto__mestre {
+  padding: 6px 10px;
+  border-left: 3px solid var(--dn-accent);
+  background: var(--dn-surface);
+}
+.desordem-ponto__mestre h3 {
+  margin-top: 0;
+}
+.desordem-ponto__vazio {
+  margin: 6px 8px;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Edição: cada bloco é um cartão com a cor dele; as linhas ficam empilhadas dentro */
+.desordem-ponto__secao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.desordem-ponto__bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-left: 4px solid var(--dn-ponto-cor);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--dn-ponto-cor) 10%, transparent);
+}
+.desordem-ponto__bloco-topo,
+.desordem-ponto__linha-topo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.desordem-ponto__bloco-nome {
+  flex: 1;
+}
+.desordem-ponto__botoes {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.desordem-ponto__botoes button {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  min-height: 0;
+  padding: 0;
+}
+.desordem-ponto__pericias,
+.desordem-ponto__bloco-opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.desordem-ponto__pericias select {
+  width: auto;
+  min-width: 10em;
+}
+.desordem-ponto__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 0 0 8px;
+  border: 1px solid var(--dn-ponto-cor);
+  border-radius: 999px;
+  background: var(--dn-surface);
+}
+.desordem-ponto__chip button {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+.desordem-ponto__rotulo,
+.desordem-ponto__dt,
+.desordem-ponto__condicao,
+.desordem-ponto__oculta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.desordem-ponto__rotulo,
+.desordem-ponto__condicao {
+  flex: 1;
+}
+.desordem-ponto__dt input {
+  width: 3.5em;
+  text-align: center;
+}
+.desordem-ponto__linha-edicao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--dn-ponto-linha);
+  border-radius: 4px;
+  background: var(--dn-surface);
+}
+.desordem-ponto__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.desordem-ponto__campo-nome {
+  font-size: 0.85em;
+  font-weight: bold;
+  opacity: 0.85;
+}
+.desordem-ponto__campo prose-mirror {
+  min-height: 3em;
+}
+.desordem-ponto__adicionar {
+  align-self: flex-start;
+  width: auto;
+}

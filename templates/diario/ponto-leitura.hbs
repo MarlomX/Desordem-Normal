@@ -1,0 +1,94 @@
+{{! Ponto de interesse, modo de leitura (v0.24.0), dentro do diário.
+  gm = dono da página (mestre ou Assistente): quadro completo, com DT, notas, condições, contexto.
+  Jogador: o contexto só traz o que ele pode ver (nome das perícias e linhas reveladas a ele). }}
+<div class="desordem-normal desordem-ponto desordem-ponto--leitura">
+  {{#if showTitle}}
+  <header class="journal-page-header desordem-ponto__cabecalho">
+    <h2 class="desordem-ponto__nome"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> {{nome}}</h2>
+    {{#if numero}}<span class="desordem-ponto__numero">{{numero}}</span>{{/if}}
+  </header>
+  {{/if}}
+
+  {{#if descricaoBasica}}
+  <div class="desordem-ponto__descricao">{{{descricaoBasica}}}</div>
+  {{/if}}
+
+  {{#if imagem}}
+  <figure class="desordem-ponto__imagem{{#if imagemEscondida}} is-escondida{{/if}}">
+    <img src="{{imagem}}" alt="{{nome}}">
+    {{#if imagemEscondida}}<figcaption><i class="fa-solid fa-eye-slash" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.SoMestre"}}</figcaption>{{/if}}
+  </figure>
+  {{/if}}
+
+  {{#if gm}}
+  <div class="desordem-ponto__quadro" role="table" aria-label="{{localize "DESORDEM.Ponto.Quadro"}}">
+    <div class="desordem-ponto__quadro-titulos" role="row">
+      <span role="columnheader">{{localize "DESORDEM.Ponto.Pericia"}}</span>
+      <span role="columnheader">{{localize "DESORDEM.Ponto.DT"}}</span>
+      <span role="columnheader">{{localize "DESORDEM.Ponto.Informacao"}}</span>
+    </div>
+    {{#each board}}
+    <div class="desordem-ponto__grupo desordem-ponto__cor-{{cor}}" role="rowgroup" data-bloco="{{id}}">
+      <div class="desordem-ponto__grupo-nome" role="rowheader">
+        {{#if oculta}}<i class="fa-solid fa-lock" data-tooltip="{{localize "DESORDEM.Ponto.OcultaDica"}}" aria-label="{{localize "DESORDEM.Ponto.Oculta"}}"></i>{{/if}}
+        {{label}}
+      </div>
+      <div class="desordem-ponto__grupo-linhas">
+        {{#each linhas}}
+        <div class="desordem-ponto__linha" role="row" data-linha="{{id}}">
+          <span class="desordem-ponto__linha-dt" role="cell">{{dt}}</span>
+          <div class="desordem-ponto__linha-texto" role="cell">
+            {{#if condicao}}<p class="desordem-ponto__linha-condicao">{{condicao}}</p>{{/if}}
+            {{#if texto}}{{{texto}}}{{else}}<p class="desordem-ponto__sem-texto">{{localize "DESORDEM.Ponto.SemTexto"}}</p>{{/if}}
+            {{#if notaMestre}}<p class="desordem-ponto__linha-nota"><i class="fa-solid fa-user-secret" aria-hidden="true"></i> {{notaMestre}}</p>{{/if}}
+          </div>
+          <span class="desordem-ponto__linha-estado" role="cell">
+            {{#if revelada}}
+            <i class="fa-solid fa-eye" data-tooltip="{{localize "DESORDEM.Ponto.Revelada"}}" aria-label="{{localize "DESORDEM.Ponto.Revelada"}}"></i>
+            {{else if reveladaPara}}
+            <i class="fa-solid fa-user-check" data-tooltip="{{localize "DESORDEM.Ponto.ReveladaPara" n=reveladaPara}}" aria-label="{{localize "DESORDEM.Ponto.ReveladaPara" n=reveladaPara}}"></i>
+            {{else}}
+            <i class="fa-solid fa-eye-slash" data-tooltip="{{localize "DESORDEM.Ponto.NaoRevelada"}}" aria-label="{{localize "DESORDEM.Ponto.NaoRevelada"}}"></i>
+            {{/if}}
+          </span>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+    {{else}}
+    <p class="desordem-ponto__vazio">{{localize "DESORDEM.Ponto.Vazio"}}</p>
+    {{/each}}
+  </div>
+
+  {{#if contexto}}
+  <section class="desordem-ponto__mestre">
+    <h3><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Contexto"}}</h3>
+    {{{contexto}}}
+  </section>
+  {{/if}}
+  {{#if desafioAcesso}}
+  <section class="desordem-ponto__mestre">
+    <h3><i class="fa-solid fa-lock" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.DesafioAcesso"}}</h3>
+    {{{desafioAcesso}}}
+  </section>
+  {{/if}}
+
+  {{else}}
+  <div class="desordem-ponto__quadro desordem-ponto__quadro--jogador">
+    {{#each board}}
+    <div class="desordem-ponto__grupo desordem-ponto__cor-{{cor}}">
+      <div class="desordem-ponto__grupo-nome">{{label}}</div>
+      {{#if linhas.length}}
+      <div class="desordem-ponto__grupo-linhas">
+        {{#each linhas}}
+        <div class="desordem-ponto__linha" data-linha="{{id}}">
+          <div class="desordem-ponto__linha-texto">{{{texto}}}</div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+  {{/if}}
+</div>

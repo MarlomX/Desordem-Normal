@@ -55,6 +55,10 @@ import {
   gainAnalysisMarkers,
 } from './rolls/abilities-chat.js';
 import { newSceneForAll } from './rolls/scene-macro.js';
+import { PontoInteresseModel } from './data/ponto.js';
+import PontoInteresseSheet from './journal/point-sheet.js';
+import { registerPointHooks } from './journal/point-hooks.js';
+import { POINT_TYPE } from './journal/point.js';
 import { computeDamage } from './rolls/damage.js';
 import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
 import { renderTableCard, registerTableSocket } from './rolls/table-chat.js';
@@ -134,6 +138,16 @@ Hooks.once('init', () => {
   // Desafios (teste estendido): configuração do mundo e a guia nova da barra lateral
   registerChallenges();
   registerEquipmentGuards();
+  // Ponto de interesse (v0.24.0): subtipo de página do Diário, com folha própria e os ganchos que
+  // mantêm o número na frente do nome da página («4.1 · Potes»)
+  CONFIG.JournalEntryPage.dataModels[POINT_TYPE] = PontoInteresseModel;
+  registerPointHooks();
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(
+    foundry.documents.JournalEntryPage,
+    SYSTEM_ID,
+    PontoInteresseSheet,
+    { types: [POINT_TYPE], makeDefault: true, label: 'TYPES.JournalEntryPage.pontoInteresse' },
+  );
 
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, PersonagemSheet, {
     types: ['personagem'],

@@ -98,6 +98,9 @@
       "item": {},
       "habilidade": {},
       "efeito": {}
+    },
+    "JournalEntryPage": {
+      "pontoInteresse": {}
     }
   },
   "socket": true,
