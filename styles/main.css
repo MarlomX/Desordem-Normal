@@ -4077,6 +4077,20 @@ button.desordem-desafios-cartao__nome:hover {
   opacity: 0.8;
 }
 
+/* Edição: a janela fica com o cabeçalho (nome, nível) e o rodapé fixos, e só o formulário
+   rola. Sem isto o conteúdo passava da altura da janela e não havia barra de rolagem (v0.24.1). */
+.desordem-ponto-folha > .window-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.desordem-ponto--edicao {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 /* Edição: cada bloco é um cartão com a cor dele; as linhas ficam empilhadas dentro */
 .desordem-ponto__secao {
   display: flex;
