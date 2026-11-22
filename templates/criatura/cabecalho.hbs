@@ -37,10 +37,10 @@
         <div class="desordem-barra{{#if pvLow}} is-baixo{{/if}}" style="--pct: {{pvPercent}}%">
           <span class="desordem-barra__nome"><i class="fa-solid fa-heart" aria-hidden="true"></i> {{localize "DESORDEM.Ficha.PV"}}</span>
           <span class="desordem-barra__valores">
-            <input type="number" name="system.pv.value" value="{{system.pv.value}}" min="0" {{#unless editable}}disabled{{/unless}}>
+            <input type="text" inputmode="numeric" class="desordem-barra__campo" name="system.pv.value" value="{{system.pv.value}}" data-relativo data-relativo-max="{{system.pv.max}}" title="{{localize "DESORDEM.Ficha.ContaDica"}}" {{#unless editable}}disabled{{/unless}}>
             <span>/</span>
             {{! Base: o máximo sem efeitos (o que se edita); com redução, o máximo calculado aparece ao lado }}
-            <input type="number" name="system.pv.base" value="{{system.pv.base}}" min="0" title="{{localize "DESORDEM.Ficha.Cab.BaseDica"}}" {{#unless editable}}disabled{{/unless}}>
+            <input type="text" inputmode="numeric" class="desordem-barra__campo" name="system.pv.base" value="{{system.pv.base}}" data-relativo title="{{localize "DESORDEM.Ficha.Cab.BaseDica"}}" {{#unless editable}}disabled{{/unless}}>
             {{#if pvReduced}}<span class="desordem-barra__maximo" title="{{localize "DESORDEM.Ficha.Cab.MaximoDica" base=system.pv.base max=system.pv.max}}">({{localize "DESORDEM.Ficha.Cab.Maximo" max=system.pv.max}})</span>{{/if}}
           </span>
         </div>

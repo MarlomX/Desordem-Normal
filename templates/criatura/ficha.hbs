@@ -5,6 +5,7 @@
     {{#each attributes}}
     <div class="desordem-atributo">
       <span class="desordem-atributo__nome">{{label}}
+        {{~! A seta fica fora do fluxo (CSS): o nome continua no centro do cartão ~}}
         {{#if stepNet}}<span class="desordem-passo desordem-passo--{{stepDirection}}" title="{{localize "DESORDEM.Ficha.Passos.Efeito" base=die atual=shownDie}}"><i class="fa-solid {{#if stepUp}}fa-arrow-up{{else}}fa-arrow-down{{/if}}" aria-hidden="true"></i>{{#if stepBig}}<sub>{{stepAbs}}</sub>{{/if}}</span>{{/if}}
       </span>
       <span class="desordem-forma desordem-forma--grande desordem-d-{{shownDie}}{{#if stepNet}} is-passo is-passo--{{stepDirection}}{{/if}}">

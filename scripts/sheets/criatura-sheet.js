@@ -54,6 +54,7 @@ import {
   creatureTabForItemType,
   visibleSkillRows,
 } from './creature-context.js';
+import { resolveRelativeFields } from './relative-input.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -201,6 +202,15 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
         skill: (key) => (PERICIAS[key] ? t(`DESORDEM.Pericias.${key}`) : key),
       }),
     };
+  }
+
+  /**
+   * Antes de gravar o formulário, faz a conta dos campos marcados com `data-relativo` (valor e
+   * base do PV): `-2` subtrai do valor gravado, `+3` soma. Veja `scripts/sheets/relative-input.js`.
+   */
+  _processFormData(event, form, formData) {
+    resolveRelativeFields(form, formData.object, this.document._source);
+    return super._processFormData(event, form, formData);
   }
 
   /** Liga os campos sem `name` (fora do formulário): atributo-base, perícias próprias, efeitos, elementos. */

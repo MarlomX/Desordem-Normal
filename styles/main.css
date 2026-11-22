@@ -589,6 +589,14 @@
 
 .desordem-item-linha__numero {
   width: 3.5em;
+  text-align: center;
+}
+
+/* Contadores da aba Condição: campos de texto curtos que aceitam conta (-1, +2) */
+.desordem-conta {
+  flex: 0 0 auto;
+  width: 4em;
+  text-align: center;
 }
 
 .desordem-ficha__alerta {
@@ -1034,6 +1042,8 @@
 }
 
 .desordem-atributo__nome {
+  /* Referência para a seta de passos, que fica fora do fluxo e não empurra o nome */
+  position: relative;
   font-size: 0.8em;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -1068,8 +1078,13 @@
 }
 
 .desordem-passo {
+  /* Logo depois do nome, sem ocupar espaço: o nome continua centralizado no cartão */
+  position: absolute;
+  top: 0;
+  left: 100%;
   margin-left: 0.25em;
   font-size: 0.9em;
+  white-space: nowrap;
 }
 
 .desordem-passo--up {
@@ -1322,7 +1337,8 @@
   white-space: nowrap;
 }
 
-.desordem-barra input[type='number'] {
+/* Campos de valor e de base: texto (aceitam conta, como -2 ou +3; veja relative-input.js) */
+.desordem-barra input.desordem-barra__campo {
   width: 2.8em;
   height: 1.5em;
   padding: 0;

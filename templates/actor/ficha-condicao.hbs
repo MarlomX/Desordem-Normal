@@ -37,12 +37,12 @@
 
   <label class="desordem-ficha__campo">
     <span>{{localize "DESORDEM.Ficha.TestesLesaoCena"}}</span>
-    <input type="number" name="system.cena.testesLesao" value="{{system.cena.testesLesao}}" min="0" {{#unless editable}}disabled{{/unless}}>
+    <input type="text" inputmode="numeric" class="desordem-conta" name="system.cena.testesLesao" value="{{system.cena.testesLesao}}" data-relativo {{#unless editable}}disabled{{/unless}}>
   </label>
 
   <label class="desordem-ficha__campo" title="{{localize "DESORDEM.Ficha.PrimeirosSocorrosDica"}}">
     <span>{{localize "DESORDEM.Ficha.PrimeirosSocorrosCena"}}</span>
-    <input type="number" name="system.cena.primeirosSocorros" value="{{system.cena.primeirosSocorros}}" min="0" {{#unless editable}}disabled{{/unless}}>
+    <input type="text" inputmode="numeric" class="desordem-conta" name="system.cena.primeirosSocorros" value="{{system.cena.primeirosSocorros}}" data-relativo {{#unless editable}}disabled{{/unless}}>
   </label>
 
 </section>
@@ -56,7 +56,7 @@
 
   <label class="desordem-ficha__campo">
     <span>{{localize "DESORDEM.Ficha.TestesTraumaCena"}}</span>
-    <input type="number" name="system.cena.testesTrauma" value="{{system.cena.testesTrauma}}" min="0" {{#unless editable}}disabled{{/unless}}>
+    <input type="text" inputmode="numeric" class="desordem-conta" name="system.cena.testesTrauma" value="{{system.cena.testesTrauma}}" data-relativo {{#unless editable}}disabled{{/unless}}>
   </label>
 
 </section>

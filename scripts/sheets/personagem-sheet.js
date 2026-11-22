@@ -109,6 +109,7 @@ import {
   skillRowOrder,
   nextOpenIds,
 } from './context.js';
+import { applyRelativeInput, limitsFromDataset, resolveRelativeFields } from './relative-input.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -342,6 +343,16 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     };
   }
 
+  /**
+   * Antes de gravar o formulário, faz a conta dos campos marcados com `data-relativo` (PV, PD,
+   * bases, contadores da cena, armadura extra gasta): `-2` subtrai do valor gravado, `+3` soma.
+   * Veja `scripts/sheets/relative-input.js`.
+   */
+  _processFormData(event, form, formData) {
+    resolveRelativeFields(form, formData.object, this.document._source);
+    return super._processFormData(event, form, formData);
+  }
+
   /** Liga os campos de texto e a caixa "usada" das relações (sem `name`, fora do formulário). */
   async _onRender(context, options) {
     await super._onRender(context, options);
@@ -511,8 +522,20 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   async #onItemField(field) {
     const item = this.document.items.get(field.dataset.itemId);
     if (!item) return;
-    const value = field.type === 'checkbox' ? field.checked : Number(field.value);
-    await item.update({ [`system.${field.dataset.itemCampo}`]: value });
+    const path = `system.${field.dataset.itemCampo}`;
+    let value;
+    if (field.type === 'checkbox') value = field.checked;
+    else if ('relativo' in field.dataset) {
+      // Quantidade, usos e pontos restantes aceitam conta (`-1`, `+2`) sobre o valor gravado
+      value = applyRelativeInput(
+        field.value,
+        foundry.utils.getProperty(item._source, path),
+        limitsFromDataset(field.dataset),
+      );
+      // O campo mostra o resultado mesmo se nada mudar (sem atualização, a ficha não redesenha)
+      field.value = String(value);
+    } else value = Number(field.value);
+    await item.update({ [path]: value });
   }
 
   /** Lista de relações como dados simples, pronta para ser alterada e regravada. */

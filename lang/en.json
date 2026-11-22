@@ -298,7 +298,8 @@
         "Cancelar": "Cancel",
         "Adicionado": "Effect \"{nome}\" added to the sheet."
       },
-      "MigracaoCondicao": "Injuries, traumas and bruises of {n} character(s) converted into Condition tab effects."
+      "MigracaoCondicao": "Injuries, traumas and bruises of {n} character(s) converted into Condition tab effects.",
+      "ContaDica": "Accepts math: -2 subtracts, +3 adds, =5 or 5 sets the value."
     },
     "Aptidoes": {
       "artes": "Arts",

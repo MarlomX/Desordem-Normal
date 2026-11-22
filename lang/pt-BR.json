@@ -298,7 +298,8 @@
         "Cancelar": "Cancelar",
         "Adicionado": "Efeito «{nome}» acrescentado à ficha."
       },
-      "MigracaoCondicao": "Lesões, traumas e contusão de {n} personagem(ns) convertidos em efeitos da aba Condição."
+      "MigracaoCondicao": "Lesões, traumas e contusão de {n} personagem(ns) convertidos em efeitos da aba Condição.",
+      "ContaDica": "Aceita conta: -2 subtrai, +3 soma, =5 ou 5 define o valor."
     },
     "Aptidoes": {
       "artes": "Artes",
