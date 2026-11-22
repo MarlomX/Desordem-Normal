@@ -10,7 +10,8 @@
     <h4>{{source}}</h4>
     {{#each entries}}
     <button type="button" class="desordem-efeito-lista__entrada" data-efeito-uuid="{{uuid}}" data-search="{{search}}">
-      <strong>{{name}}</strong>{{#if folder}} <span class="desordem-efeito-lista__pasta">{{folder}}</span>{{/if}}
+      {{! Duas linhas: nome e pasta; embaixo, o resumo dos passos (se houver) }}
+      <span class="desordem-efeito-lista__titulo"><strong>{{name}}</strong>{{#if folder}} <span class="desordem-efeito-lista__pasta">{{folder}}</span>{{/if}}</span>
       {{#if summary}}<span class="desordem-efeito-lista__resumo">{{summary}}</span>{{/if}}
     </button>
     {{/each}}
