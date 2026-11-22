@@ -6,9 +6,9 @@
     <div class="desordem-atributo">
       <span class="desordem-atributo__nome">{{label}}
         {{~! A seta fica fora do fluxo (CSS): o nome continua no centro do cartão ~}}
-        {{#if stepNet}}<span class="desordem-passo desordem-passo--{{stepDirection}}" title="{{localize "DESORDEM.Ficha.Passos.Efeito" base=die atual=shownDie}}"><i class="fa-solid {{#if stepUp}}fa-arrow-up{{else}}fa-arrow-down{{/if}}" aria-hidden="true"></i>{{#if stepBig}}<sub>{{stepAbs}}</sub>{{/if}}</span>{{/if}}
+        {{#if stepNet}}<span class="desordem-passo desordem-passo--{{stepDirection}}" data-tooltip="{{localize "DESORDEM.Ficha.Passos.Efeito" base=die atual=shownDie origens=stepSources}}"><i class="fa-solid {{#if stepUp}}fa-arrow-up{{else}}fa-arrow-down{{/if}}" aria-hidden="true"></i>{{#if stepBig}}<sub>{{stepAbs}}</sub>{{/if}}</span>{{else if stepBalanced}}<span class="desordem-passo desordem-passo--misto" data-tooltip="{{localize "DESORDEM.Ficha.Passos.Equilibrio" base=die origens=stepSources}}"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i></span>{{/if}}
       </span>
-      <span class="desordem-forma desordem-forma--grande desordem-d-{{shownDie}}{{#if stepNet}} is-passo is-passo--{{stepDirection}}{{/if}}">
+      <span class="desordem-forma desordem-forma--grande desordem-d-{{shownDie}}{{#if stepNet}} is-passo is-passo--{{stepDirection}}{{else if stepBalanced}} is-passo is-passo--misto{{/if}}">
         <span class="desordem-forma__valor">{{shownDie}}</span>
         <select class="desordem-forma__select" name="system.atributos.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
           {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
@@ -49,9 +49,9 @@
         {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
         </select>
       </span>
-      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{else if attrBalanced}} is-passo is-passo--misto{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
-      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{else if stepBalanced}} is-passo is-passo--misto{{/if}}">
         <span class="desordem-forma__valor">{{shownDie}}</span>
         <select class="desordem-forma__select" name="system.pericias.{{key}}" {{#unless ../editable}}disabled{{/unless}}>
         {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
@@ -78,9 +78,9 @@
         {{#each attrOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
         </select>
       </span>
-      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
+      <span class="desordem-forma desordem-d-{{attrShownDie}}{{#if attrShifted}} is-passo is-passo--{{attrShiftDir}}{{else if attrBalanced}} is-passo is-passo--misto{{/if}}" title="{{attrLabel}}"><span class="desordem-forma__valor">{{attrShownDie}}</span></span>
       <span class="desordem-ficha__soma">+</span>
-      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{/if}}">
+      <span class="desordem-forma desordem-d-{{shownDie}}{{#if shifted}} is-passo is-passo--{{shiftDir}}{{else if stepBalanced}} is-passo is-passo--misto{{/if}}">
         <span class="desordem-forma__valor">{{shownDie}}</span>
         <select class="desordem-forma__select" data-extra-campo="dado" data-group="pericia" data-id="{{id}}" {{#unless ../editable}}disabled{{/unless}}>
         {{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}

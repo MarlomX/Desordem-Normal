@@ -1065,6 +1065,11 @@
   --dn-passo-cor: #e0675a;
 }
 
+/* Passos que se anulam (v0.23.1): o dado parece o base, mas há aumento e redução ao mesmo tempo */
+.desordem-forma.is-passo--misto {
+  --dn-passo-cor: #d9a441;
+}
+
 @keyframes desordem-passo-pulso {
   50% {
     filter: drop-shadow(0 0 1px var(--dn-passo-cor)) drop-shadow(0 0 3px var(--dn-passo-cor));
@@ -1093,6 +1098,11 @@
 
 .desordem-passo--down {
   color: #e0675a;
+}
+
+/* Ícone de equilíbrio ao lado do nome, quando os passos se anulam */
+.desordem-passo--misto {
+  color: #d9a441;
 }
 
 .desordem-passo sub {

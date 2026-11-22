@@ -10,6 +10,7 @@ import {
   effectStepMods,
   conditionStepMods,
   attributeStepNet,
+  attributeStepSources,
   stepTestMatches,
   isLegacyEffect,
   migrateLegacyEffect,
@@ -301,6 +302,21 @@ test('attributeStepNet soma só os passos de atributo que valem em qualquer test
   ];
   assert.equal(attributeStepNet(effects, 'fisico'), 2);
   assert.equal(attributeStepNet(effects, 'mente'), 1);
+});
+
+test('attributeStepSources dá o nome e os passos de cada efeito no atributo', () => {
+  const effects = [
+    step('fisico', 1, { nome: 'Ímpeto' }),
+    step('todos', -1, { nome: 'Cansaço' }),
+    withStep({ alvo: 'atributo', atributo: 'fisico', passos: -3, teste: 'defesa' }),
+    withStep({ alvo: 'pericias', passos: 2 }),
+  ];
+  assert.deepEqual(attributeStepSources(effects, 'fisico'), [
+    { name: 'Ímpeto', steps: 1 },
+    { name: 'Cansaço', steps: -1 },
+  ]);
+  assert.deepEqual(attributeStepSources(effects, 'mente'), [{ name: 'Cansaço', steps: -1 }]);
+  assert.deepEqual(attributeStepSources([], 'mente'), []);
 });
 
 test('attributeStep: passo simples já limpo pelo catálogo', () => {

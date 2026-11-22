@@ -385,11 +385,33 @@ export function effectStepMods(effects, attrKey) {
 }
 
 /**
+ * De onde vêm os passos dos efeitos no dado de um atributo, nos testes em geral (o que a ficha
+ * mostra): um registro por `passo`, com o nome do efeito. Os que valem só em ataques ou defesas
+ * não entram. Serve para a dica da ficha e para ver passos que se anulam (v0.23.1).
+ * @param {object[]} effects `system.efeitos`.
+ * @param {string} attrKey Atributo.
+ * @returns {{name: string, steps: number}[]}
+ */
+export function attributeStepSources(effects, attrKey) {
+  const sources = [];
+  for (const effect of normalizeSheetEffects(effects)) {
+    for (const { tipo, params } of effect.efeitos) {
+      if (tipo !== 'passo' || params.passos === 0 || params.alvo !== 'atributo') continue;
+      if (!stepTestMatches(params.teste, 'qualquer')) continue;
+      if (params.atributo === attrKey || params.atributo === ALL_ATTRIBUTES) {
+        sources.push({ name: effect.nome, steps: params.passos });
+      }
+    }
+  }
+  return sources;
+}
+
+/**
  * Saldo de passos dos efeitos no dado de um atributo, nos testes em geral (o que a ficha mostra;
  * os que valem só em ataques ou defesas não entram).
  */
 export function attributeStepNet(effects, attrKey) {
-  return effectStepMods(effects, attrKey).reduce((sum, mod) => sum + mod.steps, 0);
+  return attributeStepSources(effects, attrKey).reduce((sum, source) => sum + source.steps, 0);
 }
 
 // ---------- Modificadores, dano emocional e máximo (v0.22.2) ----------

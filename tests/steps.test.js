@@ -14,7 +14,10 @@ import {
   shownDie,
   stepLimits,
   stepWithin,
+  stepTotals,
+  formatStepSources,
 } from '../scripts/rolls/steps.js';
+import { newStepEffect } from '../scripts/rolls/effects.js';
 import { planDice } from '../scripts/rolls/test.js';
 
 test('newSteps começa zerado para os três atributos e as perícias', () => {
@@ -103,10 +106,64 @@ test('stepIndicator mostra direção e saldo (manual + efeitos)', () => {
     manual: 1,
     effects: 1,
     direction: 'up',
+    up: 2,
+    down: 0,
+    mixed: false,
+    balanced: false,
+    sources: [
+      { kind: 'manual', steps: 1 },
+      { kind: 'effect', name: '', steps: 1 },
+    ],
   });
   assert.equal(stepIndicator({ steps: { mente: -1 }, key: 'mente' }).direction, 'down');
   assert.equal(stepIndicator({ steps: {}, key: 'emocao' }).direction, 'none');
   assert.equal(stepIndicator({ steps: { pericias: 2 }, effects, key: 'pericias' }).net, 2);
+});
+
+test('stepIndicator: um efeito para cima e um passo manual para baixo se anulam (v0.23.1)', () => {
+  const effects = [newStepEffect({ id: 'a', nome: 'Ímpeto', atributo: 'fisico', passos: 1 })];
+  const indicator = stepIndicator({ steps: { fisico: -1 }, effects, key: 'fisico' });
+  assert.equal(indicator.net, 0);
+  assert.equal(indicator.direction, 'none');
+  assert.deepEqual([indicator.up, indicator.down], [1, 1]);
+  assert.equal(indicator.mixed, true);
+  assert.equal(indicator.balanced, true);
+  assert.deepEqual(indicator.sources, [
+    { kind: 'manual', steps: -1 },
+    { kind: 'effect', name: 'Ímpeto', steps: 1 },
+  ]);
+});
+
+test('stepIndicator: dos dois lados com saldo diferente de 0 é misto, mas não equilibrado', () => {
+  const effects = [newStepEffect({ id: 'a', nome: 'Ímpeto', atributo: 'fisico', passos: 2 })];
+  const indicator = stepIndicator({ steps: { fisico: -1 }, effects, key: 'fisico' });
+  assert.equal(indicator.net, 1);
+  assert.equal(indicator.mixed, true);
+  assert.equal(indicator.balanced, false);
+});
+
+test('stepIndicator: só passos para o mesmo lado não é misto', () => {
+  const indicator = stepIndicator({ steps: { mente: -2 }, key: 'mente' });
+  assert.deepEqual([indicator.up, indicator.down, indicator.mixed], [0, 2, false]);
+  assert.deepEqual(stepIndicator({ steps: {}, key: 'mente' }).sources, []);
+});
+
+test('stepTotals soma separado o que sobe e o que desce', () => {
+  assert.deepEqual(stepTotals([{ steps: 2 }, { steps: -1 }, { steps: -2 }]), { up: 2, down: 3 });
+  assert.deepEqual(stepTotals([]), { up: 0, down: 0 });
+});
+
+test('formatStepSources escreve as origens com sinal', () => {
+  const sources = [
+    { kind: 'manual', steps: -1 },
+    { kind: 'effect', name: 'Ímpeto', steps: 1 },
+    { kind: 'effect', name: '', steps: 2 },
+  ];
+  assert.equal(
+    formatStepSources(sources, { manual: 'Manual', unnamed: 'Efeito' }),
+    'Manual \u22121 · Ímpeto +1 · Efeito +2',
+  );
+  assert.equal(formatStepSources([], { manual: 'Manual' }), '');
 });
 
 test('shownDie aplica o saldo líquido sem passar de d4 nem de d12', () => {

@@ -5,6 +5,7 @@ import {
   applyRelativeInput,
   limitsFromDataset,
   readPath,
+  sumTerms,
   resolveRelativeFields,
 } from '../scripts/sheets/relative-input.js';
 
@@ -17,8 +18,25 @@ test('parseNumberInput entende N, =N, +N e -N (com espaços)', () => {
   assert.deepEqual(parseNumberInput(7), { mode: 'set', amount: 7 });
 });
 
+test('parseNumberInput: conta com vários termos (v0.23.1)', () => {
+  assert.deepEqual(parseNumberInput('7-3'), { mode: 'set', amount: 4 });
+  assert.deepEqual(parseNumberInput('=7-3'), { mode: 'set', amount: 4 });
+  assert.deepEqual(parseNumberInput(' 10 + 2 - 3 '), { mode: 'set', amount: 9 });
+  assert.deepEqual(parseNumberInput('3-7'), { mode: 'set', amount: -4 });
+  assert.deepEqual(parseNumberInput('+2-1'), { mode: 'add', amount: 1 });
+  assert.deepEqual(parseNumberInput('-2-3'), { mode: 'add', amount: -5 });
+  assert.deepEqual(parseNumberInput('7\u22123'), { mode: 'set', amount: 4 });
+});
+
+test('sumTerms soma os termos com os sinais', () => {
+  assert.equal(sumTerms('7-3'), 4);
+  assert.equal(sumTerms('-2+5-1'), 2);
+  assert.equal(sumTerms('12'), 12);
+});
+
 test('parseNumberInput recusa o que não é um formato aceito', () => {
-  for (const raw of ['', '  ', 'abc', '10-2', '2.5', '+', '=-3', '*2', null, undefined, 1.5]) {
+  const invalid = ['', '  ', 'abc', '2.5', '+', '=-3', '*2', '7*3', '8/2', '(7-3)', '7-', '7--3'];
+  for (const raw of [...invalid, null, undefined, 1.5]) {
     assert.equal(parseNumberInput(raw), null, `aceitou ${raw}`);
   }
 });
@@ -45,6 +63,14 @@ test('applyRelativeInput: valor absoluto não tem teto, só o mínimo', () => {
 test('applyRelativeInput acima do máximo: somar não mexe, subtrair funciona', () => {
   assert.equal(applyRelativeInput('+1', 15, { max: 10 }), 15);
   assert.equal(applyRelativeInput('-2', 15, { max: 10 }), 13);
+});
+
+test('applyRelativeInput: 7-3 define, +2-1 soma, 3-7 fica no mínimo', () => {
+  assert.equal(applyRelativeInput('7-3', 10, { max: 10 }), 4);
+  assert.equal(applyRelativeInput('10+5', 10, { max: 10 }), 15);
+  assert.equal(applyRelativeInput('3-7', 10, { max: 10 }), 0);
+  assert.equal(applyRelativeInput('+2-1', 8, { max: 10 }), 9);
+  assert.equal(applyRelativeInput('+1-1', 8, { max: 10 }), 8);
 });
 
 test('applyRelativeInput mantém o valor gravado com texto inválido', () => {

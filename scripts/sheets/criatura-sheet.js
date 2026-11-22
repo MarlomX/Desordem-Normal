@@ -129,7 +129,13 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     const data = actor.toObject().system;
     const attrStepOf = (key) => stepIndicator({ steps: data.passos, effects: data.efeitos, key });
     const skillStep = stepIndicator({ steps: data.passos, effects: [], key: 'pericias' });
+    // Nomes usados na dica com a origem de cada passo («Manual −1 · Ímpeto +1»)
+    const stepLabels = {
+      manual: t('DESORDEM.Ficha.Passos.Manual'),
+      unnamed: t('DESORDEM.Ficha.Passos.SemNome'),
+    };
     const attrFieldOptions = {
+      stepLabels,
       attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
       defaultLabel: (key) =>
         t('DESORDEM.Ficha.AtributoPadrao', { atributo: t(`DESORDEM.Atributos.${key}`) }),
@@ -168,6 +174,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
         ATRIBUTOS,
         (key) => t(`DESORDEM.Atributos.${key}`),
         attrStepOf,
+        stepLabels,
       ),
       skillStep,
       skills: visibleSkillRows(skills, showAll),

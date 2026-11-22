@@ -1,28 +1,52 @@
 /**
  * Conta nos campos numéricos da ficha: escrever `-2` num campo que tem 10 grava 8, `+3` soma,
- * `=5` ou `5` definem o valor. Lógica pura, sem dependência do Foundry (só lê o DOM que recebe).
+ * `=5` ou `5` definem o valor, `7-3` define 4. Lógica pura, sem dependência do Foundry (só lê o
+ * DOM que recebe).
  *
- * Regras (v0.23.0):
- * - `N` e `=N` definem o valor; só não deixam ficar abaixo do mínimo (sem teto, como antes).
- * - `+N` e `-N` fazem a conta sobre o valor gravado e ficam entre o mínimo e o máximo do campo,
- *   como os botões −/+ das barras.
- * - Qualquer outro texto (vazio, letras, `10-2`, decimais) não muda nada: fica o valor gravado.
+ * Regras (v0.23.0; contas com vários termos desde a v0.23.1):
+ * - Começando por um número (`5`, `7-3`, `10+2-3`) ou por `=` (`=5`, `=7-3`), a conta define o
+ *   valor; só não deixa ficar abaixo do mínimo (sem teto, como antes).
+ * - Começando por `+` ou `-` (`+3`, `-2`, `+2-1`), a conta é feita sobre o valor gravado e fica
+ *   entre o mínimo e o máximo do campo, como os botões −/+ das barras.
+ * - Só inteiros ligados por `+` e `-` (o sinal de menos tipográfico `−` vale como `-`). Qualquer
+ *   outro texto (vazio, letras, `*`, `/`, parênteses, decimais) não muda nada: fica o valor gravado.
  *
  * Na marcação, um campo com conta tem `data-relativo`; `data-relativo-min` (padrão 0) e
  * `data-relativo-max` (opcional) dão os limites da conta relativa.
  */
 
+/** Sinais de menos aceitos: o do teclado e o tipográfico (U+2212). */
+const MINUS = ['-', '−'];
+
 /**
- * Um sinal opcional (`=`, `+`, `-` ou o sinal de menos tipográfico `−`) seguido de um inteiro.
- * Espaços antes, depois e entre o sinal e o número são aceitos.
+ * Texto aceito: um início opcional (`=`, `+`, `-` ou `−`) seguido de inteiros ligados por `+`,
+ * `-` ou `−`. Espaços entre as partes são aceitos.
+ * Grupo 1: o início; grupo 2: a conta (`7-3`, `2`, `10 + 2 - 3`).
  */
-const INPUT_PATTERN = /^\s*([=+\-−]?)\s*(\d+)\s*$/;
+const INPUT_PATTERN = /^\s*([=+\-−]?)\s*(\d+(?:\s*[+\-−]\s*\d+)*)\s*$/;
+
+/** Cada termo da conta com o seu sinal (`-3`, `+2`); o primeiro pode vir sem sinal. */
+const TERM_PATTERN = /([+\-−]?)\s*(\d+)/g;
+
+/**
+ * Resultado de uma conta já conferida por `INPUT_PATTERN` (só inteiros, `+` e `-`).
+ * @param {string} expression Ex.: `7-3`, `-2+5`, `10 + 2 - 3`.
+ * @returns {number}
+ */
+export function sumTerms(expression) {
+  let total = 0;
+  for (const [, sign, digits] of String(expression).matchAll(TERM_PATTERN)) {
+    total += MINUS.includes(sign) ? -Number(digits) : Number(digits);
+  }
+  return total;
+}
 
 /**
  * Lê o texto de um campo.
  * @param {*} raw Texto digitado (ou um número, se já vier convertido).
- * @returns {{mode: 'set'|'add', amount: number}|null} `set` define o valor; `add` soma `amount`
- *   (negativo para subtrair). `null` quando o texto não é um formato aceito.
+ * @returns {{mode: 'set'|'add', amount: number}|null} `set` define o valor como `amount` (o
+ *   resultado da conta); `add` soma `amount` ao valor gravado (negativo para subtrair). `null`
+ *   quando o texto não é um formato aceito.
  */
 export function parseNumberInput(raw) {
   // Um número que já chegou convertido (por exemplo, de um campo `type="number"`) é absoluto
@@ -31,11 +55,10 @@ export function parseNumberInput(raw) {
   }
   const match = INPUT_PATTERN.exec(String(raw ?? ''));
   if (!match) return null;
-  const [, sign, digits] = match;
-  const amount = Number(digits);
-  if (sign === '+') return { mode: 'add', amount };
-  if (sign === '-' || sign === '−') return { mode: 'add', amount: -amount };
-  return { mode: 'set', amount };
+  const [, start, expression] = match;
+  // `7-3` e `=7-3` definem; `+2-1` e `-3` somam ao gravado (o sinal do início vale para o 1º termo)
+  if (start === '' || start === '=') return { mode: 'set', amount: sumTerms(expression) };
+  return { mode: 'add', amount: sumTerms(`${start}${expression}`) };
 }
 
 /**
@@ -51,6 +74,8 @@ export function applyRelativeInput(raw, current, { min = 0, max } = {}) {
   const parsed = parseNumberInput(raw);
   if (!parsed) return base;
   if (parsed.mode === 'set') return Math.max(min, parsed.amount);
+  // Uma conta que se anula (`+1-1`) não mexe no valor
+  if (parsed.amount === 0) return base;
   const top = Number.isFinite(max) ? max : Infinity;
   const next = base + parsed.amount;
   // Somar para no máximo; se o valor já estava acima dele (definido à mão), somar não o mexe

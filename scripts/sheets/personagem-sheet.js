@@ -225,7 +225,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       stepIndicator({ steps: stepsData.passos, effects: stepsData.efeitos, key });
     const skillStep = stepIndicator({ steps: stepsData.passos, effects: [], key: 'pericias' });
     // Opções comuns da coluna do atributo-base nas linhas de perícia, aptidão e ofício
+    // Nomes usados na dica com a origem de cada passo («Manual −1 · Ímpeto +1»)
+    const stepLabels = {
+      manual: t('DESORDEM.Ficha.Passos.Manual'),
+      unnamed: t('DESORDEM.Ficha.Passos.SemNome'),
+    };
     const attrFieldOptions = {
+      stepLabels,
       attrLabel: (key) => t(`DESORDEM.Atributos.${key}`),
       defaultLabel: (key) =>
         game.i18n.format('DESORDEM.Ficha.AtributoPadrao', {
@@ -270,6 +276,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         ATRIBUTOS,
         (key) => t(`DESORDEM.Atributos.${key}`),
         attrStepOf,
+        stepLabels,
       ),
       skillStep,
       // A Medicina ganha o botão de primeiros socorros

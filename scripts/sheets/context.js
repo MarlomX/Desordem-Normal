@@ -21,7 +21,7 @@ import {
 import { itemUsePlan, ownEffects } from '../rolls/ability-effects.js';
 import { normalizeSheetEffects } from '../rolls/effects.js';
 import { abilityControls } from './ability-controls.js';
-import { shownDie, stepLimits } from '../rolls/steps.js';
+import { formatStepSources, shownDie, stepLimits } from '../rolls/steps.js';
 
 /**
  * Opções de um seletor de dado (d4 a d12). Se o valor atual estiver fora da escada
@@ -56,8 +56,10 @@ export function shiftDirection(base, shown) {
  * @param {(key: string) => string} label Devolve o nome traduzido.
  * @param {(key: string) => object} [stepOf] Devolve o `stepIndicator` do atributo (passos
  *   temporários); sem ele, o dado mostrado é o dado base.
+ * @param {{manual: string, unnamed?: string}} [stepLabels] Nomes do passo manual e de um efeito
+ *   sem nome, para o texto das origens dos passos (`stepSources`, v0.23.1).
  */
-export function buildAttributeRows(attributes, keys, label, stepOf) {
+export function buildAttributeRows(attributes, keys, label, stepOf, stepLabels = { manual: '' }) {
   return keys.map((key) => {
     const indicator = stepOf?.(key);
     const limits = stepLimits(attributes[key], indicator?.effects ?? 0);
@@ -74,6 +76,10 @@ export function buildAttributeRows(attributes, keys, label, stepOf) {
       stepAbs: Math.abs(indicator?.net ?? 0),
       stepBig: Math.abs(indicator?.net ?? 0) > 1,
       stepDirection: indicator?.direction ?? 'none',
+      // Um aumento e uma redução que se anulam: o dado parece o base, mas está sendo mexido
+      stepBalanced: indicator?.balanced ?? false,
+      // De onde vem cada passo (dica da ficha): «Manual −1 · Ímpeto +1»
+      stepSources: formatStepSources(indicator?.sources ?? [], stepLabels),
       stepManual: manual,
       canStepUp: manual < limits.max,
       canStepDown: manual > limits.min,
@@ -104,7 +110,8 @@ export function buildAttributeFields({
   attrStepOf,
 }) {
   const base = attributeDice ? Number(attributeDice[attrKey]) : undefined;
-  const shown = base === undefined ? undefined : shownDie(base, attrStepOf?.(attrKey));
+  const indicator = attrStepOf?.(attrKey);
+  const shown = base === undefined ? undefined : shownDie(base, indicator);
   const overridden = attrKey !== defaultKey;
   return {
     attrKey,
@@ -113,6 +120,8 @@ export function buildAttributeFields({
     attrShownDie: shown,
     attrShifted: base !== undefined && shown !== base,
     attrShiftDir: base === undefined ? '' : shiftDirection(base, shown),
+    // O atributo tem passos dos dois lados que se anulam (o dado mostrado é o base)
+    attrBalanced: base !== undefined && Boolean(indicator?.balanced),
     attrOverridden: overridden,
     attrDefaultLabel: attrLabel(defaultKey),
     attrOptions: [
@@ -154,6 +163,8 @@ function chosenOrDefault(chosen, defaultKey) {
  *   passo manual (um único total; a escada para em d4 e d12, então nunca passa de d12).
  * @param {(entry: {steps: number, sources: string[]}) => string} [labels.penaltyLabel] Texto da
  *   dica da penalidade (quais armaduras, quantos passos).
+ * @param {{manual: string}} [labels.stepLabels] Nome do passo manual, para a dica do dado quando
+ *   o passo manual e a penalidade das armaduras aparecem juntos (v0.23.1).
  */
 export function buildSkillRows(
   skills,
@@ -168,6 +179,7 @@ export function buildSkillRows(
     attrChoices,
     penalties = {},
     penaltyLabel = () => '',
+    stepLabels = { manual: '' },
   },
 ) {
   return Object.entries(skillAttributes)
@@ -184,8 +196,16 @@ export function buildSkillRows(
       // Passos da perícia: o manual (geral) menos a penalidade das armaduras, somados antes de
       // mexer no dado (d12 −1 da armadura +1 manual = d12)
       const penalty = penalties[key];
-      const net = (skillStep?.net ?? 0) - (penalty?.steps ?? 0);
+      const manual = skillStep?.net ?? 0;
+      const penaltySteps = penalty?.steps ?? 0;
+      const net = manual - penaltySteps;
       const shown = shownDie(skills[key], { net });
+      // Dica do dado: a penalidade das armaduras e, se houver, o passo manual junto
+      let penaltyNote = penaltySteps ? penaltyLabel(penalty) : '';
+      if (penaltySteps && manual) {
+        const manualNote = formatStepSources([{ kind: 'manual', steps: manual }], stepLabels);
+        penaltyNote = `${manualNote} · ${penaltyNote}`;
+      }
       return {
         key,
         label: skillLabel(key),
@@ -194,8 +214,10 @@ export function buildSkillRows(
         shownDie: shown,
         shifted: shown !== Number(skills[key]),
         shiftDir: shiftDirection(skills[key], shown),
-        // Dica no dado: de onde vem a redução (vazio sem penalidade)
-        penaltyNote: penalty?.steps ? penaltyLabel(penalty) : '',
+        // Passo manual para cima anulado pela penalidade das armaduras (o dado parece o base)
+        stepBalanced: manual > 0 && penaltySteps > 0 && net === 0,
+        // Dica no dado: de onde vêm os passos (vazio sem penalidade)
+        penaltyNote,
         trained: Number(skills[key]) >= 6,
         search: normalizeSearch(`${skillLabel(key)} ${attr.attrLabel}`),
         options: dieOptions(skills[key]),

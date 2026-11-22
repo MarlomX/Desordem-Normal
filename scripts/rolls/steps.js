@@ -7,7 +7,7 @@
  * (a escada de `stepShift` limita o dado). Quem soma tudo é `collectStepMods`, junto com os efeitos.
  */
 import { ATRIBUTOS } from '../config.js';
-import { attributeStepNet, conditionStepMods } from './effects.js';
+import { attributeStepSources, conditionStepMods } from './effects.js';
 import { DIE_STEPS, stepShift } from './dice.js';
 
 export const STEP_LIMIT = 4;
@@ -115,19 +115,69 @@ export function collectStepMods({ steps, effects = [], attrKey, skillKey = '', t
 /**
  * Saldo líquido para mostrar na ficha (seta e número), somando manual e efeitos.
  * Para `pericias` só há o manual.
- * @returns {{net: number, manual: number, effects: number, direction: 'up'|'down'|'none'}}
+ *
+ * Desde a v0.23.1 também diz quanto sobe e quanto desce, e de onde vem cada passo, para a ficha
+ * mostrar quando um aumento e uma redução se anulam (o dado volta ao base, mas está sendo mexido).
+ * @returns {{net: number, manual: number, effects: number, direction: 'up'|'down'|'none',
+ *   up: number, down: number, mixed: boolean, balanced: boolean,
+ *   sources: {kind: 'manual'|'effect', name?: string, steps: number}[]}}
+ *   `up`: soma dos passos para cima; `down`: soma dos passos para baixo (positiva); `mixed`: há
+ *   passos dos dois lados; `balanced`: há passos dos dois lados e o saldo é 0.
  */
 export function stepIndicator({ steps, effects = [], key }) {
   const manual = clampSteps(steps?.[key]);
   // Só os passos de atributo que valem em qualquer teste (os de ataque ou defesa não aparecem)
-  const fromEffects = ATRIBUTOS.includes(key) ? attributeStepNet(effects, key) : 0;
+  const effectSources = ATRIBUTOS.includes(key) ? attributeStepSources(effects, key) : [];
+  const sources = [
+    ...(manual !== 0 ? [{ kind: 'manual', steps: manual }] : []),
+    ...effectSources.map(({ name, steps: n }) => ({ kind: 'effect', name, steps: n })),
+  ];
+  const fromEffects = effectSources.reduce((sum, source) => sum + source.steps, 0);
   const net = manual + fromEffects;
+  const { up, down } = stepTotals(sources);
   return {
     net,
     manual,
     effects: fromEffects,
     direction: net > 0 ? 'up' : net < 0 ? 'down' : 'none',
+    up,
+    down,
+    mixed: up > 0 && down > 0,
+    balanced: up > 0 && down > 0 && net === 0,
+    sources,
   };
+}
+
+/**
+ * Soma separada dos passos para cima e para baixo de uma lista de origens.
+ * @param {{steps: number}[]} sources
+ * @returns {{up: number, down: number}} `down` é positivo (quantos passos desce).
+ */
+export function stepTotals(sources) {
+  let up = 0;
+  let down = 0;
+  for (const { steps } of sources) {
+    if (steps > 0) up += steps;
+    else down -= steps;
+  }
+  return { up, down };
+}
+
+/**
+ * Texto das origens dos passos para a dica da ficha: `Manual −1 · Ímpeto +1`.
+ * @param {{kind: string, name?: string, steps: number}[]} sources Origens (`stepIndicator`).
+ * @param {{manual: string, unnamed?: string}} labels Nome do passo manual e de um efeito sem nome.
+ * @returns {string} Vazio quando não há passos.
+ */
+export function formatStepSources(sources, { manual, unnamed = '' }) {
+  return sources
+    .map(({ kind, name, steps }) => {
+      const label = kind === 'manual' ? manual : name || unnamed;
+      // Sinal de menos tipográfico, como no resto da ficha
+      const signed = steps > 0 ? `+${steps}` : `−${Math.abs(steps)}`;
+      return `${label} ${signed}`;
+    })
+    .join(' · ');
 }
 
 /**

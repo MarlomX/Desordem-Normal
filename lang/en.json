@@ -266,7 +266,10 @@
         "Mais": "Raise step",
         "Menos": "Lower step",
         "Zerar": "Click to reset",
-        "Efeito": "Temporary step: d{base} → d{atual}"
+        "Efeito": "Temporary step: d{base} → d{atual} ({origens})",
+        "Manual": "Manual",
+        "SemNome": "Unnamed effect",
+        "Equilibrio": "Steps cancelling out: d{base} stays d{base} ({origens})"
       },
       "Bonus": {
         "Titulo": "Bonus Dice",

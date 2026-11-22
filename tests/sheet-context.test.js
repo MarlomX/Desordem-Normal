@@ -31,6 +31,8 @@ import {
   filterSkillRows,
   nextOpenIds,
 } from '../scripts/sheets/context.js';
+import { stepIndicator } from '../scripts/rolls/steps.js';
+import { newStepEffect } from '../scripts/rolls/effects.js';
 
 test('dieOptions lista d4 a d12 e marca o dado atual', () => {
   const opcoes = dieOptions(8);
@@ -737,6 +739,87 @@ test('buildAttributeRows sem passos mostra o dado base', () => {
   assert.equal(linha.shifted, false);
   assert.equal(linha.stepNet, 0);
   assert.equal(linha.stepDirection, 'none');
+});
+
+/** `stepIndicator` de Físico com um efeito «Ímpeto» de +1 e o passo manual dado (v0.23.1). */
+const balancedFisico = (manual) =>
+  stepIndicator({
+    steps: { fisico: manual },
+    effects: [newStepEffect({ id: 'i', nome: 'Ímpeto', atributo: 'fisico', passos: 1 })],
+    key: 'fisico',
+  });
+
+test('buildAttributeRows: passos que se anulam marcam o atributo e dizem as origens', () => {
+  const [linha] = buildAttributeRows(
+    { fisico: 6 },
+    ['fisico'],
+    (k) => k,
+    () => balancedFisico(-1),
+    { manual: 'Manual' },
+  );
+  assert.equal(linha.shownDie, 6);
+  assert.equal(linha.stepNet, 0);
+  assert.equal(linha.stepBalanced, true);
+  assert.equal(linha.stepSources, 'Manual \u22121 · Ímpeto +1');
+});
+
+test('buildAttributeRows: com saldo, não é equilíbrio, mas a dica traz as origens', () => {
+  const [linha] = buildAttributeRows(
+    { fisico: 6 },
+    ['fisico'],
+    (k) => k,
+    () => balancedFisico(1),
+    { manual: 'Manual' },
+  );
+  assert.equal(linha.stepNet, 2);
+  assert.equal(linha.stepBalanced, false);
+  assert.equal(linha.stepSources, 'Manual +1 · Ímpeto +1');
+  const [semPassos] = buildAttributeRows({ fisico: 6 }, ['fisico'], (k) => k);
+  assert.equal(semPassos.stepBalanced, false);
+  assert.equal(semPassos.stepSources, '');
+});
+
+test('buildSkillRows: o dado do atributo também mostra passos que se anulam', () => {
+  const [linha] = buildSkillRows(
+    { luta: 8 },
+    { luta: 'fisico' },
+    {
+      skillLabel: (k) => k,
+      attrLabel: (k) => k,
+      attributeDice: { fisico: 6 },
+      attrStepOf: () => balancedFisico(-1),
+    },
+  );
+  assert.equal(linha.attrShownDie, 6);
+  assert.equal(linha.attrShifted, false);
+  assert.equal(linha.attrBalanced, true);
+});
+
+test('buildSkillRows: passo manual +1 e penalidade de armadura −1 se anulam no dado da perícia', () => {
+  const options = {
+    skillLabel: (k) => k,
+    attrLabel: (k) => k,
+    skillStep: stepIndicator({ steps: { pericias: 1 }, key: 'pericias' }),
+    penalties: { furtividade: { steps: 1, sources: ['Colete'] } },
+    penaltyLabel: ({ steps, sources }) => `\u2212${steps} passo (${sources.join(', ')})`,
+    stepLabels: { manual: 'Manual' },
+  };
+  const [linha] = buildSkillRows({ furtividade: 8 }, { furtividade: 'fisico' }, options);
+  assert.equal(linha.shownDie, 8);
+  assert.equal(linha.shifted, false);
+  assert.equal(linha.stepBalanced, true);
+  assert.equal(linha.penaltyNote, 'Manual +1 · \u22121 passo (Colete)');
+  // Sem o passo manual: só a penalidade, sem equilíbrio
+  const [so] = buildSkillRows(
+    { furtividade: 8 },
+    { furtividade: 'fisico' },
+    {
+      ...options,
+      skillStep: undefined,
+    },
+  );
+  assert.equal(so.stepBalanced, false);
+  assert.equal(so.penaltyNote, '\u22121 passo (Colete)');
 });
 
 test('buildSkillRows aplica os passos do atributo e o geral das perícias', () => {
