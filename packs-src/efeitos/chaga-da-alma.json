@@ -1,0 +1,29 @@
+{
+  "_id": "dnEfeitowgr63CZ8",
+  "_key": "!items!dnEfeitowgr63CZ8",
+  "name": "Chaga da Alma",
+  "type": "efeito",
+  "img": "icons/svg/terror.svg",
+  "system": {
+    "descricao": "Algo se quebra no espírito. O PD máximo diminui em 2 até a cura. Pode ocorrer várias vezes, e os efeitos se acumulam.",
+    "duracao": "permanente",
+    "chave": "trauma:chagaAlma",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "reducaoMaximo",
+        "params": {
+          "recursoMax": "pd",
+          "reducao": 2
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito004",
+  "sort": 400000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

@@ -1,0 +1,32 @@
+{
+  "_id": "dnEfeitouLKWUQpF",
+  "_key": "!items!dnEfeitouLKWUQpF",
+  "name": "Caído",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "−1 passo nos testes de Físico. Ataques corpo a corpo contra você ganham +1 passo; ataques à distância contra você têm DT +3.",
+    "duracao": "manual",
+    "chave": "cond:caido",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "passo",
+        "params": {
+          "alvo": "atributo",
+          "atributo": "fisico",
+          "pericia": "",
+          "passos": -1,
+          "teste": "qualquer"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

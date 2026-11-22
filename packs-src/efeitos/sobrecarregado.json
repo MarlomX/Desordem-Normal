@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeitoOEFqkps3",
+  "_key": "!items!dnEfeitoOEFqkps3",
+  "name": "Sobrecarregado",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "Gasta uma ação para se mover na mesma zona e não pode passar para outra zona.",
+    "duracao": "manual",
+    "chave": "cond:sobrecarregado",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 600000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

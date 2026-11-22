@@ -1,0 +1,31 @@
+{
+  "_id": "dnEfeitoFpf0MbIW",
+  "_key": "!items!dnEfeitoFpf0MbIW",
+  "name": "Degradação Cognitiva",
+  "type": "efeito",
+  "img": "icons/svg/terror.svg",
+  "system": {
+    "descricao": "O medo corrói o raciocínio: −1 em testes que usam Mente. Dura até ser curado.",
+    "duracao": "permanente",
+    "chave": "trauma:degradacaoCognitiva",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "atributo",
+          "atributo": "mente",
+          "pericia": "",
+          "mod": -1
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito004",
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

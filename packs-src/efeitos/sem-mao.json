@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeito0nAxaydL",
+  "_key": "!items!dnEfeito0nAxaydL",
+  "name": "Sem Mão",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Perde o uso de uma mão ou de um braço. Só consegue empunhar um item; em tarefas de duas mãos, sofre uma redução de passo ou falha automaticamente, a critério do mestre.",
+    "duracao": "permanente",
+    "chave": "lesao:semMao",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 300000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

@@ -20,7 +20,7 @@ import {
   normalizeSheetEffects,
   withEffectIds,
 } from '../rolls/effects.js';
-import { effectText } from '../rolls/condition-tables.js';
+import { clearPresetText, effectText } from '../rolls/condition-tables.js';
 import { normalizeEffects } from '../rolls/ability-effects.js';
 import { describeEffect } from '../rolls/ability-effects-editor.js';
 import { buildEffectPicker, matchesSearch } from './context.js';
@@ -78,13 +78,15 @@ export async function createConditionEffect(actor) {
  */
 export async function addEffectFromItem(actor, item) {
   if (item?.type !== CONDITION_ITEM_TYPE) return false;
-  const effect = effectFromItem(item.toObject(), {
-    id: foundry.utils.randomID(),
-    uuid: item.uuid,
-  });
+  // Efeito pronto (chave conhecida): a cópia fica sem texto, e a ficha mostra o traduzido
+  const effect = clearPresetText(
+    effectFromItem(item.toObject(), { id: foundry.utils.randomID(), uuid: item.uuid }),
+  );
   const list = [...normalizeSheetEffects(actor.toObject().system.efeitos), effect];
   await actor.update({ 'system.efeitos': list });
-  ui.notifications.info(t('DESORDEM.Ficha.EfeitoCompendio.Adicionado', { nome: effect.nome }));
+  ui.notifications.info(
+    t('DESORDEM.Ficha.EfeitoCompendio.Adicionado', { nome: conditionEffectText(effect).nome }),
+  );
   return true;
 }
 

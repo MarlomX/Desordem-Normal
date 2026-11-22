@@ -1,0 +1,29 @@
+{
+  "_id": "dnEfeitokoXsBlmz",
+  "_key": "!items!dnEfeitokoXsBlmz",
+  "name": "Laceração Profunda",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Um corte grave e permanente. O PV máximo diminui em 2 para sempre. Pode ocorrer várias vezes, e os efeitos se acumulam.",
+    "duracao": "permanente",
+    "chave": "lesao:lacearacaoProfunda",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "reducaoMaximo",
+        "params": {
+          "recursoMax": "pv",
+          "reducao": 2
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

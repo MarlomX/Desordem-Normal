@@ -1,0 +1,32 @@
+{
+  "_id": "dnEfeitoPUS53f9L",
+  "_key": "!items!dnEfeitoPUS53f9L",
+  "name": "Irritação",
+  "type": "efeito",
+  "img": "icons/svg/hazard.svg",
+  "system": {
+    "descricao": "O fracasso tira você do sério: a Emoção cai um passo até o fim da cena.",
+    "duracao": "cena",
+    "chave": "falha:irritacao",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "passo",
+        "params": {
+          "alvo": "atributo",
+          "atributo": "emocao",
+          "pericia": "",
+          "passos": -1,
+          "teste": "qualquer"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito005",
+  "sort": 300000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

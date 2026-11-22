@@ -1736,6 +1736,48 @@
     },
     "Token": {
       "Migrados": "Prototype token linked to the sheet on {n} character(s)."
+    },
+    "Condicoes": {
+      "caido": {
+        "Nome": "Prone",
+        "Descricao": "−1 step on Physical tests. Melee attacks against you get +1 step; ranged attacks against you have DC +3."
+      },
+      "agarrado": {
+        "Nome": "Grabbed",
+        "Descricao": "You are immobile and take −1 step on attacks; you can only attack unarmed, with natural weapons or with small weapons. To break free: spend your action and win an opposed maneuver test."
+      },
+      "desequilibrado": {
+        "Nome": "Off-balance",
+        "Descricao": "−1 step on your next test (until the end of the next round). Remove the effect after that test."
+      },
+      "atordoado": {
+        "Nome": "Stunned",
+        "Descricao": "Conscious, but unable to act; the GM may allow instinctive or free actions."
+      },
+      "imovel": {
+        "Nome": "Immobile",
+        "Descricao": "You cannot move, neither within the same zone nor to another one."
+      },
+      "sobrecarregado": {
+        "Nome": "Overburdened",
+        "Descricao": "You spend an action to move within the same zone and cannot move to another zone."
+      },
+      "coberturaLeve": {
+        "Nome": "Light cover",
+        "Descricao": "Attacks against you have DC +3."
+      },
+      "coberturaTotal": {
+        "Nome": "Total cover",
+        "Descricao": "You cannot be attacked."
+      },
+      "ocultacaoLeve": {
+        "Nome": "Light concealment",
+        "Descricao": "Whoever attacks you takes −1 step on the attack."
+      },
+      "ocultacaoTotal": {
+        "Nome": "Total concealment",
+        "Descricao": "Whoever attacks you takes −2 steps on the attack."
+      }
     }
   },
   "TYPES.Item.arma": "Weapon",

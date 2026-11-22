@@ -1,0 +1,31 @@
+{
+  "_id": "dnEfeitogIAYYaxV",
+  "_key": "!items!dnEfeitogIAYYaxV",
+  "name": "Tendão Comprometido",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Um tendão perde capacidade, tirando agilidade e flexibilidade: −2 em Acrobacia.",
+    "duracao": "permanente",
+    "chave": "lesao:tendaoComprometido",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "acrobacia",
+          "mod": -2
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 500000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

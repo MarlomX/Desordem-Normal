@@ -11,6 +11,10 @@ import {
   legacyMaxLoss,
   storesEffect,
   CONTUSION_KEY,
+  presetOf,
+  clearPresetText,
+  COMBAT_CONDITIONS,
+  DISASTER_EFFECTS,
 } from '../scripts/rolls/condition-tables.js';
 import { LESIONS, lookupLesion, pickLesion } from '../scripts/rolls/injury.js';
 import { TRAUMAS, lookupTrauma, pickTrauma } from '../scripts/rolls/emotional.js';
@@ -298,4 +302,75 @@ test('migrateThreatBase: a base nasce igual ao máximo; com base, nada muda', ()
   assert.deepEqual(migrateThreatBase({ pv: { value: 3, max: 20, base: 25 } }).pv.base, 25);
   assert.deepEqual(migrateThreatBase({ pv: { value: 3 } }), { pv: { value: 3 } });
   assert.deepEqual(migrateThreatBase({}), {});
+});
+
+// ---------- Efeitos prontos do compêndio (v0.22.3) ----------
+
+test('presetOf: lesões, traumas, condições e falha crítica; o resto não', () => {
+  assert.equal(presetOf('cond:caido').base, 'DESORDEM.Condicoes');
+  assert.equal(presetOf('falha:machucado').entry.attr, 'fisico');
+  assert.equal(presetOf('lesao:semOlho').kind, 'lesao');
+  assert.equal(presetOf('falha:vexame'), null); // não fica na ficha
+  assert.equal(presetOf('cond:nada'), null);
+  assert.equal(presetOf('Compendium.x.Item.y'), null);
+  // As condições não são «lesões» para o «já tem, role de novo»
+  assert.equal(tableEntryOf('cond:caido'), null);
+});
+
+test('efeitos prontos: mecânica e duração das condições e da falha crítica', () => {
+  const caido = tableEffect(
+    'cond',
+    COMBAT_CONDITIONS.find((e) => e.key === 'caido'),
+  );
+  assert.equal(caido.duracao, 'manual');
+  assert.equal(caido.origem, '');
+  assert.deepEqual(caido.efeitos[0].params, {
+    alvo: 'atributo',
+    atributo: 'fisico',
+    pericia: '',
+    passos: -1,
+    teste: 'qualquer',
+  });
+  const agarrado = tableEffect(
+    'cond',
+    COMBAT_CONDITIONS.find((e) => e.key === 'agarrado'),
+  );
+  assert.deepEqual(
+    [agarrado.efeitos[0].params.alvo, agarrado.efeitos[0].params.teste],
+    ['pericias', 'ataque'],
+  );
+  assert.deepEqual(
+    tableEffect(
+      'cond',
+      COMBAT_CONDITIONS.find((e) => e.key === 'atordoado'),
+    ).efeitos,
+    [],
+  );
+  const irritacao = tableEffect(
+    'falha',
+    DISASTER_EFFECTS.find((e) => e.key === 'irritacao'),
+  );
+  assert.equal(irritacao.duracao, 'cena');
+  assert.equal(irritacao.efeitos[0].params.atributo, 'emocao');
+  assert.deepEqual(
+    DISASTER_EFFECTS.map((e) => e.key),
+    ['machucado', 'desatencao', 'irritacao'],
+  );
+});
+
+test('clearPresetText e effectText: a cópia de um efeito pronto mostra o texto traduzido', () => {
+  const t = (key) => `«${key}»`;
+  const copy = clearPresetText({ id: 'a', nome: 'Caído', descricao: 'pt', chave: 'cond:caido' });
+  assert.deepEqual([copy.nome, copy.descricao], ['', '']);
+  assert.deepEqual(effectText(copy, t), {
+    nome: '«DESORDEM.Condicoes.caido.Nome»',
+    descricao: '«DESORDEM.Condicoes.caido.Descricao»',
+    kind: '', // condição: etiqueta «Efeito»
+  });
+  const own = { id: 'b', nome: 'Bênção', descricao: 'x', chave: 'Compendium.x.Item.y' };
+  assert.equal(clearPresetText(own), own);
+  assert.equal(
+    effectText(clearPresetText({ chave: 'falha:desatencao' }), t).nome,
+    '«DESORDEM.FalhaCritica.desatencao.Nome»',
+  );
 });

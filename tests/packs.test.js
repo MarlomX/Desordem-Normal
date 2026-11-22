@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { normalizeEffects, ownEffects } from '../scripts/rolls/ability-effects.js';
+import { itemEffectTypes, normalizeEffects, ownEffects } from '../scripts/rolls/ability-effects.js';
+import { presetOf } from '../scripts/rolls/condition-tables.js';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const dir = path.join(root, 'packs-src', 'habilidades');
@@ -119,4 +120,82 @@ test('Segredo do Aço: proficiência marcial e Armadura extra', () => {
     steel.system.efeitos.map((e) => e.tipo),
     ['proficienciaMarcial', 'armaduraExtra'],
   );
+});
+
+// ---------- Compêndio «Efeitos básicos» (v0.22.3) ----------
+
+const effectsDir = path.join(root, 'packs-src', 'efeitos');
+const effectFiles = fs
+  .readdirSync(effectsDir)
+  .filter((file) => file.endsWith('.json'))
+  .map((file) => ({ file, doc: JSON.parse(fs.readFileSync(path.join(effectsDir, file), 'utf8')) }));
+const effectFolders = effectFiles.filter(({ doc }) => doc._key.startsWith('!folders!'));
+const effectItems = effectFiles.filter(({ doc }) => doc._key.startsWith('!items!'));
+
+test('compêndio de efeitos: as fontes gravadas são as que o código monta', async () => {
+  const { buildEffectSources } = await import('../tools/efeitos-fontes.mjs');
+  const lang = JSON.parse(fs.readFileSync(path.join(root, 'lang', 'pt-BR.json'), 'utf8'));
+  const built = buildEffectSources(lang);
+  // Mesmo conjunto de arquivos e o mesmo conteúdo (rode `node tools/gerar-efeitos.mjs` se mudar)
+  assert.deepEqual(built.map((s) => s.file).sort(), effectFiles.map((s) => s.file).sort());
+  for (const { file, doc } of built) {
+    assert.deepEqual(effectFiles.find((s) => s.file === file).doc, doc, file);
+  }
+});
+
+test('compêndio de efeitos: 28 efeitos em 5 pastas, ids, nomes e chaves únicos', () => {
+  assert.deepEqual(effectFolders.map(({ doc }) => doc.name).sort(), [
+    'Condições de combate',
+    'Falha crítica',
+    'Lesões',
+    'Saúde',
+    'Traumas',
+  ]);
+  assert.equal(effectItems.length, 28);
+  const folderIds = new Set(effectFolders.map(({ doc }) => doc._id));
+  for (const key of ['_id', 'name']) {
+    assert.equal(new Set(effectItems.map(({ doc }) => doc[key])).size, effectItems.length, key);
+  }
+  assert.equal(new Set(effectItems.map(({ doc }) => doc.system.chave)).size, effectItems.length);
+  for (const { file, doc } of [...effectFolders, ...effectItems]) {
+    assert.match(doc._id, /^[A-Za-z0-9]{16}$/, file);
+  }
+  for (const { file, doc } of effectItems) {
+    assert.equal(doc.type, 'efeito', file);
+    assert.ok(folderIds.has(doc.folder), file);
+    assert.ok(doc.system.descricao.trim().length > 0, file);
+    assert.ok(['cena', 'permanente', 'manual'].includes(doc.system.duracao), file);
+    // Toda chave é de um efeito pronto (a cópia traduz o texto por ela)
+    assert.ok(presetOf(doc.system.chave), file);
+    assert.deepEqual(normalizeEffects(doc.system.efeitos), doc.system.efeitos, file);
+    assert.ok(
+      doc.system.efeitos.every((e) => itemEffectTypes('efeito').includes(e.tipo)),
+      file,
+    );
+  }
+});
+
+test('compêndio de efeitos: cada pasta com o seu grupo de efeitos', () => {
+  const folderName = new Map(effectFolders.map(({ doc }) => [doc._id, doc.name]));
+  const byFolder = {};
+  for (const { doc } of effectItems) {
+    const name = folderName.get(doc.folder);
+    (byFolder[name] ??= []).push(doc.system.chave.split(':')[0]);
+  }
+  assert.equal(byFolder['Condições de combate'].length, 10);
+  assert.deepEqual(byFolder['Saúde'], ['lesao']);
+  assert.equal(byFolder['Lesões'].length, 9);
+  assert.equal(byFolder['Traumas'].length, 5);
+  assert.equal(byFolder['Falha crítica'].length, 3);
+  assert.ok(byFolder['Condições de combate'].every((k) => k === 'cond'));
+  assert.ok(byFolder['Traumas'].every((k) => k === 'trauma'));
+  assert.ok(byFolder['Falha crítica'].every((k) => k === 'falha'));
+});
+
+test('compêndio de efeitos: o manifesto aponta para o pacote', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'system.json'), 'utf8'));
+  const pack = manifest.packs.find((entry) => entry.name === 'efeitos');
+  assert.equal(pack.path, 'packs/efeitos');
+  assert.equal(pack.type, 'Item');
+  assert.ok(manifest.documentTypes.Item.efeito);
 });

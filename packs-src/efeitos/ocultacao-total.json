@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeito63mryp1g",
+  "_key": "!items!dnEfeito63mryp1g",
+  "name": "Ocultação total",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "Quem ataca você sofre −2 passos no ataque.",
+    "duracao": "manual",
+    "chave": "cond:ocultacaoTotal",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 1000000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeitoUzfPxSSv",
+  "_key": "!items!dnEfeitoUzfPxSSv",
+  "name": "Ocultação leve",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "Quem ataca você sofre −1 passo no ataque.",
+    "duracao": "manual",
+    "chave": "cond:ocultacaoLeve",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 900000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

@@ -1,0 +1,41 @@
+{
+  "_id": "dnEfeitosaaXLja0",
+  "_key": "!items!dnEfeitosaaXLja0",
+  "name": "Cicatriz Assustadora",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Uma marca que afasta as pessoas: −2 em Persuasão e +1 em Intimidar.",
+    "duracao": "permanente",
+    "chave": "lesao:cicatrizAssustadora",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "persuasao",
+          "mod": -2
+        }
+      },
+      {
+        "id": "m1",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "intimidar",
+          "mod": 1
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 900000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

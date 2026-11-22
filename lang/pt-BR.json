@@ -1736,6 +1736,48 @@
     },
     "Token": {
       "Migrados": "Token-modelo vinculado à ficha em {n} personagem(ns)."
+    },
+    "Condicoes": {
+      "caido": {
+        "Nome": "Caído",
+        "Descricao": "−1 passo nos testes de Físico. Ataques corpo a corpo contra você ganham +1 passo; ataques à distância contra você têm DT +3."
+      },
+      "agarrado": {
+        "Nome": "Agarrado",
+        "Descricao": "Fica imóvel e com −1 passo nos ataques; só ataca com golpes desarmados, armas naturais ou armas pequenas. Para se soltar: gaste a ação e vença um teste de manobra oposto."
+      },
+      "desequilibrado": {
+        "Nome": "Desequilibrado",
+        "Descricao": "−1 passo no próximo teste (até o fim da próxima rodada). Remova o efeito depois desse teste."
+      },
+      "atordoado": {
+        "Nome": "Atordoado",
+        "Descricao": "Consciente, mas não pode agir; o mestre pode permitir ações instintivas ou livres."
+      },
+      "imovel": {
+        "Nome": "Imóvel",
+        "Descricao": "Não pode se mover, nem dentro da mesma zona nem para outra."
+      },
+      "sobrecarregado": {
+        "Nome": "Sobrecarregado",
+        "Descricao": "Gasta uma ação para se mover na mesma zona e não pode passar para outra zona."
+      },
+      "coberturaLeve": {
+        "Nome": "Cobertura leve",
+        "Descricao": "Os ataques contra você têm DT +3."
+      },
+      "coberturaTotal": {
+        "Nome": "Cobertura total",
+        "Descricao": "Você não pode ser atacado."
+      },
+      "ocultacaoLeve": {
+        "Nome": "Ocultação leve",
+        "Descricao": "Quem ataca você sofre −1 passo no ataque."
+      },
+      "ocultacaoTotal": {
+        "Nome": "Ocultação total",
+        "Descricao": "Quem ataca você sofre −2 passos no ataque."
+      }
     }
   },
   "TYPES.Item.arma": "Arma",

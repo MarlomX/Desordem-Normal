@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeitoYXy3swlx",
+  "_key": "!items!dnEfeitoYXy3swlx",
+  "name": "Cobertura leve",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "Os ataques contra você têm DT +3.",
+    "duracao": "manual",
+    "chave": "cond:coberturaLeve",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 700000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

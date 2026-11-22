@@ -1,0 +1,31 @@
+{
+  "_id": "dnEfeitoVBFsSHFp",
+  "_key": "!items!dnEfeitoVBFsSHFp",
+  "name": "Músculo Comprometido",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Um músculo perde capacidade, tirando força e rapidez: −2 em Atletismo.",
+    "duracao": "permanente",
+    "chave": "lesao:musculoComprometido",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "atletismo",
+          "mod": -2
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 600000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

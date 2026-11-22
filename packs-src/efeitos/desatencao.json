@@ -1,0 +1,32 @@
+{
+  "_id": "dnEfeitoWFimindo",
+  "_key": "!items!dnEfeitoWFimindo",
+  "name": "Desatenção",
+  "type": "efeito",
+  "img": "icons/svg/hazard.svg",
+  "system": {
+    "descricao": "Sua cabeça escapa por um instante: a Mente cai um passo até o fim da cena.",
+    "duracao": "cena",
+    "chave": "falha:desatencao",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "passo",
+        "params": {
+          "alvo": "atributo",
+          "atributo": "mente",
+          "pericia": "",
+          "passos": -1,
+          "teste": "qualquer"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito005",
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeitoqSxGN5oz",
+  "_key": "!items!dnEfeitoqSxGN5oz",
+  "name": "Imóvel",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "Não pode se mover, nem dentro da mesma zona nem para outra.",
+    "duracao": "manual",
+    "chave": "cond:imovel",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 500000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

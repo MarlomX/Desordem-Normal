@@ -1,0 +1,31 @@
+{
+  "_id": "dnEfeitoUhkZakhu",
+  "_key": "!items!dnEfeitoUhkZakhu",
+  "name": "Órgão Interno Comprometido",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Um órgão interno (coração, pulmão, fígado...) perde capacidade: −2 em Vigor.",
+    "duracao": "permanente",
+    "chave": "lesao:orgaoInternoComprometido",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "vigor",
+          "mod": -2
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 700000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

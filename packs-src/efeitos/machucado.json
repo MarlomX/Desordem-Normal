@@ -1,0 +1,32 @@
+{
+  "_id": "dnEfeitoAPFAZPMY",
+  "_key": "!items!dnEfeitoAPFAZPMY",
+  "name": "Machucado",
+  "type": "efeito",
+  "img": "icons/svg/hazard.svg",
+  "system": {
+    "descricao": "Você se fere na tentativa: o Físico cai um passo até o fim da cena.",
+    "duracao": "cena",
+    "chave": "falha:machucado",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "passo",
+        "params": {
+          "alvo": "atributo",
+          "atributo": "fisico",
+          "pericia": "",
+          "passos": -1,
+          "teste": "qualquer"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito005",
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

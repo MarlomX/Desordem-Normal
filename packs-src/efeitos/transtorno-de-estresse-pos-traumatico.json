@@ -1,0 +1,28 @@
+{
+  "_id": "dnEfeitoR3PgyBGI",
+  "_key": "!items!dnEfeitoR3PgyBGI",
+  "name": "Transtorno de Estresse Pós-Traumático",
+  "type": "efeito",
+  "img": "icons/svg/terror.svg",
+  "system": {
+    "descricao": "Toda vez que sofre dano emocional, o dano aumenta em 1. Dura até ser curado.",
+    "duracao": "permanente",
+    "chave": "trauma:estressePosTraumatico",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "danoEmocionalExtra",
+        "params": {
+          "extra": 1
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito004",
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

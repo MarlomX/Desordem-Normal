@@ -1,0 +1,41 @@
+{
+  "_id": "dnEfeitoMZNqHED0",
+  "_key": "!items!dnEfeitoMZNqHED0",
+  "name": "Retração Defensiva",
+  "type": "efeito",
+  "img": "icons/svg/terror.svg",
+  "system": {
+    "descricao": "O personagem se fecha e evita contato social: −2 em Persuasão e em Intuição. Dura até ser curado.",
+    "duracao": "permanente",
+    "chave": "trauma:retracaoDefensiva",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "persuasao",
+          "mod": -2
+        }
+      },
+      {
+        "id": "m1",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "intuicao",
+          "mod": -2
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito004",
+  "sort": 500000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

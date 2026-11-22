@@ -1,0 +1,41 @@
+{
+  "_id": "dnEfeitoFABBzcAA",
+  "_key": "!items!dnEfeitoFABBzcAA",
+  "name": "Sem Olho",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Perde o uso de um olho: −1 em Percepção e em Pontaria.",
+    "duracao": "permanente",
+    "chave": "lesao:semOlho",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "percepcao",
+          "mod": -1
+        }
+      },
+      {
+        "id": "m1",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "pontaria",
+          "mod": -1
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeitoNfZoYFYl",
+  "_key": "!items!dnEfeitoNfZoYFYl",
+  "name": "Sem Pé",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Perde o uso de um pé ou de uma perna. Sofre duas reduções de passo ao avançar em perseguições a pé e em ações de movimento.",
+    "duracao": "permanente",
+    "chave": "lesao:semPe",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 400000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

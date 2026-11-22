@@ -1,0 +1,32 @@
+{
+  "_id": "dnEfeitoBbeoV2HI",
+  "_key": "!items!dnEfeitoBbeoV2HI",
+  "name": "Agarrado",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "Fica imóvel e com −1 passo nos ataques; só ataca com golpes desarmados, armas naturais ou armas pequenas. Para se soltar: gaste a ação e vença um teste de manobra oposto.",
+    "duracao": "manual",
+    "chave": "cond:agarrado",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "passo",
+        "params": {
+          "alvo": "pericias",
+          "atributo": "todos",
+          "pericia": "",
+          "passos": -1,
+          "teste": "ataque"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

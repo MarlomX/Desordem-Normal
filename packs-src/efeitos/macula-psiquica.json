@@ -1,0 +1,31 @@
+{
+  "_id": "dnEfeitoWHaeX3oS",
+  "_key": "!items!dnEfeitoWHaeX3oS",
+  "name": "Mácula Psíquica",
+  "type": "efeito",
+  "img": "icons/svg/terror.svg",
+  "system": {
+    "descricao": "O mundo parece mais cinzento: −1 em testes que usam Emoção. Dura até ser curado.",
+    "duracao": "permanente",
+    "chave": "trauma:maculaPsiquica",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "atributo",
+          "atributo": "emocao",
+          "pericia": "",
+          "mod": -1
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito004",
+  "sort": 300000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

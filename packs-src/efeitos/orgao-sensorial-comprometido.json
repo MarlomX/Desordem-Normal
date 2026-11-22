@@ -1,0 +1,31 @@
+{
+  "_id": "dnEfeitokDUBmzPd",
+  "_key": "!items!dnEfeitokDUBmzPd",
+  "name": "Órgão Sensorial Comprometido",
+  "type": "efeito",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "descricao": "Um órgão dos sentidos (olho, ouvido, nariz...) perde capacidade: −2 em Percepção.",
+    "duracao": "permanente",
+    "chave": "lesao:orgaoSensorialComprometido",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "modificador",
+        "params": {
+          "sobre": "pericia",
+          "atributo": "todos",
+          "pericia": "percepcao",
+          "mod": -2
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito003",
+  "sort": 800000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

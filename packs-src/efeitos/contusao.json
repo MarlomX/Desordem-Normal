@@ -1,0 +1,32 @@
+{
+  "_id": "dnEfeitoCq7k79Ar",
+  "_key": "!items!dnEfeitoCq7k79Ar",
+  "name": "Contusão",
+  "type": "efeito",
+  "img": "icons/svg/blood.svg",
+  "system": {
+    "descricao": "Um golpe forte demais: o Físico diminui um passo até o fim da cena.",
+    "duracao": "cena",
+    "chave": "lesao:contusao",
+    "efeitos": [
+      {
+        "id": "m0",
+        "tipo": "passo",
+        "params": {
+          "alvo": "atributo",
+          "atributo": "fisico",
+          "pericia": "",
+          "passos": -1,
+          "teste": "qualquer"
+        }
+      }
+    ]
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito002",
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

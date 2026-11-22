@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeito9sMJEw6C",
+  "_key": "!items!dnEfeito9sMJEw6C",
+  "name": "Cobertura total",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "Você não pode ser atacado.",
+    "duracao": "manual",
+    "chave": "cond:coberturaTotal",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 800000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

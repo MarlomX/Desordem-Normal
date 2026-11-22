@@ -1,0 +1,20 @@
+{
+  "_id": "dnEfeitoKnUMnBFs",
+  "_key": "!items!dnEfeitoKnUMnBFs",
+  "name": "Atordoado",
+  "type": "efeito",
+  "img": "icons/svg/falling.svg",
+  "system": {
+    "descricao": "Consciente, mas não pode agir; o mestre pode permitir ações instintivas ou livres.",
+    "duracao": "manual",
+    "chave": "cond:atordoado",
+    "efeitos": []
+  },
+  "effects": [],
+  "folder": "dnPastaEfeito001",
+  "sort": 400000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}
