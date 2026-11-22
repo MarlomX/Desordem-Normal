@@ -470,6 +470,12 @@
   background: var(--dn-surface);
 }
 
+.desordem-efeito__resumo {
+  flex: 1 1 160px;
+  opacity: 0.85;
+  font-size: 0.9em;
+}
+
 .desordem-efeito__nome {
   flex: 1 1 9em;
 }

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { effectView, newStepEffect } from '../scripts/rolls/effects.js';
 import {
   addCostBags,
   collectEffects,
@@ -158,35 +159,27 @@ test('syncConditionalEffects: põe o efeito com o nome da habilidade e tira quan
       },
     ]),
   ]);
-  const manual = {
-    nome: 'Caído',
-    descricao: '',
-    atributo: 'fisico',
-    passos: -1,
-    fimDeCena: true,
-    origem: '',
-  };
+  const manual = newStepEffect({ id: 'm', nome: 'Caído', atributo: 'fisico', passos: -1 });
   const low = { pv: 7, pvMax: 15, pd: 10, pdMax: 12 };
   const added = syncConditionalEffects([manual], list, low);
   assert.deepEqual(added, [
     manual,
-    {
+    newStepEffect({
+      id: conditionalOrigin(list[0]),
       nome: 'Instinto',
-      descricao: '',
       atributo: 'todos',
       passos: 1,
-      fimDeCena: false,
+      duracao: 'manual',
       origem: conditionalOrigin(list[0]),
-    },
+    }),
   ]);
   // Já está lá: nada muda (mesmo se a pessoa editou o efeito)
-  const edited = [manual, { ...added[1], passos: 3 }];
+  const edited = [manual, newStepEffect({ ...added[1], atributo: 'todos', passos: 3 })];
   assert.equal(syncConditionalEffects(edited, list, low), null);
   // Os dois valem: o de PD entra no atributo escolhido
   const both = syncConditionalEffects(added, list, { ...low, pd: 6 });
   assert.equal(both.length, 3);
-  assert.equal(both[2].atributo, 'mente');
-  assert.equal(both[2].passos, 2);
+  assert.deepEqual(effectView(both[2]), { atributo: 'mente', passos: 2 });
   // PV de volta acima da metade: o de PV sai, o feito à mão fica
   assert.deepEqual(syncConditionalEffects(both, list, { ...low, pv: 15, pd: 6 }), [
     manual,

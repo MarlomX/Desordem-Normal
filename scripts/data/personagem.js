@@ -1,5 +1,6 @@
 import { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
-import { migrateCraftSkill, migrateAbilityResources } from './migrations.js';
+import { migrateCraftSkill, migrateAbilityResources, migrateConditionEffects } from './migrations.js';
+import { conditionEffectsField } from './condition-effects.js';
 import { OVERRIDABLE_KEYS } from '../rolls/attribute.js';
 
 export default class PersonagemModel extends foundry.abstract.TypeDataModel {
@@ -127,29 +128,22 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         emocao: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
         pericias: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 })
       }),
-      // Efeitos temporários: descrição e, se quiser, passos no dado de um atributo (ou de todos,
-      // 'todos'). `origem` marca os criados por uma habilidade (passo condicional)
-      efeitos: new f.ArrayField(
-        new f.SchemaField({
-          nome: new f.StringField({ required: true, blank: true, initial: '' }),
-          descricao: new f.StringField({ required: true, blank: true, initial: '' }),
-          atributo: new f.StringField({ required: true, blank: true, initial: '' }),
-          passos: new f.NumberField({ required: true, integer: true, min: -3, max: 3, initial: 0 }),
-          fimDeCena: new f.BooleanField({ initial: false }),
-          origem: new f.StringField({ required: true, blank: true, initial: '' })
-        })
-      )
+      // Efeitos da aba Condição, no formato modular (v0.22.0; veja rolls/effects.js e
+      // data/condition-effects.js)
+      efeitos: conditionEffectsField()
     };
   }
 
   /**
    * Adapta dados salvos por versões anteriores antes de o Foundry validá-los.
    * Até a v0.14.4 existia a perícia `metalurgia`; hoje ela é uma área do Ofício. Até a v0.19.x
-   * o ímpeto e a análise ficavam em `recursos`; hoje ficam em `recursosHab`.
+   * o ímpeto e a análise ficavam em `recursos`; hoje ficam em `recursosHab`. Até a v0.21.x os
+   * efeitos da aba Condição tinham um formato fixo; hoje são modulares.
    */
   static migrateData(source) {
     migrateCraftSkill(source);
     migrateAbilityResources(source);
+    migrateConditionEffects(source);
     return super.migrateData(source);
   }
 }

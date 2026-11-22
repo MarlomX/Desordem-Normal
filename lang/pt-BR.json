@@ -285,7 +285,8 @@
       "ArmaduraRotulo": {
         "armadura": "Armadura {categoria}",
         "escudo": "Escudo {categoria}"
-      }
+      },
+      "EfeitoResumoDica": "Este efeito tem passos que a linha simples ainda não mostra. O editor completo dos efeitos chega na próxima versão."
     },
     "Aptidoes": {
       "artes": "Artes",
@@ -1499,7 +1500,8 @@
         "passoAlvo": "Passo no alvo",
         "ferramenta": "Ferramenta",
         "concederDado": "Dado bônus",
-        "municao": "Munição"
+        "municao": "Munição",
+        "passo": "Passo"
       },
       "Campos": {
         "chave": "Chave",
@@ -1535,7 +1537,8 @@
         "recursoCura": "Recupera",
         "ferramenta": "Ferramenta",
         "alcance": "Vale em armas",
-        "dano": "Bônus de dano"
+        "dano": "Bônus de dano",
+        "alvo": "Onde"
       },
       "Gatilhos": {
         "falha": "Ao falhar um teste com DT",
@@ -1549,7 +1552,8 @@
         "qualquer": "Qualquer teste",
         "ataqueCorpo": "Ataque corpo a corpo",
         "ataqueDistancia": "Ataque à distância",
-        "defesa": "Defesa"
+        "defesa": "Defesa",
+        "ataque": "Qualquer ataque"
       },
       "Grupos": {
         "habilidade": "Habilidades",
@@ -1617,7 +1621,8 @@
         "passoAlvo": "Ao usar: {atributo} {passos} até o fim da cena, para quem receber",
         "ferramenta": "Ferramenta: {ferramenta}",
         "concederDado": "Ao usar: +d{dado} na reserva de dados bônus (vale em um teste)",
-        "municao": "Munição de armas {alcance}: +{passos} passo no ataque, +{dano} no dano; gasta uma unidade por ataque"
+        "municao": "Munição de armas {alcance}: +{passos} passo no ataque, +{dano} no dano; gasta uma unidade por ataque",
+        "passo": "{passos} passo(s) no dado de {alvo}{teste}"
       },
       "Botao": {
         "passoCena": "Passo na cena{custo}",
@@ -1672,6 +1677,11 @@
       },
       "Alcances": {
         "distancia": "à distância"
+      },
+      "Alvos": {
+        "atributo": "Dado do atributo",
+        "pericias": "Dado de qualquer perícia",
+        "pericia": "Dado de uma perícia"
       }
     },
     "Plano": {

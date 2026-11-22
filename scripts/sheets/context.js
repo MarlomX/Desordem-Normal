@@ -19,7 +19,13 @@ import {
   weaponDamageLabel,
 } from '../rolls/equipment.js';
 import { itemUsePlan, ownEffects } from '../rolls/ability-effects.js';
-import { ALL_ATTRIBUTES, EFFECT_MAX_STEPS } from '../rolls/effects.js';
+import {
+  ALL_ATTRIBUTES,
+  EFFECT_MAX_STEPS,
+  effectView,
+  isBridgeable,
+  normalizeSheetEffects,
+} from '../rolls/effects.js';
 import { abilityControls } from './ability-controls.js';
 import { shownDie, stepLimits } from '../rolls/steps.js';
 
@@ -329,8 +335,11 @@ export function buildRelationRows(relations, { degreeLabel, editable = true }) {
 }
 
 /**
- * Linhas dos efeitos temporários da ficha, com as opções dos seletores de atributo e de passos.
- * @param {{nome: string, descricao: string, atributo: string, passos: number}[]} effects
+ * Linhas dos efeitos da aba Condição (formato de rolls/effects.js). Enquanto o editor modular não
+ * chega (v0.22.1), a linha mostra o atributo e os passos do `passo` simples do efeito
+ * (`effectView`); um efeito com outros passos (numa perícia, só em ataques...) mostra o resumo
+ * deles e os seletores ficam travados (`bridge` falso).
+ * @param {object[]} effects `system.efeitos` (formato novo ou antigo: tudo passa pela limpeza).
  * @param {Object} options
  * @param {(key: string) => string} options.attrLabel Nome traduzido do atributo.
  * @param {string} options.noAttrLabel Texto de "sem atributo".
@@ -338,43 +347,55 @@ export function buildRelationRows(relations, { degreeLabel, editable = true }) {
  *   aparece no efeito que já a usa).
  * @param {string[]} options.attributes Chaves dos atributos, na ordem do seletor.
  * @param {boolean} [options.editable=true]
+ * @param {(entry: object) => string} [options.describe] Resumo de um efeito do catálogo (só nos
+ *   efeitos que a linha simples não mostra).
  */
 export function buildEffectRows(
   effects,
-  { attrLabel, noAttrLabel, allAttrLabel = '', attributes, editable = true },
+  { attrLabel, noAttrLabel, allAttrLabel = '', attributes, editable = true, describe },
 ) {
   const steps = Array.from({ length: EFFECT_MAX_STEPS * 2 + 1 }, (_, i) => i - EFFECT_MAX_STEPS);
-  return effects.map((effect, index) => ({
-    index,
-    nome: effect.nome,
-    descricao: effect.descricao,
-    fimDeCena: effect.fimDeCena,
-    locked: !editable,
-    // Criado por uma habilidade (passo condicional): a etiqueta diz «Habilidade»
-    fromAbility: String(effect.origem ?? '').startsWith('hab:'),
-    attrOptions: [
-      { value: '', label: noAttrLabel, selected: effect.atributo === '' },
-      ...(allAttrLabel || effect.atributo === ALL_ATTRIBUTES
-        ? [
-            {
-              value: ALL_ATTRIBUTES,
-              label: allAttrLabel || ALL_ATTRIBUTES,
-              selected: effect.atributo === ALL_ATTRIBUTES,
-            },
-          ]
-        : []),
-      ...attributes.map((key) => ({
-        value: key,
-        label: attrLabel(key),
-        selected: effect.atributo === key,
+  return normalizeSheetEffects(effects).map((effect, index) => {
+    const bridge = isBridgeable(effect);
+    const view = effectView(effect);
+    return {
+      index,
+      id: effect.id,
+      nome: effect.nome,
+      descricao: effect.descricao,
+      duracao: effect.duracao,
+      fimDeCena: effect.duracao === 'cena',
+      locked: !editable,
+      bridge,
+      // Resumo dos passos que a linha simples não consegue mostrar (um por efeito do catálogo)
+      summary:
+        !bridge && describe ? effect.efeitos.map((entry) => describe(entry)).join('; ') : '',
+      // Criado por uma habilidade (passo condicional): a etiqueta diz «Habilidade»
+      fromAbility: String(effect.origem ?? '').startsWith('hab:'),
+      attrOptions: [
+        { value: '', label: noAttrLabel, selected: view.atributo === '' },
+        ...(allAttrLabel || view.atributo === ALL_ATTRIBUTES
+          ? [
+              {
+                value: ALL_ATTRIBUTES,
+                label: allAttrLabel || ALL_ATTRIBUTES,
+                selected: view.atributo === ALL_ATTRIBUTES,
+              },
+            ]
+          : []),
+        ...attributes.map((key) => ({
+          value: key,
+          label: attrLabel(key),
+          selected: view.atributo === key,
+        })),
+      ],
+      stepOptions: steps.map((value) => ({
+        value,
+        label: value > 0 ? `+${value}` : String(value),
+        selected: value === view.passos,
       })),
-    ],
-    stepOptions: steps.map((value) => ({
-      value,
-      label: value > 0 ? `+${value}` : String(value),
-      selected: value === effect.passos,
-    })),
-  }));
+    };
+  });
 }
 
 /**

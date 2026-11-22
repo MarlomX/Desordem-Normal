@@ -285,7 +285,8 @@
       "ArmaduraRotulo": {
         "armadura": "{categoria} armor",
         "escudo": "{categoria} shield"
-      }
+      },
+      "EfeitoResumoDica": "This effect has steps the simple row cannot show yet. The full effect editor arrives in the next version."
     },
     "Aptidoes": {
       "artes": "Arts",
@@ -1499,7 +1500,8 @@
         "passoAlvo": "Step on target",
         "ferramenta": "Tool",
         "concederDado": "Bonus die",
-        "municao": "Ammunition"
+        "municao": "Ammunition",
+        "passo": "Step"
       },
       "Campos": {
         "chave": "Key",
@@ -1535,7 +1537,8 @@
         "recursoCura": "Recovers",
         "ferramenta": "Tool",
         "alcance": "Applies to weapons",
-        "dano": "Damage bonus"
+        "dano": "Damage bonus",
+        "alvo": "Where"
       },
       "Gatilhos": {
         "falha": "On failing a test with a DC",
@@ -1549,7 +1552,8 @@
         "qualquer": "Any test",
         "ataqueCorpo": "Melee attack",
         "ataqueDistancia": "Ranged attack",
-        "defesa": "Defense"
+        "defesa": "Defense",
+        "ataque": "Any attack"
       },
       "Grupos": {
         "habilidade": "Abilities",
@@ -1617,7 +1621,8 @@
         "passoAlvo": "On use: {atributo} {passos} until the end of the scene, for whoever receives it",
         "ferramenta": "Tool: {ferramenta}",
         "concederDado": "On use: +d{dado} to the bonus dice pool (one test)",
-        "municao": "Ammunition for {alcance} weapons: +{passos} step on the attack, +{dano} damage; spends one unit per attack"
+        "municao": "Ammunition for {alcance} weapons: +{passos} step on the attack, +{dano} damage; spends one unit per attack",
+        "passo": "{passos} step(s) to the {alvo} die{teste}"
       },
       "Botao": {
         "passoCena": "Scene step{custo}",
@@ -1672,6 +1677,11 @@
       },
       "Alcances": {
         "distancia": "ranged"
+      },
+      "Alvos": {
+        "atributo": "Attribute die",
+        "pericias": "Any skill die",
+        "pericia": "One skill die"
       }
     },
     "Plano": {

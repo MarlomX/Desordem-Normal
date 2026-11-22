@@ -9,6 +9,8 @@
  */
 import { ATRIBUTOS, PERICIAS, ELEMENTOS } from '../config.js';
 import { MAX_RD } from '../rolls/threat.js';
+import { migrateConditionEffects } from './migrations.js';
+import { conditionEffectsField } from './condition-effects.js';
 
 const f = foundry.data.fields;
 
@@ -54,16 +56,18 @@ export class AmeacaModel extends foundry.abstract.TypeDataModel {
         emocao: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
         pericias: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
       }),
-      efeitos: new f.ArrayField(
-        new f.SchemaField({
-          nome: texto(),
-          descricao: texto(),
-          atributo: texto(),
-          passos: new f.NumberField({ required: true, integer: true, min: -3, max: 3, initial: 0 }),
-          fimDeCena: new f.BooleanField({ initial: false }),
-        }),
-      ),
+      // Efeitos da aba Condição, no formato modular (v0.22.0; veja data/condition-effects.js)
+      efeitos: conditionEffectsField(),
     };
+  }
+
+  /**
+   * Adapta dados salvos por versões anteriores antes de o Foundry validá-los: até a v0.21.x os
+   * efeitos tinham um formato fixo; hoje são modulares (veja `migrateConditionEffects`).
+   */
+  static migrateData(source) {
+    migrateConditionEffects(source);
+    return super.migrateData(source);
   }
 }
 

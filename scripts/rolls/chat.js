@@ -328,7 +328,7 @@ export async function rollTest({
  * Serve para a prévia da janela pré-teste.
  * @returns {{attrDie: number, skillDie: number, attrLabel: string, skillLabel: string}}
  */
-export function testDicePreview(actor, skillKey, attribute, extraStepMods = []) {
+export function testDicePreview(actor, skillKey, attribute, extraStepMods = [], { testKind } = {}) {
   const attrKey = resolveSkillAttribute(actor.system, skillKey, attribute);
   const { system } = actor;
   const plan = planDice({
@@ -340,7 +340,14 @@ export function testDicePreview(actor, skillKey, attribute, extraStepMods = []) 
       // Penalidade passiva das armaduras vestidas e dos escudos empunhados nesta perícia
       ...armorStepMods(armorSkillPenalties(actor.items), skillKey),
       ...contusionStepMods(system.estado, attrKey),
-      ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
+      // Passos manuais e da aba Condição (os de uma perícia só e os de um tipo de teste também)
+      ...collectStepMods({
+        steps: system.passos,
+        effects: system.efeitos,
+        attrKey,
+        skillKey,
+        testKind
+      }),
     ],
   });
   return {
@@ -460,7 +467,13 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
       ...(ammo?.passos ? [{ target: 'skill', steps: ammo.passos }] : []),
       ...contusionStepMods(system.estado, attrKey),
       // (os passos condicionais das habilidades chegam como efeitos da ficha, na aba Condição)
-      ...collectStepMods({ steps: system.passos, effects: system.efeitos, attrKey }),
+      ...collectStepMods({
+        steps: system.passos,
+        effects: system.efeitos,
+        attrKey,
+        skillKey,
+        testKind: allowDefense ? 'defesa' : testKind
+      }),
     ],
     extraDice: [
       ...(rest.extraDice ?? []),

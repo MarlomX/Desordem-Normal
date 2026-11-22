@@ -9,6 +9,7 @@ import { render, postMessage, rebuildTest, rollTest, skillTestOptions } from './
 import { startGroupDice } from './bonus-dice-chat.js';
 import { adjustLabel, resourceName } from '../sheets/ability-controls.js';
 import { applyAnalysis, rerollCandidates, replaceDie, sceneReset } from './abilities.js';
+import { newStepEffect } from './effects.js';
 import {
   canPay,
   conditionFlips,
@@ -166,17 +167,19 @@ export async function impetoStep(actor, itemId = null, effectId = null) {
   }
   if (!attribute) return undefined;
   const { passos } = entry.params;
+  // Efeito novo na aba Condição: passos no atributo escolhido até o fim da cena
   const effects = [
     ...actor.toObject().system.efeitos,
-    {
+    newStepEffect({
+      id: foundry.utils.randomID(),
       nome: legacy ? t('DESORDEM.Habilidade.EfeitoImpeto') : entry.itemName,
       descricao: legacy
         ? t('DESORDEM.Habilidade.EfeitoImpetoDescricao')
         : t('DESORDEM.Efeito.Nota.passoDescricao', { passos }),
       atributo: attribute,
       passos,
-      fimDeCena: true,
-    },
+      duracao: 'cena',
+    }),
   ];
   await actor.update({
     ...payUpdates(entry.params.custo, wallet),

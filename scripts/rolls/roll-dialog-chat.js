@@ -445,12 +445,19 @@ export async function askRollChoices(
     .reduce((sum, line) => sum + line.value, 0);
   const skillStep = (steps) => (steps ? [{ target: 'skill', steps }] : []);
   const previewFor = (ammoSteps, notAttacked) =>
-    testDicePreview(actor, skillKey, attribute, [
-      ...stepMods,
-      ...skillStep(attack.steps),
-      ...skillStep(ammoSteps),
-      ...skillStep(notAttacked ? optionalSteps : 0),
-    ]);
+    testDicePreview(
+      actor,
+      skillKey,
+      attribute,
+      [
+        ...stepMods,
+        ...skillStep(attack.steps),
+        ...skillStep(ammoSteps),
+        ...skillStep(notAttacked ? optionalSteps : 0),
+      ],
+      // Os passos da aba Condição que valem só num tipo de teste (ataque, defesa) entram na prévia
+      { testKind: allowDefense ? 'defesa' : testKind },
+    );
   const diceVariants = {};
   for (const option of [null, ...ammo]) {
     for (const notAttacked of optionalSteps ? [false, true] : [false]) {

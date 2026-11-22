@@ -1,88 +1,340 @@
 /**
- * Efeitos temporários da ficha (por exemplo, o bônus de um preparado até o fim da cena).
- * Cada efeito tem nome, descrição e, opcionalmente, um atributo (ou todos) cujo dado sobe ou desce
- * passos. Os marcados "até o fim da cena" somem no reinício de cena. Os que uma habilidade cria
- * (passo condicional) guardam a origem em `origem` («hab:item:efeito»); os feitos à mão, vazio.
- * Lógica pura, sem dependência do Foundry.
+ * Efeitos da aba Condição: a lista `system.efeitos` do personagem e da criatura. Lógica pura, sem
+ * dependência do Foundry.
+ *
+ * Desde a v0.22.0 cada efeito tem o formato modular, igual ao das habilidades e equipamentos:
+ *   { id, nome, descricao, chave, origem, duracao, efeitos }
+ * - `efeitos`: lista do catálogo (`{id, tipo, params}`, veja ability-effects.js), só com os tipos
+ *   que a aba Condição aceita (`itemEffectTypes('efeito')`; por enquanto, `passo`).
+ * - `duracao`: `cena` (sai na Nova cena), `permanente` ou `manual` (os dois ficam até alguém
+ *   remover; `permanente` é o das lesões e traumas, a partir da v0.22.2).
+ * - `chave`: de onde o efeito pronto veio (compêndio ou tabela; vazio por enquanto).
+ * - `origem`: quem criou o efeito: `hab:<item>:<efeito>` (passo condicional de uma habilidade),
+ *   `item` (item com `passoAlvo`, como um tônico), `falha` (efeito de falha crítica) ou vazio (à
+ *   mão, na ficha).
+ *
+ * Até a v0.21.x o efeito tinha um formato fixo: `{nome, descricao, atributo, passos, fimDeCena,
+ * origem}`. `migrateLegacyEffect` converte esse formato (o atributo e os passos viram um efeito
+ * `passo`; `fimDeCena` vira a duração `cena`).
+ *
+ * A linha da ficha ainda mostra um seletor de atributo e um de passos (a «ponte» até o editor
+ * modular da v0.22.1): eles leem e gravam o primeiro `passo` simples do efeito (`bridgeEntry`).
  */
 import { ATRIBUTOS } from '../config.js';
+import { itemEffectTypes, normalizeEffect, normalizeEffects } from './ability-effects.js';
 
+/** Limite de passos de um efeito (para cima ou para baixo). */
 export const EFFECT_MAX_STEPS = 3;
 
 /** Valor do atributo de um efeito que vale para o dado de qualquer atributo. */
 export const ALL_ATTRIBUTES = 'todos';
 
-/**
- * @returns {{nome: string, descricao: string, atributo: string, passos: number, fimDeCena: boolean,
- *   origem: string}}
- */
-export function newEffect() {
-  return { nome: '', descricao: '', atributo: '', passos: 0, fimDeCena: false, origem: '' };
+/** Durações de um efeito da aba Condição. */
+export const DURATIONS = Object.freeze(['cena', 'permanente', 'manual']);
+
+/** Tipo de item dos efeitos da aba Condição, para o catálogo (`itemEffectTypes`). */
+export const CONDITION_ITEM_TYPE = 'efeito';
+
+/** Id do `passo` que a ponte da ficha cria (único dentro do efeito, que é o que importa). */
+const BRIDGE_STEP_ID = 'p0';
+
+/** O valor, se for texto; qualquer outra coisa vira texto vazio (o banco aceita de tudo). */
+const text = (value) => (typeof value === 'string' ? value : '');
+
+/** Limita um número de passos a −3..+3 (inválido vira 0). */
+function clampEffectSteps(value) {
+  const n = Math.trunc(Number(value));
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(EFFECT_MAX_STEPS, Math.max(-EFFECT_MAX_STEPS, n));
 }
 
-/** Acrescenta um efeito novo ao fim da lista (devolve uma lista nova). */
-export function addEffect(effects) {
-  return [...effects.map((e) => ({ ...e })), newEffect()];
+/** Atributo aceito num passo de atributo: um dos atributos do jogo ou `todos` (senão, vazio). */
+const validAttribute = (key) => (ATRIBUTOS.includes(key) || key === ALL_ATTRIBUTES ? key : '');
+
+/**
+ * Efeito vazio, feito à mão na ficha: sem passos e sem fim automático.
+ * @param {string} [id] Id do efeito (no Foundry, `foundry.utils.randomID()`).
+ */
+export function newEffect(id = '') {
+  return {
+    id,
+    nome: '',
+    descricao: '',
+    chave: '',
+    origem: '',
+    duracao: 'manual',
+    efeitos: [],
+  };
+}
+
+/**
+ * Um `passo` simples: passos no dado de um atributo (ou de todos), em qualquer teste.
+ * @param {string} atributo `fisico`, `mente`, `emocao` ou `todos`.
+ * @param {number} passos −3 a +3.
+ * @param {string} [id]
+ */
+export function attributeStep(atributo, passos, id = BRIDGE_STEP_ID) {
+  return normalizeEffect({
+    id,
+    tipo: 'passo',
+    params: { alvo: 'atributo', atributo, passos: clampEffectSteps(passos), teste: 'qualquer' },
+  });
+}
+
+/**
+ * Efeito com passos no dado de um atributo: o que habilidades, itens e falhas críticas criam.
+ * Sem atributo válido, o efeito fica só com o nome e a descrição.
+ * @param {object} data
+ * @param {string} [data.id]
+ * @param {string} data.nome
+ * @param {string} [data.descricao]
+ * @param {string} data.atributo `fisico`, `mente`, `emocao` ou `todos`.
+ * @param {number} data.passos −3 a +3.
+ * @param {string} [data.duracao='cena']
+ * @param {string} [data.origem='']
+ */
+export function newStepEffect({
+  id = '',
+  nome,
+  descricao = '',
+  atributo,
+  passos,
+  duracao = 'cena',
+  origem = '',
+}) {
+  const attr = validAttribute(atributo);
+  return {
+    ...newEffect(id),
+    nome: text(nome),
+    descricao: text(descricao),
+    origem,
+    duracao: DURATIONS.includes(duracao) ? duracao : 'manual',
+    efeitos: attr ? [attributeStep(attr, passos)] : [],
+  };
+}
+
+// ---------- Formato antigo e limpeza ----------
+
+/**
+ * O efeito está no formato antigo (até a v0.21.x)? Ele não tem a lista `efeitos` e tem algum dos
+ * campos fixos (`atributo`, `passos`, `fimDeCena`).
+ */
+export function isLegacyEffect(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw.efeitos)) return false;
+  return 'atributo' in raw || 'passos' in raw || 'fimDeCena' in raw;
+}
+
+/**
+ * Converte um efeito do formato antigo: o atributo e os passos viram um `passo` (sem atributo,
+ * nenhum), e «até o fim da cena» vira a duração `cena` (senão, `manual`).
+ * @param {object} raw Efeito antigo.
+ * @param {string} [id] Id para o efeito (o antigo não tinha).
+ */
+export function migrateLegacyEffect(raw, id = '') {
+  const fimDeCena = raw.fimDeCena === true || raw.fimDeCena === 'true';
+  return newStepEffect({
+    id: text(raw.id) || id,
+    nome: raw.nome,
+    descricao: raw.descricao,
+    atributo: raw.atributo,
+    passos: raw.passos,
+    duracao: fimDeCena ? 'cena' : 'manual',
+    origem: text(raw.origem),
+  });
+}
+
+/**
+ * Limpa um efeito da aba Condição: campos de texto, duração conhecida e só os efeitos do catálogo
+ * que a aba aceita. Um efeito antigo é convertido antes.
+ * @param {object} raw
+ * @param {string} [fallbackId] Id usado se o efeito não tiver um.
+ */
+export function normalizeSheetEffect(raw, fallbackId = '') {
+  const source = isLegacyEffect(raw) ? migrateLegacyEffect(raw, fallbackId) : (raw ?? {});
+  const allowed = itemEffectTypes(CONDITION_ITEM_TYPE);
+  return {
+    id: text(source.id) || fallbackId,
+    nome: text(source.nome),
+    descricao: text(source.descricao),
+    chave: text(source.chave),
+    origem: text(source.origem),
+    duracao: DURATIONS.includes(source.duracao) ? source.duracao : 'manual',
+    efeitos: normalizeEffects(source.efeitos).filter((e) => allowed.includes(e.tipo)),
+  };
+}
+
+/** Limpa uma lista de efeitos da aba Condição (sem id: `ef0`, `ef1`...). */
+export function normalizeSheetEffects(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map((raw, i) => normalizeSheetEffect(raw, `ef${i}`));
+}
+
+// ---------- Edição na ficha ----------
+
+/**
+ * Acrescenta um efeito novo ao fim da lista (devolve uma lista nova).
+ * @param {object[]} effects
+ * @param {string} [id] Id do efeito novo.
+ */
+export function addEffect(effects, id = '') {
+  return [...normalizeSheetEffects(effects), newEffect(id)];
 }
 
 /** Remove o efeito do índice indicado (devolve uma lista nova). */
 export function removeEffect(effects, index) {
-  return effects.filter((_, i) => i !== index).map((e) => ({ ...e }));
+  return normalizeSheetEffects(effects).filter((_, i) => i !== index);
+}
+
+/** O `passo` pode ser editado pela linha simples da ficha (atributo, em qualquer teste)? */
+const isSimpleStep = (entry) =>
+  entry.tipo === 'passo' && entry.params.alvo === 'atributo' && entry.params.teste === 'qualquer';
+
+/**
+ * Posição do `passo` que a linha simples da ficha mostra e edita, ou −1. Só existe quando o
+ * efeito não tem nada além dele (um efeito com mais coisas é editado no editor da v0.22.1).
+ */
+export function bridgeEntry(effect) {
+  const list = effect?.efeitos ?? [];
+  return list.length === 1 && isSimpleStep(list[0]) ? 0 : -1;
+}
+
+/** A linha simples da ficha consegue mostrar este efeito inteiro (nenhum passo, ou um simples)? */
+export function isBridgeable(effect) {
+  const list = effect?.efeitos ?? [];
+  return list.length === 0 || bridgeEntry(effect) === 0;
 }
 
 /**
- * Altera campos de um efeito. O atributo deve ser vazio, `todos` ou um dos atributos do jogo, e os
- * passos ficam entre −3 e +3. Campos desconhecidos (e a origem) são ignorados.
+ * Atributo e passos que a linha simples da ficha mostra: os do `passo` simples, ou nenhum.
+ * @returns {{atributo: string, passos: number}}
+ */
+export function effectView(effect) {
+  const index = bridgeEntry(effect);
+  if (index === -1) return { atributo: '', passos: 0 };
+  const { atributo, passos } = effect.efeitos[index].params;
+  return { atributo, passos };
+}
+
+/**
+ * Altera campos de um efeito pela linha da ficha. `nome` e `descricao` são texto; `fimDeCena`
+ * liga a duração `cena` (desligado volta a `manual`; uma duração `permanente` não muda). Em
+ * efeitos que a linha simples mostra (`isBridgeable`), `atributo` e `passos` gravam o `passo`
+ * simples: atributo vazio o tira; um atributo novo o cria (com 0 passos). Campos desconhecidos e
+ * a origem são ignorados.
  */
 export function updateEffect(effects, index, changes) {
-  return effects.map((effect, i) => {
-    if (i !== index) return { ...effect };
-    const next = { ...effect };
+  return normalizeSheetEffects(effects).map((effect, i) => {
+    if (i !== index) return effect;
+    const next = { ...effect, efeitos: [...effect.efeitos] };
     if ('nome' in changes) next.nome = String(changes.nome ?? '');
     if ('descricao' in changes) next.descricao = String(changes.descricao ?? '');
-    if ('fimDeCena' in changes)
-      next.fimDeCena = changes.fimDeCena === true || changes.fimDeCena === 'true';
-    if ('atributo' in changes) {
-      const key = String(changes.atributo ?? '');
-      next.atributo = ATRIBUTOS.includes(key) || key === ALL_ATTRIBUTES ? key : '';
+    if ('duracao' in changes && DURATIONS.includes(changes.duracao)) {
+      next.duracao = changes.duracao;
     }
-    if ('passos' in changes) {
+    if ('fimDeCena' in changes) {
+      const on = changes.fimDeCena === true || changes.fimDeCena === 'true';
+      if (on) next.duracao = 'cena';
+      else if (next.duracao === 'cena') next.duracao = 'manual';
+    }
+    if (!isBridgeable(effect)) return next;
+
+    const current = effectView(effect);
+    if ('atributo' in changes) {
+      const attr = validAttribute(String(changes.atributo ?? ''));
+      next.efeitos = attr ? [attributeStep(attr, current.passos)] : [];
+    }
+    if ('passos' in changes && next.efeitos.length) {
       const steps = Math.trunc(Number(changes.passos));
-      next.passos = Number.isFinite(steps)
-        ? Math.min(EFFECT_MAX_STEPS, Math.max(-EFFECT_MAX_STEPS, steps))
-        : effect.passos;
+      const passos = Number.isFinite(steps) ? steps : current.passos;
+      next.efeitos = [attributeStep(next.efeitos[0].params.atributo, passos)];
     }
     return next;
   });
 }
 
-/** Aumentos e reduções de passo que os efeitos dão ao dado do atributo em um teste. */
-export function effectStepMods(effects, attrKey) {
-  return effects
-    .filter(
-      (effect) =>
-        (effect.atributo === attrKey || effect.atributo === ALL_ATTRIBUTES) && effect.passos !== 0,
-    )
-    .map((effect) => ({ target: 'attribute', steps: effect.passos }));
+// ---------- Fim de cena ----------
+
+/** O efeito acaba na Nova cena? */
+export const endsAtScene = (effect) => normalizeSheetEffect(effect).duracao === 'cena';
+
+/** Efeitos que continuam depois da Nova cena (os de duração `cena` saem). */
+export function keepAfterScene(effects) {
+  return normalizeSheetEffects(effects).filter((effect) => effect.duracao !== 'cena');
 }
+
+// ---------- Passos nos testes ----------
+
+/**
+ * O `passo` vale neste tipo de teste? `qualquer` vale em todos; `ataque`, nos dois tipos de
+ * ataque; os outros, só no próprio tipo.
+ * @param {string} kind `teste` do passo.
+ * @param {string} testKind Tipo do teste feito (`qualquer`, `ataqueCorpo`, `ataqueDistancia`,
+ *   `defesa`).
+ */
+export function stepTestMatches(kind, testKind = 'qualquer') {
+  if (kind === 'qualquer' || kind === testKind) return true;
+  return kind === 'ataque' && (testKind === 'ataqueCorpo' || testKind === 'ataqueDistancia');
+}
+
+/** Todos os `passo` dos efeitos (já limpos). */
+function stepEntries(effects) {
+  return normalizeSheetEffects(effects).flatMap((effect) =>
+    effect.efeitos.filter((entry) => entry.tipo === 'passo' && entry.params.passos !== 0),
+  );
+}
+
+/**
+ * Aumentos e reduções de passo que os efeitos dão num teste: no dado do atributo (o do teste, ou
+ * `todos`), no dado da perícia (qualquer perícia, ou só a do teste), conforme o tipo do teste.
+ * @param {object[]} effects `system.efeitos`.
+ * @param {{attrKey: string, skillKey?: string, testKind?: string}} test
+ * @returns {{target: 'attribute'|'skill', steps: number}[]}
+ */
+export function conditionStepMods(effects, { attrKey, skillKey = '', testKind = 'qualquer' }) {
+  const mods = [];
+  for (const { params } of stepEntries(effects)) {
+    if (!stepTestMatches(params.teste, testKind)) continue;
+    if (params.alvo === 'atributo') {
+      if (params.atributo === attrKey || params.atributo === ALL_ATTRIBUTES) {
+        mods.push({ target: 'attribute', steps: params.passos });
+      }
+    } else if (params.alvo === 'pericias' || (skillKey && params.pericia === skillKey)) {
+      mods.push({ target: 'skill', steps: params.passos });
+    }
+  }
+  return mods;
+}
+
+/** Passos que os efeitos dão ao dado do atributo em qualquer teste (só o atributo). */
+export function effectStepMods(effects, attrKey) {
+  return conditionStepMods(effects, { attrKey }).filter((mod) => mod.target === 'attribute');
+}
+
+/**
+ * Saldo de passos dos efeitos no dado de um atributo, nos testes em geral (o que a ficha mostra;
+ * os que valem só em ataques ou defesas não entram).
+ */
+export function attributeStepNet(effects, attrKey) {
+  return effectStepMods(effects, attrKey).reduce((sum, mod) => sum + mod.steps, 0);
+}
+
+// ---------- Efeitos que outros sistemas criam ----------
 
 /**
  * Efeito da aba Condição que um item entrega (efeito `passoAlvo`, como um tônico): passos no
  * atributo até o fim da cena, com o nome do item. Cada uso é um efeito à parte (eles somam; o dado
  * para em d12).
- * @param {{nome: string, descricao?: string, atributo: string, passos: number}} data
- * @returns {{nome: string, descricao: string, atributo: string, passos: number, fimDeCena: boolean,
- *   origem: string}}
+ * @param {{id?: string, nome: string, descricao?: string, atributo: string, passos: number}} data
  */
-export function itemStepEffect({ nome, descricao = '', atributo, passos }) {
-  const steps = Math.max(-EFFECT_MAX_STEPS, Math.min(EFFECT_MAX_STEPS, Math.trunc(passos) || 0));
-  return {
-    ...newEffect(),
+export function itemStepEffect({ id = '', nome, descricao = '', atributo, passos }) {
+  return newStepEffect({
+    id,
     nome,
     descricao,
+    // Um item não dá passos «em todos os atributos»: só num deles
     atributo: ATRIBUTOS.includes(atributo) ? atributo : '',
-    passos: steps,
-    fimDeCena: true,
+    passos,
+    duracao: 'cena',
     origem: 'item',
-  };
+  });
 }

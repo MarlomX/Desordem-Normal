@@ -37,7 +37,7 @@ import {
   weaponTestKind,
 } from '../rolls/ability-effects.js';
 import { resourceBars } from './ability-controls.js';
-import { itemEffectsText } from '../rolls/ability-effects-editor.js';
+import { describeEffect, itemEffectsText } from '../rolls/ability-effects-editor.js';
 
 /**
  * Texto da penalidade passiva de uma armadura ou escudo («−1 passo em Atletismo, Furtividade»),
@@ -314,6 +314,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         allAttrLabel: t('DESORDEM.Ficha.EfeitoTodosAtributos'),
         attributes: ATRIBUTOS,
         editable: this.isEditable,
+        // Resumo dos passos que a linha simples ainda não mostra (perícia, tipo de teste)
+        describe: (entry) =>
+          describeEffect(entry, {
+            t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
+            skill: skillName,
+            itemType: 'efeito',
+          }),
       }),
       abilities: buildAbilityRows(
         this.document.items
@@ -847,7 +854,10 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   /** Acrescenta um efeito temporário vazio à ficha. */
   static async #onAddEffect() {
     const effects = this.document.toObject().system.efeitos;
-    await this.document.update({ 'system.efeitos': addEffect(effects) });
+    // Id novo do efeito (o Foundry gera um texto aleatório de 16 letras)
+    await this.document.update({
+      'system.efeitos': addEffect(effects, foundry.utils.randomID()),
+    });
   }
 
   /** Remove o efeito temporário clicado. */

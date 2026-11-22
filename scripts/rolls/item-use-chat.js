@@ -161,6 +161,7 @@ async function receiveStep(message) {
     return false;
   }
   const effect = itemStepEffect({
+    id: foundry.utils.randomID(),
     nome: data.nome,
     descricao: t('DESORDEM.Equipamento.PassoDescricao', { texto: stepText(data) }),
     atributo: data.atributo,

@@ -3,6 +3,7 @@
  * Cada função recebe os dados "crus" do ator (como estão no banco), ajusta e devolve o mesmo objeto.
  * Todas podem rodar várias vezes sem estragar nada (idempotentes).
  */
+import { isLegacyEffect, migrateLegacyEffect } from '../rolls/effects.js';
 
 /**
  * Até a v0.14.4 a perícia `metalurgia` era uma perícia comum. Nas regras 1.1 ela virou uma área
@@ -37,6 +38,26 @@ export function migrateAbilityResources(source) {
   }
   const count = (value) => (Number.isInteger(value) && value > 0 ? value : 0);
   source.recursosHab = { impeto: count(old.impeto), analise: count(old.analise) };
+  return source;
+}
+
+/**
+ * Até a v0.21.x os efeitos da aba Condição (`efeitos`, no personagem e na criatura) tinham o
+ * formato fixo `{nome, descricao, atributo, passos, fimDeCena, origem}`. Desde a v0.22.0 eles são
+ * modulares (`{id, nome, descricao, chave, origem, duracao, efeitos}`, veja rolls/effects.js).
+ * Só os efeitos no formato antigo mudam: os já convertidos (com a lista `efeitos`) ficam como
+ * estão. Isso importa porque o Foundry também passa por aqui as mudanças de uma gravação, que já
+ * vêm no formato novo.
+ *
+ * O id dos convertidos é a posição (`ef0`, `ef1`...): como a migração só é gravada na próxima
+ * gravação do ator, ela pode rodar a cada carregamento, e o id precisa sair igual todas as vezes.
+ * @param {object} source Dados do ator (`system`), possivelmente de uma versão antiga.
+ */
+export function migrateConditionEffects(source) {
+  if (!Array.isArray(source?.efeitos) || !source.efeitos.some(isLegacyEffect)) return source;
+  source.efeitos = source.efeitos.map((effect, i) =>
+    isLegacyEffect(effect) ? migrateLegacyEffect(effect, `ef${i}`) : effect,
+  );
   return source;
 }
 

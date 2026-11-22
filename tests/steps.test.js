@@ -142,3 +142,36 @@ test('stepWithin nunca afasta um valor que já passou do limite', () => {
   assert.equal(stepWithin(-3, 1, limits), -2);
   assert.equal(stepWithin(0, 0, limits), 0);
 });
+
+test('collectStepMods: passos da aba Condição numa perícia só e só num tipo de teste', () => {
+  const passo = (params) => ({
+    id: 'a',
+    nome: 'x',
+    duracao: 'manual',
+    efeitos: [{ id: 'p0', tipo: 'passo', params }],
+  });
+  const effects = [
+    passo({ alvo: 'pericia', pericia: 'pontaria', passos: -1 }),
+    passo({ alvo: 'atributo', atributo: 'fisico', passos: -1, teste: 'ataque' }),
+  ];
+  // Teste comum de Pontaria: só o passo da perícia
+  assert.deepEqual(
+    collectStepMods({ steps: {}, effects, attrKey: 'fisico', skillKey: 'pontaria' }),
+    [{ target: 'skill', steps: -1 }],
+  );
+  // Ataque à distância com Pontaria: os dois
+  const plan = planDice({
+    attrDie: 8,
+    skillDie: 8,
+    stepMods: collectStepMods({
+      steps: {},
+      effects,
+      attrKey: 'fisico',
+      skillKey: 'pontaria',
+      testKind: 'ataqueDistancia',
+    }),
+  });
+  assert.deepEqual([plan.attrFinal, plan.skillFinal], [6, 6]);
+  // A ficha mostra só o que vale em qualquer teste (o de ataque não muda a cor do Físico)
+  assert.equal(stepIndicator({ steps: {}, effects, key: 'fisico' }).net, 0);
+});

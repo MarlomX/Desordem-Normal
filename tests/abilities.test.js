@@ -134,7 +134,11 @@ test('sceneReset zera a cena, esvazia recursos e dá 1 PV a quem está com 0', (
   for (const key of ['fisico', 'mente', 'emocao', 'pericias']) {
     assert.equal(changes[`system.passos.${key}`], 0);
   }
-  assert.deepEqual(changes['system.efeitos'], [{ nome: 'B', fimDeCena: false }]);
+  // Efeitos antigos também passam pela limpeza: só o sem «fim de cena» fica (já convertido)
+  assert.deepEqual(
+    changes['system.efeitos'].map((e) => [e.nome, e.duracao]),
+    [['B', 'manual']],
+  );
 });
 
 test('sceneReset mantém o PV de quem tem vida e grava os recursos calculados', () => {

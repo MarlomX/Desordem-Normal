@@ -11,6 +11,7 @@ import { rollSkill, rollExtraSkill, testDicePreview } from '../rolls/chat.js';
 import { attackWithWeapon, weaponCompanionDice } from '../rolls/equipment-chat.js';
 import { useAbilityEffect } from '../rolls/abilities-chat.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
+import { describeEffect } from '../rolls/ability-effects-editor.js';
 import { weaponSkill } from '../rolls/equipment.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { proposeOpposed } from '../opposed/opposed-chat.js';
@@ -175,6 +176,13 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
         allAttrLabel: t('DESORDEM.Ficha.EfeitoTodosAtributos'),
         attributes: ATRIBUTOS,
         editable: this.isEditable,
+        // Resumo dos passos que a linha simples ainda não mostra (perícia, tipo de teste)
+        describe: (entry) =>
+          describeEffect(entry, {
+            t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
+            skill: (key) => (PERICIAS[key] ? t(`DESORDEM.Pericias.${key}`) : key),
+            itemType: 'efeito',
+          }),
       }),
       attacks: buildAttackRows(items, {
         kindLabel: (kind) => t(`DESORDEM.Item.Tipo.${kind}`),
@@ -394,7 +402,10 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
   /** Acrescenta um efeito temporário vazio (caído, atordoado...). */
   static async #onAddEffect() {
     const effects = this.document.toObject().system.efeitos;
-    await this.document.update({ 'system.efeitos': addEffect(effects) });
+    // Id novo do efeito (o Foundry gera um texto aleatório de 16 letras)
+    await this.document.update({
+      'system.efeitos': addEffect(effects, foundry.utils.randomID()),
+    });
   }
 
   /** Remove o efeito temporário clicado. */

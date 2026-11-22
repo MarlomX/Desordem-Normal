@@ -7,7 +7,7 @@
  * (a escada de `stepShift` limita o dado). Quem soma tudo é `collectStepMods`, junto com os efeitos.
  */
 import { ATRIBUTOS } from '../config.js';
-import { ALL_ATTRIBUTES, effectStepMods } from './effects.js';
+import { attributeStepNet, conditionStepMods } from './effects.js';
 import { DIE_STEPS, stepShift } from './dice.js';
 
 export const STEP_LIMIT = 4;
@@ -96,11 +96,20 @@ export function manualStepMods(steps, attrKey) {
 }
 
 /**
- * Única função que reúne os passos de um teste: manuais + efeitos da ficha.
+ * Única função que reúne os passos de um teste: manuais + efeitos da aba Condição.
  * (A contusão e as ajudas continuam entrando pelas suas próprias funções.)
+ * @param {object} test
+ * @param {object} test.steps `system.passos`.
+ * @param {object[]} [test.effects] `system.efeitos`.
+ * @param {string} test.attrKey Atributo do teste.
+ * @param {string} [test.skillKey] Perícia do teste (para os passos numa perícia só).
+ * @param {string} [test.testKind] Tipo do teste (para os passos só em ataques, defesas...).
  */
-export function collectStepMods({ steps, effects = [], attrKey }) {
-  return [...manualStepMods(steps, attrKey), ...effectStepMods(effects, attrKey)];
+export function collectStepMods({ steps, effects = [], attrKey, skillKey = '', testKind }) {
+  return [
+    ...manualStepMods(steps, attrKey),
+    ...conditionStepMods(effects, { attrKey, skillKey, testKind }),
+  ];
 }
 
 /**
@@ -110,11 +119,8 @@ export function collectStepMods({ steps, effects = [], attrKey }) {
  */
 export function stepIndicator({ steps, effects = [], key }) {
   const manual = clampSteps(steps?.[key]);
-  const fromEffects = ATRIBUTOS.includes(key)
-    ? effects
-        .filter((e) => e.atributo === key || e.atributo === ALL_ATTRIBUTES)
-        .reduce((sum, e) => sum + (e.passos || 0), 0)
-    : 0;
+  // Só os passos de atributo que valem em qualquer teste (os de ataque ou defesa não aparecem)
+  const fromEffects = ATRIBUTOS.includes(key) ? attributeStepNet(effects, key) : 0;
   const net = manual + fromEffects;
   return {
     net,

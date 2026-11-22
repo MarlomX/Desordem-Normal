@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { effectView } from '../scripts/rolls/effects.js';
 import {
   DISASTERS,
   lookupDisaster,
@@ -31,14 +32,13 @@ test('só os efeitos de PV e PD rolam um d4', () => {
 test('machucado, desatenção e irritação reduzem Físico, Mente e Emoção em um passo até o fim da cena', () => {
   const attrs = [2, 3, 4].map((n) => lookupDisaster(n).attr);
   assert.deepEqual(attrs, ['fisico', 'mente', 'emocao']);
-  const effect = disasterStepEffect(lookupDisaster(2), { name: 'N', description: 'D' });
-  assert.deepEqual(effect, {
-    nome: 'N',
-    descricao: 'D',
-    atributo: 'fisico',
-    passos: -1,
-    fimDeCena: true,
-  });
+  const effect = disasterStepEffect(lookupDisaster(2), { name: 'N', description: 'D' }, 'id1');
+  assert.equal(effect.id, 'id1');
+  assert.equal(effect.nome, 'N');
+  assert.equal(effect.descricao, 'D');
+  assert.equal(effect.duracao, 'cena');
+  assert.equal(effect.origem, 'falha');
+  assert.deepEqual(effectView(effect), { atributo: 'fisico', passos: -1 });
 });
 
 test('o efeito de passo é acrescentado à lista sem alterar a original', () => {

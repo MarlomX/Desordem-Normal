@@ -61,10 +61,14 @@ export async function applyDisasterDraw(actor, pending, drawn) {
   const { entry, amount, manual } = drawn;
   const effect =
     entry.kind === 'step'
-      ? disasterStepEffect(entry, {
-          name: t(`DESORDEM.FalhaCritica.${entry.key}.Nome`),
-          description: t(`DESORDEM.FalhaCritica.${entry.key}.Descricao`),
-        })
+      ? disasterStepEffect(
+          entry,
+          {
+            name: t(`DESORDEM.FalhaCritica.${entry.key}.Nome`),
+            description: t(`DESORDEM.FalhaCritica.${entry.key}.Descricao`),
+          },
+          foundry.utils.randomID(),
+        )
       : undefined;
   const next = applyDisaster(
     {

@@ -9,6 +9,7 @@ import { checkEquipment, handsInUse, handsOf, isNatural } from '../scripts/rolls
 import {
   EFFECT_TYPES,
   EQUIPMENT_ONLY_TYPES,
+  CONDITION_ONLY_TYPES,
   collectEffects,
   dialogDiceOptions,
   itemEffectTypes,
@@ -116,8 +117,12 @@ test('handsInUse e checkEquipment usam a empunhadura (natural nunca ocupa mão)'
 test('itemEffectTypes: habilidade aceita todos menos os de equipamento; cada equipamento, os seus', () => {
   assert.deepEqual(
     itemEffectTypes('habilidade'),
-    Object.keys(EFFECT_TYPES).filter((tipo) => !EQUIPMENT_ONLY_TYPES.includes(tipo)),
+    Object.keys(EFFECT_TYPES).filter(
+      (tipo) => !EQUIPMENT_ONLY_TYPES.includes(tipo) && !CONDITION_ONLY_TYPES.includes(tipo),
+    ),
   );
+  // Efeitos da aba Condição: só os passos, por enquanto
+  assert.deepEqual(itemEffectTypes('efeito'), ['passo']);
   assert.deepEqual(itemEffectTypes('arma'), [
     'dadoExtra',
     'bonusAtaque',

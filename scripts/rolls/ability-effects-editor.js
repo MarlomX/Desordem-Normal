@@ -74,6 +74,7 @@ const CHOICE_GROUPS = Object.freeze({
   recursoCura: 'RecursosCura',
   ferramenta: 'Ferramentas',
   alcance: 'Alcances',
+  alvo: 'Alvos',
 });
 
 /**
@@ -179,6 +180,8 @@ export function effectSupported(effect, itemType = 'habilidade') {
     // Itens gerais (v0.21.8): dado bônus ao usar e munição nos ataques
     case 'concederDado':
     case 'municao':
+    // Efeitos da aba Condição (v0.22.0): passos nos testes
+    case 'passo':
       return true;
     case 'ganharRecurso':
       // Todos os gatilhos têm uso desde a v0.20.7 (ao se defender, início do combate)
@@ -304,9 +307,28 @@ export function describeEffect(effect, { t, skill, itemType = 'habilidade' }) {
         passos: p.passos,
         dano: p.dano,
       });
+    case 'passo':
+      return t(key('passo'), {
+        // Com sinal (+1, −2), para ver de cara se o dado sobe ou desce
+        passos: p.passos > 0 ? `+${p.passos}` : String(p.passos),
+        alvo: stepTargetText(p, { t, skill }),
+        teste: p.teste === 'qualquer' ? '' : ` (${t(`DESORDEM.Efeito.Testes.${p.teste}`)})`,
+      });
     default:
       return '';
   }
+}
+
+/**
+ * Dado que um `passo` muda, em texto: «Físico», «qualquer atributo», «qualquer perícia» ou o nome
+ * da perícia escolhida («?» se nenhuma foi escolhida ainda).
+ */
+function stepTargetText(params, { t, skill }) {
+  if (params.alvo === 'pericias') return t('DESORDEM.Efeito.Resumo.QualquerPericia');
+  if (params.alvo === 'pericia') return params.pericia ? skill(params.pericia) : '?';
+  return params.atributo === 'todos'
+    ? t('DESORDEM.Efeito.TodosAtributos')
+    : t(`DESORDEM.Atributos.${params.atributo}`);
 }
 
 /**

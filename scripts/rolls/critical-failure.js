@@ -5,6 +5,7 @@
  * numa tabela de efeitos. Os textos ficam no arquivo de idioma (DESORDEM.FalhaCritica.<key>).
  * Não vale para o teste de lesão (falha crítica mata) nem para o de trauma.
  */
+import { newStepEffect } from './effects.js';
 
 export const DISASTER_DIE = 8;
 
@@ -38,12 +39,22 @@ export const disasterByKey = (key) => DISASTERS.find((e) => e.key === key);
 export const disasterExtraDie = (entry) => entry.die ?? null;
 
 /**
- * Efeito temporário da ficha (mesmo formato de `effects.js`) de um efeito que reduz um atributo.
+ * Efeito da aba Condição (formato de `effects.js`) de um resultado que reduz um atributo: −1 passo
+ * no dado do atributo até o fim da cena.
  * @param {{attr: string}} entry
  * @param {{name: string, description: string}} text Textos já traduzidos.
+ * @param {string} [id] Id do efeito (no Foundry, `foundry.utils.randomID()`).
  */
-export function disasterStepEffect(entry, { name, description }) {
-  return { nome: name, descricao: description, atributo: entry.attr, passos: -1, fimDeCena: true };
+export function disasterStepEffect(entry, { name, description }, id = '') {
+  return newStepEffect({
+    id,
+    nome: name,
+    descricao: description,
+    atributo: entry.attr,
+    passos: -1,
+    duracao: 'cena',
+    origem: 'falha',
+  });
 }
 
 /**

@@ -66,6 +66,24 @@ export const TOOLS = Object.freeze(['medicina']);
 /** Atributos de um `passoCondicional` (`todos` = o dado de qualquer atributo). */
 export const STEP_ATTRIBUTE_CHOICES = Object.freeze(['todos', 'fisico', 'mente', 'emocao']);
 
+/**
+ * Onde um `passo` (efeito da aba Condição) muda o dado: o dado do atributo, o dado de qualquer
+ * perícia ou o dado de uma perícia só (`pericia`).
+ */
+export const STEP_TARGETS = Object.freeze(['atributo', 'pericias', 'pericia']);
+
+/**
+ * Testes em que um `passo` vale: os de `TEST_KINDS` e `ataque` (qualquer ataque, corpo a corpo ou
+ * à distância; ex.: agarrado).
+ */
+export const CONDITION_TEST_KINDS = Object.freeze([
+  'qualquer',
+  'ataque',
+  'ataqueCorpo',
+  'ataqueDistancia',
+  'defesa',
+]);
+
 // ---------- Números das habilidades antigas (também são os padrões) ----------
 
 export const IMPETO_MAX = 5;
@@ -252,7 +270,19 @@ export const EFFECT_TYPES = Object.freeze({
     passos: intField(1, 0, 3),
     dano: intField(1, 0, 10),
   },
+  // Efeito da aba Condição: passos no dado do atributo, de qualquer perícia ou de uma perícia só,
+  // nos testes do tipo `teste` (o padrão −1 é o de uma condição comum, como caído)
+  passo: {
+    alvo: choiceField(STEP_TARGETS, 'atributo'),
+    atributo: choiceField(STEP_ATTRIBUTE_CHOICES, 'todos'),
+    pericia: textField('', 'skill'),
+    passos: intField(-1, -3, 3),
+    teste: choiceField(CONDITION_TEST_KINDS, 'qualquer'),
+  },
 });
+
+/** Tipos que só os efeitos da aba Condição aceitam (habilidades e equipamentos não os oferecem). */
+export const CONDITION_ONLY_TYPES = Object.freeze(['passo']);
 
 /** Tipos que só uma arma aceita (a habilidade não os oferece). */
 export const WEAPON_ONLY_TYPES = Object.freeze(['bonusAtaque', 'passoAtaque', 'criticoAmpliado']);
@@ -411,6 +441,8 @@ export const ITEM_EFFECT_TYPES = Object.freeze({
     'concederDado',
     'municao',
   ]),
+  // Efeito da aba Condição (lista `system.efeitos` do ator): por enquanto, só passos
+  efeito: Object.freeze(['passo']),
 });
 
 /**
@@ -423,7 +455,9 @@ export const ITEM_EFFECT_TYPES = Object.freeze({
  */
 export function itemEffectTypes(itemType) {
   if (itemType === 'habilidade') {
-    return Object.keys(EFFECT_TYPES).filter((tipo) => !EQUIPMENT_ONLY_TYPES.includes(tipo));
+    return Object.keys(EFFECT_TYPES).filter(
+      (tipo) => !EQUIPMENT_ONLY_TYPES.includes(tipo) && !CONDITION_ONLY_TYPES.includes(tipo),
+    );
   }
   return [...(ITEM_EFFECT_TYPES[itemType] ?? [])];
 }
@@ -937,13 +971,27 @@ export function syncConditionalEffects(sheetEffects, entries, state) {
   const present = new Set(kept.map((effect) => effect.origem));
   const added = [...wanted]
     .filter(([origem]) => !present.has(origem))
+    // Formato da aba Condição (effects.js): um `passo` no dado do atributo, sem fim automático
+    // (sai quando a condição deixa de valer). O id é a própria origem, que é única por habilidade.
     .map(([origem, entry]) => ({
+      id: origem,
       nome: entry.itemName ?? '',
       descricao: '',
-      atributo: entry.params.atributo || 'todos',
-      passos: entry.params.passos,
-      fimDeCena: false,
+      chave: '',
       origem,
+      duracao: 'manual',
+      efeitos: [
+        normalizeEffect({
+          id: 'p0',
+          tipo: 'passo',
+          params: {
+            alvo: 'atributo',
+            atributo: entry.params.atributo || 'todos',
+            passos: entry.params.passos,
+            teste: 'qualquer',
+          },
+        }),
+      ],
     }));
   if (!added.length && kept.length === (sheetEffects ?? []).length) return null;
   return [...kept, ...added];

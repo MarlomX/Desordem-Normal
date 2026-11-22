@@ -16,7 +16,7 @@ import {
 } from '../scripts/rolls/ability-effects.js';
 import { describeEffect, editorRows } from '../scripts/rolls/ability-effects-editor.js';
 import { itemUse, itemUseChanges, itemUseState } from '../scripts/rolls/equipment.js';
-import { itemStepEffect } from '../scripts/rolls/effects.js';
+import { effectView, itemStepEffect } from '../scripts/rolls/effects.js';
 import { hasMedicalKit } from '../scripts/rolls/first-aid.js';
 import { buildEquipmentRows } from '../scripts/sheets/context.js';
 
@@ -95,14 +95,16 @@ test('itemUseState: Usar aparece com efeitos de uso mesmo sem limite, e não gas
 });
 
 test('itemStepEffect: efeito até o fim da cena, com limite de ±3 passos', () => {
-  const effect = itemStepEffect({ nome: 'Tônico', atributo: 'fisico', passos: 1 });
+  const effect = itemStepEffect({ id: 'i1', nome: 'Tônico', atributo: 'fisico', passos: 1 });
+  assert.equal(effect.id, 'i1');
   assert.equal(effect.nome, 'Tônico');
-  assert.equal(effect.atributo, 'fisico');
-  assert.equal(effect.passos, 1);
-  assert.equal(effect.fimDeCena, true);
+  assert.deepEqual(effectView(effect), { atributo: 'fisico', passos: 1 });
+  assert.equal(effect.duracao, 'cena');
   assert.equal(effect.origem, 'item');
-  assert.equal(itemStepEffect({ nome: 'x', atributo: 'fisico', passos: 9 }).passos, 3);
-  assert.equal(itemStepEffect({ nome: 'x', atributo: 'outro', passos: 1 }).atributo, '');
+  assert.equal(effectView(itemStepEffect({ nome: 'x', atributo: 'fisico', passos: 9 })).passos, 3);
+  // Atributo desconhecido, ou «todos» (um item dá passo num atributo só): sem passo
+  assert.deepEqual(itemStepEffect({ nome: 'x', atributo: 'outro', passos: 1 }).efeitos, []);
+  assert.deepEqual(itemStepEffect({ nome: 'x', atributo: 'todos', passos: 1 }).efeitos, []);
 });
 
 test('hasMedicalKit: pelo efeito ferramenta; o nome continua valendo para itens antigos', () => {

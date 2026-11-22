@@ -5,6 +5,7 @@
 import { resolveTest } from './test.js';
 import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { sequenceRng } from './dice.js';
+import { keepAfterScene } from './effects.js';
 import {
   ANALISE_GAIN,
   ANALISE_MAX,
@@ -181,7 +182,7 @@ export function activeBoosts(
  * @param {number} state.pv
  * @param {boolean} state.contusao
  * @param {boolean} state.estupor
- * @param {{fimDeCena: boolean}[]} state.efeitos
+ * @param {{duracao: string}[]} state.efeitos `system.efeitos` (formato de effects.js).
  * @param {Object<string, number>} [state.recursos] Valor novo de cada recurso das habilidades.
  * @returns {Object} Valores novos, nas chaves da ficha (`system.*`).
  */
@@ -212,6 +213,7 @@ export function sceneReset(state) {
     'system.passos.mente': 0,
     'system.passos.emocao': 0,
     'system.passos.pericias': 0,
-    'system.efeitos': state.efeitos.filter((effect) => !effect.fimDeCena),
+    // Efeitos da aba Condição com duração «cena» saem (os de outras durações ficam)
+    'system.efeitos': keepAfterScene(state.efeitos),
   };
 }

@@ -2,7 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { canGuardWeaponCard, guardWeaponCard, guardianData } from '../scripts/rolls/guardian.js';
 import { linkMigrationUpdates, shouldLinkNew } from '../scripts/data/token-link.js';
-import { effectStepMods, newEffect, updateEffect } from '../scripts/rolls/effects.js';
+import {
+  effectStepMods,
+  effectView,
+  newEffect,
+  newStepEffect,
+  updateEffect,
+} from '../scripts/rolls/effects.js';
 import { stepIndicator } from '../scripts/rolls/steps.js';
 import { buildEffectRows } from '../scripts/sheets/context.js';
 
@@ -59,8 +65,8 @@ test('migração: só os personagens ainda sem vínculo', () => {
 
 test('efeito em todos os atributos vale para o dado de qualquer atributo', () => {
   const effects = [
-    { ...newEffect(), nome: 'Instinto', atributo: 'todos', passos: 1, origem: 'hab:i:e' },
-    { ...newEffect(), nome: 'Caído', atributo: 'fisico', passos: -1 },
+    newStepEffect({ nome: 'Instinto', atributo: 'todos', passos: 1, origem: 'hab:i:e' }),
+    newStepEffect({ nome: 'Caído', atributo: 'fisico', passos: -1 }),
   ];
   assert.deepEqual(effectStepMods(effects, 'mente'), [{ target: 'attribute', steps: 1 }]);
   assert.deepEqual(effectStepMods(effects, 'fisico'), [
@@ -74,16 +80,16 @@ test('efeito em todos os atributos vale para o dado de qualquer atributo', () =>
 
 test('updateEffect aceita «todos» e não deixa mudar a origem', () => {
   const [effect] = updateEffect([newEffect()], 0, { atributo: 'todos', origem: 'hab:x:y' });
-  assert.equal(effect.atributo, 'todos');
+  assert.equal(effectView(effect).atributo, 'todos');
   assert.equal(effect.origem, '');
-  assert.equal(updateEffect([newEffect()], 0, { atributo: 'nada' })[0].atributo, '');
+  assert.equal(effectView(updateEffect([newEffect()], 0, { atributo: 'nada' })[0]).atributo, '');
 });
 
 test('buildEffectRows: opção «todos os atributos» e etiqueta de habilidade', () => {
   const rows = buildEffectRows(
     [
-      { ...newEffect(), atributo: 'todos', origem: 'hab:i:e' },
-      { ...newEffect(), atributo: 'mente' },
+      newStepEffect({ nome: '', atributo: 'todos', passos: 0, origem: 'hab:i:e' }),
+      newStepEffect({ nome: '', atributo: 'mente', passos: 0 }),
     ],
     {
       attrLabel: (k) => k,

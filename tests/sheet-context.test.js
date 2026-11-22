@@ -743,3 +743,35 @@ test('buildAttributeRows desliga + no dado máximo e − no dado mínimo', () =>
   assert.equal(fisico.canStepUp, true);
   assert.equal(emocao.canStepUp, false);
 });
+
+test('buildEffectRows: efeito que a linha simples não mostra traz o resumo e não a ponte', () => {
+  const rows = buildEffectRows(
+    [
+      {
+        id: 'g',
+        nome: 'Agarrado',
+        duracao: 'cena',
+        efeitos: [
+          { id: 'p0', tipo: 'passo', params: { alvo: 'pericias', passos: -1, teste: 'ataque' } },
+        ],
+      },
+      { nome: 'Antigo', atributo: 'mente', passos: 1, fimDeCena: false },
+    ],
+    {
+      attrLabel: (k) => k,
+      noAttrLabel: '—',
+      attributes: ['fisico', 'mente', 'emocao'],
+      describe: (entry) => `${entry.tipo}:${entry.params.passos}`,
+    },
+  );
+  assert.equal(rows[0].bridge, false);
+  assert.equal(rows[0].summary, 'passo:-1');
+  assert.equal(rows[0].fimDeCena, true);
+  assert.equal(rows[0].attrOptions.find((o) => o.selected).value, '');
+  // O efeito antigo é convertido na hora e a ponte mostra o atributo e os passos dele
+  assert.equal(rows[1].bridge, true);
+  assert.equal(rows[1].summary, '');
+  assert.equal(rows[1].id, 'ef1');
+  assert.equal(rows[1].attrOptions.find((o) => o.selected).value, 'mente');
+  assert.equal(rows[1].stepOptions.find((o) => o.selected).value, 1);
+});
