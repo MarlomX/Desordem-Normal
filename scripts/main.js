@@ -57,7 +57,7 @@ import {
 import { newSceneForAll } from './rolls/scene-macro.js';
 import { PontoInteresseModel } from './data/ponto.js';
 import PontoInteresseSheet from './journal/point-sheet.js';
-import { registerPointHooks } from './journal/point-hooks.js';
+import { registerPointHooks, registerPointSettings } from './journal/point-hooks.js';
 import { POINT_TYPE } from './journal/point.js';
 import { renderPointBar } from './journal/investigation-app.js';
 import { computeDamage } from './rolls/damage.js';
@@ -143,6 +143,8 @@ Hooks.once('init', () => {
   // mantêm o número na frente do nome da página («4.1 · Potes»)
   CONFIG.JournalEntryPage.dataModels[POINT_TYPE] = PontoInteresseModel;
   registerPointHooks();
+  // Configuração do usuário: barra «Usar no ponto de interesse» nos cartões de teste (v0.24.6)
+  registerPointSettings();
   foundry.applications.apps.DocumentSheetConfig.registerSheet(
     foundry.documents.JournalEntryPage,
     SYSTEM_ID,

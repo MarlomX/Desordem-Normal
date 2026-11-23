@@ -11,6 +11,16 @@
       </div>
       <p class="hint">{{localize "DESORDEM.Ponto.NumeroDica"}}</p>
     </div>
+    <div class="form-group">
+      <label for="{{page.id}}-pai">{{localize "DESORDEM.Ponto.Pai"}}</label>
+      <div class="form-fields">
+        <select id="{{page.id}}-pai" name="system.paiId">
+          <option value="">{{localize "DESORDEM.Ponto.SemPai"}}</option>
+          {{#each pais}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}
+        </select>
+      </div>
+      <p class="hint">{{localize "DESORDEM.Ponto.PaiDica"}}</p>
+    </div>
     <div class="form-group stacked">
       <label>{{localize "DESORDEM.Ponto.DescricaoBasica"}}</label>
       {{formInput fields.descricaoBasica name="system.descricaoBasica" value=system.descricaoBasica enriched=enriched.descricaoBasica toggled=true documentUUID=page.uuid}}

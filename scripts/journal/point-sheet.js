@@ -18,9 +18,13 @@
  * v0.24.4: o 🔍 de cada bloco abre a janela «Investigar» (`investigation-app.js`), e o ponto pode
  * ficar ligado a um desafio da guia Desafios (`system.desafioId`): criado ou escolhido na edição,
  * aberto pelo botão do quadro do mestre.
+ *
+ * v0.24.6: «Subponto de» (`system.paiId`) escolhe outro ponto do diário como pai e o número vira
+ * o do pai mais o próximo livre (3 → 3.1, 3.2…); a imagem abre em tela cheia ao clicar.
  */
 import { SYSTEM_ID, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import {
+  POINT_TYPE,
   addBlock,
   addLine,
   applyBlockForm,
@@ -34,6 +38,8 @@ import {
   moveBlock,
   moveLine,
   newBlock,
+  nextChildNumber,
+  parentChoices,
   newLine,
   newLineIds,
   normalizeBlocks,
@@ -65,6 +71,9 @@ const TEMPLATES = `systems/${SYSTEM_ID}/templates/diario`;
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet {
+  /** Subtipo de página desta folha. */
+  static TYPE = POINT_TYPE;
+
   static DEFAULT_OPTIONS = {
     classes: ['desordem-normal', 'desordem-ponto-folha'],
     // Classes da página quando ela aparece dentro do diário (modo de leitura)
@@ -212,7 +221,12 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
    */
   async _onRender(context, options) {
     await super._onRender(context, options);
-    if (!this.isView || !this.document.isOwner) return;
+    if (!this.isView) return;
+    // Imagem em tela cheia (para todos), na janela de imagem do Foundry
+    this.element.querySelector('.desordem-ponto__imagem img')?.addEventListener('click', () => {
+      this.#showImage();
+    });
+    if (!this.document.isOwner) return;
     for (const button of this.element.querySelectorAll('[data-ponto-acao]')) {
       button.addEventListener('click', (event) => {
         event.preventDefault();
@@ -254,6 +268,10 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         label: t(`DESORDEM.Desafio.Tipo.${tipo}`),
       })),
       desafio: this.#linkedChallenge(),
+      // Pontos do diário que podem ser pai deste (sem ele mesmo e sem os descendentes dele)
+      pais: parentChoices(PontoInteresseSheet.pointsOf(this.document.parent), this.document.id).map(
+        (entry) => ({ ...entry, selected: entry.id === system.paiId }),
+      ),
       // Campo do texto da linha, para o `formInput` montar o editor rico de cada uma
       lineTextField: fields.blocos.element.fields.linhas.element.fields.texto,
       blocks,
@@ -263,6 +281,21 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         desafioAcesso: await this.#enrich(system.desafioAcesso),
       },
     };
+  }
+
+  /**
+   * Pontos de interesse de um diário, no formato das funções puras (id, nome, número, pai).
+   * @param {JournalEntry} entry
+   */
+  static pointsOf(entry) {
+    return (entry?.pages.contents ?? [])
+      .filter((page) => page.type === PontoInteresseSheet.TYPE)
+      .map((page) => ({
+        id: page.id,
+        name: page.name,
+        numero: page.system.numero,
+        paiId: page.system.paiId,
+      }));
   }
 
   /**
@@ -304,7 +337,30 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
     if (fromForm) {
       foundry.utils.setProperty(data, 'system.blocos', applyBlockForm(this.#blocks(), fromForm));
     }
+    this.#applyParent(data);
     return data;
+  }
+
+  /**
+   * Pai escolhido agora («Subponto de» mudou): o número vira o do pai mais o próximo livre entre
+   * os irmãos. Com o pai igual, vale o número digitado (o mestre pode trocar a última parte).
+   * Pai que não está mais no diário vira «sem pai».
+   * @param {object} data Dados do formulário, já expandidos (mudados aqui).
+   */
+  #applyParent(data) {
+    const paiId = foundry.utils.getProperty(data, 'system.paiId');
+    if (typeof paiId !== 'string' || paiId === this.document.system.paiId) return;
+    if (!paiId) return;
+    const points = PontoInteresseSheet.pointsOf(this.document.parent);
+    const parent = points.find((entry) => entry.id === paiId);
+    if (!parent || parent.id === this.document.id) {
+      foundry.utils.setProperty(data, 'system.paiId', '');
+      return;
+    }
+    const siblings = points
+      .filter((entry) => entry.paiId === paiId && entry.id !== this.document.id)
+      .map((entry) => entry.numero);
+    foundry.utils.setProperty(data, 'system.numero', nextChildNumber(parent.numero, siblings));
   }
 
   /** Blocos gravados, limpos (ids garantidos). */
@@ -349,6 +405,21 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
   /* ---------------------------------------------------------------------------------------- */
   /* Revelar (modo de leitura)                                                                 */
   /* ---------------------------------------------------------------------------------------- */
+
+  /**
+   * Abre a imagem do ponto na janela de imagem do Foundry. Com o `uuid`, o mestre ganha nela o
+   * botão do próprio Foundry de mostrar a imagem aos jogadores.
+   */
+  #showImage() {
+    const src = this.document.system.imagem;
+    if (!src) return;
+    const { ImagePopout } = foundry.applications.apps;
+    new ImagePopout({
+      src,
+      uuid: this.document.uuid,
+      window: { title: this.document.name },
+    }).render({ force: true });
+  }
 
   /** Encaminha o botão clicado para a ação dele. */
   async #onRevealControl(button) {

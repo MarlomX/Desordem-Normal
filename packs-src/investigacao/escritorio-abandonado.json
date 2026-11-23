@@ -1,0 +1,393 @@
+{
+  "_id": "dnInvestEscrit01",
+  "_key": "!journal!dnInvestEscrit01",
+  "name": "Exemplo: escritório abandonado",
+  "pages": [
+    {
+      "_id": "dnPontoTexto0001",
+      "_key": "!journal.pages!dnInvestEscrit01.dnPontoTexto0001",
+      "name": "Como usar este exemplo",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<p>Cena inventada para mostrar as páginas «Ponto de interesse» do sistema. Importe o diário para o mundo e abra os pontos.</p><ul><li>No modo de leitura, o mestre revela as linhas pelo olho de cada uma, por bloco ou pelo 🔍 «Investigar».</li><li>Dê aos jogadores a permissão «Observador» no diário para eles verem os pontos.</li><li>O ponto 1.1 é subponto do 1 (campo «Subponto de» na edição).</li><li>O cofre (ponto 2) mostra onde ligar um desafio de acesso.</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 100000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnPontoMesa00001",
+      "_key": "!journal.pages!dnInvestEscrit01.dnPontoMesa00001",
+      "name": "1 · Mesa do contador",
+      "type": "pontoInteresse",
+      "system": {
+        "numero": "1",
+        "paiId": "",
+        "descricaoBasica": "<p>Uma escrivaninha pesada coberta de pó, com papéis amarelados e uma luminária quebrada.</p>",
+        "imagem": "",
+        "imagemVisivel": true,
+        "blocos": [
+          {
+            "id": "dnBlocoMesaPerc",
+            "pericias": [
+              "percepcao"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaMesaPer6",
+                "dt": 6,
+                "texto": "<p>Entre os papéis há uma <strong>agenda</strong> com a última página arrancada.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              },
+              {
+                "id": "dnLinhaMesaPe10",
+                "dt": 10,
+                "texto": "<p>Marcas de dedos recentes no pó: alguém mexeu na mesa há poucos dias.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          },
+          {
+            "id": "dnBlocoMesaInsp",
+            "pericias": [
+              "inspecionar"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaMesaIns8",
+                "dt": 8,
+                "texto": "<p>A gaveta de baixo é mais rasa por dentro do que por fora.</p>",
+                "notaMestre": "Leva ao ponto 1.1.",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          },
+          {
+            "id": "dnBlocoMesaApti",
+            "pericias": [
+              "aptidao:erudicao",
+              "oficio:carpintaria"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaMesaAp10",
+                "dt": 10,
+                "texto": "<p>A escrivaninha é de uma marcenaria que fechou há décadas; o fundo da gaveta foi colocado bem depois.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          }
+        ],
+        "contexto": "<p>A agenda era do contador desaparecido. A página arrancada está no ponto 3, no bolso do zelador.</p>",
+        "desafioAcesso": "",
+        "desafioId": ""
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "text": {
+        "format": 1
+      },
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 200000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {}
+    },
+    {
+      "_id": "dnPontoGaveta001",
+      "_key": "!journal.pages!dnInvestEscrit01.dnPontoGaveta001",
+      "name": "1.1 · Gaveta de fundo falso",
+      "type": "pontoInteresse",
+      "system": {
+        "numero": "1.1",
+        "paiId": "dnPontoMesa00001",
+        "descricaoBasica": "<p>A gaveta de baixo, com uma tábua solta no fundo.</p>",
+        "imagem": "",
+        "imagemVisivel": true,
+        "blocos": [
+          {
+            "id": "dnBlocoGavInsp1",
+            "pericias": [
+              "inspecionar"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaGavIns61",
+                "dt": 6,
+                "texto": "<p>Embaixo da tábua há um <strong>envelope lacrado</strong> com um símbolo desenhado à mão.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          },
+          {
+            "id": "dnBlocoGavBrux1",
+            "pericias": [
+              "bruxaria"
+            ],
+            "rotulo": "",
+            "oculta": true,
+            "linhas": [
+              {
+                "id": "dnLinhaGavBr101",
+                "dt": 10,
+                "texto": "<p>O símbolo é um selo de proteção incompleto: falta um dos traços.</p>",
+                "notaMestre": "Completar o selo é a pista para conversar com o zelador (ponto 3).",
+                "condicao": "Só depois de abrir o envelope.",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          }
+        ],
+        "contexto": "<p>Abrir o envelope sem cuidado solta um pó irritante: teste de Vigor (DT 8) ou 1 de dano.</p>",
+        "desafioAcesso": "",
+        "desafioId": ""
+      },
+      "title": {
+        "show": true,
+        "level": 2
+      },
+      "image": {},
+      "text": {
+        "format": 1
+      },
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 300000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {}
+    },
+    {
+      "_id": "dnPontoCofre0001",
+      "_key": "!journal.pages!dnInvestEscrit01.dnPontoCofre0001",
+      "name": "2 · Cofre de parede",
+      "type": "pontoInteresse",
+      "system": {
+        "numero": "2",
+        "paiId": "",
+        "descricaoBasica": "<p>Um quadro torto pendurado na parede dos fundos.</p>",
+        "imagem": "",
+        "imagemVisivel": true,
+        "blocos": [
+          {
+            "id": "dnBlocoCofPerc1",
+            "pericias": [
+              "percepcao"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaCofPer61",
+                "dt": 6,
+                "texto": "<p>Atrás do quadro há a porta de um <strong>cofre</strong>.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          },
+          {
+            "id": "dnBlocoCofCrim1",
+            "pericias": [
+              "crime"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaCofCri81",
+                "dt": 8,
+                "texto": "<p>A fechadura é antiga e já foi forçada antes.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          },
+          {
+            "id": "dnBlocoCofPerc2",
+            "pericias": [
+              "percepcao"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaCofPe101",
+                "dt": 10,
+                "texto": "<p>Riscos no chão mostram que o quadro foi tirado e recolocado várias vezes.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          }
+        ],
+        "contexto": "<p>Dentro do cofre: dinheiro antigo sem valor e a chave do porão.</p>",
+        "desafioAcesso": "<p>Para abrir o cofre, crie na edição um desafio do tipo Arrombar ou Destrancar e ligue a este ponto.</p>",
+        "desafioId": ""
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "text": {
+        "format": 1
+      },
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 400000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {}
+    },
+    {
+      "_id": "dnPontoZelador01",
+      "_key": "!journal.pages!dnInvestEscrit01.dnPontoZelador01",
+      "name": "3 · Zelador",
+      "type": "pontoInteresse",
+      "system": {
+        "numero": "3",
+        "paiId": "",
+        "descricaoBasica": "<p>Um senhor de uniforme gasto, encostado na porta, de olho em vocês.</p>",
+        "imagem": "",
+        "imagemVisivel": true,
+        "blocos": [
+          {
+            "id": "dnBlocoZelIntu1",
+            "pericias": [
+              "intuicao"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaZelInt61",
+                "dt": 6,
+                "texto": "<p>Ele está nervoso e evita olhar para a mesa.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              },
+              {
+                "id": "dnLinhaZelIn101",
+                "dt": 10,
+                "texto": "<p>Ele sabe mais do que conta: está protegendo alguém.</p>",
+                "notaMestre": "",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          },
+          {
+            "id": "dnBlocoZelPers1",
+            "pericias": [
+              "persuasao"
+            ],
+            "rotulo": "",
+            "oculta": false,
+            "linhas": [
+              {
+                "id": "dnLinhaZelPer81",
+                "dt": 8,
+                "texto": "<p>Ele admite que viu um homem de casaco cinza sair do prédio de madrugada.</p>",
+                "notaMestre": "O homem de casaco cinza é o próprio contador.",
+                "condicao": "",
+                "revelada": false,
+                "reveladaPara": []
+              }
+            ]
+          }
+        ],
+        "contexto": "<p>O zelador guarda a página arrancada da agenda e só a entrega se o grupo prometer não chamar a polícia.</p>",
+        "desafioAcesso": "",
+        "desafioId": ""
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "text": {
+        "format": 1
+      },
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 500000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {}
+    }
+  ],
+  "folder": null,
+  "sort": 0,
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

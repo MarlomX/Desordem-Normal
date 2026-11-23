@@ -40,6 +40,12 @@ import {
   investigationRows,
   applyReveal,
   examineFindsNothing,
+  compareNumbers,
+  sortUpdates,
+  nextChildNumber,
+  childNumberFor,
+  descendantIds,
+  parentChoices,
 } from '../scripts/journal/point.js';
 
 // Tradução com o arquivo de idioma de verdade (como o game.i18n: chave sem texto volta a chave)
@@ -451,4 +457,72 @@ test('penalidade do Examinar: cena «investigacao» com o ator como alvo', async
     actorTargetScene(createPenaltyFlag({ tipo: 'pv', valor: 1, cena: 'furtividade' })),
     false,
   );
+});
+
+test('compareNumbers: ordem numérica e hierárquica', () => {
+  const list = ['3.2', '10', '1.1', '3', '', '2', '3.1.1', '1', '3.1', '1.2', 'A'];
+  assert.deepEqual([...list].sort(compareNumbers), [
+    '1',
+    '1.1',
+    '1.2',
+    '2',
+    '3',
+    '3.1',
+    '3.1.1',
+    '3.2',
+    '10',
+    'A',
+    '',
+  ]);
+  assert.ok(compareNumbers('4.2', '4.10') < 0);
+});
+
+test('sortUpdates: páginas comuns primeiro, pontos pelo número, só o que muda', () => {
+  const pages = [
+    { id: 'p3', isPoint: true, numero: '3', sort: 100000 },
+    { id: 'txt', isPoint: false, sort: 200000 },
+    { id: 'p1', isPoint: true, numero: '1', sort: 300000 },
+    { id: 'p11', isPoint: true, numero: '1.1', sort: 400000 },
+  ];
+  assert.deepEqual(sortUpdates(pages), [
+    { _id: 'txt', sort: 100000 },
+    { _id: 'p1', sort: 200000 },
+    { _id: 'p11', sort: 300000 },
+    { _id: 'p3', sort: 400000 },
+  ]);
+  const sorted = [
+    { id: 'txt', isPoint: false, sort: 100000 },
+    { id: 'p1', isPoint: true, numero: '1', sort: 200000 },
+  ];
+  assert.deepEqual(sortUpdates(sorted), []);
+});
+
+test('nextChildNumber e childNumberFor: numeração dos subpontos', () => {
+  assert.equal(nextChildNumber('3', []), '3.1');
+  assert.equal(nextChildNumber('3', ['3.1', '3.2', '3.2.1', '4.7']), '3.3');
+  assert.equal(nextChildNumber('', ['1']), '');
+  assert.equal(childNumberFor('5', '3.2'), '5.2');
+  assert.equal(childNumberFor('5.1', '3.2.4'), '5.1.4');
+  assert.equal(childNumberFor('5', ''), '5.1');
+  assert.equal(childNumberFor('', '3.2'), '3.2');
+});
+
+test('descendantIds e parentChoices: sem ciclos', () => {
+  const points = [
+    { id: 'a', name: 'A', numero: '1' },
+    { id: 'b', name: 'B', numero: '1.1', paiId: 'a' },
+    { id: 'c', name: 'C', numero: '1.1.1', paiId: 'b' },
+    { id: 'd', name: 'D', numero: '2' },
+  ];
+  assert.deepEqual(descendantIds(points, 'a').sort(), ['b', 'c']);
+  assert.deepEqual(
+    parentChoices(points, 'b').map((page) => page.id),
+    ['a', 'd'],
+  );
+  // Ciclo gravado por engano não trava
+  const loop = [
+    { id: 'x', paiId: 'y' },
+    { id: 'y', paiId: 'x' },
+  ];
+  assert.deepEqual(descendantIds(loop, 'x'), ['y']);
 });

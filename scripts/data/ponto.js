@@ -43,6 +43,8 @@ export class PontoInteresseModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       numero: texto(),
+      // Ponto pai (id de outra página de ponto do mesmo diário; v0.24.6): o número vira pai.N
+      paiId: texto(),
       descricaoBasica: textoRico(),
       imagem: new f.FilePathField({
         categories: ['IMAGE'],

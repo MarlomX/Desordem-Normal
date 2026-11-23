@@ -1910,6 +1910,19 @@
         "Apagado": "O desafio ligado foi apagado.",
         "NaoCriou": "Não foi possível criar o desafio (a lista pode estar cheia).",
         "Criado": "Desafio «{nome}» criado e ligado ao ponto."
+      },
+      "Pai": "Subponto de",
+      "SemPai": "(nenhum: ponto principal)",
+      "PaiDica": "Ao escolher o ponto pai, o número vira o dele mais o próximo livre (3 → 3.1, 3.2…). Dá para trocar a última parte à mão. Se o número do pai mudar, os subpontos acompanham.",
+      "Diario": {
+        "Ordenar": "Ordenar pontos por número",
+        "EsconderTodos": "Esconder todos os pontos",
+        "ConfirmarEsconderTodos": "Esconder todas as linhas de todos os pontos de interesse deste diário, de todos os jogadores?",
+        "Escondidos": "Linhas escondidas em {n} ponto(s)."
+      },
+      "Config": {
+        "Barra": "Barra «Usar no ponto de interesse» nos testes",
+        "BarraDica": "Mostra, só para o mestre, um botão nos cartões de teste para usar o resultado no Examinar de um ponto de interesse. Vale só neste computador."
       }
     }
   },

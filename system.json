@@ -74,6 +74,17 @@
         "TRUSTED": "NONE",
         "ASSISTANT": "OWNER"
       }
+    },
+    {
+      "name": "investigacao",
+      "label": "Exemplos de investigação",
+      "path": "packs/investigacao",
+      "type": "JournalEntry",
+      "ownership": {
+        "PLAYER": "NONE",
+        "TRUSTED": "NONE",
+        "ASSISTANT": "OWNER"
+      }
     }
   ],
   "url": "https://github.com/MarlomX/desordem-normal",

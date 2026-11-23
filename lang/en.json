@@ -1910,6 +1910,19 @@
         "Apagado": "The linked challenge was deleted.",
         "NaoCriou": "Could not create the challenge (the list may be full).",
         "Criado": "Challenge «{nome}» created and linked to the point."
+      },
+      "Pai": "Sub-point of",
+      "SemPai": "(none: main point)",
+      "PaiDica": "When you choose the parent point, the number becomes its number plus the next free one (3 → 3.1, 3.2…). You can change the last part by hand. If the parent's number changes, the sub-points follow.",
+      "Diario": {
+        "Ordenar": "Sort points by number",
+        "EsconderTodos": "Hide all points",
+        "ConfirmarEsconderTodos": "Hide every row of every point of interest in this journal from all players?",
+        "Escondidos": "Rows hidden in {n} point(s)."
+      },
+      "Config": {
+        "Barra": "«Use on point of interest» bar on tests",
+        "BarraDica": "Shows, only to the GM, a button on test cards to use the result in a point of interest's Examine. Applies only to this computer."
       }
     }
   },

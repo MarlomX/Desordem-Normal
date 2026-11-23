@@ -3972,6 +3972,7 @@ button.desordem-desafios-cartao__nome:hover {
   text-align: center;
 }
 .desordem-ponto__imagem img {
+  cursor: zoom-in;
   max-width: 100%;
   max-height: 360px;
   border: none;

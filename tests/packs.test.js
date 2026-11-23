@@ -226,3 +226,46 @@ test('compêndio de macros: o manifesto aponta para o pacote, escondido dos joga
   assert.equal(pack.type, 'Macro');
   assert.equal(pack.ownership.PLAYER, 'NONE');
 });
+
+// ---------- Compêndio «Exemplos de investigação» (v0.24.6) ----------
+
+test('compêndio de investigação: diário com pontos válidos, pais existentes e nomes com número', async () => {
+  const { POINT_TYPE, normalizeBlocks, pointPageName, headingLevel } =
+    await import('../scripts/journal/point.js');
+  const dir = path.join(root, 'packs-src', 'investigacao');
+  const files = fs.readdirSync(dir).filter((file) => file.endsWith('.json'));
+  assert.equal(files.length, 1);
+  const entry = JSON.parse(fs.readFileSync(path.join(dir, files[0]), 'utf8'));
+  assert.match(entry._id, /^[A-Za-z0-9]{16}$/);
+  assert.equal(entry._key, `!journal!${entry._id}`);
+  const points = entry.pages.filter((page) => page.type === POINT_TYPE);
+  assert.ok(points.length >= 3);
+  const ids = new Set(entry.pages.map((page) => page._id));
+  assert.equal(ids.size, entry.pages.length);
+  const lineIds = new Set();
+  for (const page of entry.pages) {
+    assert.match(page._id, /^[A-Za-z0-9]{16}$/, page.name);
+    assert.equal(page._key, `!journal.pages!${entry._id}.${page._id}`, page.name);
+  }
+  for (const page of points) {
+    const { system } = page;
+    assert.deepEqual(normalizeBlocks(system.blocos), system.blocos, page.name);
+    assert.equal(page.name, pointPageName(page.name, system.numero, system.numero), page.name);
+    assert.equal(page.title.level, headingLevel(system.numero), page.name);
+    if (system.paiId) assert.ok(ids.has(system.paiId), page.name);
+    // Nada revelado no compêndio
+    for (const block of system.blocos) {
+      for (const line of block.linhas) {
+        assert.equal(line.revelada, false, page.name);
+        assert.deepEqual(line.reveladaPara, [], page.name);
+        assert.ok(!lineIds.has(line.id), line.id);
+        lineIds.add(line.id);
+      }
+    }
+  }
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'system.json'), 'utf8'));
+  const pack = manifest.packs.find((item) => item.name === 'investigacao');
+  assert.equal(pack.type, 'JournalEntry');
+  assert.equal(pack.path, 'packs/investigacao');
+  assert.equal(pack.ownership.PLAYER, 'NONE');
+});

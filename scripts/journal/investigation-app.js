@@ -338,10 +338,13 @@ export default class InvestigationApp extends HandlebarsApplicationMixin(Applica
 
 /**
  * Hook renderChatMessageHTML: no cartão de um teste, o mestre vê a barra «Usar no ponto de
- * interesse» (só se o mundo tiver alguma página de ponto). Os jogadores nunca veem.
+ * interesse» (só se ligou a configuração «barraPontoInteresse» e o mundo tem alguma página de
+ * ponto). Os jogadores nunca veem.
  */
 export function renderPointBar(message, html) {
   if (!game.user.isGM) return;
+  // Barra desligada por padrão: cada mestre liga nas configurações (v0.24.6)
+  if (!game.settings.get(SYSTEM_ID, 'barraPontoInteresse')) return;
   const test = message.flags?.[SYSTEM_ID]?.teste;
   const container = html.querySelector('.message-content');
   if (!test || !container || !pointPages().length) return;

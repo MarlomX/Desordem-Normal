@@ -8,13 +8,22 @@
  *
  * v0.24.3: aviso curto para o jogador que recebe uma linha nova, e a marca de «novo» zerada
  * quando o diário fecha.
+ *
+ * v0.24.6: quando o número de um ponto muda, os subpontos dele são renumerados (3.2 → 5.2); as
+ * páginas do diário se reorganizam sozinhas (páginas comuns primeiro, pontos pelo número); o menu
+ * «⋮» da janela do diário ganha «Ordenar pontos por número» e «Esconder todos os pontos»; e a
+ * configuração do usuário que liga a barra «Usar no ponto de interesse» nos cartões de teste.
  */
+import { SYSTEM_ID } from '../config.js';
 import {
   POINT_TYPE,
+  childNumberFor,
   headingLevel,
+  hideAll,
   newLineIds,
   normalizeBlocks,
   pointPageName,
+  sortUpdates,
   visibleLineIds,
 } from './point.js';
 import { readSeen } from './point-seen.js';
@@ -25,6 +34,101 @@ import PontoInteresseSheet from './point-sheet.js';
  * se a página mudar outra vez antes de o jogador abri-la (abrir grava a lista de vistas).
  */
 const notified = new Map();
+
+/** Nome da configuração (do usuário) que mostra a barra «Usar no ponto» nos cartões de teste. */
+export const POINT_BAR_SETTING = 'barraPontoInteresse';
+
+/** Traduz uma chave. */
+const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+
+/** A página é um ponto de interesse? */
+const isPoint = (page) => page?.type === POINT_TYPE;
+
+/**
+ * Reorganiza as páginas do diário: as comuns primeiro (na ordem que tinham), depois os pontos
+ * pelo número (1, 1.1, 1.2, 2, 3, 3.1, 3.1.1, 3.2). Só grava o que muda de lugar.
+ * @param {JournalEntry} entry
+ */
+export async function sortPointPages(entry) {
+  if (!entry?.isOwner) return;
+  const updates = sortUpdates(
+    entry.pages.contents.map((page) => ({
+      id: page.id,
+      isPoint: isPoint(page),
+      numero: isPoint(page) ? page.system.numero : '',
+      sort: page.sort,
+    })),
+  );
+  if (updates.length) await entry.updateEmbeddedDocuments('JournalEntryPage', updates);
+}
+
+/**
+ * Ordenação automática com espera: uma renumeração em cascata muda várias páginas seguidas, e o
+ * diário só precisa ser reorganizado uma vez no fim (um temporizador por diário).
+ */
+const sortTimers = new Map();
+function scheduleSort(entry) {
+  if (!entry) return;
+  globalThis.clearTimeout(sortTimers.get(entry.id));
+  sortTimers.set(
+    entry.id,
+    globalThis.setTimeout(() => {
+      sortTimers.delete(entry.id);
+      sortPointPages(entry).catch((error) =>
+        console.warn(`${SYSTEM_ID} | não foi possível ordenar os pontos`, error),
+      );
+    }, 300),
+  );
+}
+
+/**
+ * Renumera os filhos diretos de um ponto que mudou de número (3.2 com o pai indo para 5 → 5.2).
+ * A gravação dos filhos dispara este mesmo gancho para eles, e assim chega aos netos.
+ */
+async function renumberChildren(page) {
+  const entry = page.parent;
+  const updates = entry.pages.contents
+    .filter((child) => isPoint(child) && child.system.paiId === page.id)
+    .map((child) => ({
+      _id: child.id,
+      numero: childNumberFor(page.system.numero, child.system.numero),
+      atual: child.system.numero,
+    }))
+    .filter((entryUpdate) => entryUpdate.numero !== entryUpdate.atual)
+    .map(({ _id, numero }) => ({ _id, 'system.numero': numero }));
+  if (updates.length) await entry.updateEmbeddedDocuments('JournalEntryPage', updates);
+}
+
+/** Esconde todas as linhas de todos os pontos do diário (para reusar a aventura), com confirmação. */
+export async function hideAllPoints(entry) {
+  if (!entry?.isOwner) return;
+  const confirmed = await foundry.applications.api.DialogV2.confirm({
+    window: { title: t('DESORDEM.Ponto.Diario.EsconderTodos') },
+    content: `<p>${t('DESORDEM.Ponto.Diario.ConfirmarEsconderTodos')}</p>`,
+    rejectClose: false,
+  });
+  if (!confirmed) return;
+  const updates = entry.pages.contents.filter(isPoint).map((page) => ({
+    _id: page.id,
+    'system.blocos': hideAll(normalizeBlocks(page._source.system?.blocos)),
+  }));
+  if (updates.length) await entry.updateEmbeddedDocuments('JournalEntryPage', updates);
+  ui.notifications.info(t('DESORDEM.Ponto.Diario.Escondidos', { n: updates.length }));
+}
+
+/** Configuração do usuário: barra «Usar no ponto de interesse» nos cartões de teste (desligada). */
+export function registerPointSettings() {
+  game.settings.register(SYSTEM_ID, POINT_BAR_SETTING, {
+    name: 'DESORDEM.Ponto.Config.Barra',
+    hint: 'DESORDEM.Ponto.Config.BarraDica',
+    scope: 'client',
+    config: true,
+    type: Boolean,
+    default: false,
+    // Redesenha o chat para a barra aparecer ou sumir na hora
+    onChange: () => ui.chat?.render?.(),
+  });
+}
 
 export function registerPointHooks() {
   // Página nova (ou duplicada): nome com o número e nível do índice pelo número
@@ -71,5 +175,42 @@ export function registerPointHooks() {
   // Diário fechado: as páginas de ponto dele esquecem a marca de «novo» desta visita
   Hooks.on('closeJournalEntrySheet', (app) => {
     PontoInteresseSheet.clearFreshFor(app.document);
+  });
+
+  // Só no computador de quem mudou (userId): renumera os subpontos e reorganiza o diário. Assim
+  // a cascata roda uma vez só, e por quem tem permissão de gravar.
+  Hooks.on('updateJournalEntryPage', (page, changes, options, userId) => {
+    if (!isPoint(page) || userId !== game.user.id) return;
+    if (foundry.utils.getProperty(changes, 'system.numero') === undefined) return;
+    renumberChildren(page).catch((error) =>
+      console.warn(`${SYSTEM_ID} | não foi possível renumerar os subpontos`, error),
+    );
+    scheduleSort(page.parent);
+  });
+  Hooks.on('createJournalEntryPage', (page, options, userId) => {
+    if (isPoint(page) && userId === game.user.id) scheduleSort(page.parent);
+  });
+
+  // Menu «⋮» da janela do diário (só para quem pode editar o diário)
+  Hooks.on('getHeaderControlsJournalEntrySheet', (app, controls) => {
+    const entry = app.document;
+    if (!entry?.isOwner) return;
+    const add = (action, icon, label, handler) => {
+      // O Foundry chama `onClick` (ou, nas versões que não aceitam, a ação de mesmo nome)
+      app.options.actions[action] ??= () => handler(entry);
+      controls.push({ action, icon, label, onClick: () => handler(entry) });
+    };
+    add(
+      'desordemOrdenarPontos',
+      'fa-solid fa-arrow-down-1-9',
+      'DESORDEM.Ponto.Diario.Ordenar',
+      sortPointPages,
+    );
+    add(
+      'desordemEsconderPontos',
+      'fa-solid fa-eye-slash',
+      'DESORDEM.Ponto.Diario.EsconderTodos',
+      hideAllPoints,
+    );
   });
 }
