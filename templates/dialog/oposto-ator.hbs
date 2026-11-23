@@ -1,0 +1,25 @@
+<div class="desordem-oposto-ator">
+  {{#if opponentName}}<p class="desordem-ficha__dica">{{localize "DESORDEM.Oposto.Contra" nome=opponentName}}</p>{{/if}}
+  {{#if showTabs}}
+  <nav class="desordem-oposto-ator__abas" role="tablist">
+    {{#each tabs}}<button type="button" class="desordem-oposto-ator__aba{{#if active}} is-ativa{{/if}}" data-aba="{{type}}" role="tab" aria-selected="{{#if active}}true{{else}}false{{/if}}">{{label}}</button>{{/each}}
+  </nav>
+  {{/if}}
+  {{#if showSearch}}
+  <input type="search" class="desordem-oposto-ator__busca" placeholder="{{localize "DESORDEM.Oposto.Buscar"}}" aria-label="{{localize "DESORDEM.Oposto.Buscar"}}" autocomplete="off">
+  {{/if}}
+  {{#each tabs}}
+  <ul class="desordem-oposto-ator__lista" data-lista="{{type}}" role="radiogroup"{{#unless active}} hidden{{/unless}}>
+    {{#each actors}}
+    <li class="desordem-oposto-ator__linha" data-busca="{{search}}">
+      <label>
+        <input type="radio" name="actor" value="{{uuid}}"{{#if checked}} checked{{/if}}>
+        {{#if img}}<img src="{{img}}" alt="" width="32" height="32">{{/if}}
+        <span>{{name}}</span>
+      </label>
+    </li>
+    {{/each}}
+  </ul>
+  {{/each}}
+  <p class="desordem-ficha__dica desordem-oposto-ator__vazio" hidden>{{localize "DESORDEM.Oposto.SemResultado"}}</p>
+</div>

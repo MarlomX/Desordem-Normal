@@ -19,6 +19,7 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import { OPPOSED_ACTOR_TYPES, acceptCandidates } from './candidates.js';
+import { matchesName, pickerModel } from './actor-picker.js';
 import { postMessage, render, skillName, skillTestOptions, rollTest } from '../rolls/chat.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { resolveWithValues } from '../rolls/abilities.js';
@@ -65,6 +66,7 @@ import {
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/oposto-cartao.hbs`;
 const TEMPLATE_DIALOG = `systems/${SYSTEM_ID}/templates/dialog/oposto.hbs`;
+const TEMPLATE_PICKER = `systems/${SYSTEM_ID}/templates/dialog/oposto-ator.hbs`;
 const SOCKET = `system.${SYSTEM_ID}`;
 const ACTOR_TYPES = OPPOSED_ACTOR_TYPES;
 
@@ -167,7 +169,6 @@ async function askChoices(title, context) {
             confirmed: true,
             skill: fields.skill?.value ?? '',
             weapon: fields.weapon?.value ?? '',
-            actor: fields.actor?.value ?? '',
             descricao: fields.descricao?.value ?? '',
           };
         },
@@ -289,13 +290,101 @@ async function pickActor(state, side, filter = null) {
     return null;
   }
   if (candidates.length === 1) return candidates[0];
-  const answer = await askChoices(t('DESORDEM.Oposto.AceitarTitulo'), {
-    actors: candidates.map((actor) => ({ uuid: actor.uuid, name: actor.name })),
-    showActor: true,
-    opponentName: state[otherSide(side)].nome,
-    confirmar: t('DESORDEM.Oposto.Continuar'),
+  const opponent = state[otherSide(side)];
+  const proposer = opponent.actorUuid ? foundry.utils.fromUuidSync(opponent.actorUuid) : null;
+  const uuid = await askActor(candidates, {
+    proposerType: proposer?.type ?? null,
+    opponentName: opponent.nome,
   });
-  return candidates.find((actor) => actor.uuid === answer?.actor) ?? null;
+  return candidates.find((actor) => actor.uuid === uuid) ?? null;
+}
+
+/**
+ * Liga a janela de escolha do ator (v0.25.4): troca de aba, busca por nome e a marcação, que fica
+ * sempre num ator visível da aba aberta (o «Continuar» envia o marcado).
+ * @param {HTMLElement} root Elemento da janela.
+ */
+function wireActorPicker(root) {
+  const box = root.querySelector('.desordem-oposto-ator');
+  if (!box) return;
+  const search = box.querySelector('.desordem-oposto-ator__busca');
+  const empty = box.querySelector('.desordem-oposto-ator__vazio');
+  const activeList = () => box.querySelector('.desordem-oposto-ator__lista:not([hidden])');
+  // Se o marcado sumiu (outra aba ou fora da busca), marca o primeiro visível da aba aberta
+  const keepSelection = () => {
+    const list = activeList();
+    const visible = list
+      ? [...list.querySelectorAll('.desordem-oposto-ator__linha:not([hidden])')]
+      : [];
+    const checked = box.querySelector('input[name="actor"]:checked');
+    const checkedVisible = checked && visible.some((row) => row.contains(checked));
+    if (!checkedVisible) {
+      if (checked) checked.checked = false;
+      const first = visible[0]?.querySelector('input[name="actor"]');
+      if (first) first.checked = true;
+    }
+    if (empty) empty.hidden = visible.length > 0;
+  };
+  const applySearch = () => {
+    const query = search?.value ?? '';
+    for (const row of box.querySelectorAll('.desordem-oposto-ator__linha')) {
+      row.hidden = !matchesName(row.dataset.busca ?? '', query);
+    }
+    keepSelection();
+  };
+  for (const tab of box.querySelectorAll('.desordem-oposto-ator__aba')) {
+    tab.addEventListener('click', () => {
+      for (const other of box.querySelectorAll('.desordem-oposto-ator__aba')) {
+        const active = other === tab;
+        other.classList.toggle('is-ativa', active);
+        other.setAttribute('aria-selected', String(active));
+      }
+      for (const list of box.querySelectorAll('.desordem-oposto-ator__lista')) {
+        list.hidden = list.dataset.lista !== tab.dataset.aba;
+      }
+      keepSelection();
+    });
+  }
+  search?.addEventListener('input', applySearch);
+}
+
+/**
+ * Janela «Responder ao teste oposto» com abas Personagens/Criaturas, lista com retrato e busca
+ * (a partir de 10 atores). Marca-se um ator e clica em «Continuar».
+ * @param {Actor[]} candidates
+ * @param {{proposerType: string|null, opponentName: string}} info
+ * @returns {Promise<string|null>} Uuid do ator escolhido, ou null.
+ */
+async function askActor(candidates, { proposerType, opponentName }) {
+  const model = pickerModel(candidates, {
+    proposerType,
+    label: (type, n) =>
+      t(type === 'criatura' ? 'DESORDEM.Oposto.AbaCriaturas' : 'DESORDEM.Oposto.AbaPersonagens', {
+        n,
+      }),
+  });
+  return foundry.applications.api.DialogV2.wait({
+    window: { title: t('DESORDEM.Oposto.AceitarTitulo') },
+    classes: ['desordem-normal', 'desordem-oposto-janela'],
+    content: await render(TEMPLATE_PICKER, { ...model, opponentName }),
+    modal: true,
+    rejectClose: false,
+    render: (event, dialog) => wireActorPicker((dialog ?? event.target).element),
+    buttons: [
+      {
+        action: 'ok',
+        label: t('DESORDEM.Oposto.Continuar'),
+        icon: 'fa-solid fa-check',
+        default: true,
+        callback: (event, button) => {
+          const uuid = button.form.querySelector('input[name="actor"]:checked')?.value ?? '';
+          if (!uuid) ui.notifications.warn(t('DESORDEM.Oposto.EscolhaAlguem'));
+          return uuid || null;
+        },
+      },
+      { action: 'cancel', label: t('DESORDEM.Teste.Pre.Cancelar'), callback: () => null },
+    ],
+  });
 }
 
 /**

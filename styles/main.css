@@ -4488,3 +4488,75 @@ button.desordem-desafios-cartao__nome:hover {
   padding: 0;
   touch-action: pan-y;
 }
+
+/* ===== Teste oposto: janela de resposta com abas e lista (v0.25.4) ===== */
+
+/* Coluna: aviso, abas, busca, lista e o texto de «ninguém encontrado» */
+.desordem-oposto-ator {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Abas Personagens / Criaturas: dois botões lado a lado; a aberta fica destacada */
+.desordem-oposto-ator__abas {
+  display: flex;
+  gap: 4px;
+}
+
+.desordem-oposto-ator__aba {
+  flex: 1 1 0;
+  opacity: 0.7;
+}
+
+.desordem-oposto-ator__aba.is-ativa {
+  border-color: var(--dn-accent);
+  box-shadow: inset 0 -2px 0 var(--dn-accent);
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* Lista: rola sozinha quando é longa (também no celular, com o dedo) */
+.desordem-oposto-ator__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  max-height: 45vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  touch-action: pan-y;
+}
+
+/* `hidden` precisa vencer o `display` acima (aba fechada, linha fora da busca) */
+.desordem-oposto-ator__lista[hidden],
+.desordem-oposto-ator__linha[hidden] {
+  display: none;
+}
+
+/* Cada linha inteira é clicável: botão de marcar, retrato e nome */
+.desordem-oposto-ator__linha label {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  padding: 3px 6px;
+}
+
+.desordem-oposto-ator__linha label:has(input:checked) {
+  background: var(--dn-accent-soft);
+  border-color: var(--dn-accent);
+}
+
+.desordem-oposto-ator__linha img {
+  border: none;
+  border-radius: 4px;
+  flex: 0 0 32px;
+  height: 32px;
+  object-fit: cover;
+  width: 32px;
+}

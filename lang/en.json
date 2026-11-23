@@ -381,7 +381,12 @@
       "PorDefesa": "Complete tie: the defense wins.",
       "LutaContraDistancia": "The defense used Fighting against a ranged attack (the rule only allows Acrobatics): the GM decides.",
       "Esquiva": "Dodge",
-      "Esquivar": "Dodge"
+      "Esquivar": "Dodge",
+      "AbaPersonagens": "Characters ({n})",
+      "AbaCriaturas": "Creatures ({n})",
+      "Buscar": "Search by name…",
+      "SemResultado": "No one with that name.",
+      "EscolhaAlguem": "Choose who will answer the opposed test."
     },
     "Ajuda": {
       "Recebida": "Help from",

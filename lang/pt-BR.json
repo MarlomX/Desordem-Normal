@@ -381,7 +381,12 @@
       "PorDefesa": "Empate completo: a defesa vence.",
       "LutaContraDistancia": "A defesa usou Luta contra um ataque à distância (a regra só permite Acrobacia): o mestre decide.",
       "Esquiva": "Esquiva",
-      "Esquivar": "Esquivar"
+      "Esquivar": "Esquivar",
+      "AbaPersonagens": "Personagens ({n})",
+      "AbaCriaturas": "Criaturas ({n})",
+      "Buscar": "Buscar por nome…",
+      "SemResultado": "Ninguém com esse nome.",
+      "EscolhaAlguem": "Escolha quem vai responder ao teste oposto."
     },
     "Ajuda": {
       "Recebida": "Ajuda de",
