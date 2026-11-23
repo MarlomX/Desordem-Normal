@@ -10,6 +10,10 @@
  *
  * O quadro é gravado inteiro (`system.blocos`) a cada mudança: os botões montam a lista nova
  * com as funções puras de `point.js`, e o formulário é aplicado por id (`applyBlockForm`).
+ *
+ * v0.24.3: no modo de leitura, o dono revela e esconde linhas (para todos ou para jogadores
+ * escolhidos), revela ou esconde um bloco inteiro e esconde tudo. O jogador vê a marca de «novo»
+ * nas linhas que chegaram desde a última visita (lista de vistas em `point-seen.js`).
  */
 import { SYSTEM_ID, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import {
@@ -20,21 +24,30 @@ import {
   buildEditBlocks,
   buildGmBoard,
   buildPlayerBoard,
+  hasRevealed,
+  hideAll,
   moveBlock,
   moveLine,
   newBlock,
   newLine,
+  newLineIds,
   normalizeBlocks,
   removeBlock,
   removeLine,
   removeSkill,
+  setBlockRevealed,
+  setLineRevealed,
+  setLineUsers,
   skillOptionGroups,
   stripNumberPrefix,
+  visibleLineIds,
 } from './point.js';
+import { readSeen, saveSeen } from './point-seen.js';
 import { escapeHtml } from '../sheets/notes.js';
 
 const { JournalEntryPageHandlebarsSheet } = foundry.applications.sheets.journal;
 const { DialogV2 } = foundry.applications.api;
+const { renderTemplate } = foundry.applications.handlebars;
 
 /** Pasta dos templates das páginas do diário. */
 const TEMPLATES = `systems/${SYSTEM_ID}/templates/diario`;
@@ -61,6 +74,12 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       periciaRemover: PontoInteresseSheet.#onRemoveSkill,
     },
   };
+
+  /**
+   * Linhas marcadas como «novo» nesta visita do jogador (ids). Entram quando a página é desenhada
+   * com uma linha que ele ainda não tinha visto e saem quando a página ou o diário fecham.
+   */
+  #fresh = new Set();
 
   /** Modo de edição: cabeçalho e rodapé do Foundry, com o nosso formulário no meio. */
   static EDIT_PARTS = {
@@ -121,13 +140,75 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       imagemEscondida: gm && system.imagem && !system.imagemVisivel,
     };
     if (gm) {
-      context.board = await buildGmBoard(blocks, { t, enrich });
+      const userName = (userId) => game.users.get(userId)?.name ?? userId;
+      context.board = await buildGmBoard(blocks, { t, enrich, userName });
+      context.anyRevealed = hasRevealed(blocks);
       context.contexto = await this.#enrich(system.contexto);
       context.desafioAcesso = await this.#enrich(system.desafioAcesso);
     } else {
-      context.board = await buildPlayerBoard(blocks, { userId: game.user.id, t, enrich });
+      context.board = await buildPlayerBoard(blocks, {
+        userId: game.user.id,
+        t,
+        enrich,
+        fresh: this.#markSeen(blocks),
+      });
     }
     return context;
+  }
+
+  /**
+   * Marca de «novo» do jogador: junta às novidades desta visita as linhas que ele vê agora e não
+   * tinha visto, e grava a lista de vistas (sem esperar a gravação, que não muda a tela).
+   * @returns {string[]} Ids marcados como novos.
+   */
+  #markSeen(blocks) {
+    const page = this.document;
+    const visible = visibleLineIds(blocks, game.user.id);
+    for (const id of newLineIds(visible, readSeen(page))) this.#fresh.add(id);
+    // Linha escondida de novo deixa de ser novidade
+    for (const id of this.#fresh) if (!visible.includes(id)) this.#fresh.delete(id);
+    saveSeen(page, visible).catch((error) =>
+      console.warn(`${SYSTEM_ID} | não foi possível gravar as linhas vistas`, error),
+    );
+    return [...this.#fresh];
+  }
+
+  /** Esquece as novidades desta visita (a página fechou). */
+  clearFresh() {
+    this.#fresh.clear();
+  }
+
+  /**
+   * Esquece as novidades de todas as páginas de ponto abertas de um diário (o diário fechou).
+   * Procura nas janelas abertas, para não criar a folha de uma página que nunca foi aberta.
+   * @param {JournalEntry} entry
+   */
+  static clearFreshFor(entry) {
+    for (const app of foundry.applications.instances.values()) {
+      if (app instanceof PontoInteresseSheet && app.document.parent === entry) app.clearFresh();
+    }
+  }
+
+  async _onClose(options) {
+    this.clearFresh();
+    return super._onClose(options);
+  }
+
+  /**
+   * Botões de revelar (modo de leitura, só o dono). Ligados à mão a cada desenho, com um atributo
+   * próprio (`data-ponto-acao`), porque a página dentro do diário é desenhada pelo diário e os
+   * `data-action` da folha podem não chegar até ela.
+   */
+  async _onRender(context, options) {
+    await super._onRender(context, options);
+    if (!this.isView || !this.document.isOwner) return;
+    for (const button of this.element.querySelectorAll('[data-ponto-acao]')) {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.#onRevealControl(button);
+      });
+    }
   }
 
   /** Modo de edição: o formulário completo (só quem pode editar abre este modo). */
@@ -202,10 +283,11 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
    * @param {(blocks: object[]) => object[]} change Recebe os blocos e devolve a lista nova.
    */
   async #saveBlocks(change) {
-    const typed = this.form
-      ? foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(this.form).object)
-          .ponto
-      : null;
+    const typed =
+      !this.isView && this.form
+        ? foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(this.form).object)
+            .ponto
+        : null;
     const current = applyBlockForm(this.#blocks(), typed);
     const next = change(current);
     if (next === current) return;
@@ -228,6 +310,122 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       rejectClose: false,
     });
   }
+
+  /* ---------------------------------------------------------------------------------------- */
+  /* Revelar (modo de leitura)                                                                 */
+  /* ---------------------------------------------------------------------------------------- */
+
+  /** Encaminha o botão clicado para a ação dele. */
+  async #onRevealControl(button) {
+    const { blockId, lineId } = PontoInteresseSheet.#target(button);
+    const reveal = button.dataset.revelar === '1';
+    switch (button.dataset.pontoAcao) {
+      case 'linhaRevelar':
+        if (reveal) this.#warnIfNobodySees();
+        return this.#saveBlocks((blocks) => setLineRevealed(blocks, blockId, lineId, reveal));
+      case 'blocoRevelar':
+        if (reveal) this.#warnIfNobodySees();
+        return this.#saveBlocks((blocks) => setBlockRevealed(blocks, blockId, reveal));
+      case 'linhaJogadores':
+        return this.#chooseUsers(blockId, lineId);
+      case 'esconderTudo':
+        return this.#hideEverything();
+    }
+  }
+
+  /** Jogadores do mundo (todos os usuários que não são mestre). */
+  static #players() {
+    return game.users.filter((user) => !user.isGM);
+  }
+
+  /** O jogador pode ver esta página (Observador ou mais, contando a permissão do diário)? */
+  #canSee(user) {
+    return this.document.testUserPermission(user, 'OBSERVER');
+  }
+
+  /** Revelar para todos não adianta se nenhum jogador pode ver a página: avisa o mestre. */
+  #warnIfNobodySees() {
+    const players = PontoInteresseSheet.#players();
+    if (players.length && !players.some((user) => this.#canSee(user))) {
+      ui.notifications.warn(t('DESORDEM.Ponto.AvisoNinguem'));
+    }
+  }
+
+  /** Janela para escolher quem vê a linha (a revelação para todos não muda). */
+  async #chooseUsers(blockId, lineId) {
+    const line = this.#blocks()
+      .find((block) => block.id === blockId)
+      ?.linhas.find((entry) => entry.id === lineId);
+    if (!line) return;
+    const players = PontoInteresseSheet.#players();
+    if (!players.length) {
+      ui.notifications.info(t('DESORDEM.Ponto.Jogadores.Nenhum'));
+      return;
+    }
+    const content = await renderTemplate(`${TEMPLATES}/ponto-jogadores.hbs`, {
+      jogadores: players.map((user) => ({
+        id: user.id,
+        nome: user.name,
+        personagem: user.character?.name ?? '',
+        marcado: line.reveladaPara.includes(user.id),
+        semAcesso: !this.#canSee(user),
+      })),
+    });
+    const answer = await DialogV2.wait({
+      window: { title: t('DESORDEM.Ponto.Jogadores.Titulo') },
+      classes: ['desordem-normal', 'desordem-ponto-dialogo'],
+      content,
+      modal: true,
+      rejectClose: false,
+      buttons: [
+        {
+          action: 'salvar',
+          label: t('DESORDEM.Ponto.Jogadores.Salvar'),
+          icon: 'fa-solid fa-user-check',
+          default: true,
+          callback: (event, button, dialog) => ({
+            confirmed: true,
+            ids: [...dialog.element.querySelectorAll('[name="jogador"]:checked')].map(
+              (input) => input.value,
+            ),
+          }),
+        },
+        { action: 'cancelar', label: t('DESORDEM.Ponto.Jogadores.Cancelar') },
+      ],
+    });
+    // Só {confirmed: true} confirma: fechar no X ou cancelar devolve outra coisa
+    if (answer?.confirmed !== true) return;
+    // Nunca confia no que veio da janela: só vale quem estava na lista oferecida
+    const chosen = players.filter((user) => answer.ids.includes(user.id));
+    const blind = chosen.filter((user) => !this.#canSee(user));
+    if (blind.length) {
+      ui.notifications.warn(
+        t('DESORDEM.Ponto.AvisoSemAcesso', { nomes: blind.map((user) => user.name).join(', ') }),
+      );
+    }
+    await this.#saveBlocks((blocks) =>
+      setLineUsers(
+        blocks,
+        blockId,
+        lineId,
+        chosen.map((user) => user.id),
+      ),
+    );
+  }
+
+  /** Esconde todas as linhas da página, depois de confirmar. */
+  async #hideEverything() {
+    const confirmed = await DialogV2.confirm({
+      window: { title: t('DESORDEM.Ponto.EsconderTudo') },
+      content: `<p>${escapeHtml(t('DESORDEM.Ponto.ConfirmarEsconderTudo'))}</p>`,
+      rejectClose: false,
+    });
+    if (confirmed) await this.#saveBlocks((blocks) => hideAll(blocks));
+  }
+
+  /* ---------------------------------------------------------------------------------------- */
+  /* Botões do modo de edição                                                                  */
+  /* ---------------------------------------------------------------------------------------- */
 
   static async #onAddBlock() {
     const { randomID } = foundry.utils;

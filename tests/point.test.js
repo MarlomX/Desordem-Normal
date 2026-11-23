@@ -26,6 +26,14 @@ import {
   buildEditBlocks,
   buildGmBoard,
   buildPlayerBoard,
+  setLineRevealed,
+  setLineUsers,
+  setBlockRevealed,
+  hideAll,
+  hasRevealed,
+  visibleLineIds,
+  newLineIds,
+  sameIds,
 } from '../scripts/journal/point.js';
 
 // Tradução com o arquivo de idioma de verdade (como o game.i18n: chave sem texto volta a chave)
@@ -247,7 +255,7 @@ test('buildPlayerBoard: linha revelada mostra só o texto (sem DT nem nota)', as
   const blocks = sampleBlocks();
   blocks[0].linhas[0].revelada = true;
   const board = await buildPlayerBoard(blocks, { userId: 'u1', t, enrich });
-  assert.deepEqual(board[0].linhas, [{ id: 'a1', texto: '<E>texto A</E>' }]);
+  assert.deepEqual(board[0].linhas, [{ id: 'a1', texto: '<E>texto A</E>', novo: false }]);
   const json = JSON.stringify(board);
   for (const secret of ['só mestre', 'depois de A', 'texto B', '"dt"', 'D</E>']) {
     assert.ok(!json.includes(secret), secret);
@@ -263,7 +271,7 @@ test('buildPlayerBoard: bloco oculto aparece só para quem tem linha revelada', 
   assert.deepEqual(forU2[2], {
     label: 'Ocultismo',
     cor: 2,
-    linhas: [{ id: 'c1', texto: '<E>D</E>' }],
+    linhas: [{ id: 'c1', texto: '<E>D</E>', novo: false }],
   });
 });
 
@@ -281,4 +289,64 @@ test('buildPlayerBoard: a mesma perícia em dois blocos vira um grupo só', asyn
       ['Intuição', []],
     ],
   );
+});
+
+test('setLineRevealed: revela para todos; esconder limpa também os jogadores', () => {
+  let blocks = setLineUsers(sampleBlocks(), 'a', 'a1', ['u1', 'u1', 'u2']);
+  assert.deepEqual(blocks[0].linhas[0].reveladaPara, ['u1', 'u2']);
+  blocks = setLineRevealed(blocks, 'a', 'a1', true);
+  assert.equal(blocks[0].linhas[0].revelada, true);
+  assert.deepEqual(blocks[0].linhas[0].reveladaPara, ['u1', 'u2'], 'revelar não apaga a lista');
+  blocks = setLineRevealed(blocks, 'a', 'a1', false);
+  assert.equal(blocks[0].linhas[0].revelada, false);
+  assert.deepEqual(blocks[0].linhas[0].reveladaPara, []);
+  assert.equal(blocks[0].linhas[1].revelada, false, 'as outras linhas não mudam');
+});
+
+test('setBlockRevealed e hideAll', () => {
+  let blocks = setBlockRevealed(sampleBlocks(), 'a', true);
+  assert.deepEqual(
+    blocks[0].linhas.map((line) => line.revelada),
+    [true, true],
+  );
+  assert.equal(blocks[1].linhas[0].revelada, false);
+  assert.equal(hasRevealed(blocks), true);
+  blocks = setLineUsers(blocks, 'c', 'c1', ['u1']);
+  blocks = hideAll(blocks);
+  assert.equal(hasRevealed(blocks), false);
+});
+
+test('buildGmBoard: bloco todo revelado e nomes de quem vê a linha', async () => {
+  let blocks = setBlockRevealed(sampleBlocks(), 'a', true);
+  blocks = setLineUsers(blocks, 'b', 'b1', ['u1', 'u2']);
+  const names = { u1: 'Ana', u2: 'Beto' };
+  const board = await buildGmBoard(blocks, { t, enrich, userName: (id) => names[id] });
+  assert.equal(board[0].todasReveladas, true);
+  assert.equal(board[1].todasReveladas, false);
+  assert.equal(board[1].linhas[0].reveladaPara, 2);
+  assert.equal(board[1].linhas[0].reveladaParaNomes, 'Ana, Beto');
+});
+
+test('linhas novas: vê agora e ainda não tinha visto', async () => {
+  let blocks = setLineRevealed(sampleBlocks(), 'a', 'a1', true);
+  blocks = setLineUsers(blocks, 'b', 'b1', ['u1']);
+  const visible = visibleLineIds(blocks, 'u1');
+  assert.deepEqual(visible, ['a1', 'b1']);
+  assert.deepEqual(visibleLineIds(blocks, 'u2'), ['a1']);
+  assert.deepEqual(newLineIds(visible, ['a1', 'zz']), ['b1']);
+  assert.deepEqual(newLineIds(visible, undefined), ['a1', 'b1']);
+  const board = await buildPlayerBoard(blocks, { userId: 'u1', t, enrich, fresh: ['b1'] });
+  assert.deepEqual(
+    board.flatMap((group) => group.linhas.map((line) => [line.id, line.novo])),
+    [
+      ['a1', false],
+      ['b1', true],
+    ],
+  );
+});
+
+test('sameIds: compara sem contar a ordem', () => {
+  assert.equal(sameIds(['a', 'b'], ['b', 'a']), true);
+  assert.equal(sameIds(['a'], ['a', 'b']), false);
+  assert.equal(sameIds(undefined, []), true);
 });

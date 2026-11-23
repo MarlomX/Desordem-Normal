@@ -359,14 +359,18 @@ export function buildEditBlocks(blocks, { t, groups }) {
  * @param {object} opts
  * @param {(key: string, data?: object) => string} opts.t
  * @param {(html: string) => Promise<string>|string} opts.enrich HTML pronto para leitura.
+ * @param {(userId: string) => string} [opts.userName] Nome do usuário (para a dica de «revelada
+ *   para»); sem ela, aparece o id.
  */
-export async function buildGmBoard(blocks, { t, enrich }) {
+export async function buildGmBoard(blocks, { t, enrich, userName = (id) => id }) {
   return Promise.all(
     blocks.map(async (block, index) => ({
       id: block.id,
       label: blockLabel(block, t),
       oculta: block.oculta,
       cor: index % BLOCK_COLORS,
+      // Bloco com todas as linhas reveladas para todos: o olho do bloco passa a esconder
+      todasReveladas: block.linhas.length > 0 && block.linhas.every((line) => line.revelada),
       linhas: await Promise.all(
         block.linhas.map(async (line) => ({
           id: line.id,
@@ -376,6 +380,7 @@ export async function buildGmBoard(blocks, { t, enrich }) {
           condicao: line.condicao,
           revelada: line.revelada,
           reveladaPara: line.reveladaPara.length,
+          reveladaParaNomes: line.reveladaPara.map(userName).join(', '),
         })),
       ),
     })),
@@ -393,9 +398,12 @@ export async function buildGmBoard(blocks, { t, enrich }) {
  * @param {string} opts.userId Usuário que vai ver (`game.user.id`).
  * @param {(key: string, data?: object) => string} opts.t
  * @param {(html: string) => Promise<string>|string} opts.enrich
- * @returns {Promise<{label: string, cor: number, linhas: {id: string, texto: string}[]}[]>}
+ * @param {string[]} [opts.fresh] Ids das linhas que chegaram nesta visita (marca de «novo»).
+ * @returns {Promise<{label: string, cor: number,
+ *   linhas: {id: string, texto: string, novo: boolean}[]}[]>}
  */
-export async function buildPlayerBoard(blocks, { userId, t, enrich }) {
+export async function buildPlayerBoard(blocks, { userId, t, enrich, fresh = [] }) {
+  const isNew = new Set(fresh);
   const groups = new Map();
   for (const block of blocks) {
     const visible = block.linhas.filter((line) => isLineVisibleTo(line, userId));
@@ -413,8 +421,88 @@ export async function buildPlayerBoard(blocks, { userId, t, enrich }) {
         group.linhas.map(async (line) => ({
           id: line.id,
           texto: line.texto ? await enrich(line.texto) : '',
+          novo: isNew.has(line.id),
         })),
       ),
     })),
   );
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Revelar (v0.24.3)                                                                           */
+/* ------------------------------------------------------------------------------------------ */
+
+/** Troca uma linha (pelo id) pelo resultado de `change(linha)`. */
+function mapLine(blocks, blockId, lineId, change) {
+  return mapBlock(blocks, blockId, (block) => ({
+    ...block,
+    linhas: block.linhas.map((line) => (line.id === lineId ? change(line) : line)),
+  }));
+}
+
+/** Linha escondida de todos: tira a revelação geral e a lista de jogadores. */
+const hidden = (line) => ({ ...line, revelada: false, reveladaPara: [] });
+
+/**
+ * Revela a linha para todos (`revealed = true`) ou esconde de novo. Esconder limpa também a
+ * lista de jogadores específicos (o olho vale como «ninguém vê»).
+ */
+export function setLineRevealed(blocks, blockId, lineId, revealed) {
+  return mapLine(blocks, blockId, lineId, (line) =>
+    revealed ? { ...line, revelada: true } : hidden(line),
+  );
+}
+
+/** Revela a linha só para estes usuários (a lista substitui a anterior; ids repetidos saem). */
+export function setLineUsers(blocks, blockId, lineId, userIds) {
+  const ids = [...new Set((userIds ?? []).map(clean).filter(Boolean))];
+  return mapLine(blocks, blockId, lineId, (line) => ({ ...line, reveladaPara: ids }));
+}
+
+/** Revela (para todos) ou esconde todas as linhas de um bloco. */
+export function setBlockRevealed(blocks, blockId, revealed) {
+  return mapBlock(blocks, blockId, (block) => ({
+    ...block,
+    linhas: block.linhas.map((line) => (revealed ? { ...line, revelada: true } : hidden(line))),
+  }));
+}
+
+/** Esconde todas as linhas da página (para reusar a aventura). */
+export function hideAll(blocks) {
+  return blocks.map((block) => ({ ...block, linhas: block.linhas.map(hidden) }));
+}
+
+/** Alguma linha da página está revelada (para todos ou para alguém)? */
+export function hasRevealed(blocks) {
+  return blocks.some((block) =>
+    block.linhas.some((line) => line.revelada || line.reveladaPara.length > 0),
+  );
+}
+
+/** Ids das linhas que este usuário vê agora, na ordem do quadro. */
+export function visibleLineIds(blocks, userId) {
+  return blocks.flatMap((block) =>
+    block.linhas.filter((line) => isLineVisibleTo(line, userId)).map((line) => line.id),
+  );
+}
+
+/**
+ * Linhas novas para o jogador: as que ele vê agora e que não estavam na lista de vistas.
+ * @param {string[]} visible Saída de `visibleLineIds`.
+ * @param {string[]} seen Ids que ele já viu nesta página (guardados no usuário dele).
+ * @returns {string[]}
+ */
+export function newLineIds(visible, seen) {
+  const known = new Set(seen ?? []);
+  return visible.filter((id) => !known.has(id));
+}
+
+/**
+ * Dois conjuntos de ids iguais, sem contar a ordem? Serve para não gravar a lista de vistas
+ * quando nada mudou.
+ */
+export function sameIds(a, b) {
+  const left = new Set(a ?? []);
+  const right = new Set(b ?? []);
+  return left.size === right.size && [...left].every((id) => right.has(id));
 }

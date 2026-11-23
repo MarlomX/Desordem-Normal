@@ -4021,7 +4021,7 @@ button.desordem-desafios-cartao__nome:hover {
 }
 .desordem-ponto__linha {
   display: grid;
-  grid-template-columns: 2.6em 1fr 1.4em;
+  grid-template-columns: 2.6em 1fr auto;
   gap: 0 8px;
   align-items: start;
   padding: 6px 0;
@@ -4049,8 +4049,79 @@ button.desordem-desafios-cartao__nome:hover {
   opacity: 0.8;
 }
 .desordem-ponto__linha-estado {
-  text-align: center;
+  display: flex;
+  gap: 2px;
+}
+
+/* Revelar (v0.24.3): olho (todos) e jogadores específicos; aceso = revelado */
+.desordem-ponto__olho,
+.desordem-ponto__jogadores {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 26px;
+  height: 26px;
+  min-height: 0;
+  padding: 0 4px;
+  opacity: 0.55;
+}
+.desordem-ponto__olho.is-ativo,
+.desordem-ponto__jogadores.is-ativo {
+  opacity: 1;
+  color: var(--dn-accent);
+  border-color: var(--dn-accent-line);
+}
+.desordem-ponto__grupo-nome .desordem-ponto__olho {
+  margin-left: 4px;
+}
+.desordem-ponto__ferramentas {
+  display: flex;
+  justify-content: flex-end;
+}
+.desordem-ponto__ferramentas button {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+/* Jogador: linha recém-chegada, destacada até ele fechar a página */
+.desordem-ponto__linha.is-novo {
+  background: var(--dn-accent-soft);
+  box-shadow: inset 3px 0 0 var(--dn-accent);
+}
+.desordem-ponto__novo {
+  float: right;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--dn-accent);
+}
+
+/* Janela «Revelar para quem?» */
+.desordem-ponto-jogadores {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 280px;
+}
+.desordem-ponto-jogadores__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.desordem-ponto-jogadores__personagem {
   opacity: 0.75;
+  font-style: italic;
+}
+.desordem-ponto-jogadores__aviso {
+  margin-left: auto;
+  font-size: 0.85em;
+  color: var(--dn-gold);
+}
+.desordem-ponto-jogadores__item.is-sem-acesso .desordem-ponto-jogadores__nome {
+  opacity: 0.7;
 }
 
 /* Jogador: sem a coluna da DT nem a do estado; perícia sem linha fica só com o nome */

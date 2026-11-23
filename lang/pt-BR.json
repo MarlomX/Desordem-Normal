@@ -1846,7 +1846,27 @@
       "ReveladaPara": "Revelada para {n} jogador(es)",
       "NaoRevelada": "Ainda não revelada",
       "Vazio": "Nenhuma perícia no quadro.",
-      "SemTexto": "(sem texto)"
+      "SemTexto": "(sem texto)",
+      "Revelar": "Revelar para todos",
+      "Esconder": "Esconder de todos",
+      "RevelarJogadores": "Revelar para jogadores específicos…",
+      "ReveladaParaNomes": "Revelada para: {nomes}",
+      "RevelarBloco": "Revelar o bloco inteiro para todos",
+      "EsconderBloco": "Esconder o bloco inteiro",
+      "EsconderTudo": "Esconder tudo",
+      "ConfirmarEsconderTudo": "Esconder todas as linhas desta página de todos os jogadores?",
+      "AvisoSemAcesso": "{nomes}: sem permissão para ver esta página. Dê pelo menos «Observador» para a revelação valer.",
+      "AvisoNinguem": "Nenhum jogador tem permissão para ver esta página. Dê pelo menos «Observador» para a revelação valer.",
+      "Aviso": "Nova informação em «{pagina}».",
+      "Novo": "novo",
+      "Jogadores": {
+        "Titulo": "Revelar para quem?",
+        "Dica": "Marque quem vê esta linha. «Revelar para todos» é o olho, à parte.",
+        "Salvar": "Salvar",
+        "Cancelar": "Cancelar",
+        "SemAcesso": "não vê esta página",
+        "Nenhum": "Não há jogadores no mundo."
+      }
     }
   },
   "TYPES.Item.arma": "Arma",

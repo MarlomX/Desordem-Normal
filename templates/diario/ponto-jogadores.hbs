@@ -1,0 +1,13 @@
+{{! Janela «Revelar para quem?» (v0.24.3): uma caixa por jogador (usuário que não é mestre).
+  semAcesso = o jogador não tem Observador na página, então a revelação não chega a ele. }}
+<div class="desordem-ponto-jogadores">
+  <p class="hint">{{localize "DESORDEM.Ponto.Jogadores.Dica"}}</p>
+  {{#each jogadores}}
+  <label class="desordem-ponto-jogadores__item{{#if semAcesso}} is-sem-acesso{{/if}}">
+    <input type="checkbox" name="jogador" value="{{id}}" {{checked marcado}}>
+    <span class="desordem-ponto-jogadores__nome">{{nome}}</span>
+    {{#if personagem}}<span class="desordem-ponto-jogadores__personagem">{{personagem}}</span>{{/if}}
+    {{#if semAcesso}}<span class="desordem-ponto-jogadores__aviso"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Jogadores.SemAcesso"}}</span>{{/if}}
+  </label>
+  {{/each}}
+</div>

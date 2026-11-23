@@ -1846,7 +1846,27 @@
       "ReveladaPara": "Revealed to {n} player(s)",
       "NaoRevelada": "Not revealed yet",
       "Vazio": "No skills on the board.",
-      "SemTexto": "(no text)"
+      "SemTexto": "(no text)",
+      "Revelar": "Reveal to everyone",
+      "Esconder": "Hide from everyone",
+      "RevelarJogadores": "Reveal to specific players…",
+      "ReveladaParaNomes": "Revealed to: {nomes}",
+      "RevelarBloco": "Reveal the whole block to everyone",
+      "EsconderBloco": "Hide the whole block",
+      "EsconderTudo": "Hide everything",
+      "ConfirmarEsconderTudo": "Hide every row of this page from all players?",
+      "AvisoSemAcesso": "{nomes}: no permission to see this page. Grant at least «Observer» for the reveal to work.",
+      "AvisoNinguem": "No player has permission to see this page. Grant at least «Observer» for the reveal to work.",
+      "Aviso": "New information in «{pagina}».",
+      "Novo": "new",
+      "Jogadores": {
+        "Titulo": "Reveal to whom?",
+        "Dica": "Check who sees this row. «Reveal to everyone» is the eye, separately.",
+        "Salvar": "Save",
+        "Cancelar": "Cancel",
+        "SemAcesso": "can't see this page",
+        "Nenhum": "There are no players in the world."
+      }
     }
   },
   "TYPES.Item.arma": "Weapon",
