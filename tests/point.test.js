@@ -46,6 +46,8 @@ import {
   childNumberFor,
   descendantIds,
   parentChoices,
+  noteIconFor,
+  noteUpdates,
 } from '../scripts/journal/point.js';
 
 // Tradução com o arquivo de idioma de verdade (como o game.i18n: chave sem texto volta a chave)
@@ -525,4 +527,32 @@ test('descendantIds e parentChoices: sem ciclos', () => {
     { id: 'y', paiId: 'x' },
   ];
   assert.deepEqual(descendantIds(loop, 'x'), ['y']);
+});
+
+test('noteIconFor: imagem visível vira ícone; escondida ou ausente, a lupa', () => {
+  const lupa = 'lupa.svg';
+  assert.equal(noteIconFor({ imagem: 'cofre.webp', imagemVisivel: true }, lupa), 'cofre.webp');
+  assert.equal(noteIconFor({ imagem: 'cofre.webp', imagemVisivel: false }, lupa), lupa);
+  assert.equal(noteIconFor({ imagem: '', imagemVisivel: true }, lupa), lupa);
+  assert.equal(noteIconFor(undefined, lupa), lupa);
+});
+
+test('noteUpdates: troca só o ícone e o texto que o sistema controla', () => {
+  const notes = [
+    { id: 'n1', src: 'velha.webp', text: '2 · Cofre' },
+    { id: 'n2', src: 'icons/svg/book.svg', text: '' },
+    { id: 'n3', src: 'escolhida-a-mao.webp', text: 'Meu texto' },
+    { id: 'n4', src: 'nova.webp', text: '5 · Cofre' },
+  ];
+  const updates = noteUpdates(notes, {
+    oldIcon: 'velha.webp',
+    newIcon: 'nova.webp',
+    oldName: '2 · Cofre',
+    newName: '5 · Cofre',
+    managed: ['lupa.svg', 'icons/svg/book.svg'],
+  });
+  assert.deepEqual(updates, [
+    { _id: 'n1', 'texture.src': 'nova.webp', text: '5 · Cofre' },
+    { _id: 'n2', 'texture.src': 'nova.webp', text: '5 · Cofre' },
+  ]);
 });

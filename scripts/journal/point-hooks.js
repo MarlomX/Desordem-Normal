@@ -13,6 +13,10 @@
  * páginas do diário se reorganizam sozinhas (páginas comuns primeiro, pontos pelo número); o menu
  * «⋮» da janela do diário ganha «Ordenar pontos por número» e «Esconder todos os pontos»; e a
  * configuração do usuário que liga a barra «Usar no ponto de interesse» nos cartões de teste.
+ *
+ * v0.24.7: marcador no mapa. Uma Nota (o alfinete de diário) ligada a uma página de ponto usa a
+ * imagem de referência do ponto como ícone (ou a lupa, se a imagem está escondida ou não existe)
+ * e o nome da página como texto; quando a imagem ou o nome mudam, os marcadores acompanham.
  */
 import { SYSTEM_ID } from '../config.js';
 import {
@@ -21,6 +25,8 @@ import {
   headingLevel,
   hideAll,
   newLineIds,
+  noteIconFor,
+  noteUpdates,
   normalizeBlocks,
   pointPageName,
   sortUpdates,
@@ -43,6 +49,57 @@ const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localiz
 
 /** A página é um ponto de interesse? */
 const isPoint = (page) => page?.type === POINT_TYPE;
+
+/** Ícone neutro do marcador (lupa), para ponto sem imagem ou com a imagem escondida. */
+export const NEUTRAL_NOTE_ICON = `systems/${SYSTEM_ID}/styles/icones/lupa.svg`;
+
+/** Ícone padrão do Foundry para marcadores de diário (o livro). */
+const defaultNoteIcon = () => foundry.documents.BaseNote?.DEFAULT_ICON ?? 'icons/svg/book.svg';
+
+/** Página de ponto à qual um marcador aponta (ou `null`). */
+function pointOfNote(note) {
+  const page = game.journal.get(note.entryId)?.pages.get(note.pageId);
+  return isPoint(page) ? page : null;
+}
+
+/**
+ * Marcadores da página em todas as cenas, já agrupados por cena.
+ * @returns {{scene: Scene, notes: NoteDocument[]}[]}
+ */
+function notesOfPage(page) {
+  return game.scenes.contents
+    .map((scene) => ({
+      scene,
+      notes: scene.notes.filter(
+        (note) => note.entryId === page.parent?.id && note.pageId === page.id,
+      ),
+    }))
+    .filter((group) => group.notes.length);
+}
+
+/**
+ * Depois que a imagem ou o nome de um ponto mudaram: troca o ícone e o texto dos marcadores dele
+ * (só o que o sistema controla; veja `noteUpdates`). Só o mestre grava marcadores.
+ * @param {JournalEntryPage} page Página já atualizada.
+ * @param {{oldIcon: string, oldName: string}} before O que valia antes (guardado no preUpdate).
+ */
+async function syncNotes(page, before) {
+  const change = {
+    oldIcon: before.oldIcon,
+    newIcon: noteIconFor(page.system, NEUTRAL_NOTE_ICON),
+    oldName: before.oldName,
+    newName: page.name,
+    managed: [NEUTRAL_NOTE_ICON, defaultNoteIcon()],
+  };
+  if (change.oldIcon === change.newIcon && change.oldName === change.newName) return;
+  for (const { scene, notes } of notesOfPage(page)) {
+    const updates = noteUpdates(
+      notes.map((note) => ({ id: note.id, src: note.texture?.src ?? '', text: note.text ?? '' })),
+      change,
+    );
+    if (updates.length) await scene.updateEmbeddedDocuments('Note', updates);
+  }
+}
 
 /**
  * Reorganiza as páginas do diário: as comuns primeiro (na ordem que tinham), depois os pontos
@@ -145,8 +202,14 @@ export function registerPointHooks() {
 
   // Edição: se o nome ou o número mudou, refaz o prefixo; se o número mudou, refaz o nível.
   // O nível escolhido à mão no cabeçalho da página continua valendo até o número mudar.
-  Hooks.on('preUpdateJournalEntryPage', (page, changes) => {
+  Hooks.on('preUpdateJournalEntryPage', (page, changes, options) => {
     if (page.type !== POINT_TYPE) return;
+    // Para os marcadores do mapa (v0.24.7): o ícone e o nome de antes vão junto com a gravação
+    // (as `options` chegam ao gancho de depois, no computador de quem gravou)
+    options.desordemNota = {
+      oldIcon: noteIconFor(page.system, NEUTRAL_NOTE_ICON),
+      oldName: page.name,
+    };
     const oldNumero = page.system?.numero ?? '';
     const sent = foundry.utils.getProperty(changes, 'system.numero');
     const numeroChanged = typeof sent === 'string' && sent.trim() !== oldNumero.trim();
@@ -189,6 +252,30 @@ export function registerPointHooks() {
   });
   Hooks.on('createJournalEntryPage', (page, options, userId) => {
     if (isPoint(page) && userId === game.user.id) scheduleSort(page.parent);
+  });
+
+  // Marcador novo ligado a uma página de ponto: imagem do ponto (ou lupa) no lugar do livro, e o
+  // nome da página como texto. Um ícone já escolhido à mão (diferente do livro) fica.
+  Hooks.on('preCreateNote', (note) => {
+    const page = pointOfNote(note);
+    if (!page) return;
+    const update = {};
+    const src = note.texture?.src;
+    if (!src || src === defaultNoteIcon()) {
+      update['texture.src'] = noteIconFor(page.system, NEUTRAL_NOTE_ICON);
+    }
+    if (!note.text) update.text = page.name;
+    if (Object.keys(update).length) note.updateSource(update);
+  });
+
+  // Ponto mudou (imagem, «jogadores veem a imagem» ou nome): os marcadores acompanham. Só no
+  // computador do mestre que gravou, para não gravar várias vezes.
+  Hooks.on('updateJournalEntryPage', (page, changes, options, userId) => {
+    if (!isPoint(page) || userId !== game.user.id || !game.user.isGM) return;
+    if (!options?.desordemNota) return;
+    syncNotes(page, options.desordemNota).catch((error) =>
+      console.warn(`${SYSTEM_ID} | não foi possível atualizar os marcadores do ponto`, error),
+    );
   });
 
   // Menu «⋮» da janela do diário (só para quem pode editar o diário)

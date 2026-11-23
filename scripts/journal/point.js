@@ -752,3 +752,47 @@ export function parentChoices(points, selfId) {
     .filter((page) => !blocked.has(page.id))
     .sort((a, b) => compareNumbers(a.numero, b.numero));
 }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Marcador no mapa (v0.24.7)                                                                  */
+/* ------------------------------------------------------------------------------------------ */
+
+/**
+ * Ícone do marcador de um ponto no mapa: a imagem de referência, se os jogadores podem vê-la;
+ * senão o ícone neutro (a imagem escondida não pode vazar pelo mapa).
+ * @param {{imagem?: string, imagemVisivel?: boolean}} system Dados do ponto.
+ * @param {string} neutral Caminho do ícone neutro (lupa).
+ */
+export function noteIconFor(system, neutral) {
+  const image = clean(system?.imagem);
+  return image && system?.imagemVisivel !== false ? image : neutral;
+}
+
+/**
+ * Atualizações dos marcadores de um ponto depois que a imagem ou o nome mudaram. Só mexe no que o
+ * sistema controla: o ícone, se ainda é o antigo do ponto, a lupa ou o livro padrão do Foundry (um
+ * ícone escolhido à mão pelo mestre fica); o texto, se está vazio ou ainda é o nome antigo.
+ * @param {{id: string, src: string, text: string}[]} notes Marcadores ligados à página.
+ * @param {object} change
+ * @param {string} change.oldIcon Ícone que o ponto dava antes.
+ * @param {string} change.newIcon Ícone que o ponto dá agora.
+ * @param {string} change.oldName Nome da página antes.
+ * @param {string} change.newName Nome da página agora.
+ * @param {string[]} change.managed Outros ícones que o sistema pode trocar (lupa, livro padrão).
+ * @returns {{_id: string, 'texture.src'?: string, text?: string}[]}
+ */
+export function noteUpdates(notes, { oldIcon, newIcon, oldName, newName, managed = [] }) {
+  const ours = new Set([oldIcon, ...managed].filter(Boolean));
+  return notes
+    .map((note) => {
+      const update = { _id: note.id };
+      if (note.src !== newIcon && (!note.src || ours.has(note.src))) {
+        update['texture.src'] = newIcon;
+      }
+      if (newName && note.text !== newName && (!note.text || note.text === oldName)) {
+        update.text = newName;
+      }
+      return update;
+    })
+    .filter((update) => Object.keys(update).length > 1);
+}
