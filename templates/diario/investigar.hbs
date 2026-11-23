@@ -1,5 +1,8 @@
 {{! Janela «Investigar» do mestre (v0.24.4). Cada mudança redesenha a prévia (submitOnChange).
-  Nomes: pagina, grupo, modo, valor, alvo, jogador.<id>, examinador, linha.<id>. }}
+  Nomes: pagina, grupo, modo, valor, alvo, jogador.<id>, examinador, linha.<id>.
+  A parte precisa de UM elemento raiz (exigência do ApplicationV2): tudo, rodapé incluído, fica
+  dentro de .desordem-investigar__janela (até a v0.24.4 o rodapé ficava fora e a janela não abria). }}
+<div class="desordem-investigar__janela">
 <div class="desordem-investigar__corpo">
   <div class="form-group">
     <label>{{localize "DESORDEM.Ponto.Investigar.Pagina"}}</label>
@@ -102,3 +105,4 @@
   <button type="button" data-action="revelar"><i class="fa-solid fa-eye" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Investigar.Revelar"}}</button>
   <button type="button" data-action="cancelar"><i class="fa-solid fa-xmark" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Jogadores.Cancelar"}}</button>
 </footer>
+</div>

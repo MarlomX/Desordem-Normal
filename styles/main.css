@@ -4285,6 +4285,11 @@ button.desordem-desafios-cartao__nome:hover {
   flex-direction: column;
   gap: 6px;
 }
+.desordem-investigar__janela {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .desordem-investigar__corpo {
   display: flex;
   flex-direction: column;
