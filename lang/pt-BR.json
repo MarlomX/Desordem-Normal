@@ -1923,6 +1923,30 @@
       "Config": {
         "Barra": "Barra «Usar no ponto de interesse» nos testes",
         "BarraDica": "Mostra, só para o mestre, um botão nos cartões de teste para usar o resultado no Examinar de um ponto de interesse. Vale só neste computador."
+      },
+      "Vinculo": {
+        "Titulo": "Vínculos",
+        "Dica": "Arraste para cá itens, diários, páginas ou atores achados neste ponto. Cada vínculo tem o próprio olho ou aparece junto com uma linha. Ao revelar, quem recebe ganha permissão para ver o documento.",
+        "Rotulo": "Nome mostrado (vazio = nome do documento)",
+        "JuntoLinha": "Junto com a linha",
+        "JuntoLinhaDica": "Aparece sozinho quando esta linha for revelada.",
+        "OlhoProprio": "(olho próprio)",
+        "Quantidade": "Qtd.",
+        "QuantidadeDica": "Unidades disponíveis neste ponto. Cada «Entregar a…» tira uma; com 0 o item fica cinza.",
+        "Remover": "Remover o vínculo",
+        "Arraste": "Arraste para cá um item, diário, página ou ator.",
+        "Abrir": "Abrir",
+        "Encontrado": "Encontrado aqui",
+        "Esgotado": "Não resta mais nenhum",
+        "Entregar": "Entregar a…",
+        "EntregarTitulo": "Entregar «{item}»",
+        "Quem": "Para quem",
+        "Entregue": "«{item}» foi entregue a {personagem}.",
+        "SemPersonagens": "Não há personagens no mundo para receber o item.",
+        "TipoInvalido": "Só dá para vincular itens, diários, páginas de diário e atores.",
+        "JaExiste": "Este documento já está vinculado ao ponto.",
+        "Sumiu": "O documento deste vínculo não existe mais.",
+        "SemPermissao": "Você não tem permissão para abrir este documento."
       }
     }
   },

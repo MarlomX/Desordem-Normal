@@ -1923,6 +1923,30 @@
       "Config": {
         "Barra": "«Use on point of interest» bar on tests",
         "BarraDica": "Shows, only to the GM, a button on test cards to use the result in a point of interest's Examine. Applies only to this computer."
+      },
+      "Vinculo": {
+        "Titulo": "Links",
+        "Dica": "Drag here items, journals, pages or actors found at this point. Each link has its own eye or shows up together with a row. When revealed, whoever receives it gets permission to see the document.",
+        "Rotulo": "Shown name (empty = document name)",
+        "JuntoLinha": "Together with row",
+        "JuntoLinhaDica": "Shows up by itself when this row is revealed.",
+        "OlhoProprio": "(own eye)",
+        "Quantidade": "Qty.",
+        "QuantidadeDica": "Units available at this point. Each «Give to…» takes one; at 0 the item turns gray.",
+        "Remover": "Remove the link",
+        "Arraste": "Drag an item, journal, page or actor here.",
+        "Abrir": "Open",
+        "Encontrado": "Found here",
+        "Esgotado": "None left",
+        "Entregar": "Give to…",
+        "EntregarTitulo": "Give «{item}»",
+        "Quem": "To whom",
+        "Entregue": "«{item}» was given to {personagem}.",
+        "SemPersonagens": "There are no characters in the world to receive the item.",
+        "TipoInvalido": "Only items, journals, journal pages and actors can be linked.",
+        "JaExiste": "This document is already linked to the point.",
+        "Sumiu": "This link's document no longer exists.",
+        "SemPermissao": "You don't have permission to open this document."
       }
     }
   },

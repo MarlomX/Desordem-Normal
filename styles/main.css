@@ -4375,3 +4375,84 @@ button.desordem-desafios-cartao__nome:hover {
   width: auto;
   margin-left: auto;
 }
+
+/* ===== Ponto de interesse: vínculos (v0.24.8) ===== */
+.desordem-ponto__vinculos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 6px;
+}
+.desordem-ponto__vinculos.is-arrastando {
+  outline: 2px dashed var(--dn-accent);
+  outline-offset: 2px;
+}
+.desordem-ponto__vinculos h3 {
+  margin: 4px 0 0;
+}
+.desordem-ponto__vinculo,
+.desordem-ponto__vinculo-edicao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border: 1px solid var(--dn-border);
+  border-radius: 4px;
+  background: var(--dn-surface);
+}
+.desordem-ponto__vinculo-edicao input[type='text'] {
+  flex: 1;
+}
+.desordem-ponto__vinculo-edicao select {
+  flex: 1;
+  min-width: 8em;
+}
+.desordem-ponto__vinculo-edicao button {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  min-height: 0;
+  padding: 0;
+}
+.desordem-ponto__vinculo-quantidade {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.desordem-ponto__vinculo-quantidade input {
+  width: 3.5em;
+  text-align: center;
+}
+.desordem-ponto__vinculo-abrir {
+  flex: 1;
+  justify-content: flex-start;
+  width: auto;
+  min-height: 0;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  text-align: left;
+}
+.desordem-ponto__vinculo-qtd {
+  font-family: var(--dn-fonte-numeros);
+  opacity: 0.8;
+}
+.desordem-ponto__vinculo-linha {
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+/* Item sem unidade: cinza para todos */
+.desordem-ponto__vinculo.is-esgotado .desordem-ponto__vinculo-abrir {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+/* Documento apagado: riscado */
+.desordem-ponto__vinculo.is-sumiu .desordem-ponto__vinculo-abrir,
+.desordem-ponto__vinculo-edicao.is-sumiu input {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.desordem-ponto__vinculo.is-novo {
+  background: var(--dn-accent-soft);
+  box-shadow: inset 3px 0 0 var(--dn-accent);
+}

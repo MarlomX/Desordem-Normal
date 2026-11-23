@@ -127,6 +127,30 @@
     </button>
   </fieldset>
 
+  <fieldset class="desordem-ponto__secao desordem-ponto__vinculos">
+    <legend><i class="fa-solid fa-link" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Vinculo.Titulo"}}</legend>
+    <p class="hint">{{localize "DESORDEM.Ponto.Vinculo.Dica"}}</p>
+    {{#each links}}
+    <div class="desordem-ponto__vinculo-edicao{{#if missing}} is-sumiu{{/if}}" data-vinculo="{{id}}">
+      <i class="{{icon}}" aria-hidden="true"></i>
+      <input type="text" name="vinculo.{{id}}.rotulo" value="{{rotulo}}" placeholder="{{label}}" aria-label="{{localize "DESORDEM.Ponto.Vinculo.Rotulo"}}">
+      <select name="vinculo.{{id}}.linhaId" aria-label="{{localize "DESORDEM.Ponto.Vinculo.JuntoLinha"}}" data-tooltip="{{localize "DESORDEM.Ponto.Vinculo.JuntoLinhaDica"}}">
+        <option value="">{{localize "DESORDEM.Ponto.Vinculo.OlhoProprio"}}</option>
+        {{#each linhaOpcoes}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+      {{#if isItem}}
+      <label class="desordem-ponto__vinculo-quantidade" data-tooltip="{{localize "DESORDEM.Ponto.Vinculo.QuantidadeDica"}}">
+        <span>{{localize "DESORDEM.Ponto.Vinculo.Quantidade"}}</span>
+        <input type="number" name="vinculo.{{id}}.quantidade" value="{{quantidade}}" min="0" max="999" step="1">
+      </label>
+      {{/if}}
+      <button type="button" class="icon fa-solid fa-trash" data-action="vinculoRemover" data-tooltip="{{localize "DESORDEM.Ponto.Vinculo.Remover"}}" aria-label="{{localize "DESORDEM.Ponto.Vinculo.Remover"}}"></button>
+    </div>
+    {{else}}
+    <p class="desordem-ponto__vazio">{{localize "DESORDEM.Ponto.Vinculo.Arraste"}}</p>
+    {{/each}}
+  </fieldset>
+
   <fieldset class="desordem-ponto__secao">
     <legend><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Contexto"}}</legend>
     <p class="hint">{{localize "DESORDEM.Ponto.SoMestre"}}</p>

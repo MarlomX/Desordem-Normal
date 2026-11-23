@@ -79,6 +79,35 @@
     {{/each}}
   </div>
 
+  <section class="desordem-ponto__vinculos desordem-ponto__vinculos--mestre">
+    <h3><i class="fa-solid fa-link" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Vinculo.Titulo"}}</h3>
+    {{#each links}}
+    <div class="desordem-ponto__vinculo{{#if esgotado}} is-esgotado{{/if}}{{#if missing}} is-sumiu{{/if}}" data-vinculo="{{id}}">
+      <button type="button" class="desordem-ponto__vinculo-abrir" data-ponto-acao="vinculoAbrir" data-tooltip="{{localize "DESORDEM.Ponto.Vinculo.Abrir"}}">
+        <i class="{{icon}}" aria-hidden="true"></i> {{label}}{{#if isItem}} <span class="desordem-ponto__vinculo-qtd">×{{quantidade}}</span>{{/if}}
+      </button>
+      {{#if linha}}<span class="desordem-ponto__vinculo-linha" data-tooltip="{{localize "DESORDEM.Ponto.Vinculo.JuntoLinhaDica"}}"><i class="fa-solid fa-link" aria-hidden="true"></i> {{linha}}</span>{{/if}}
+      <span class="desordem-ponto__linha-estado">
+        {{#if revelado}}
+        <button type="button" class="desordem-ponto__olho is-ativo" data-ponto-acao="vinculoRevelar" data-revelar="0" data-tooltip="{{localize "DESORDEM.Ponto.Revelada"}} — {{localize "DESORDEM.Ponto.Esconder"}}" aria-label="{{localize "DESORDEM.Ponto.Esconder"}}"><i class="fa-solid fa-eye"></i></button>
+        {{else}}
+        <button type="button" class="desordem-ponto__olho" data-ponto-acao="vinculoRevelar" data-revelar="1" data-tooltip="{{localize "DESORDEM.Ponto.NaoRevelada"}} — {{localize "DESORDEM.Ponto.Revelar"}}" aria-label="{{localize "DESORDEM.Ponto.Revelar"}}"><i class="fa-solid fa-eye-slash"></i></button>
+        {{/if}}
+        {{#if reveladoPara}}
+        <button type="button" class="desordem-ponto__jogadores is-ativo" data-ponto-acao="vinculoJogadores" data-tooltip="{{localize "DESORDEM.Ponto.ReveladaParaNomes" nomes=reveladoParaNomes}}" aria-label="{{localize "DESORDEM.Ponto.ReveladaPara" n=reveladoPara}}"><i class="fa-solid fa-user-check"></i> {{reveladoPara}}</button>
+        {{else}}
+        <button type="button" class="desordem-ponto__jogadores" data-ponto-acao="vinculoJogadores" data-tooltip="{{localize "DESORDEM.Ponto.RevelarJogadores"}}" aria-label="{{localize "DESORDEM.Ponto.RevelarJogadores"}}"><i class="fa-solid fa-user-plus"></i></button>
+        {{/if}}
+        {{#if isItem}}
+        <button type="button" class="desordem-ponto__jogadores" data-ponto-acao="vinculoEntregar" data-tooltip="{{localize "DESORDEM.Ponto.Vinculo.Entregar"}}" aria-label="{{localize "DESORDEM.Ponto.Vinculo.Entregar"}}" {{disabled esgotado}}><i class="fa-solid fa-hand-holding"></i></button>
+        {{/if}}
+      </span>
+    </div>
+    {{else}}
+    <p class="desordem-ponto__vazio">{{localize "DESORDEM.Ponto.Vinculo.Arraste"}}</p>
+    {{/each}}
+  </section>
+
   {{#if contexto}}
   <section class="desordem-ponto__mestre">
     <h3><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Contexto"}}</h3>
@@ -121,5 +150,18 @@
     </div>
     {{/each}}
   </div>
+  {{#if links.length}}
+  <section class="desordem-ponto__vinculos desordem-ponto__vinculos--jogador">
+    <h3><i class="fa-solid fa-link" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Vinculo.Encontrado"}}</h3>
+    {{#each links}}
+    <div class="desordem-ponto__vinculo{{#if esgotado}} is-esgotado{{/if}}{{#if missing}} is-sumiu{{/if}}{{#if novo}} is-novo{{/if}}" data-vinculo="{{id}}">
+      <button type="button" class="desordem-ponto__vinculo-abrir" data-ponto-acao="vinculoAbrir" data-tooltip="{{#if esgotado}}{{localize "DESORDEM.Ponto.Vinculo.Esgotado"}}{{else}}{{localize "DESORDEM.Ponto.Vinculo.Abrir"}}{{/if}}">
+        <i class="{{icon}}" aria-hidden="true"></i> {{label}}
+      </button>
+      {{#if novo}}<span class="desordem-ponto__novo">{{localize "DESORDEM.Ponto.Novo"}}</span>{{/if}}
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
   {{/if}}
 </div>

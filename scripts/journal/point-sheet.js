@@ -21,11 +21,29 @@
  *
  * v0.24.6: «Subponto de» (`system.paiId`) escolhe outro ponto do diário como pai e o número vira
  * o do pai mais o próximo livre (3 → 3.1, 3.2…); a imagem abre em tela cheia ao clicar.
+ *
+ * v0.24.8: vínculos (`system.vinculos`). O mestre arrasta para o ponto um item, diário, página ou
+ * ator; cada vínculo tem olho próprio, jogadores específicos e pode ser amarrado a uma linha. Um
+ * clique abre o documento; itens têm «Entregar a…» (só o mestre) com quantidade disponível. A
+ * permissão de ver o documento é dada em `point-hooks.js` quando o vínculo é revelado.
  */
 import { SYSTEM_ID, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import {
+  LINK_TYPES,
   POINT_TYPE,
   addBlock,
+  addLink,
+  applyLinkForm,
+  buildLinks,
+  hideAllLinks,
+  lineChoices,
+  newLink,
+  normalizeLinks,
+  removeLink,
+  setLinkRevealed,
+  setLinkUsers,
+  takeOne,
+  visibleLinkIds,
   addLine,
   applyBlockForm,
   blockGroupKey,
@@ -67,6 +85,19 @@ const { renderTemplate } = foundry.applications.handlebars;
 /** Pasta dos templates das páginas do diário. */
 const TEMPLATES = `systems/${SYSTEM_ID}/templates/diario`;
 
+/**
+ * Documento de um vínculo pelo UUID, sem esperar (mundo ou índice de compêndio): só o nome
+ * importa para mostrar. `null` se não existe mais.
+ */
+function resolveDoc(uuid) {
+  try {
+    const doc = foundry.utils.fromUuidSync(uuid);
+    return doc ? { name: doc.name ?? '' } : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Traduz uma chave (com dados, usa `format` para trocar os `{marcadores}`). */
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
@@ -91,6 +122,7 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       linhaDescer: PontoInteresseSheet.#onMoveLineDown,
       periciaRemover: PontoInteresseSheet.#onRemoveSkill,
       desafioCriar: PontoInteresseSheet.#onCreateChallenge,
+      vinculoRemover: PontoInteresseSheet.#onRemoveLink,
     },
   };
 
@@ -158,10 +190,13 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       imagem: system.imagem && (gm || system.imagemVisivel) ? system.imagem : '',
       imagemEscondida: gm && system.imagem && !system.imagemVisivel,
     };
+    const links = normalizeLinks(system.vinculos);
     if (gm) {
       const userName = (userId) => game.users.get(userId)?.name ?? userId;
       context.board = await buildGmBoard(blocks, { t, enrich, userName });
-      context.anyRevealed = hasRevealed(blocks);
+      context.links = buildLinks(links, { blocks, resolve: resolveDoc, userName, t });
+      context.anyRevealed =
+        hasRevealed(blocks) || links.some((link) => link.revelado || link.reveladoPara.length);
       context.desafio = this.#linkedChallenge();
       context.contexto = await this.#enrich(system.contexto);
       context.desafioAcesso = await this.#enrich(system.desafioAcesso);
@@ -170,7 +205,13 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         userId: game.user.id,
         t,
         enrich,
-        fresh: this.#markSeen(blocks),
+        fresh: this.#markSeen(blocks, links),
+      });
+      context.links = buildLinks(links, {
+        blocks,
+        resolve: resolveDoc,
+        userId: game.user.id,
+        fresh: [...this.#fresh],
       });
     }
     return context;
@@ -181,9 +222,13 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
    * tinha visto, e grava a lista de vistas (sem esperar a gravação, que não muda a tela).
    * @returns {string[]} Ids marcados como novos.
    */
-  #markSeen(blocks) {
+  #markSeen(blocks, links = []) {
     const page = this.document;
-    const visible = visibleLineIds(blocks, game.user.id);
+    // Linhas e vínculos na mesma lista (os ids não se repetem entre eles)
+    const visible = [
+      ...visibleLineIds(blocks, game.user.id),
+      ...visibleLinkIds(links, blocks, game.user.id),
+    ];
     for (const id of newLineIds(visible, readSeen(page))) this.#fresh.add(id);
     // Linha escondida de novo deixa de ser novidade
     for (const id of this.#fresh) if (!visible.includes(id)) this.#fresh.delete(id);
@@ -221,19 +266,63 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
    */
   async _onRender(context, options) {
     await super._onRender(context, options);
-    if (!this.isView) return;
+    // Na edição, só a área de vínculos (arrastar documentos) precisa de ligação à mão
+    if (!this.isView) {
+      if (this.document.isOwner) this.#bindLinkDrop();
+      return;
+    }
     // Imagem em tela cheia (para todos), na janela de imagem do Foundry
     this.element.querySelector('.desordem-ponto__imagem img')?.addEventListener('click', () => {
       this.#showImage();
     });
-    if (!this.document.isOwner) return;
+    // Abrir um vínculo vale para todos; os outros botões são só do dono
+    const owner = this.document.isOwner;
     for (const button of this.element.querySelectorAll('[data-ponto-acao]')) {
+      if (!owner && button.dataset.pontoAcao !== 'vinculoAbrir') continue;
       button.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
         this.#onRevealControl(button);
       });
     }
+    if (owner) this.#bindLinkDrop();
+  }
+
+  /**
+   * Área «Vínculos» aceita documentos arrastados (da barra lateral ou de compêndios). O arrasto é
+   * tratado aqui e não sobe para o diário (que trataria como mudar a página de lugar).
+   */
+  #bindLinkDrop() {
+    const zone = this.element.querySelector('.desordem-ponto__vinculos');
+    if (!zone) return;
+    zone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      zone.classList.add('is-arrastando');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('is-arrastando'));
+    zone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      zone.classList.remove('is-arrastando');
+      const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
+      this.#addDroppedLink(data);
+    });
+  }
+
+  /** Grava o documento arrastado como vínculo novo (tipos aceitos; nunca a própria página). */
+  async #addDroppedLink(data) {
+    const uuid = typeof data?.uuid === 'string' ? data.uuid : '';
+    if (!LINK_TYPES.includes(data?.type) || !uuid || uuid === this.document.uuid) {
+      ui.notifications.warn(t('DESORDEM.Ponto.Vinculo.TipoInvalido'));
+      return;
+    }
+    const before = this.#links();
+    const after = addLink(before, newLink(foundry.utils.randomID(), uuid));
+    if (after === before) {
+      ui.notifications.info(t('DESORDEM.Ponto.Vinculo.JaExiste'));
+      return;
+    }
+    await this.#saveLinks(() => after);
   }
 
   /** Modo de edição: o formulário completo (só quem pode editar abre este modo). */
@@ -268,6 +357,8 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         label: t(`DESORDEM.Desafio.Tipo.${tipo}`),
       })),
       desafio: this.#linkedChallenge(),
+      // Vínculos, cada um com a lista de linhas às quais pode ser amarrado (a escolhida marcada)
+      links: this.#editLinks(),
       // Pontos do diário que podem ser pai deste (sem ele mesmo e sem os descendentes dele)
       pais: parentChoices(PontoInteresseSheet.pointsOf(this.document.parent), this.document.id).map(
         (entry) => ({ ...entry, selected: entry.id === system.paiId }),
@@ -337,6 +428,11 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
     if (fromForm) {
       foundry.utils.setProperty(data, 'system.blocos', applyBlockForm(this.#blocks(), fromForm));
     }
+    const linkForm = data.vinculo;
+    delete data.vinculo;
+    if (linkForm) {
+      foundry.utils.setProperty(data, 'system.vinculos', applyLinkForm(this.#links(), linkForm));
+    }
     this.#applyParent(data);
     return data;
   }
@@ -385,11 +481,49 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
     await this.document.update({ 'system.blocos': next });
   }
 
+  /** Vínculos para o formulário de edição: rótulo, linha amarrada e as opções de linha. */
+  #editLinks() {
+    const blocks = normalizeBlocks(this.document._source.system?.blocos);
+    const saved = this.#links();
+    const choices = lineChoices(blocks, t);
+    return buildLinks(saved, { blocks, resolve: resolveDoc, t }).map((link) => {
+      const raw = saved.find((entry) => entry.id === link.id);
+      return {
+        ...link,
+        rotulo: raw?.rotulo ?? '',
+        linhaOpcoes: choices.map((choice) => ({ ...choice, selected: choice.id === raw?.linhaId })),
+      };
+    });
+  }
+
+  /** Vínculos gravados, limpos. */
+  #links() {
+    return normalizeLinks(this.document._source.system?.vinculos);
+  }
+
+  /**
+   * Grava uma mudança nos vínculos. Na edição, os valores digitados (rótulo, linha, quantidade)
+   * entram junto, como em `#saveBlocks`.
+   * @param {(links: object[]) => object[]} change
+   */
+  async #saveLinks(change) {
+    const typed =
+      !this.isView && this.form
+        ? foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(this.form).object)
+            .vinculo
+        : null;
+    const current = applyLinkForm(this.#links(), typed);
+    const next = change(current);
+    if (next === current) return;
+    await this.document.update({ 'system.vinculos': next });
+  }
+
   /** Bloco (e linha) do botão clicado, lidos dos `data-bloco` e `data-linha` do HTML. */
   static #target(target) {
     const blockId = target.closest('[data-bloco]')?.dataset.bloco;
     const lineId = target.closest('[data-linha]')?.dataset.linha;
-    return { blockId, lineId };
+    const linkId = target.closest('[data-vinculo]')?.dataset.vinculo;
+    return { blockId, lineId, linkId };
   }
 
   /** Pede confirmação antes de remover (bloco ou linha). */
@@ -423,7 +557,7 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
 
   /** Encaminha o botão clicado para a ação dele. */
   async #onRevealControl(button) {
-    const { blockId, lineId } = PontoInteresseSheet.#target(button);
+    const { blockId, lineId, linkId } = PontoInteresseSheet.#target(button);
     const reveal = button.dataset.revelar === '1';
     switch (button.dataset.pontoAcao) {
       case 'linhaRevelar':
@@ -443,6 +577,15 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       }
       case 'desafioAbrir':
         return DesafioApp.open(this.document.system.desafioId);
+      case 'vinculoAbrir':
+        return this.#openLink(linkId);
+      case 'vinculoRevelar':
+        if (reveal) this.#warnIfNobodySees();
+        return this.#saveLinks((links) => setLinkRevealed(links, linkId, reveal));
+      case 'vinculoJogadores':
+        return this.#chooseLinkUsers(linkId);
+      case 'vinculoEntregar':
+        return this.#deliverItem(linkId);
     }
   }
 
@@ -470,17 +613,51 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       .find((block) => block.id === blockId)
       ?.linhas.find((entry) => entry.id === lineId);
     if (!line) return;
+    const chosen = await this.#askUsers(line.reveladaPara);
+    if (!chosen) return;
+    await this.#saveBlocks((blocks) =>
+      setLineUsers(
+        blocks,
+        blockId,
+        lineId,
+        chosen.map((user) => user.id),
+      ),
+    );
+  }
+
+  /** Janela para escolher quem vê o vínculo. */
+  async #chooseLinkUsers(linkId) {
+    const link = this.#links().find((entry) => entry.id === linkId);
+    if (!link) return;
+    const chosen = await this.#askUsers(link.reveladoPara);
+    if (!chosen) return;
+    await this.#saveLinks((links) =>
+      setLinkUsers(
+        links,
+        linkId,
+        chosen.map((user) => user.id),
+      ),
+    );
+  }
+
+  /**
+   * Janela «Revelar para quem?»: caixas dos jogadores, com os já escolhidos marcados. Avisa de
+   * quem não tem permissão na página.
+   * @param {string[]} selected Ids já escolhidos.
+   * @returns {Promise<User[]|null>} Jogadores escolhidos, ou `null` se cancelou.
+   */
+  async #askUsers(selected) {
     const players = PontoInteresseSheet.#players();
     if (!players.length) {
       ui.notifications.info(t('DESORDEM.Ponto.Jogadores.Nenhum'));
-      return;
+      return null;
     }
     const content = await renderTemplate(`${TEMPLATES}/ponto-jogadores.hbs`, {
       jogadores: players.map((user) => ({
         id: user.id,
         nome: user.name,
         personagem: user.character?.name ?? '',
-        marcado: line.reveladaPara.includes(user.id),
+        marcado: selected.includes(user.id),
         semAcesso: !this.#canSee(user),
       })),
     });
@@ -507,7 +684,7 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       ],
     });
     // Só {confirmed: true} confirma: fechar no X ou cancelar devolve outra coisa
-    if (answer?.confirmed !== true) return;
+    if (answer?.confirmed !== true) return null;
     // Nunca confia no que veio da janela: só vale quem estava na lista oferecida
     const chosen = players.filter((user) => answer.ids.includes(user.id));
     const blind = chosen.filter((user) => !this.#canSee(user));
@@ -516,14 +693,107 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         t('DESORDEM.Ponto.AvisoSemAcesso', { nomes: blind.map((user) => user.name).join(', ') }),
       );
     }
-    await this.#saveBlocks((blocks) =>
-      setLineUsers(
-        blocks,
-        blockId,
-        lineId,
-        chosen.map((user) => user.id),
-      ),
+    return chosen;
+  }
+
+  /**
+   * Abre o documento do vínculo: a página abre dentro do diário dela; os outros, na própria
+   * ficha. Sem permissão (ou apagado), só avisa.
+   */
+  async #openLink(linkId) {
+    const link = normalizeLinks(this.document.system.vinculos).find((entry) => entry.id === linkId);
+    const doc = link ? await foundry.utils.fromUuid(link.uuid) : null;
+    if (!doc) {
+      ui.notifications.warn(t('DESORDEM.Ponto.Vinculo.Sumiu'));
+      return;
+    }
+    if (!doc.testUserPermission(game.user, 'LIMITED')) {
+      ui.notifications.warn(t('DESORDEM.Ponto.Vinculo.SemPermissao'));
+      return;
+    }
+    if (doc.documentName === 'JournalEntryPage') {
+      doc.parent.sheet.render({ force: true, pageId: doc.id });
+      return;
+    }
+    doc.sheet.render({ force: true });
+  }
+
+  /**
+   * «Entregar a…» (só o mestre): escolhe um personagem e põe uma unidade do item na ficha dele.
+   * Se ele já tem um item igual (mesmo nome e tipo, com quantidade), soma 1; senão cria uma cópia
+   * com quantidade 1. O ponto perde uma unidade e o chat avisa.
+   */
+  async #deliverItem(linkId) {
+    if (!game.user.isGM) return;
+    const link = this.#links().find((entry) => entry.id === linkId);
+    if (!link || link.tipo !== 'Item' || link.quantidade <= 0) return;
+    const item = await foundry.utils.fromUuid(link.uuid);
+    if (!item) {
+      ui.notifications.warn(t('DESORDEM.Ponto.Vinculo.Sumiu'));
+      return;
+    }
+    const actor = await this.#askActor(link.rotulo || item.name);
+    if (!actor) return;
+    const same = actor.items.find(
+      (owned) =>
+        owned.name === item.name &&
+        owned.type === item.type &&
+        typeof owned.system?.quantidade === 'number',
     );
+    if (same) {
+      await same.update({ 'system.quantidade': same.system.quantidade + 1 });
+    } else {
+      const data = item.toObject();
+      delete data._id;
+      if (typeof data.system?.quantidade === 'number') data.system.quantidade = 1;
+      await actor.createEmbeddedDocuments('Item', [data]);
+    }
+    await this.#saveLinks((links) => takeOne(links, linkId));
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ user: game.user }),
+      content: `<div class="desordem-chat desordem-ponto-entrega"><p><i class="fa-solid fa-suitcase" aria-hidden="true"></i> ${escapeHtml(
+        t('DESORDEM.Ponto.Vinculo.Entregue', { item: item.name, personagem: actor.name }),
+      )}</p></div>`,
+    });
+  }
+
+  /**
+   * Janela para escolher quem recebe o item: os personagens do mundo, com os de jogadores primeiro.
+   * @returns {Promise<Actor|null>}
+   */
+  async #askActor(itemName) {
+    const characters = game.actors
+      .filter((actor) => actor.type === 'personagem')
+      .sort((a, b) => Number(b.hasPlayerOwner) - Number(a.hasPlayerOwner));
+    if (!characters.length) {
+      ui.notifications.warn(t('DESORDEM.Ponto.Vinculo.SemPersonagens'));
+      return null;
+    }
+    const options = characters
+      .map((actor) => `<option value="${actor.id}">${escapeHtml(actor.name)}</option>`)
+      .join('');
+    const answer = await DialogV2.wait({
+      window: { title: t('DESORDEM.Ponto.Vinculo.EntregarTitulo', { item: itemName }) },
+      classes: ['desordem-normal', 'desordem-ponto-dialogo'],
+      content: `<div class="form-group"><label>${escapeHtml(t('DESORDEM.Ponto.Vinculo.Quem'))}</label><div class="form-fields"><select name="personagem">${options}</select></div></div>`,
+      modal: true,
+      rejectClose: false,
+      buttons: [
+        {
+          action: 'entregar',
+          label: t('DESORDEM.Ponto.Vinculo.Entregar'),
+          icon: 'fa-solid fa-hand-holding',
+          default: true,
+          callback: (event, button, dialog) => ({
+            confirmed: true,
+            id: dialog.element.querySelector('[name="personagem"]')?.value,
+          }),
+        },
+        { action: 'cancelar', label: t('DESORDEM.Ponto.Jogadores.Cancelar') },
+      ],
+    });
+    if (answer?.confirmed !== true) return null;
+    return characters.find((actor) => actor.id === answer.id) ?? null;
   }
 
   /** Esconde todas as linhas da página, depois de confirmar. */
@@ -533,7 +803,11 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       content: `<p>${escapeHtml(t('DESORDEM.Ponto.ConfirmarEsconderTudo'))}</p>`,
       rejectClose: false,
     });
-    if (confirmed) await this.#saveBlocks((blocks) => hideAll(blocks));
+    if (!confirmed) return;
+    await this.document.update({
+      'system.blocos': hideAll(this.#blocks()),
+      'system.vinculos': hideAllLinks(this.#links()),
+    });
   }
 
   /* ---------------------------------------------------------------------------------------- */
@@ -555,6 +829,11 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
     }
     await this.document.update({ 'system.desafioId': id });
     ui.notifications.info(t('DESORDEM.Ponto.Desafio.Criado', { nome: this.document.name }));
+  }
+
+  static async #onRemoveLink(event, target) {
+    const { linkId } = PontoInteresseSheet.#target(target);
+    await this.#saveLinks((links) => removeLink(links, linkId));
   }
 
   static async #onAddBlock() {

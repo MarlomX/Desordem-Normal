@@ -48,6 +48,22 @@ import {
   parentChoices,
   noteIconFor,
   noteUpdates,
+  linkTypeOf,
+  newLink,
+  normalizeLinks,
+  addLink,
+  removeLink,
+  setLinkRevealed,
+  setLinkUsers,
+  hideAllLinks,
+  takeOne,
+  applyLinkForm,
+  isLinkVisibleTo,
+  linkAudience,
+  lineChoices,
+  buildLinks,
+  grantOwnership,
+  visibleLinkIds,
 } from '../scripts/journal/point.js';
 
 // Tradução com o arquivo de idioma de verdade (como o game.i18n: chave sem texto volta a chave)
@@ -555,4 +571,139 @@ test('noteUpdates: troca só o ícone e o texto que o sistema controla', () => {
     { _id: 'n1', 'texture.src': 'nova.webp', text: '5 · Cofre' },
     { _id: 'n2', 'texture.src': 'nova.webp', text: '5 · Cofre' },
   ]);
+});
+
+test('linkTypeOf: tipo pelo UUID, também em compêndios e páginas', () => {
+  assert.equal(linkTypeOf('Item.abc'), 'Item');
+  assert.equal(linkTypeOf('JournalEntry.x.JournalEntryPage.y'), 'JournalEntryPage');
+  assert.equal(linkTypeOf('Compendium.desordem-normal.itens.Item.abc'), 'Item');
+  assert.equal(linkTypeOf('Actor.a'), 'Actor');
+  assert.equal(linkTypeOf('Scene.s'), '');
+  assert.equal(linkTypeOf(''), '');
+});
+
+test('vínculos: acrescentar sem repetir, revelar, jogadores, esconder, quantidade', () => {
+  let links = addLink([], newLink('v1', 'Item.pote'));
+  links = addLink(links, newLink('v2', 'JournalEntry.docA'));
+  assert.equal(addLink(links, newLink('v3', 'Item.pote')), links, 'mesmo documento não repete');
+  assert.equal(addLink(links, newLink('v4', 'Scene.x')), links, 'tipo não aceito');
+  links = setLinkUsers(links, 'v2', ['u1', 'u1']);
+  assert.deepEqual(links[1].reveladoPara, ['u1']);
+  links = setLinkRevealed(links, 'v1', true);
+  assert.equal(links[0].revelado, true);
+  links = hideAllLinks(links);
+  assert.equal(links[0].revelado, false);
+  assert.deepEqual(links[1].reveladoPara, []);
+  links = takeOne(takeOne(links, 'v1'), 'v1');
+  assert.equal(links[0].quantidade, 0, 'não passa de zero');
+  links = removeLink(links, 'v1');
+  assert.deepEqual(
+    links.map((link) => link.id),
+    ['v2'],
+  );
+});
+
+test('normalizeLinks e applyLinkForm', () => {
+  const links = normalizeLinks([
+    { id: 'v1', uuid: 'Item.a', quantidade: '3', reveladoPara: ['u1', ''] },
+    { uuid: 'Scene.x' },
+    { uuid: 'Actor.b', quantidade: -5 },
+  ]);
+  // O segundo vínculo válido não tinha id: recebe um novo, sem repetir o «v1» do primeiro
+  assert.deepEqual(
+    links.map((link) => [link.id, link.tipo, link.quantidade]),
+    [
+      ['v1', 'Item', 3],
+      ['v0', 'Actor', 0],
+    ],
+  );
+  const edited = applyLinkForm(links, {
+    v1: { rotulo: ' Bálsamo ', linhaId: 'a1', quantidade: 2 },
+  });
+  assert.equal(edited[0].rotulo, 'Bálsamo');
+  assert.equal(edited[0].linhaId, 'a1');
+  assert.equal(edited[0].quantidade, 2);
+  assert.equal(applyLinkForm(links, null), links);
+});
+
+test('isLinkVisibleTo e linkAudience: pelo próprio olho ou pela linha amarrada', () => {
+  let blocks = sampleBlocks();
+  const link = { ...newLink('v1', 'JournalEntry.docA'), linhaId: 'a1' };
+  assert.equal(isLinkVisibleTo(link, blocks, 'u1'), false);
+  assert.deepEqual(linkAudience(link, blocks), { all: false, userIds: [] });
+  blocks = setLineUsers(blocks, 'a', 'a1', ['u2']);
+  assert.equal(isLinkVisibleTo(link, blocks, 'u2'), true);
+  assert.equal(isLinkVisibleTo(link, blocks, 'u1'), false);
+  assert.deepEqual(linkAudience({ ...link, reveladoPara: ['u3'] }, blocks), {
+    all: false,
+    userIds: ['u3', 'u2'],
+  });
+  blocks = setLineRevealed(blocks, 'a', 'a1', true);
+  assert.equal(isLinkVisibleTo(link, blocks, 'u1'), true);
+  assert.deepEqual(linkAudience(link, blocks), { all: true, userIds: [] });
+});
+
+test('buildLinks: mestre vê tudo; jogador só o que vê, com o item esgotado em cinza', () => {
+  const blocks = sampleBlocks();
+  const links = normalizeLinks([
+    { id: 'v1', uuid: 'Item.pote', revelado: true, quantidade: 0 },
+    { id: 'v2', uuid: 'JournalEntry.docA', rotulo: 'Documento A', linhaId: 'a2' },
+    { id: 'v3', uuid: 'Actor.sumiu', reveladoPara: ['u1'] },
+  ]);
+  const names = { 'Item.pote': 'Pote de argila', 'JournalEntry.docA': 'Carta' };
+  const resolve = (uuid) => (names[uuid] ? { name: names[uuid] } : null);
+  const gm = buildLinks(links, { blocks, resolve, t });
+  assert.equal(gm.length, 3);
+  assert.equal(gm[0].label, 'Pote de argila');
+  assert.equal(gm[0].esgotado, true);
+  assert.equal(gm[1].label, 'Documento A');
+  assert.equal(gm[1].linha, 'DT 10 · texto B');
+  assert.equal(gm[2].missing, true);
+  const player = buildLinks(links, { blocks, resolve, userId: 'u1' });
+  assert.deepEqual(
+    player.map((link) => [link.id, link.esgotado]),
+    [
+      ['v1', true],
+      ['v3', false],
+    ],
+  );
+  assert.ok(!('revelado' in player[0]), 'o jogador não recebe o estado de revelação');
+});
+
+test('lineChoices: perícia, DT e começo do texto', () => {
+  const choices = lineChoices(sampleBlocks(), t);
+  assert.equal(choices[0].id, 'a1');
+  assert.equal(choices[0].label, 'Intuição · DT 7 · texto A');
+});
+
+test('grantOwnership: só sobe a permissão de quem recebeu', () => {
+  assert.deepEqual(grantOwnership({ default: 0 }, { all: true, userIds: [] }, 2), { default: 2 });
+  assert.equal(grantOwnership({ default: 3 }, { all: true, userIds: [] }, 2), null);
+  assert.deepEqual(
+    grantOwnership({ default: 0, u1: 1 }, { all: false, userIds: ['u1', 'u2'] }, 2),
+    {
+      default: 0,
+      u1: 2,
+      u2: 2,
+    },
+  );
+  assert.equal(grantOwnership({ default: 2 }, { all: false, userIds: ['u1'] }, 2), null);
+  assert.equal(grantOwnership({ default: 0, u1: 3 }, { all: false, userIds: ['u1'] }, 2), null);
+  assert.equal(grantOwnership({ default: 0 }, { all: false, userIds: [] }, 2), null);
+});
+
+test('visibleLinkIds e marca de «novo» dos vínculos', () => {
+  const blocks = setLineRevealed(sampleBlocks(), 'a', 'a1', true);
+  const links = normalizeLinks([
+    { id: 'v1', uuid: 'Item.a', linhaId: 'a1' },
+    { id: 'v2', uuid: 'Item.b' },
+  ]);
+  assert.deepEqual(visibleLinkIds(links, blocks, 'u1'), ['v1']);
+  const view = buildLinks(links, {
+    blocks,
+    resolve: () => ({ name: 'x' }),
+    userId: 'u1',
+    fresh: ['v1'],
+  });
+  assert.equal(view[0].novo, true);
 });

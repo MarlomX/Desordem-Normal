@@ -17,20 +17,29 @@
  * v0.24.7: marcador no mapa. Uma Nota (o alfinete de diário) ligada a uma página de ponto usa a
  * imagem de referência do ponto como ícone (ou a lupa, se a imagem está escondida ou não existe)
  * e o nome da página como texto; quando a imagem ou o nome mudam, os marcadores acompanham.
+ *
+ * v0.24.8: vínculos. Quando um vínculo passa a ser visto por alguém (olho próprio, jogadores
+ * escolhidos ou a linha amarrada a ele), o mestre que gravou dá a permissão de ver o documento:
+ * Observador no documento (e, numa página, Limitado no diário dela). Nunca tira permissão.
  */
 import { SYSTEM_ID } from '../config.js';
 import {
   POINT_TYPE,
   childNumberFor,
+  grantOwnership,
   headingLevel,
   hideAll,
+  hideAllLinks,
+  linkAudience,
   newLineIds,
   noteIconFor,
   noteUpdates,
   normalizeBlocks,
+  normalizeLinks,
   pointPageName,
   sortUpdates,
   visibleLineIds,
+  visibleLinkIds,
 } from './point.js';
 import { readSeen } from './point-seen.js';
 import PontoInteresseSheet from './point-sheet.js';
@@ -168,9 +177,39 @@ export async function hideAllPoints(entry) {
   const updates = entry.pages.contents.filter(isPoint).map((page) => ({
     _id: page.id,
     'system.blocos': hideAll(normalizeBlocks(page._source.system?.blocos)),
+    'system.vinculos': hideAllLinks(normalizeLinks(page._source.system?.vinculos)),
   }));
   if (updates.length) await entry.updateEmbeddedDocuments('JournalEntryPage', updates);
   ui.notifications.info(t('DESORDEM.Ponto.Diario.Escondidos', { n: updates.length }));
+}
+
+/** Níveis de permissão do Foundry usados aqui. */
+const LEVELS = () => foundry.CONST.DOCUMENT_OWNERSHIP_LEVELS;
+
+/**
+ * Dá a permissão de ver os documentos vinculados a quem passou a ver o vínculo. Só documentos do
+ * mundo (compêndio tem permissão própria). Uma página recebe Observador e o diário dela, Limitado
+ * (o suficiente para o diário mostrar só as páginas que ele pode ver).
+ * @param {JournalEntryPage} page Ponto já atualizado.
+ */
+async function grantLinkPermissions(page) {
+  const blocks = normalizeBlocks(page.system.blocos);
+  for (const link of normalizeLinks(page.system.vinculos)) {
+    const audience = linkAudience(link, blocks);
+    if (!audience.all && !audience.userIds.length) continue;
+    const doc = foundry.utils.fromUuidSync(link.uuid);
+    if (!doc || doc.pack || typeof doc.update !== 'function') continue;
+    await raise(doc, audience, LEVELS().OBSERVER);
+    if (doc.documentName === 'JournalEntryPage' && doc.parent) {
+      await raise(doc.parent, audience, LEVELS().LIMITED);
+    }
+  }
+}
+
+/** Sobe a permissão de um documento (só se for preciso; veja `grantOwnership`). */
+async function raise(doc, audience, level) {
+  const ownership = grantOwnership(doc._source.ownership, audience, level);
+  if (ownership) await doc.update({ ownership }, { diff: false, recursive: false });
 }
 
 /** Configuração do usuário: barra «Usar no ponto de interesse» nos cartões de teste (desligada). */
@@ -224,9 +263,15 @@ export function registerPointHooks() {
   // que ainda não tinha visto. A notificação comum do Foundry fecha sozinha.
   Hooks.on('updateJournalEntryPage', (page, changes) => {
     if (page.type !== POINT_TYPE || page.isOwner) return;
-    if (foundry.utils.getProperty(changes, 'system.blocos') === undefined) return;
+    const system = changes.system ?? {};
+    if (system.blocos === undefined && system.vinculos === undefined) return;
     if (!page.testUserPermission(game.user, 'OBSERVER')) return;
-    const visible = visibleLineIds(normalizeBlocks(page.system.blocos), game.user.id);
+    const blocks = normalizeBlocks(page.system.blocos);
+    // Linhas e vínculos novos para este jogador (v0.24.8: vínculos entram no aviso)
+    const visible = [
+      ...visibleLineIds(blocks, game.user.id),
+      ...visibleLinkIds(normalizeLinks(page.system.vinculos), blocks, game.user.id),
+    ];
     const already = notified.get(page.uuid) ?? new Set();
     const fresh = newLineIds(visible, [...readSeen(page), ...already]);
     if (!fresh.length) return;
@@ -275,6 +320,16 @@ export function registerPointHooks() {
     if (!options?.desordemNota) return;
     syncNotes(page, options.desordemNota).catch((error) =>
       console.warn(`${SYSTEM_ID} | não foi possível atualizar os marcadores do ponto`, error),
+    );
+  });
+
+  // Vínculo revelado (por ele mesmo ou pela linha): o mestre que gravou dá a permissão de ver
+  Hooks.on('updateJournalEntryPage', (page, changes, options, userId) => {
+    if (!isPoint(page) || userId !== game.user.id || !game.user.isGM) return;
+    const system = changes.system ?? {};
+    if (system.blocos === undefined && system.vinculos === undefined) return;
+    grantLinkPermissions(page).catch((error) =>
+      console.warn(`${SYSTEM_ID} | não foi possível dar permissão aos vínculos`, error),
     );
   });
 

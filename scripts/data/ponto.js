@@ -28,6 +28,24 @@ const linha = () =>
     reveladaPara: new f.ArrayField(new f.StringField({ required: true, blank: false })),
   });
 
+/**
+ * Um vínculo (v0.24.8): documento achado no ponto (item, diário, página ou ator), pelo UUID. Tem
+ * o próprio olho (revelado, reveladoPara) e pode ser amarrado a uma linha (aparece com ela).
+ */
+const vinculo = () =>
+  new f.SchemaField({
+    id: id('v0'),
+    uuid: texto(),
+    // Tipo do documento (Item, JournalEntry, JournalEntryPage, Actor), tirado do UUID
+    tipo: texto(),
+    rotulo: texto(),
+    linhaId: texto(),
+    // Unidades do item ainda no ponto (cada «Entregar a…» tira uma; com 0 fica cinza)
+    quantidade: new f.NumberField({ required: true, integer: true, min: 0, max: 999, initial: 1 }),
+    revelado: new f.BooleanField({ initial: false }),
+    reveladoPara: new f.ArrayField(new f.StringField({ required: true, blank: false })),
+  });
+
 /** Um bloco do quadro: uma ou mais perícias (ou um nome livre) e as linhas delas. */
 const bloco = () =>
   new f.SchemaField({
@@ -55,6 +73,7 @@ export class PontoInteresseModel extends foundry.abstract.TypeDataModel {
       // O mestre pode esconder a imagem dos jogadores (por padrão, eles veem)
       imagemVisivel: new f.BooleanField({ initial: true }),
       blocos: new f.ArrayField(bloco()),
+      vinculos: new f.ArrayField(vinculo()),
       contexto: textoRico(),
       desafioAcesso: textoRico(),
       // Desafio da guia Desafios ligado ao ponto (v0.24.4); vazio = nenhum
