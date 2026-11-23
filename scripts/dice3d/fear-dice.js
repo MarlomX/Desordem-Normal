@@ -16,6 +16,9 @@ export const DSN_MODULE_ID = 'dice-so-nice';
 /** Nome do conjunto de cores (colorset) do dado de pavor registrado no Dice So Nice. */
 export const FEAR_COLORSET = 'desordem-pavor';
 
+/** Configuração do usuário com a aparência escolhida do dado de pavor (v0.25.5). */
+export const FEAR_STYLE_SETTING = 'aparenciaPavor';
+
 /** Id do efeito especial «Aura de pavor» registrado no Dice So Nice. */
 export const FEAR_AURA_SFX = 'DesordemAuraPavor';
 

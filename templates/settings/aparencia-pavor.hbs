@@ -1,0 +1,37 @@
+<div class="desordem-aparencia">
+  <div class="desordem-aparencia__topo">
+    <svg class="desordem-aparencia__previa" viewBox="0 0 100 100" role="img" aria-label="{{localize "DESORDEM.Dados3D.Aparencia.Previa"}}">
+      <polygon class="desordem-aparencia__forma" points="{{shape}}"></polygon>
+      <text class="desordem-aparencia__numero" x="50" y="54" text-anchor="middle" dominant-baseline="middle">{{previewNumber}}</text>
+    </svg>
+    <div class="desordem-aparencia__previa-lado">
+      <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Dados3D.Aparencia.DadoPrevia"}}</span>
+        <select name="previewSides">{{#each sides}}<option value="{{value}}"{{#if selected}} selected{{/if}}>d{{value}}</option>{{/each}}</select>
+      </label>
+      <button type="button" data-action="preview3d"><i class="fa-solid fa-cube" aria-hidden="true"></i> {{localize "DESORDEM.Dados3D.Aparencia.Ver3D"}}</button>
+      <p class="desordem-ficha__dica">{{localize "DESORDEM.Dados3D.Aparencia.DicaPrevia"}}</p>
+    </div>
+  </div>
+
+  <div class="desordem-aparencia__campos">
+    {{#each colors}}
+    <label class="desordem-ficha__campo"><span>{{label}}</span><input type="color" name="{{field}}" value="{{value}}"></label>
+    {{/each}}
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Dados3D.Aparencia.Campo.texture"}}</span>
+      <select name="texture">{{#each textures}}<option value="{{key}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Dados3D.Aparencia.Campo.material"}}</span>
+      <select name="material">{{#each materials}}<option value="{{key}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
+    <label class="desordem-ficha__campo"><span>{{localize "DESORDEM.Dados3D.Aparencia.Campo.font"}}</span>
+      <select name="font">{{#each fonts}}<option value="{{key}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
+  </div>
+
+  <p class="desordem-ficha__dica">{{localize "DESORDEM.Dados3D.Aparencia.DicaAura"}}</p>
+
+  <footer class="desordem-aparencia__botoes">
+    <button type="button" data-action="restore"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> {{localize "DESORDEM.Dados3D.Aparencia.Restaurar"}}</button>
+    <button type="button" data-action="save"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> {{localize "DESORDEM.Dados3D.Aparencia.Salvar"}}</button>
+  </footer>
+</div>

@@ -1965,7 +1965,30 @@
     "Dados3D": {
       "Conjunto": "Dado de pavor",
       "Categoria": "Desordem-Normal",
-      "Aura": "Aura de pavor (Desordem-Normal)"
+      "Aura": "Aura de pavor (Desordem-Normal)",
+      "Aparencia": {
+        "MenuNome": "Aparência do dado de pavor",
+        "MenuBotao": "Aparência do dado de pavor",
+        "MenuDica": "Cores, textura, material e fonte do seu dado de pavor no Dice So Nice. Cada jogador escolhe o seu; todos veem.",
+        "Titulo": "Aparência do dado de pavor",
+        "Previa": "Prévia do dado de pavor",
+        "DadoPrevia": "Dado da prévia",
+        "Ver3D": "Ver em 3D",
+        "DicaPrevia": "A prévia 2D mostra as cores e a fonte. «Ver em 3D» joga um dado de teste só na sua tela, com textura, material e aura.",
+        "DicaAura": "A aura de pavor vai sempre no dado de pavor, qualquer que seja a aparência.",
+        "Restaurar": "Restaurar padrão",
+        "Salvar": "Salvar",
+        "Salvo": "Aparência do dado de pavor salva.",
+        "Campo": {
+          "background": "Cor do dado",
+          "foreground": "Cor do número",
+          "outline": "Contorno do número",
+          "edge": "Cor das arestas",
+          "texture": "Textura",
+          "material": "Material",
+          "font": "Fonte"
+        }
+      }
     }
   },
   "TYPES.Item.arma": "Arma",

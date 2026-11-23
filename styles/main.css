@@ -4560,3 +4560,77 @@ button.desordem-desafios-cartao__nome:hover {
   object-fit: cover;
   width: 32px;
 }
+
+/* ===== Aparência do dado de pavor (v0.25.5) ===== */
+
+/* As cores e a fonte da prévia vêm das variáveis --dn-ap-*, trocadas pela janela a cada campo */
+.desordem-aparencia {
+  --dn-ap-dado: #0c0d0f;
+  --dn-ap-numero: #d5d8dc;
+  --dn-ap-contorno: #0c0d0f;
+  --dn-ap-arestas: #9fd6ee;
+  --dn-ap-fonte: 'Desordem Numeros', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Prévia à esquerda; dado da prévia, «Ver em 3D» e a dica à direita */
+.desordem-aparencia__topo {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.desordem-aparencia__previa {
+  flex: 0 0 110px;
+  height: 110px;
+  width: 110px;
+}
+
+.desordem-aparencia__previa-lado {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* O dado: cor do dado por dentro, cor das arestas na borda */
+.desordem-aparencia__forma {
+  fill: var(--dn-ap-dado);
+  stroke: var(--dn-ap-arestas);
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+/* O número: contorno desenhado por baixo da cor (paint-order), como no Dice So Nice */
+.desordem-aparencia__numero {
+  fill: var(--dn-ap-numero);
+  font-family: var(--dn-ap-fonte);
+  font-size: 34px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--dn-ap-contorno);
+  stroke-width: 4;
+}
+
+/* Campos em duas colunas (uma só em janela estreita, como no celular) */
+.desordem-aparencia__campos {
+  display: grid;
+  gap: 6px 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.desordem-aparencia__campos input[type='color'] {
+  height: 28px;
+  padding: 0 2px;
+}
+
+.desordem-aparencia__botoes {
+  display: flex;
+  gap: 6px;
+}
+
+.desordem-aparencia__botoes button {
+  flex: 1 1 0;
+}

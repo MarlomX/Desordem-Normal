@@ -1965,7 +1965,30 @@
     "Dados3D": {
       "Conjunto": "Fear die",
       "Categoria": "Desordem-Normal",
-      "Aura": "Fear aura (Desordem-Normal)"
+      "Aura": "Fear aura (Desordem-Normal)",
+      "Aparencia": {
+        "MenuNome": "Fear die appearance",
+        "MenuBotao": "Fear die appearance",
+        "MenuDica": "Colors, texture, material and font of your fear die in Dice So Nice. Each player picks their own; everyone sees it.",
+        "Titulo": "Fear die appearance",
+        "Previa": "Fear die preview",
+        "DadoPrevia": "Preview die",
+        "Ver3D": "See in 3D",
+        "DicaPrevia": "The 2D preview shows the colors and font. \"See in 3D\" throws a test die only on your screen, with texture, material and aura.",
+        "DicaAura": "The fear aura always goes on the fear die, whatever the appearance.",
+        "Restaurar": "Restore default",
+        "Salvar": "Save",
+        "Salvo": "Fear die appearance saved.",
+        "Campo": {
+          "background": "Die color",
+          "foreground": "Number color",
+          "outline": "Number outline",
+          "edge": "Edge color",
+          "texture": "Texture",
+          "material": "Material",
+          "font": "Font"
+        }
+      }
     }
   },
   "TYPES.Item.arma": "Weapon",

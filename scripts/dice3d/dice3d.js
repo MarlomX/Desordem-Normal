@@ -7,12 +7,15 @@
  * As decisões ficam em funções puras (`fear-dice.js`); aqui só a conversa com o Foundry e com o
  * Dice So Nice.
  */
+import { SYSTEM_ID } from '../config.js';
+import FearAppearanceApp, { savedFearStyle } from './appearance-app.js';
 import {
   AURA_OUTLINE_FIELDS,
   DSN_MODULE_ID,
   FEAR_AURA_OUTLINE,
   FEAR_AURA_SFX,
   FEAR_FONT,
+  FEAR_STYLE_SETTING,
   decorateFearRolls,
   fearAppearance,
   fearColorsetData,
@@ -122,13 +125,35 @@ async function onDiceSoNiceReady(dice3d) {
   await dice3d.addColorset(fearColorsetData((key) => game.i18n.localize(key)));
 }
 
-/** Registra a integração (chamada no `init` do sistema). Sem o Dice So Nice, o hook nunca roda. */
+/**
+ * Registra a integração (chamada no `init` do sistema). Sem o Dice So Nice, o hook nunca roda.
+ * A configuração da aparência (v0.25.5) é sempre registrada (ler nunca falha); o botão
+ * «Aparência do dado de pavor» só aparece nas Configurações com o módulo ativo.
+ */
 export function registerDiceSoNice() {
+  // `scope: 'user'`: guardada no mundo, uma por usuário (a mesma no PC e no celular)
+  game.settings.register(SYSTEM_ID, FEAR_STYLE_SETTING, {
+    scope: 'user',
+    config: false,
+    type: Object,
+    default: {},
+  });
+  if (diceSoNiceActive()) {
+    game.settings.registerMenu(SYSTEM_ID, `${FEAR_STYLE_SETTING}Menu`, {
+      name: 'DESORDEM.Dados3D.Aparencia.MenuNome',
+      label: 'DESORDEM.Dados3D.Aparencia.MenuBotao',
+      hint: 'DESORDEM.Dados3D.Aparencia.MenuDica',
+      icon: 'fa-solid fa-dice-d20',
+      type: FearAppearanceApp,
+      // Todos podem abrir: cada um muda só o próprio dado
+      restricted: false,
+    });
+  }
   Hooks.once('diceSoNiceReady', onDiceSoNiceReady);
 }
 
 /**
- * Marca nos Rolls de um teste o dado de pavor (aparência própria e aura) e o pavor abraçado (só a
+ * Marca nos Rolls de um teste o dado de pavor (a aparência escolhida pelo jogador e a aura) e o pavor abraçado (só a
  * aura). Sem o Dice So Nice, não faz nada.
  * @param {Roll[]} rolls Rolls do teste, na ordem de `executeTest` (o pavor por último).
  * @param {{rolledCount: number, hasFear: boolean, embracedExtraIndex?: number|null}} info
@@ -136,5 +161,6 @@ export function registerDiceSoNice() {
  */
 export function markFearDice(rolls, info) {
   if (!diceSoNiceActive()) return 0;
-  return decorateFearRolls(rolls, fearRollIndexes(info), fearAppearance());
+  // A aparência escolhida por quem rola (v0.25.5); os outros veem a mesma, gravada na rolagem
+  return decorateFearRolls(rolls, fearRollIndexes(info), fearAppearance(savedFearStyle()));
 }
