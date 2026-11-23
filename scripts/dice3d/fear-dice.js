@@ -23,6 +23,18 @@ export const FEAR_STYLE_SETTING = 'aparenciaPavor';
 export const FEAR_AURA_SFX = 'DesordemAuraPavor';
 
 /**
+ * «Sistema de dados» próprio do dado de pavor no Dice So Nice (v0.25.6): os mesmos modelos do
+ * padrão, mas com os números em brilho (emissive) desde o lançamento. Só o dado de pavor o usa.
+ */
+export const FEAR_DICE_SYSTEM = 'desordem-pavor';
+
+/** Lados com modelo próprio no sistema do pavor (o dado de pavor vai de d4 a d20). */
+export const FEAR_SYSTEM_SIDES = Object.freeze([4, 6, 8, 10, 12, 20]);
+
+/** Cor e força do brilho dos números (a mesma cor da aura). */
+export const FEAR_EMISSIVE = Object.freeze({ color: '#dcefff', intensity: 1 });
+
+/**
  * Fonte dos números do dado de pavor: a mesma dos números da ficha e do chat
  * (`@font-face` em styles/main.css, só dígitos).
  */
@@ -83,7 +95,45 @@ export function fearColorsetData(localize) {
  * @returns {object}
  */
 export function fearAppearance(style = {}) {
-  return { colorset: FEAR_COLORSET, ...DEFAULT_FEAR_STYLE, ...style };
+  // `system`: o sistema de dados do pavor (números com brilho, v0.25.6)
+  return { colorset: FEAR_COLORSET, ...DEFAULT_FEAR_STYLE, ...style, system: FEAR_DICE_SYSTEM };
+}
+
+/**
+ * Rótulos das faces de um dado, como no Dice So Nice padrão (o d10 mostra 0 no lugar do 10).
+ * @param {number} sides
+ * @returns {string[]}
+ */
+export function faceLabels(sides) {
+  const labels = Array.from({ length: sides }, (_, index) => String(index + 1));
+  if (sides === 10) labels[9] = '0';
+  return labels;
+}
+
+/**
+ * Presets do sistema do pavor para `game.dice3d.addDicePreset`: um por dado, com os rótulos
+ * padrão e o brilho dos números.
+ * @returns {object[]}
+ */
+export function fearDicePresets() {
+  return FEAR_SYSTEM_SIDES.map((sides) => ({
+    type: `d${sides}`,
+    labels: faceLabels(sides),
+    system: FEAR_DICE_SYSTEM,
+    emissive: FEAR_EMISSIVE.color,
+    emissiveIntensity: FEAR_EMISSIVE.intensity,
+  }));
+}
+
+/**
+ * Se um dado da mesa do Dice So Nice deve ganhar a aura já no lançamento (v0.25.6): é o que tem a
+ * aura marcada em `options.sfx` e não é um dado «fantasma» (rolagem às cegas vista por outros,
+ * que o Dice So Nice desenha sem efeitos).
+ * @param {object|undefined} options `options` do dado na mesa (as mesmas do termo).
+ * @returns {boolean}
+ */
+export function wantsAura(options) {
+  return options?.sfx?.specialEffect === FEAR_AURA_SFX && !options?.ghost;
 }
 
 /** Efeito especial fixo do termo: a aura de pavor, seja qual for o resultado. */

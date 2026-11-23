@@ -5,11 +5,16 @@ import {
   DEFAULT_FEAR_STYLE,
   FEAR_AURA_SFX,
   FEAR_COLORSET,
+  FEAR_DICE_SYSTEM,
+  FEAR_EMISSIVE,
   decorateFearRolls,
   fearAppearance,
   fearAuraSfx,
+  faceLabels,
   fearColorsetData,
+  fearDicePresets,
   fearRollIndexes,
+  wantsAura,
 } from '../scripts/dice3d/fear-dice.js';
 
 /** Roll de mentira: só o que o Dice So Nice lê (o primeiro termo de dado e as opções). */
@@ -25,7 +30,13 @@ test('fearColorsetData: o conjunto do pavor, escondido da lista de cores', () =>
 });
 
 test('fearAppearance: padrão do sistema, com campos trocáveis', () => {
-  assert.deepEqual(fearAppearance(), { colorset: FEAR_COLORSET, ...DEFAULT_FEAR_STYLE });
+  assert.deepEqual(fearAppearance(), {
+    colorset: FEAR_COLORSET,
+    ...DEFAULT_FEAR_STYLE,
+    system: FEAR_DICE_SYSTEM,
+  });
+  // O jogador não troca o sistema de dados do pavor (é ele que dá o brilho aos números)
+  assert.equal(fearAppearance({ system: 'outro' }).system, FEAR_DICE_SYSTEM);
   const custom = fearAppearance({ background: '#330000' });
   assert.equal(custom.background, '#330000');
   assert.equal(custom.foreground, DEFAULT_FEAR_STYLE.foreground);
@@ -78,4 +89,28 @@ test('decorateFearRolls: aparência copiada (cada dado com o seu objeto) e índi
   assert.notEqual(rolls[2].dice[0].options.appearance, style);
   assert.equal(decorateFearRolls(rolls, { fear: 9, embraced: null }), 0);
   assert.equal(decorateFearRolls([{ dice: [] }], { fear: 0, embraced: null }), 0);
+});
+
+test('sistema do pavor: rótulos padrão (d10 com 0) e brilho em todos os dados', () => {
+  assert.deepEqual(faceLabels(4), ['1', '2', '3', '4']);
+  assert.equal(faceLabels(10)[9], '0');
+  assert.equal(faceLabels(20).length, 20);
+  const presets = fearDicePresets();
+  assert.deepEqual(
+    presets.map((preset) => preset.type),
+    ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'],
+  );
+  for (const preset of presets) {
+    assert.equal(preset.system, FEAR_DICE_SYSTEM);
+    assert.equal(preset.emissive, FEAR_EMISSIVE.color);
+    assert.equal(preset.labels.length, Number(preset.type.slice(1)));
+  }
+});
+
+test('wantsAura: só dados marcados com a aura e que não são fantasmas', () => {
+  assert.equal(wantsAura({ sfx: fearAuraSfx() }), true);
+  assert.equal(wantsAura({ sfx: fearAuraSfx(), ghost: true }), false);
+  assert.equal(wantsAura({ sfx: { specialEffect: 'PlayAnimationOutline' } }), false);
+  assert.equal(wantsAura({}), false);
+  assert.equal(wantsAura(undefined), false);
 });

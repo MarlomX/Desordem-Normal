@@ -1,8 +1,10 @@
-/* global document */
+/* global document, requestAnimationFrame, performance */
 /**
  * Ligação opcional com o módulo Dice So Nice (v0.25.2). Só faz algo se o módulo estiver ativo:
- * no hook `diceSoNiceReady` registra o conjunto de cores do dado de pavor e o efeito especial
- * «Aura de pavor». `markFearDice` é chamada por `executeTest` (scripts/rolls/chat.js) logo depois
+ * no hook `diceSoNiceReady` registra o conjunto de cores do dado de pavor, o efeito especial
+ * «Aura de pavor» e (v0.25.6) o sistema de dados do pavor, com os números em brilho. Também
+ * (v0.25.6) liga a aura já no lançamento: no hook `diceSoNiceRollStart`, procura na mesa os dados
+ * marcados com a aura. `markFearDice` é chamada por `executeTest` (scripts/rolls/chat.js) logo depois
  * de rolar, antes da mensagem ir ao chat, para todos os testes do sistema.
  * As decisões ficam em funções puras (`fear-dice.js`); aqui só a conversa com o Foundry e com o
  * Dice So Nice.
@@ -15,12 +17,18 @@ import {
   FEAR_AURA_OUTLINE,
   FEAR_AURA_SFX,
   FEAR_FONT,
+  FEAR_DICE_SYSTEM,
   FEAR_STYLE_SETTING,
   decorateFearRolls,
   fearAppearance,
   fearColorsetData,
+  fearDicePresets,
   fearRollIndexes,
+  wantsAura,
 } from './fear-dice.js';
+
+/** Por quanto tempo (ms), depois do início de uma rolagem, procurar os dados com aura na mesa. */
+const AURA_WATCH_MS = 5000;
 
 /** Se o Dice So Nice está ativo neste mundo (sem ele, o sistema não mexe nos Rolls). */
 export const diceSoNiceActive = () => Boolean(game.modules.get(DSN_MODULE_ID)?.active);
@@ -31,8 +39,8 @@ export const diceSoNiceActive = () => Boolean(game.modules.get(DSN_MODULE_ID)?.a
  */
 const savedOutline = new WeakMap();
 
-/** Quantas auras estão ligadas em cada contorno (o mesmo objeto serve a todos os dados). */
-const activeAuras = new WeakMap();
+/** Dados com aura ligada em cada contorno (o mesmo objeto do contorno serve a todos os dados). */
+const auraMeshes = new WeakMap();
 
 /** Guarda os valores do contorno (cores copiadas, números como estão). */
 function saveOutline(pass) {
@@ -52,6 +60,81 @@ function applyOutline(pass, values) {
     if (pass[field]?.set) pass[field].set(value);
     else pass[field] = value;
   }
+}
+
+/**
+ * Tira da lista de auras os dados que já saíram da mesa (o Dice So Nice limpa a mesa entre
+ * rolagens). Assim uma aura que ficou para trás não segura o contorno mudado.
+ * @param {object} box Mesa de dados do Dice So Nice.
+ * @param {Set<object>} set
+ */
+function pruneAuras(box, set) {
+  const alive = new Set([...(box?.diceList ?? []), ...(box?.deadDiceList ?? [])]);
+  for (const mesh of set) {
+    if (alive.has(mesh)) continue;
+    set.delete(mesh);
+    if (box?.outlinePass) {
+      box.outlinePass.selectedObjects = box.outlinePass.selectedObjects.filter((m) => m !== mesh);
+    }
+  }
+}
+
+/**
+ * Liga a aura num dado (pode ser chamada de novo para o mesmo dado: nada muda). Na primeira aura
+ * do contorno, guarda os valores dele e aplica os da aura.
+ * @param {object} box Mesa de dados do Dice So Nice.
+ * @param {object} mesh O dado (malha 3D).
+ * @returns {boolean} false se não há contorno (iluminação realista desligada).
+ */
+function auraOn(box, mesh) {
+  const pass = box?.outlinePass;
+  if (!pass?.selectedObjects || !mesh) return false;
+  let set = auraMeshes.get(pass);
+  if (!set) auraMeshes.set(pass, (set = new Set()));
+  pruneAuras(box, set);
+  if (set.has(mesh)) return true;
+  if (set.size === 0) saveOutline(pass);
+  set.add(mesh);
+  applyOutline(pass, FEAR_AURA_OUTLINE);
+  if (!pass.selectedObjects.includes(mesh)) pass.selectedObjects.push(mesh);
+  return true;
+}
+
+/**
+ * Desliga a aura de um dado. Quando a última termina, o contorno volta como era (para o efeito
+ * «contorno» do próprio módulo).
+ * @param {object} box
+ * @param {object} mesh
+ */
+function auraOff(box, mesh) {
+  const pass = box?.outlinePass;
+  if (!pass?.selectedObjects) return;
+  pass.selectedObjects = pass.selectedObjects.filter((m) => m !== mesh);
+  const set = auraMeshes.get(pass);
+  if (!set) return;
+  set.delete(mesh);
+  pruneAuras(box, set);
+  if (set.size === 0 && savedOutline.has(pass)) applyOutline(pass, savedOutline.get(pass));
+}
+
+/**
+ * Aura desde o lançamento (v0.25.6): o Dice So Nice só toca efeitos quando o dado para, então,
+ * a cada quadro, por alguns segundos depois do início da rolagem, o sistema procura na mesa os
+ * dados marcados com a aura e a liga neles. Quando o dado para, o efeito «Aura de pavor» encontra
+ * a aura já ligada e só cuida de desligá-la no fim. Se algo mudar no Dice So Nice e a busca não
+ * achar os dados, a aura continua aparecendo no fim, como antes.
+ */
+function watchAuraDice() {
+  const box = game.dice3d?.box;
+  if (!box?.outlinePass) return;
+  const until = performance.now() + AURA_WATCH_MS;
+  const step = () => {
+    for (const mesh of box.diceList ?? []) {
+      if (wantsAura(mesh.options)) auraOn(box, mesh);
+    }
+    if (performance.now() < until) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 }
 
 /**
@@ -87,26 +170,13 @@ class FearAuraSfx {
   }
 
   async play() {
-    const pass = this.box?.outlinePass;
-    if (!pass?.selectedObjects) return false;
-    const count = activeAuras.get(pass) ?? 0;
-    if (count === 0) saveOutline(pass);
-    activeAuras.set(pass, count + 1);
-    applyOutline(pass, FEAR_AURA_OUTLINE);
-    pass.selectedObjects.push(this.dicemesh);
-    return true;
+    return auraOn(this.box, this.dicemesh);
   }
 
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
-    const pass = this.box?.outlinePass;
-    if (!pass?.selectedObjects) return;
-    pass.selectedObjects = pass.selectedObjects.filter((mesh) => mesh !== this.dicemesh);
-    const count = Math.max(0, (activeAuras.get(pass) ?? 1) - 1);
-    activeAuras.set(pass, count);
-    // A última aura terminou: o contorno volta como era (para o efeito «contorno» do módulo)
-    if (count === 0 && savedOutline.has(pass)) applyOutline(pass, savedOutline.get(pass));
+    auraOff(this.box, this.dicemesh);
   }
 }
 
@@ -123,6 +193,18 @@ async function onDiceSoNiceReady(dice3d) {
   }
   dice3d.addSFXMode(FearAuraSfx);
   await dice3d.addColorset(fearColorsetData((key) => game.i18n.localize(key)));
+  // Sistema de dados do pavor (v0.25.6): números em brilho durante toda a animação
+  dice3d.addSystem(
+    {
+      id: FEAR_DICE_SYSTEM,
+      name: game.i18n.localize('DESORDEM.Dados3D.Sistema'),
+      group: game.i18n.localize('DESORDEM.Dados3D.Categoria'),
+    },
+    'default',
+  );
+  for (const preset of fearDicePresets()) dice3d.addDicePreset(preset);
+  // Aura já no lançamento (v0.25.6)
+  Hooks.on('diceSoNiceRollStart', watchAuraDice);
 }
 
 /**

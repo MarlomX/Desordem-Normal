@@ -1988,7 +1988,8 @@
           "material": "Material",
           "font": "Fonte"
         }
-      }
+      },
+      "Sistema": "Dado de pavor (Desordem-Normal)"
     }
   },
   "TYPES.Item.arma": "Arma",

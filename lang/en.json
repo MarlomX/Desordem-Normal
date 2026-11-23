@@ -1988,7 +1988,8 @@
           "material": "Material",
           "font": "Font"
         }
-      }
+      },
+      "Sistema": "Fear die (Desordem-Normal)"
     }
   },
   "TYPES.Item.arma": "Weapon",
