@@ -314,6 +314,32 @@
       },
       "flags": {},
       "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0013",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0013",
+      "name": "Dados 3D (Dice So Nice)",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<p>Com o módulo <strong>Dice So Nice</strong> ativo, o sistema dá ao <strong>dado de pavor</strong> um estilo próprio na animação (escuro, com o número claro e a borda azul pálida) e a <strong>aura de pavor</strong>, um contorno branco levemente azulado que pulsa quando o dado para. Sem o módulo, nada muda.</p><ul><li>Os outros dados seguem a aparência que cada jogador escolheu no Dice So Nice.</li><li>Ao abraçar o pavor, o dado vira um dado bônus: ele fica com a aparência normal do jogador, mas leva a aura.</li><li>Todos veem o dado de pavor de quem rolou.</li><li>A aura só aparece para quem tem a iluminação realista (bump mapping) ligada nas configurações do Dice So Nice. Sem ela, o dado de pavor continua com o estilo próprio, só sem o contorno.</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 1300000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
     }
   ],
   "folder": null,

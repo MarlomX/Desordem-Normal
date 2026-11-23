@@ -1956,6 +1956,11 @@
       "EscolhaTitulo": "Escolha o personagem",
       "EscolhaPergunta": "Qual ficha você quer abrir?",
       "SemPersonagem": "Nenhum personagem encontrado. Peça ao mestre para vincular um ao seu usuário."
+    },
+    "Dados3D": {
+      "Conjunto": "Dado de pavor",
+      "Categoria": "Desordem-Normal",
+      "Aura": "Aura de pavor (Desordem-Normal)"
     }
   },
   "TYPES.Item.arma": "Arma",

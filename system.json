@@ -7,6 +7,15 @@
     "minimum": "13",
     "verified": "13.351"
   },
+  "relationships": {
+    "recommends": [
+      {
+        "id": "dice-so-nice",
+        "type": "module",
+        "reason": "Opcional: dá ao dado de pavor um estilo próprio e a aura de pavor na animação 3D."
+      }
+    ]
+  },
   "authors": [
     {
       "name": "Marlom"

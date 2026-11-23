@@ -41,6 +41,7 @@ const localize = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.
 import { resolveFearOptions } from './fear.js';
 import { createPending } from './pending-table.js';
 import { isThreat, testResources } from './threat.js';
+import { markFearDice } from '../dice3d/dice3d.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
 const TEMPLATE_OPOSTO = `systems/${SYSTEM_ID}/templates/chat/oposto.hbs`;
@@ -139,7 +140,8 @@ export async function executeTest({
   attrLabel,
   skillLabel,
   showDt = true,
-  usos = []
+  usos = [],
+  embracedFearIndex = null
 }) {
   const helped = applyHelpers({ stepMods, extraDice }, helpers);
 
@@ -152,6 +154,13 @@ export async function executeTest({
   });
   // O dado de pavor é rolado junto, depois dos demais dados
   const rolls = await rollDice(fearDie ? [...rolledSides, fearDie] : rolledSides);
+  // Dice So Nice (v0.25.2): aparência e aura no dado de pavor, aura no pavor abraçado. As ajudas
+  // só acrescentam dados no fim, então a posição do abraçado nos dados extras não muda.
+  markFearDice(rolls, {
+    rolledCount: rolledSides.length,
+    hasFear: Boolean(fearDie),
+    embracedExtraIndex: embracedFearIndex,
+  });
   const result = resolveTest({
     attrDie,
     skillDie,
@@ -446,6 +455,13 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   }));
   // Linha «Usou» do cartão: também os efeitos da arma que entraram neste ataque e a penalidade
   usos.push(...attackUsedLines([...attack.lines, ...(penaltyLine ? [penaltyLine] : [])], localize));
+  // Dados extras do teste; o pavor abraçado vira um dado bônus e entra por último
+  const extraDice = [
+    ...(rest.extraDice ?? []),
+    ...boosts.extraDice,
+    ...reserveDice,
+    ...(fear.bonusDie ? [fear.bonusDie] : []),
+  ];
 
   return {
     ...rest,
@@ -472,12 +488,9 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
         testKind: allowDefense ? 'defesa' : testKind
       }),
     ],
-    extraDice: [
-      ...(rest.extraDice ?? []),
-      ...boosts.extraDice,
-      ...reserveDice,
-      ...(fear.bonusDie ? [fear.bonusDie] : []),
-    ],
+    extraDice,
+    // Pavor abraçado (v0.25.2): posição dele nos dados extras, para levar a aura no Dice So Nice
+    embracedFearIndex: fear.bonusDie ? extraDice.length - 1 : null,
     // Crítico ampliado da arma (sem ele, o padrão de `resolveTest`)
     ...(attack.critMin ? { critMin: attack.critMin } : {}),
     modifier:

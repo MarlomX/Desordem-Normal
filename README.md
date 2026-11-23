@@ -30,3 +30,8 @@ tem duas macros que resolvem isso pela barra de macros:
 - **Abrir ficha**: abre (ou traz para a frente) a ficha do seu personagem.
 
 Arraste as duas do compêndio para a barra de macros e toque nelas pela aba de macros do Swipe.
+
+## Dice So Nice (opcional)
+
+Com o módulo Dice So Nice ativo, o dado de pavor ganha um estilo próprio na animação 3D e a
+aura de pavor (um contorno branco levemente azulado). Sem o módulo, nada muda.

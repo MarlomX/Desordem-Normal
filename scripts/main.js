@@ -56,6 +56,7 @@ import {
 } from './rolls/abilities-chat.js';
 import { newSceneForAll } from './rolls/scene-macro.js';
 import { openChat, openSheet } from './mobile/macros.js';
+import { registerDiceSoNice } from './dice3d/dice3d.js';
 import { PontoInteresseModel } from './data/ponto.js';
 import PontoInteresseSheet from './journal/point-sheet.js';
 import { registerPointHooks, registerPointSettings } from './journal/point-hooks.js';
@@ -140,6 +141,8 @@ Hooks.once('init', () => {
   // Desafios (teste estendido): configuração do mundo e a guia nova da barra lateral
   registerChallenges();
   registerEquipmentGuards();
+  // Dice So Nice (v0.25.2, opcional): estilo do dado de pavor e a aura; sem o módulo, nada muda
+  registerDiceSoNice();
   // Ponto de interesse (v0.24.0): subtipo de página do Diário, com folha própria e os ganchos que
   // mantêm o número na frente do nome da página («4.1 · Potes»)
   CONFIG.JournalEntryPage.dataModels[POINT_TYPE] = PontoInteresseModel;

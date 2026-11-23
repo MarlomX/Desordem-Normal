@@ -1956,6 +1956,11 @@
       "EscolhaTitulo": "Choose the character",
       "EscolhaPergunta": "Which sheet do you want to open?",
       "SemPersonagem": "No character found. Ask the GM to link one to your user."
+    },
+    "Dados3D": {
+      "Conjunto": "Fear die",
+      "Categoria": "Desordem-Normal",
+      "Aura": "Fear aura (Desordem-Normal)"
     }
   },
   "TYPES.Item.arma": "Weapon",
