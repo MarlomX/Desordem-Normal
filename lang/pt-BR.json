@@ -1948,6 +1948,14 @@
         "Sumiu": "O documento deste vínculo não existe mais.",
         "SemPermissao": "Você não tem permissão para abrir este documento."
       }
+    },
+    "Celular": {
+      "ChatTitulo": "Chat (últimas {n})",
+      "Fechar": "Fechar",
+      "MensagemNaoAchada": "Não achei essa mensagem no chat original.",
+      "EscolhaTitulo": "Escolha o personagem",
+      "EscolhaPergunta": "Qual ficha você quer abrir?",
+      "SemPersonagem": "Nenhum personagem encontrado. Peça ao mestre para vincular um ao seu usuário."
     }
   },
   "TYPES.Item.arma": "Arma",

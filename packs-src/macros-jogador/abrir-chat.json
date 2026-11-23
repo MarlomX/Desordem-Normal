@@ -1,0 +1,15 @@
+{
+  "_id": "dnMacroAbrirChat",
+  "_key": "!macros!dnMacroAbrirChat",
+  "name": "Abrir chat",
+  "type": "script",
+  "img": "icons/svg/sound.svg",
+  "scope": "global",
+  "command": "// Abrir chat (Desordem-Normal, v0.25.1): mostra as últimas mensagens do chat numa janela que se\n// atualiza sozinha, com os botões dos cartões e os detalhes das rolagens funcionando.\n// Feita para jogar pelo celular com o Swipe, onde o chat do Foundry só fica para assinantes:\n// coloque esta macro na barra de macros e abra o chat por ela. Veja o compêndio «Guias».\n// Para mostrar outra quantidade de mensagens (1 a 50), troque por: game.desordem.openChat({ limit: 20 });\n// A lógica fica no sistema (scripts/mobile/macros.js) e é atualizada junto com ele.\ngame.desordem.openChat();\n",
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

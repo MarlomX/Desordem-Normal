@@ -55,6 +55,7 @@ import {
   gainAnalysisMarkers,
 } from './rolls/abilities-chat.js';
 import { newSceneForAll } from './rolls/scene-macro.js';
+import { openChat, openSheet } from './mobile/macros.js';
 import { PontoInteresseModel } from './data/ponto.js';
 import PontoInteresseSheet from './journal/point-sheet.js';
 import { registerPointHooks, registerPointSettings } from './journal/point-hooks.js';
@@ -191,6 +192,9 @@ Hooks.once('init', () => {
     endScene,
     // Macro do mestre: nova cena para os personagens dos jogadores (v0.23.3)
     newSceneForAll,
+    // Macros do jogador para celular (v0.25.1): chat em janela e atalho para a ficha
+    openChat,
+    openSheet,
     healAlly,
     gainAnalysisMarkers,
     perseguicao: chaseApi,

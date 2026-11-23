@@ -269,3 +269,74 @@ test('compêndio de investigação: diário com pontos válidos, pais existentes
   assert.equal(pack.path, 'packs/investigacao');
   assert.equal(pack.ownership.PLAYER, 'NONE');
 });
+
+// ---------- Compêndios «Macros do jogador» e «Guias» (v0.25.1) ----------
+
+const manifestPacks = () =>
+  JSON.parse(fs.readFileSync(path.join(root, 'system.json'), 'utf8')).packs;
+
+test('compêndios: cada pasta de packs-src tem um pacote no manifesto, e vice-versa', () => {
+  const folders = fs
+    .readdirSync(path.join(root, 'packs-src'))
+    .filter((name) => fs.statSync(path.join(root, 'packs-src', name)).isDirectory())
+    .sort();
+  const packs = manifestPacks();
+  assert.deepEqual(packs.map((pack) => pack.name).sort(), folders);
+  for (const pack of packs) assert.equal(pack.path, `packs/${pack.name}`, pack.name);
+});
+
+test('macros do jogador: «Abrir chat» e «Abrir ficha» só chamam o sistema', () => {
+  const dir = path.join(root, 'packs-src', 'macros-jogador');
+  const docs = fs
+    .readdirSync(dir)
+    .filter((file) => file.endsWith('.json'))
+    .map((file) => JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')));
+  assert.equal(docs.length, 2);
+  const byName = Object.fromEntries(docs.map((doc) => [doc.name, doc]));
+  assert.match(byName['Abrir chat'].command, /^game\.desordem\.openChat\(\);$/m);
+  assert.match(byName['Abrir ficha'].command, /^game\.desordem\.openSheet\(\);$/m);
+  for (const doc of docs) {
+    assert.match(doc._id, /^[A-Za-z0-9]{16}$/, doc.name);
+    assert.equal(doc._key, `!macros!${doc._id}`, doc.name);
+    assert.equal(doc.type, 'script', doc.name);
+    // O comentário explica o uso pelo Swipe e aponta para o guia
+    assert.match(doc.command, /Swipe/, doc.name);
+    assert.match(doc.command, /Guias/, doc.name);
+  }
+  // As funções chamadas existem na API do sistema
+  const main = fs.readFileSync(path.join(root, 'scripts', 'main.js'), 'utf8');
+  assert.match(main, /^\s+openChat,$/m);
+  assert.match(main, /^\s+openSheet,$/m);
+  const pack = manifestPacks().find((entry) => entry.name === 'macros-jogador');
+  assert.equal(pack.type, 'Macro');
+  assert.equal(pack.ownership.PLAYER, 'OBSERVER');
+});
+
+test('guias: diário com páginas de texto, ids únicos e visível aos jogadores', () => {
+  const dir = path.join(root, 'packs-src', 'guias');
+  const files = fs.readdirSync(dir).filter((file) => file.endsWith('.json'));
+  assert.equal(files.length, 1);
+  const entry = JSON.parse(fs.readFileSync(path.join(dir, files[0]), 'utf8'));
+  assert.match(entry._id, /^[A-Za-z0-9]{16}$/);
+  assert.equal(entry._key, `!journal!${entry._id}`);
+  // A cópia importada para o mundo já vem como «Observador» para os jogadores
+  assert.equal(entry.ownership.default, 2);
+  const ids = new Set();
+  for (const page of entry.pages) {
+    assert.match(page._id, /^[A-Za-z0-9]{16}$/, page.name);
+    assert.equal(page._key, `!journal.pages!${entry._id}.${page._id}`, page.name);
+    assert.equal(page.type, 'text', page.name);
+    assert.ok(page.text.content.length > 100, page.name);
+    // Licença: o nome da publicação oficial não entra no conteúdo do sistema
+    assert.doesNotMatch(page.text.content, /Ordem Paranormal/i, page.name);
+    ids.add(page._id);
+  }
+  assert.equal(ids.size, entry.pages.length);
+  const swipe = entry.pages.find((page) => /celular/i.test(page.name));
+  assert.ok(swipe, 'página do celular');
+  assert.match(swipe.text.content, /Abrir chat/);
+  assert.match(swipe.text.content, /Abrir ficha/);
+  const pack = manifestPacks().find((item) => item.name === 'guias');
+  assert.equal(pack.type, 'JournalEntry');
+  assert.equal(pack.ownership.PLAYER, 'OBSERVER');
+});

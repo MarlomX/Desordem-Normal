@@ -1,0 +1,326 @@
+{
+  "_id": "dnGuiaSistema001",
+  "_key": "!journal!dnGuiaSistema001",
+  "name": "Guia do Desordem-Normal",
+  "pages": [
+    {
+      "_id": "dnGuiaPagina0001",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0001",
+      "name": "Comece aqui",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<p>Este guia mostra <strong>como usar o sistema</strong> no Foundry: onde fica cada botão e o que ele faz. As regras do jogo estão nos livros e documentos do playtest; aqui só aparece o caminho na tela.</p><p>O sistema é <strong>semiautomático</strong>: ele rola, calcula e mostra o resultado, mas dano, cura, perda de PV/PD, tabelas e testes importantes só acontecem quando alguém clica no botão do cartão no chat. Nada é descontado sozinho.</p><h2>Compêndios do sistema</h2><ul><li><strong>Habilidades básicas</strong>, <strong>Itens básicos</strong> e <strong>Efeitos básicos</strong>: arraste para a ficha.</li><li><strong>Macros do jogador</strong>: «Abrir chat» e «Abrir ficha», para jogar pelo celular (página «Jogar pelo celular»).</li><li><strong>Guias</strong>: este diário.</li><li>Só o mestre vê: <strong>Macros do mestre</strong> («Nova cena» para todos) e <strong>Exemplos de investigação</strong>.</li></ul><h2>Para o mestre, antes da sessão</h2><ul><li>Vincule cada personagem ao usuário do jogador (Configurações de jogador, «Personagem»). Vários atalhos e macros usam esse vínculo.</li><li>Dê ao jogador a permissão «Dono» na ficha do personagem dele.</li><li>Para os jogadores lerem este guia no mundo, importe-o e dê a permissão «Observador» (a cópia importada já vem assim).</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 100000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0002",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0002",
+      "name": "Ficha do personagem",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<h2>Cabeçalho (sempre visível)</h2><ul><li>Retrato, nome, perfil, vocação e nível.</li><li>Barras de <strong>PV</strong> e <strong>PD</strong> com −/+. O campo aceita conta: <code>-2</code> subtrai, <code>+3</code> soma, <code>=5</code> ou <code>5</code> define. «máx.» mostra o máximo já com os efeitos.</li><li>O texto <strong>«Teste de lesão · DT»</strong> (e o de trauma) abre o teste correspondente. Os −/+ ao lado contam os testes feitos na cena.</li><li>Etiquetas de estado (inconsciente, moribundo...) e do <strong>dado de pavor</strong>, pontos de armadura e, se o personagem tiver as habilidades, os marcadores clicáveis de ímpeto e análise.</li></ul><p>Logo abaixo do cabeçalho aparecem cartões de <strong>perseguição</strong>, <strong>furtividade</strong> e <strong>desafios</strong> enquanto o personagem participa de um deles.</p><h2>Abas</h2><ul><li><strong>Testes</strong>: atributos (os −/+ embaixo são passos temporários), «Passos das Perícias», busca e ordenação das perícias, Aptidão e Ofício com áreas extras («Adicionar aptidão/ofício»). A etiqueta do atributo ao lado de uma perícia troca o atributo-base dela (fica gravado). O botão <strong>Teste oposto</strong> também fica aqui.</li><li><strong>Habilidades</strong>: as habilidades do personagem (a de perfil primeiro). A descrição abre e fecha; os botões de ação ficam sempre à mostra.</li><li><strong>Equipamento</strong>: armas (<strong>Atacar</strong>), armaduras e escudos, itens (<strong>Usar</strong>). Empunhar ocupa as mãos (no máximo duas); muitos itens podem ser usados sem empunhar.</li><li><strong>Condição</strong>: Medo, Efeitos, Saúde, Trauma, barras temporárias e <strong>Reiniciar cena</strong>.</li><li><strong>Relações</strong>: pessoa, grau do laço (bolinhas) e o botão <strong>Invocar</strong>.</li><li><strong>Notas</strong>: descrição e história do personagem.</li></ul><p>Em janela estreita (como no celular), as abas mostram só o ícone.</p>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 200000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0003",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0003",
+      "name": "Testes e a janela pré-teste",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<h2>Fazer um teste</h2><ul><li><strong>Clique</strong> no nome da perícia, aptidão ou ofício para abrir a janela pré-teste. <strong>Shift+clique</strong> rola direto, sem janela.</li><li>A janela também abre ao atacar com uma arma, na esquiva e nos testes de lesão e trauma.</li></ul><h2>O que tem na janela</h2><ul><li>Prévia dos dados que serão rolados.</li><li><strong>DT</strong> editável (sem DT na esquiva).</li><li><strong>Dados bônus</strong>: dois espaços de dado extra, só para este teste.</li><li>As habilidades que valem para o teste, com o custo e quanto você tem.</li><li><strong>Controlar</strong> ou <strong>abraçar o pavor</strong>, quando há dado de pavor.</li><li>Opções de cena, quando você participa de uma: «Usar como teste de avanço» (perseguição), de esconderijo (furtividade) ou «Usar no desafio».</li><li>O resumo do que será gasto. Nada é pago se você cancelar.</li></ul><h2>O cartão no chat</h2><ul><li>Mostra os dados (os ignorados e os devorados pelo pavor ficam apagados), o total, a rolagem alta (RA), a rolagem baixa (RB) e o resultado.</li><li>Botões de habilidade, como usar análise ou repetir um dado, aparecem só para quem pode usá-los.</li><li>Na falha crítica aparece <strong>«Rolar efeito de falha crítica»</strong>.</li></ul><h2>Teste oposto</h2><ul><li>Na aba Testes, <strong>Teste oposto</strong>: escolha o tipo (perícia contra perícia, corpo a corpo, atacar ou defender-se).</li><li>Com um token mirado, ele é o oponente. Sem alvo, qualquer outro personagem ou criatura pode aceitar no cartão do chat.</li><li>Cada lado rola pelo cartão. Quando há dano, ele vem num botão «Aplicar dano».</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 300000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0004",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0004",
+      "name": "Saúde, medo e condição",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<h2>Dano e testes de lesão e trauma</h2><ul><li>PV e PD mudam pelas barras do cabeçalho ou pelos botões dos cartões. Quando chegam a 0, o sistema só avisa: o teste é feito clicando em «Teste de lesão · DT» (ou de trauma) no cabeçalho.</li><li>O dano não letal é uma opção na janela do teste de lesão.</li><li>Se o teste falhar, o cartão ganha <strong>«Rolar tabela de lesão»</strong> (ou de trauma). Ele abre uma janela com o d20; <strong>Cancelar</strong> deixa a tabela pendente no cartão para depois.</li><li>O resultado vira um efeito na aba Condição.</li></ul><h2>Aba Condição</h2><ul><li><strong>Medo</strong>: o dado de pavor do personagem (também aparece no cabeçalho e na janela pré-teste).</li><li><strong>Efeitos</strong>: lesões, traumas e outros efeitos (caído, preparados...). Crie um ou escolha em «Do compêndio»; ✎ edita. Os efeitos podem mudar passos e o PV/PD máximo.</li><li><strong>Saúde</strong> e <strong>Trauma</strong>: estados e contadores da cena.</li><li><strong>Barras temporárias</strong>: contadores da cena de furtividade, quando você participa de uma.</li><li><strong>Reiniciar cena</strong>: zera os contadores da cena deste personagem. O mestre pode fazer isso para todos com a macro «Nova cena» (compêndio «Macros do mestre»).</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 400000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0005",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0005",
+      "name": "Habilidades e equipamento",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<ul><li>Arraste habilidades e itens dos compêndios (ou da barra de Itens) para a ficha.</li><li>Habilidades com automação mostram os botões e os custos na aba Habilidades e aparecem na janela pré-teste quando valem para o teste. Os efeitos de cada habilidade ficam no editor do item.</li><li>Armas: o botão Atacar abre a janela pré-teste com a perícia da arma; o dano vem por botão no cartão. Munição e armas de arremesso gastam uma unidade ao fazer o teste, com aviso no chat.</li><li>Armaduras: os pontos restantes aparecem no cabeçalho e são perguntados ao aplicar dano físico.</li><li>Itens com usos ou quantidade mostram quanto resta. O botão Usar publica um cartão no chat.</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 500000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0006",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0006",
+      "name": "Combate por fases",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<ul><li>Use a aba de combate do Foundry normalmente: adicione os tokens e clique em iniciar o combate para contar as rodadas.</li><li>A aba mostra as áreas <strong>Fase geral</strong>, <strong>Ataques à distância</strong>, <strong>Corpo a corpo</strong> e <strong>Não agiu</strong>, e a barra da fase atual com «Fase anterior» e «Próxima fase».</li><li>Os botões de cada combatente o movem para a área em que ele agiu (Shift: «também agiu», para quem age em duas fases).</li><li>A cada «Próxima rodada», todos voltam para «Não agiu».</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 600000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0007",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0007",
+      "name": "Perseguição",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<h2>Mestre</h2><ul><li>Na aba de combate, <strong>«Nova perseguição»</strong> (ou «Abrir perseguição», se já existir uma).</li><li>Crie, adicione os participantes e clique em <strong>Iniciar</strong>. A janela mostra a rodada, a DT, e o PA, o fôlego e o «já agiu» de cada um. A rodada pode ser mudada à mão.</li><li><strong>Pontos de checagem</strong>: a lista de rodadas com o PA alvo. Só o mestre a vê; os olhos mostram aos jogadores o próximo alvo ou o PA final, cada um separado.</li><li><strong>Aplicar penalidade</strong>: escolha PV ou PD e um valor (número ou dados). O cartão no chat dá um botão para cada jogador aplicar em si.</li></ul><h2>Jogador</h2><ul><li>O cartão de perseguição aparece na ficha, com <strong>Abrir</strong> e <strong>Recuperar fôlego</strong>.</li><li>Para avançar, faça um teste e marque <strong>«Usar como teste de avanço»</strong> na janela pré-teste (ali também ficam o fôlego e o esforço extra).</li><li>Depois, clique em <strong>«Adicionar N PA»</strong> no cartão do teste. O esforço extra também vem num botão «Aplicar N PV».</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 700000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0008",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0008",
+      "name": "Furtividade",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<h2>Mestre</h2><ul><li>Na aba de combate, <strong>«Nova furtividade»</strong>. Adicione os participantes.</li><li>A janela da cena mostra quem está sem esconderijo, escondido ou encontrado e quantos dados cada um tem. Os valores só aparecem pelo olho, com confirmação e aviso no chat.</li><li><strong>Procura</strong>: digite dados ou valores, ou escolha uma linha das tabelas de ações das criaturas (Sortear ou Editar). A rolagem é pública, e o descarte é resolvido pelos cartões.</li><li>Consequência para quem está encontrado (PV ou PD) e «Zerar esconderijo», com confirmação.</li></ul><h2>Jogador</h2><ul><li>Faça o teste de esconderijo marcando «Usar como teste de esconderijo» na janela pré-teste. A rolagem é privada, e você escolhe no cartão os dados que ficam («Guardar N dados»).</li><li>Só você vê os valores dos seus dados. Na ficha aparece a quantidade, e os valores ficam na janela da cena.</li><li>Depois de escondido, a mesma opção vira <strong>Esconder-se</strong>, <strong>Distrair</strong> ou <strong>Ação chamativa</strong>. «Chamar atenção» fica na janela da cena.</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 800000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0009",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0009",
+      "name": "Desafios",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<h2>Mestre</h2><ul><li>Abra a guia <strong>Desafios</strong> na barra lateral (ícone de bandeira). Os desafios não são cenas: acontecem dentro de uma cena.</li><li>Crie um desafio pelo tipo: <strong>Teste estendido</strong>, <strong>Arrombar</strong>, <strong>Escalar</strong>, <strong>Alcançar</strong>, <strong>Sustentar</strong>, <strong>Equilíbrio</strong> ou <strong>Destrancar</strong>.</li><li>Defina o nome, a pontuação alvo, o modo (individual ou em grupo), quem vê o desafio e os participantes («Tokens selecionados» adiciona os do mapa).</li><li>«Penalidade» manda um cartão com botão só para os participantes marcados. «Encerrar» e «Reabrir» controlam o desafio.</li></ul><h2>Jogador</h2><ul><li>O cartão de desafios aparece na ficha.</li><li>Faça o teste marcando «Usar no desafio» na janela pré-teste e escolha a abordagem quando houver. Depois, clique em <strong>«Somar N pontos»</strong> no cartão.</li><li>Equilíbrio: o botão Rolar fica no cartão de desafios da ficha.</li><li>Destrancar: «Tentar senha» no cartão da ficha, e o <strong>quadro da fechadura</strong> para o grupo anotar as teorias.</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 900000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0010",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0010",
+      "name": "Pontos de interesse",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<h2>Mestre: montar</h2><ul><li>Num diário, crie uma página do tipo <strong>«Ponto de interesse»</strong>.</li><li>Número no mapa (vai para a frente do nome no índice; com ponto, como 4.1, vira subponto), ou o campo «Subponto de».</li><li>Descrição básica, imagem de referência (os jogadores podem ver ou não) e o <strong>quadro de perícias</strong>: blocos por perícia, com linhas de DT e informação. Um bloco pode ser «perícia oculta».</li><li>Vínculos: itens, diários, páginas e atores ligados ao ponto, revelados junto ou pelo olho próprio. «Entregar a…» passa um item a um personagem.</li><li>O ponto pode ter um marcador no mapa. Há um exemplo pronto no compêndio «Exemplos de investigação».</li></ul><h2>Mestre: na sessão</h2><ul><li>No modo de leitura, revele as linhas pelo olho de cada uma (para todos ou para jogadores escolhidos), por bloco, ou pelo 🔍 <strong>Investigar</strong>.</li><li>O cartão do teste pode ganhar a barra «Usar no ponto de interesse» (ligue nas configurações). «Examinar» também fica no cartão do teste.</li></ul><h2>Jogador</h2><ul><li>Você vê a descrição, os nomes das perícias não ocultas e só as linhas reveladas, sem DT. Uma notificação pequena avisa quando algo novo é revelado.</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 1000000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0011",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0011",
+      "name": "Criaturas (mestre)",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<ul><li>Crie um ator do tipo <strong>Criatura</strong>. A ficha tem as abas Ficha, Ações e Notas.</li><li>Não tem PD. Tem RD (descontada do dano físico), elemento principal e secundários.</li><li>Perícias: mostra as treinadas («Mostrar todas» abre o resto) e as perícias próprias, com nome livre. Clique no nome para rolar.</li><li>Ataques são armas da criatura. Habilidades especiais, estratégia e descrição são texto do mestre.</li><li>O botão de nova cena da criatura zera os passos temporários e os efeitos de cena. A macro «Nova cena» não mexe em criaturas.</li><li>Os números da criatura só aparecem para o mestre.</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 1100000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    },
+    {
+      "_id": "dnGuiaPagina0012",
+      "_key": "!journal.pages!dnGuiaSistema001.dnGuiaPagina0012",
+      "name": "Jogar pelo celular (Swipe)",
+      "type": "text",
+      "text": {
+        "format": 1,
+        "content": "<p>O sistema funciona pelo celular com o Swipe, mas lá o <strong>chat do Foundry só fica disponível para assinantes</strong> do Swipe. As duas macros do compêndio <strong>«Macros do jogador»</strong> resolvem isso pela aba de macros.</p><h2>As macros</h2><ul><li><strong>Abrir chat</strong>: abre uma janela com as últimas 10 mensagens, que se atualiza sozinha. Os botões dos cartões funcionam (o toque é repassado para a mensagem real do chat), e tocar numa rolagem mostra os detalhes dos dados. Se você estiver lendo mensagens antigas, a janela não pula para o fim.</li><li><strong>Abrir ficha</strong>: abre a ficha do personagem vinculado ao seu usuário; sem vínculo, a do token selecionado; senão, a dos seus personagens (com uma lista se forem vários). Se a ficha já estiver aberta, ela vem para a frente.</li></ul><h2>Como colocar na barra de macros</h2><ul><li>Num computador ou no celular, abra a aba de <strong>Compêndios</strong> e depois <strong>«Macros do jogador»</strong>.</li><li>Arraste cada macro para um espaço vazio da <strong>barra de macros</strong> (o Foundry cria uma cópia sua no mundo).</li><li>No Swipe, abra a aba de macros e toque na macro.</li><li>Se não der para colocar ou rodar a macro, o mestre confere a permissão «Usar macros de script» em Configurar permissões.</li></ul><h2>Dicas</h2><ul><li>Para outra quantidade de mensagens, edite a macro e troque a linha por <code>game.desordem.openChat({ limit: 20 })</code> (de 1 a 50).</li><li>A lógica fica no sistema, então as macros são atualizadas junto com ele, mesmo depois de copiadas para a barra.</li></ul>"
+      },
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "sort": 1200000,
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "system": {}
+    }
+  ],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 2
+  },
+  "flags": {},
+  "categories": []
+}

@@ -76,6 +76,17 @@
       }
     },
     {
+      "name": "macros-jogador",
+      "label": "Macros do jogador",
+      "path": "packs/macros-jogador",
+      "type": "Macro",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "TRUSTED": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    },
+    {
       "name": "investigacao",
       "label": "Exemplos de investigação",
       "path": "packs/investigacao",
@@ -83,6 +94,17 @@
       "ownership": {
         "PLAYER": "NONE",
         "TRUSTED": "NONE",
+        "ASSISTANT": "OWNER"
+      }
+    },
+    {
+      "name": "guias",
+      "label": "Guias",
+      "path": "packs/guias",
+      "type": "JournalEntry",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "TRUSTED": "OBSERVER",
         "ASSISTANT": "OWNER"
       }
     }

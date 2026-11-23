@@ -4473,3 +4473,18 @@ button.desordem-desafios-cartao__nome:hover {
   background: var(--dn-accent-soft);
   box-shadow: inset 3px 0 0 var(--dn-accent);
 }
+
+/* ===== Macros do jogador para celular (v0.25.1) ===== */
+
+/* Lista de mensagens da janela «Abrir chat»: rola dentro da janela (até 70% da altura da tela),
+   sem marcadores de lista. `touch-action: pan-y` deixa o dedo rolar no Swipe e
+   `overscroll-behavior` impede que o fim da lista arraste a página junto (como na v0.25.0). */
+.desordem-chat-janela {
+  list-style: none;
+  margin: 0;
+  max-height: 70vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  touch-action: pan-y;
+}

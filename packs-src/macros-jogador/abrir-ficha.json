@@ -1,0 +1,15 @@
+{
+  "_id": "dnMacroAbrirFich",
+  "_key": "!macros!dnMacroAbrirFich",
+  "name": "Abrir ficha",
+  "type": "script",
+  "img": "icons/svg/book.svg",
+  "scope": "global",
+  "command": "// Abrir ficha (Desordem-Normal, v0.25.1): abre a ficha do personagem vinculado ao seu usuário; sem\n// vínculo, a do token selecionado no mapa; sem token, a dos seus personagens (com uma lista se\n// forem vários). Se a ficha já estiver aberta, ela vem para a frente.\n// Ajuda a alternar entre a ficha e a macro «Abrir chat» no celular (Swipe). Veja o compêndio «Guias».\n// A lógica fica no sistema (scripts/mobile/macros.js) e é atualizada junto com ele.\ngame.desordem.openSheet();\n",
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}
