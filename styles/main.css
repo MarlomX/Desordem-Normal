@@ -2747,7 +2747,10 @@
 /* ===== Desafios: guia da barra lateral, janela do teste estendido e cartão da ficha (v0.18.0) ===== */
 
 /* Lista (na guia da barra lateral ou na janela flutuante): rola sozinha dentro do espaço dela.
-   Sem display na raiz da guia: o Foundry esconde as guias inativas pelo display. */
+   Sem display na raiz da guia: o Foundry esconde as guias inativas pelo display.
+   v0.24.9: em tela de toque (celular, módulo Swipe) a lista não rolava. `touch-action: pan-y`
+   libera o arrastar vertical do dedo mesmo quando um módulo bloqueia os gestos da página, e
+   `overscroll-behavior` impede que o fim da lista puxe a página inteira junto. */
 .desordem-desafios {
   display: flex;
   flex: 1 1 auto;
@@ -2757,7 +2760,21 @@
   height: 100%;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 8px 10px;
+}
+
+/* Raiz da guia na barra lateral (v0.24.9): fica no tamanho da barra e rola por conta própria se
+   a lista de dentro não conseguir (quando a barra não dá uma altura fixa para a guia, como no
+   layout do Swipe). Sem `display`, pelo motivo acima. */
+.desordem-desafios-guia {
+  box-sizing: border-box;
+  max-height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .desordem-desafios__topo {
