@@ -1,0 +1,104 @@
+{{! Janela «Investigar» do mestre (v0.24.4). Cada mudança redesenha a prévia (submitOnChange).
+  Nomes: pagina, grupo, modo, valor, alvo, jogador.<id>, examinador, linha.<id>. }}
+<div class="desordem-investigar__corpo">
+  <div class="form-group">
+    <label>{{localize "DESORDEM.Ponto.Investigar.Pagina"}}</label>
+    <div class="form-fields">
+      {{#if fixedPage}}
+      <strong>{{pageName}}</strong>
+      {{else}}
+      <select name="pagina">
+        {{#each pages}}<option value="{{uuid}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+      {{/if}}
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "DESORDEM.Ponto.Pericia"}}</label>
+    <div class="form-fields">
+      {{#if groups.length}}
+      <select name="grupo">
+        {{#each groups}}<option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+      {{else}}
+      <em>{{localize "DESORDEM.Ponto.Vazio"}}</em>
+      {{/if}}
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "DESORDEM.Ponto.Investigar.Modo"}}</label>
+    <div class="form-fields desordem-investigar__opcoes">
+      <label><input type="radio" name="modo" value="investigar" {{checked investigate}}> {{localize "DESORDEM.Ponto.Investigar.ModoInvestigar"}}</label>
+      <label><input type="radio" name="modo" value="examinar" {{checked examine}}> {{localize "DESORDEM.Ponto.Investigar.ModoExaminar"}}</label>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>{{#if examine}}{{localize "DESORDEM.Ponto.Investigar.Resultado"}}{{else}}{{localize "DESORDEM.Ponto.Investigar.Dado"}}{{/if}}</label>
+    <div class="form-fields desordem-investigar__valor">
+      {{#unless examine}}
+      {{#each dice}}
+      <button type="button" class="desordem-investigar__dado{{#if active}} is-ativo{{/if}}" data-action="dado" data-lados="{{sides}}">d{{sides}}</button>
+      {{/each}}
+      {{/unless}}
+      <input type="number" name="valor" value="{{value}}" min="0" max="99" step="1">
+    </div>
+  </div>
+  <p class="hint">{{#if examine}}{{localize "DESORDEM.Ponto.Investigar.DicaExaminar"}}{{else}}{{localize "DESORDEM.Ponto.Investigar.DicaInvestigar"}}{{/if}}</p>
+
+  {{#if examine}}
+  <div class="form-group">
+    <label>{{localize "DESORDEM.Ponto.Investigar.QuemExaminou"}}</label>
+    <div class="form-fields">
+      <select name="examinador">
+        <option value="">{{localize "DESORDEM.Ponto.Investigar.Ninguem"}}</option>
+        {{#each players}}<option value="{{id}}" {{#if examiner}}selected{{/if}}>{{name}}{{#if character}} ({{character}}){{/if}}</option>{{/each}}
+      </select>
+    </div>
+  </div>
+  {{/if}}
+
+  <div class="form-group">
+    <label>{{localize "DESORDEM.Ponto.Investigar.ParaQuem"}}</label>
+    <div class="form-fields desordem-investigar__opcoes">
+      <label><input type="radio" name="alvo" value="todos" {{checked targetAll}}> {{localize "DESORDEM.Ponto.Investigar.Todos"}}</label>
+      <label><input type="radio" name="alvo" value="jogadores" {{checked targetSome}}> {{localize "DESORDEM.Ponto.Investigar.Escolhidos"}}</label>
+    </div>
+  </div>
+  {{#unless targetAll}}
+  <div class="desordem-investigar__jogadores">
+    {{#each players}}
+    <label class="{{#if blind}}is-sem-acesso{{/if}}">
+      <input type="checkbox" name="jogador.{{id}}" {{checked checked}}> {{name}}{{#if character}} <em>({{character}})</em>{{/if}}
+      {{#if blind}}<span class="desordem-ponto-jogadores__aviso"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Jogadores.SemAcesso"}}</span>{{/if}}
+    </label>
+    {{else}}
+    <em>{{localize "DESORDEM.Ponto.Jogadores.Nenhum"}}</em>
+    {{/each}}
+  </div>
+  {{/unless}}
+
+  <h4 class="desordem-investigar__titulo">{{localize "DESORDEM.Ponto.Investigar.Previa" n=marked}}</h4>
+  <div class="desordem-investigar__linhas">
+    {{#each rows}}
+    <label class="desordem-investigar__linha{{#unless alcanca}} is-fora{{/unless}}">
+      <input type="checkbox" name="linha.{{lineId}}" {{checked marcada}}>
+      <span class="desordem-investigar__dt">{{dt}}</span>
+      <span class="desordem-investigar__resumo">
+        {{#if condicao}}<em class="desordem-investigar__condicao">{{localize "DESORDEM.Ponto.Condicao"}}: {{condicao}}</em>{{/if}}
+        {{#if resumo}}{{resumo}}{{else}}<em>{{localize "DESORDEM.Ponto.SemTexto"}}</em>{{/if}}
+      </span>
+      {{#if revelada}}<i class="fa-solid fa-eye" data-tooltip="{{localize "DESORDEM.Ponto.Revelada"}}" aria-label="{{localize "DESORDEM.Ponto.Revelada"}}"></i>{{/if}}
+    </label>
+    {{else}}
+    <p class="desordem-ponto__vazio">{{localize "DESORDEM.Ponto.Investigar.SemLinhas"}}</p>
+    {{/each}}
+  </div>
+</div>
+
+<footer class="form-footer">
+  <button type="button" data-action="revelar"><i class="fa-solid fa-eye" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Investigar.Revelar"}}</button>
+  <button type="button" data-action="cancelar"><i class="fa-solid fa-xmark" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Jogadores.Cancelar"}}</button>
+</footer>

@@ -1866,6 +1866,50 @@
         "Cancelar": "Cancelar",
         "SemAcesso": "não vê esta página",
         "Nenhum": "Não há jogadores no mundo."
+      },
+      "Investigar": {
+        "Titulo": "Investigar ponto de interesse",
+        "Abrir": "Investigar, Observar ou Examinar com esta perícia",
+        "UsarNoPonto": "Usar no ponto de interesse",
+        "Pagina": "Ponto",
+        "Modo": "Ação",
+        "ModoInvestigar": "Investigar / Observar",
+        "ModoExaminar": "Examinar",
+        "Dado": "Dado da perícia",
+        "Resultado": "Resultado do teste",
+        "DicaInvestigar": "O jogador diz o dado da perícia; revela as linhas com DT até esse valor, sem teste.",
+        "DicaExaminar": "Revela as linhas com DT até o resultado. Se quem examinou não receber nada novo, sai no chat o botão «perde 1 PD».",
+        "QuemExaminou": "Quem examinou",
+        "Ninguem": "(ninguém)",
+        "ParaQuem": "Revelar para",
+        "Todos": "Todos",
+        "Escolhidos": "Jogadores escolhidos",
+        "Previa": "Linhas ({n} marcada(s))",
+        "SemLinhas": "Nenhuma linha nesta perícia.",
+        "Revelar": "Revelar",
+        "SemPontos": "Nenhuma página de ponto de interesse no mundo.",
+        "SemPagina": "A página deste ponto não existe mais.",
+        "NadaMarcado": "Marque pelo menos uma linha para revelar.",
+        "SemJogadores": "Marque pelo menos um jogador.",
+        "SemPersonagem": "{nome} não tem personagem atribuído: o cartão de «perde 1 PD» não saiu.",
+        "SemExaminador": "Ninguém escolhido em «Quem examinou»: o sistema não conferiu a perda de PD."
+      },
+      "Examinar": {
+        "Titulo": "Examinar sem informação nova",
+        "TituloCartao": "Examinar sem informação nova",
+        "Fixa": "Nenhuma informação nova: perde {valor} {tipo}."
+      },
+      "Desafio": {
+        "Ligado": "Desafio ligado",
+        "Nenhum": "Nenhum",
+        "Novo": "Criar desafio",
+        "Tipo": "Tipo do desafio",
+        "Criar": "Criar e ligar",
+        "Dica": "O desafio nasce na guia Desafios com o nome desta página. Quem vê o desafio é definido nele.",
+        "Abrir": "Abrir o desafio «{nome}»",
+        "Apagado": "O desafio ligado foi apagado.",
+        "NaoCriou": "Não foi possível criar o desafio (a lista pode estar cheia).",
+        "Criado": "Desafio «{nome}» criado e ligado ao ponto."
       }
     }
   },

@@ -59,6 +59,7 @@ import { PontoInteresseModel } from './data/ponto.js';
 import PontoInteresseSheet from './journal/point-sheet.js';
 import { registerPointHooks } from './journal/point-hooks.js';
 import { POINT_TYPE } from './journal/point.js';
+import { renderPointBar } from './journal/investigation-app.js';
 import { computeDamage } from './rolls/damage.js';
 import { emotionalDamage, rollTraumaTest } from './rolls/mind.js';
 import { renderTableCard, registerTableSocket } from './rolls/table-chat.js';
@@ -212,6 +213,8 @@ Hooks.on('renderChatMessageHTML', (message, html) => {
   renderActionBar(message, html);
   renderTableCard(message, html);
   renderOpposedCard(message, html);
+  // Ponto de interesse (v0.24.4): barra do mestre «Usar no ponto de interesse» no cartão do teste
+  renderPointBar(message, html);
   renderFirstAidButton(message, html);
   renderBonusDiceButton(message, html);
   renderFearDice(message, html);

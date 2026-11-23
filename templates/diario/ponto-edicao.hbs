@@ -126,6 +126,26 @@
   <fieldset class="desordem-ponto__secao">
     <legend><i class="fa-solid fa-lock" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.DesafioAcesso"}}</legend>
     <p class="hint">{{localize "DESORDEM.Ponto.SoMestre"}}</p>
+    <div class="form-group">
+      <label for="{{page.id}}-desafio">{{localize "DESORDEM.Ponto.Desafio.Ligado"}}</label>
+      <div class="form-fields">
+        <select id="{{page.id}}-desafio" name="system.desafioId">
+          <option value="">{{localize "DESORDEM.Ponto.Desafio.Nenhum"}}</option>
+          {{#each desafios}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{nome}} ({{tipo}})</option>{{/each}}
+          {{#if desafio.missing}}<option value="{{desafio.id}}" selected>{{localize "DESORDEM.Ponto.Desafio.Apagado"}}</option>{{/if}}
+        </select>
+      </div>
+    </div>
+    <div class="form-group desordem-ponto__desafio">
+      <label>{{localize "DESORDEM.Ponto.Desafio.Novo"}}</label>
+      <div class="form-fields">
+        <select data-desafio-tipo aria-label="{{localize "DESORDEM.Ponto.Desafio.Tipo"}}">
+          {{#each desafioTipos}}<option value="{{tipo}}">{{label}}</option>{{/each}}
+        </select>
+        <button type="button" data-action="desafioCriar"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Desafio.Criar"}}</button>
+      </div>
+      <p class="hint">{{localize "DESORDEM.Ponto.Desafio.Dica"}}</p>
+    </div>
     {{formInput fields.desafioAcesso name="system.desafioAcesso" value=system.desafioAcesso enriched=enriched.desafioAcesso toggled=true documentUUID=page.uuid}}
   </fieldset>
 </div>

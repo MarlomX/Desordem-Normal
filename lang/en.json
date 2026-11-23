@@ -1866,6 +1866,50 @@
         "Cancelar": "Cancel",
         "SemAcesso": "can't see this page",
         "Nenhum": "There are no players in the world."
+      },
+      "Investigar": {
+        "Titulo": "Investigate point of interest",
+        "Abrir": "Investigate, Observe or Examine with this skill",
+        "UsarNoPonto": "Use on point of interest",
+        "Pagina": "Point",
+        "Modo": "Action",
+        "ModoInvestigar": "Investigate / Observe",
+        "ModoExaminar": "Examine",
+        "Dado": "Skill die",
+        "Resultado": "Test result",
+        "DicaInvestigar": "The player states the skill die; reveals the rows with DC up to that value, no test.",
+        "DicaExaminar": "Reveals the rows with DC up to the result. If whoever examined gets nothing new, the chat gets a «lose 1 DP» button.",
+        "QuemExaminou": "Who examined",
+        "Ninguem": "(nobody)",
+        "ParaQuem": "Reveal to",
+        "Todos": "Everyone",
+        "Escolhidos": "Chosen players",
+        "Previa": "Rows ({n} checked)",
+        "SemLinhas": "No rows for this skill.",
+        "Revelar": "Reveal",
+        "SemPontos": "No point of interest page in the world.",
+        "SemPagina": "This point's page no longer exists.",
+        "NadaMarcado": "Check at least one row to reveal.",
+        "SemJogadores": "Check at least one player.",
+        "SemPersonagem": "{nome} has no assigned character: the «lose 1 DP» card was not posted.",
+        "SemExaminador": "Nobody chosen in «Who examined»: the system did not check the DP loss."
+      },
+      "Examinar": {
+        "Titulo": "Examine with no new information",
+        "TituloCartao": "Examine with no new information",
+        "Fixa": "No new information: lose {valor} {tipo}."
+      },
+      "Desafio": {
+        "Ligado": "Linked challenge",
+        "Nenhum": "None",
+        "Novo": "Create challenge",
+        "Tipo": "Challenge type",
+        "Criar": "Create and link",
+        "Dica": "The challenge is created in the Challenges tab with this page's name. Who sees it is set in the challenge.",
+        "Abrir": "Open the challenge «{nome}»",
+        "Apagado": "The linked challenge was deleted.",
+        "NaoCriou": "Could not create the challenge (the list may be full).",
+        "Criado": "Challenge «{nome}» created and linked to the point."
       }
     }
   },

@@ -13,6 +13,7 @@
  */
 import { SYSTEM_ID } from '../config.js';
 import {
+  actorTargetScene,
   applyPenaltyTo,
   createPenaltyFlag,
   parsePenaltyValue,
@@ -64,6 +65,14 @@ const TEXTS = {
     fixa: 'DESORDEM.Desafio.Penalidade.Fixa',
     rolada: 'DESORDEM.Desafio.Penalidade.Rolada',
     dica: 'DESORDEM.Desafio.Penalidade.Dica',
+  },
+  // Ponto de interesse (0.24.4): Examinar sem informação nova perde 1 PD (botão de quem examinou)
+  investigacao: {
+    titulo: 'DESORDEM.Ponto.Examinar.Titulo',
+    cartao: 'DESORDEM.Ponto.Examinar.TituloCartao',
+    fixa: 'DESORDEM.Ponto.Examinar.Fixa',
+    rolada: 'DESORDEM.Ponto.Examinar.Fixa',
+    dica: 'DESORDEM.Ponto.Examinar.Titulo',
   },
 };
 
@@ -132,12 +141,15 @@ export async function askAndPostPenalty({ cena = 'perseguicao', alvos, escolhas 
  * id do participante (Combatant) do encontro.
  */
 function targetActor(flag, id) {
-  if (penaltyScene(flag) === 'desafio') return game.actors.get(id) ?? null;
+  if (actorTargetScene(flag)) return game.actors.get(id) ?? null;
   return sceneOf(flag)?.combatants.get(id)?.actor ?? null;
 }
 
-/** Rola (se for fórmula) uma única vez e posta a mensagem da penalidade. */
-async function postPenalty(raw, tipo, { cena = 'perseguicao', alvos } = {}) {
+/**
+ * Rola (se for fórmula) uma única vez e posta a mensagem da penalidade. Exportada para o Examinar
+ * do ponto de interesse (cena 'investigacao', 1 PD para o personagem de quem examinou).
+ */
+export async function postPenalty(raw, tipo, { cena = 'perseguicao', alvos } = {}) {
   const texts = TEXTS[cena] ?? TEXTS.perseguicao;
   const parsed = parsePenaltyValue(raw);
   if (!parsed.valid) {
@@ -219,8 +231,8 @@ function requestApply(message, combatantId) {
 
 /** Participantes da cena da penalidade que a pessoa controla (o mestre controla todos). */
 function myRows(flag) {
-  // Desafio: os alvos já são atores do mundo (não depende do desafio ainda existir)
-  if (penaltyScene(flag) === 'desafio') {
+  // Desafio e Examinar: os alvos já são atores do mundo (não depende do desafio ainda existir)
+  if (actorTargetScene(flag)) {
     return (flag.alvos ?? [])
       .map((id) => game.actors.get(id))
       .filter((actor) => actor?.isOwner)

@@ -41,6 +41,7 @@
         {{#if oculta}}<i class="fa-solid fa-lock" data-tooltip="{{localize "DESORDEM.Ponto.OcultaDica"}}" aria-label="{{localize "DESORDEM.Ponto.Oculta"}}"></i>{{/if}}
         {{label}}
         {{#if linhas.length}}
+        <button type="button" class="desordem-ponto__olho desordem-ponto__investigar" data-ponto-acao="investigar" data-tooltip="{{localize "DESORDEM.Ponto.Investigar.Abrir"}}" aria-label="{{localize "DESORDEM.Ponto.Investigar.Abrir"}}"><i class="fa-solid fa-magnifying-glass"></i></button>
         {{#if todasReveladas}}
         <button type="button" class="desordem-ponto__olho is-ativo" data-ponto-acao="blocoRevelar" data-revelar="0" data-tooltip="{{localize "DESORDEM.Ponto.EsconderBloco"}}" aria-label="{{localize "DESORDEM.Ponto.EsconderBloco"}}"><i class="fa-solid fa-eye"></i></button>
         {{else}}
@@ -84,9 +85,18 @@
     {{{contexto}}}
   </section>
   {{/if}}
-  {{#if desafioAcesso}}
+  {{#if (or desafioAcesso desafio)}}
   <section class="desordem-ponto__mestre">
     <h3><i class="fa-solid fa-lock" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.DesafioAcesso"}}</h3>
+    {{#if desafio}}
+    {{#if desafio.missing}}
+    <p class="desordem-ponto__vazio">{{localize "DESORDEM.Ponto.Desafio.Apagado"}}</p>
+    {{else}}
+    <button type="button" class="desordem-ponto__desafio-abrir" data-ponto-acao="desafioAbrir">
+      <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> {{localize "DESORDEM.Ponto.Desafio.Abrir" nome=desafio.nome}}
+    </button>
+    {{/if}}
+    {{/if}}
     {{{desafioAcesso}}}
   </section>
   {{/if}}

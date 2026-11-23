@@ -601,6 +601,9 @@ export function parsePenaltyValue(raw) {
  * eles têm o botão. Na perseguição o registro continua igual ao de antes. Num desafio (guia de
  * desafios) o registro guarda `cena: 'desafio'` e `alvos` com os ids dos atores escolhidos.
  */
+/** Cenas da penalidade que guardam `alvos` (furtividade: participantes; as outras: atores). */
+const ACTOR_TARGET_SCENES = ['furtividade', 'desafio', 'investigacao'];
+
 export function createPenaltyFlag({ tipo, valor, formula = '', cena, alvos }) {
   const flag = {
     tipo: PENALTY_TYPES.includes(tipo) ? tipo : 'pv',
@@ -609,7 +612,7 @@ export function createPenaltyFlag({ tipo, valor, formula = '', cena, alvos }) {
     aplicados: [],
   };
   // Furtividade: ids dos participantes encontrados. Desafio (0.18.0): ids dos atores escolhidos.
-  if (cena === 'furtividade' || cena === 'desafio') {
+  if (ACTOR_TARGET_SCENES.includes(cena)) {
     flag.cena = cena;
     flag.alvos = (Array.isArray(alvos) ? alvos : []).map(String);
   }
@@ -618,7 +621,13 @@ export function createPenaltyFlag({ tipo, valor, formula = '', cena, alvos }) {
 
 /** De qual cena é a penalidade ('perseguicao' para os registros antigos, sem `cena`). */
 export const penaltyScene = (flag) =>
-  flag?.cena === 'furtividade' || flag?.cena === 'desafio' ? flag.cena : 'perseguicao';
+  ACTOR_TARGET_SCENES.includes(flag?.cena) ? flag.cena : 'perseguicao';
+
+/**
+ * Cenas em que os alvos são atores do mundo (ids de Actor), e não participantes de um encontro:
+ * os desafios (0.18.0) e o Examinar sem informação nova do ponto de interesse (0.24.4).
+ */
+export const actorTargetScene = (flag) => ['desafio', 'investigacao'].includes(penaltyScene(flag));
 
 /** Esse participante pode aplicar a penalidade? (com `alvos`, só quem está na lista) */
 export const penaltyAllows = (flag, combatantId) =>

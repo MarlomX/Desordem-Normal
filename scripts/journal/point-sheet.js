@@ -14,12 +14,17 @@
  * v0.24.3: no modo de leitura, o dono revela e esconde linhas (para todos ou para jogadores
  * escolhidos), revela ou esconde um bloco inteiro e esconde tudo. O jogador vê a marca de «novo»
  * nas linhas que chegaram desde a última visita (lista de vistas em `point-seen.js`).
+ *
+ * v0.24.4: o 🔍 de cada bloco abre a janela «Investigar» (`investigation-app.js`), e o ponto pode
+ * ficar ligado a um desafio da guia Desafios (`system.desafioId`): criado ou escolhido na edição,
+ * aberto pelo botão do quadro do mestre.
  */
 import { SYSTEM_ID, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import {
   addBlock,
   addLine,
   applyBlockForm,
+  blockGroupKey,
   blockLabel,
   buildEditBlocks,
   buildGmBoard,
@@ -43,6 +48,10 @@ import {
   visibleLineIds,
 } from './point.js';
 import { readSeen, saveSeen } from './point-seen.js';
+import InvestigationApp from './investigation-app.js';
+import DesafioApp from '../challenges/app.js';
+import { createChallenge, getChallenge, readChallenges } from '../challenges/store.js';
+import { CHALLENGE_TYPES } from '../rolls/challenge.js';
 import { escapeHtml } from '../sheets/notes.js';
 
 const { JournalEntryPageHandlebarsSheet } = foundry.applications.sheets.journal;
@@ -72,6 +81,7 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       linhaSubir: PontoInteresseSheet.#onMoveLineUp,
       linhaDescer: PontoInteresseSheet.#onMoveLineDown,
       periciaRemover: PontoInteresseSheet.#onRemoveSkill,
+      desafioCriar: PontoInteresseSheet.#onCreateChallenge,
     },
   };
 
@@ -143,6 +153,7 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       const userName = (userId) => game.users.get(userId)?.name ?? userId;
       context.board = await buildGmBoard(blocks, { t, enrich, userName });
       context.anyRevealed = hasRevealed(blocks);
+      context.desafio = this.#linkedChallenge();
       context.contexto = await this.#enrich(system.contexto);
       context.desafioAcesso = await this.#enrich(system.desafioAcesso);
     } else {
@@ -231,6 +242,18 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       ...(await this.#headerContext()),
       system,
       fields,
+      // Desafios da guia (para ligar um que já existe) e os tipos para criar um novo
+      desafios: readChallenges().desafios.map((challenge) => ({
+        id: challenge.id,
+        nome: challenge.nome || t('DESORDEM.Desafio.Estendido.SemNome'),
+        tipo: t(`DESORDEM.Desafio.Tipo.${challenge.tipo}`),
+        selected: challenge.id === system.desafioId,
+      })),
+      desafioTipos: CHALLENGE_TYPES.map((tipo) => ({
+        tipo,
+        label: t(`DESORDEM.Desafio.Tipo.${tipo}`),
+      })),
+      desafio: this.#linkedChallenge(),
       // Campo do texto da linha, para o `formInput` montar o editor rico de cada uma
       lineTextField: fields.blocos.element.fields.linhas.element.fields.texto,
       blocks,
@@ -240,6 +263,18 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         desafioAcesso: await this.#enrich(system.desafioAcesso),
       },
     };
+  }
+
+  /**
+   * Desafio ligado ao ponto: `null` sem ligação; `{missing: true}` se o desafio foi apagado.
+   * @returns {{id: string, nome: string, missing?: boolean}|null}
+   */
+  #linkedChallenge() {
+    const id = this.document.system.desafioId;
+    if (!id) return null;
+    const challenge = getChallenge(id);
+    if (!challenge) return { id, nome: '', missing: true };
+    return { id, nome: challenge.nome || t('DESORDEM.Desafio.Estendido.SemNome') };
   }
 
   /**
@@ -330,6 +365,13 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         return this.#chooseUsers(blockId, lineId);
       case 'esconderTudo':
         return this.#hideEverything();
+      case 'investigar': {
+        const block = this.#blocks().find((entry) => entry.id === blockId);
+        if (block) InvestigationApp.openForGroup(this.document, blockGroupKey(block, t));
+        return undefined;
+      }
+      case 'desafioAbrir':
+        return DesafioApp.open(this.document.system.desafioId);
     }
   }
 
@@ -426,6 +468,23 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
   /* ---------------------------------------------------------------------------------------- */
   /* Botões do modo de edição                                                                  */
   /* ---------------------------------------------------------------------------------------- */
+
+  /**
+   * Cria um desafio na guia Desafios com o nome da página e o tipo escolhido ao lado do botão, e
+   * liga ao ponto. Só o mestre cria desafios (eles ficam numa configuração do mundo).
+   */
+  static async #onCreateChallenge(event, target) {
+    if (!game.user.isGM) return;
+    const select = target.closest('.desordem-ponto__desafio')?.querySelector('[data-desafio-tipo]');
+    const tipo = CHALLENGE_TYPES.includes(select?.value) ? select.value : 'estendido';
+    const id = await createChallenge(this.document.name, tipo);
+    if (!id) {
+      ui.notifications.warn(t('DESORDEM.Ponto.Desafio.NaoCriou'));
+      return;
+    }
+    await this.document.update({ 'system.desafioId': id });
+    ui.notifications.info(t('DESORDEM.Ponto.Desafio.Criado', { nome: this.document.name }));
+  }
 
   static async #onAddBlock() {
     const { randomID } = foundry.utils;

@@ -34,6 +34,12 @@ import {
   visibleLineIds,
   newLineIds,
   sameIds,
+  groupChoices,
+  findGroupKey,
+  textSnippet,
+  investigationRows,
+  applyReveal,
+  examineFindsNothing,
 } from '../scripts/journal/point.js';
 
 // Tradução com o arquivo de idioma de verdade (como o game.i18n: chave sem texto volta a chave)
@@ -349,4 +355,100 @@ test('sameIds: compara sem contar a ordem', () => {
   assert.equal(sameIds(['a', 'b'], ['b', 'a']), true);
   assert.equal(sameIds(['a'], ['a', 'b']), false);
   assert.equal(sameIds(undefined, []), true);
+});
+
+test('groupChoices e findGroupKey: grupos sem repetir e combinação pelo nome da perícia', () => {
+  const blocks = normalizeBlocks([
+    { id: 'a', pericias: ['percepcao'] },
+    { id: 'b', pericias: ['intuicao', 'aptidao:guerra'] },
+    { id: 'c', pericias: ['percepcao'] },
+  ]);
+  assert.deepEqual(
+    groupChoices(blocks, t).map((group) => group.label),
+    ['Percepção', 'Intuição ou Aptidão (Guerra)'],
+  );
+  assert.equal(findGroupKey(blocks, 'Percepção', t), 'percepção');
+  assert.equal(findGroupKey(blocks, 'Aptidão (Guerra)', t), 'intuição ou aptidão (guerra)');
+  assert.equal(findGroupKey(blocks, 'Luta', t), '');
+  assert.equal(findGroupKey(blocks, '', t), '');
+});
+
+test('textSnippet: tira o HTML e corta textos longos', () => {
+  assert.equal(
+    textSnippet('<p>Um <strong>baú</strong></p><p>velho &amp; sujo</p>'),
+    'Um baú velho & sujo',
+  );
+  assert.equal(textSnippet('abcdefghij', 5), 'abcd…');
+});
+
+test('investigationRows: DT até o valor, condição desmarcada, marcação manual', () => {
+  const blocks = normalizeBlocks([
+    {
+      id: 'a',
+      pericias: ['percepcao'],
+      linhas: [
+        { id: 'a1', dt: 6, texto: '<p>um</p>' },
+        { id: 'a2', dt: 8, texto: 'dois', condicao: 'depois do baú' },
+        { id: 'a3', dt: 12, texto: 'três' },
+      ],
+    },
+    { id: 'b', pericias: ['intuicao'], linhas: [{ id: 'b1', dt: 4 }] },
+    { id: 'c', pericias: ['percepcao'], linhas: [{ id: 'c1', dt: 10 }] },
+  ]);
+  const rows = investigationRows(blocks, { groupKey: 'percepção', value: 10, t });
+  assert.deepEqual(
+    rows.map((row) => [row.lineId, row.alcanca, row.marcada]),
+    [
+      ['a1', true, true],
+      ['a2', true, false],
+      ['a3', false, false],
+      ['c1', true, true],
+    ],
+  );
+  assert.equal(rows[0].resumo, 'um');
+  const manual = investigationRows(blocks, {
+    groupKey: 'percepção',
+    value: 10,
+    t,
+    overrides: { a2: true, a1: false },
+  });
+  assert.deepEqual(
+    manual.filter((row) => row.marcada).map((row) => row.lineId),
+    ['a2', 'c1'],
+  );
+});
+
+test('applyReveal: para todos ou acrescentando jogadores', () => {
+  let blocks = setLineUsers(sampleBlocks(), 'a', 'a1', ['u1']);
+  const all = applyReveal(blocks, ['a1', 'b1'], { all: true });
+  assert.equal(all[0].linhas[0].revelada, true);
+  assert.equal(all[1].linhas[0].revelada, true);
+  assert.equal(all[0].linhas[1].revelada, false);
+  blocks = applyReveal(blocks, ['a1'], { userIds: ['u2', 'u1'] });
+  assert.deepEqual(blocks[0].linhas[0].reveladaPara, ['u1', 'u2']);
+  assert.equal(blocks[0].linhas[0].revelada, false);
+});
+
+test('examineFindsNothing: só o que já era visto (ou nada) não é informação nova', () => {
+  const blocks = setLineRevealed(sampleBlocks(), 'a', 'a1', true);
+  assert.equal(examineFindsNothing(blocks, ['a1'], 'u1'), true);
+  assert.equal(examineFindsNothing(blocks, [], 'u1'), true);
+  assert.equal(examineFindsNothing(blocks, ['a1', 'a2'], 'u1'), false);
+  const forU1 = setLineUsers(blocks, 'b', 'b1', ['u1']);
+  assert.equal(examineFindsNothing(forU1, ['b1'], 'u1'), true);
+  assert.equal(examineFindsNothing(forU1, ['b1'], 'u2'), false);
+});
+
+test('penalidade do Examinar: cena «investigacao» com o ator como alvo', async () => {
+  const { createPenaltyFlag, penaltyScene, actorTargetScene, penaltyAllows } =
+    await import('../scripts/rolls/chase.js');
+  const flag = createPenaltyFlag({ tipo: 'pd', valor: 1, cena: 'investigacao', alvos: ['ator1'] });
+  assert.equal(penaltyScene(flag), 'investigacao');
+  assert.equal(actorTargetScene(flag), true);
+  assert.equal(penaltyAllows(flag, 'ator1'), true);
+  assert.equal(penaltyAllows(flag, 'ator2'), false);
+  assert.equal(
+    actorTargetScene(createPenaltyFlag({ tipo: 'pv', valor: 1, cena: 'furtividade' })),
+    false,
+  );
 });

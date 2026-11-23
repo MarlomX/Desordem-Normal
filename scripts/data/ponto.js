@@ -55,6 +55,8 @@ export class PontoInteresseModel extends foundry.abstract.TypeDataModel {
       blocos: new f.ArrayField(bloco()),
       contexto: textoRico(),
       desafioAcesso: textoRico(),
+      // Desafio da guia Desafios ligado ao ponto (v0.24.4); vazio = nenhum
+      desafioId: texto(),
     };
   }
 }

@@ -4278,3 +4278,94 @@ button.desordem-desafios-cartao__nome:hover {
   align-self: flex-start;
   width: auto;
 }
+
+/* ===== Ponto de interesse: janela «Investigar» e desafio ligado (v0.24.4) ===== */
+.desordem-investigar .window-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.desordem-investigar__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.desordem-investigar__opcoes,
+.desordem-investigar__valor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.desordem-investigar__valor input {
+  width: 4em;
+  flex: 0 0 auto;
+  text-align: center;
+}
+.desordem-investigar__dado {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 2.6em;
+  padding: 0 4px;
+  font-family: var(--dn-fonte-numeros);
+}
+.desordem-investigar__dado.is-ativo {
+  color: var(--dn-accent);
+  border-color: var(--dn-accent);
+  background: var(--dn-accent-soft);
+}
+.desordem-investigar__jogadores {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 1em;
+}
+.desordem-investigar__jogadores label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.desordem-investigar__titulo {
+  margin: 6px 0 0;
+  border-bottom: 1px solid var(--dn-border);
+}
+.desordem-investigar__linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.desordem-investigar__linha {
+  display: grid;
+  grid-template-columns: auto 2.4em 1fr auto;
+  align-items: start;
+  gap: 6px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  background: var(--dn-surface);
+}
+.desordem-investigar__linha.is-fora {
+  opacity: 0.55;
+}
+.desordem-investigar__dt {
+  font-family: var(--dn-fonte-numeros);
+  font-weight: bold;
+  text-align: center;
+}
+.desordem-investigar__condicao {
+  display: block;
+  opacity: 0.85;
+}
+.desordem-ponto__desafio-abrir {
+  width: auto;
+  margin-bottom: 6px;
+}
+.desordem-ponto__desafio .form-fields button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.desordem-ponto-barra button {
+  width: auto;
+  margin-left: auto;
+}
