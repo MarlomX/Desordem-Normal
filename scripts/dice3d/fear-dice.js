@@ -25,6 +25,8 @@ export const FEAR_AURA_SFX = 'DesordemAuraPavor';
 /**
  * «Sistema de dados» próprio do dado de pavor no Dice So Nice (v0.25.6): os mesmos modelos do
  * padrão, mas com os números em brilho (emissive) desde o lançamento. Só o dado de pavor o usa.
+ * Desde a 0.26.0 o sistema carrega os presets dele (`loadDicePresets`), que o Dice So Nice não
+ * carregava.
  */
 export const FEAR_DICE_SYSTEM = 'desordem-pavor';
 
@@ -123,6 +125,41 @@ export function fearDicePresets() {
     emissive: FEAR_EMISSIVE.color,
     emissiveIntensity: FEAR_EMISSIVE.intensity,
   }));
+}
+
+/**
+ * Presets que ainda precisam ser carregados (v0.26.0). O Dice So Nice só carrega (monta as faces
+ * de) os presets do sistema padrão e do sistema que cada jogador escolheu nas configurações dele;
+ * os do sistema do pavor ficavam sem carregar, com as faces fora do lugar e uma ou duas faces
+ * transparentes (o dado «translúcido»). `modelLoaded === false` é o preset registrado e não
+ * carregado; se o campo não existir (outra versão do Dice So Nice), o preset fica como está.
+ * @param {Iterable<object>} presets Presets do sistema do pavor (`system.dice.values()`).
+ * @returns {object[]}
+ */
+export function presetsNeedingLoad(presets) {
+  return [...presets].filter((preset) => preset?.modelLoaded === false);
+}
+
+/**
+ * Carrega os presets que precisam (v0.26.0), com o `loadTextures()` do próprio preset (o mesmo que
+ * o Dice So Nice usa nos presets que ele carrega). Um preset que falha não impede os outros.
+ * @param {Iterable<object>} presets
+ * @returns {Promise<{loaded: object[], failed: object[]}>} `failed`: sem `loadTextures` ou com erro.
+ */
+export async function loadDicePresets(presets) {
+  const pending = presetsNeedingLoad(presets);
+  const results = await Promise.allSettled(
+    pending.map(async (preset) => {
+      if (typeof preset.loadTextures !== 'function') throw new Error('sem loadTextures');
+      await preset.loadTextures();
+    }),
+  );
+  const loaded = [];
+  const failed = [];
+  results.forEach((result, index) => {
+    (result.status === 'fulfilled' ? loaded : failed).push(pending[index]);
+  });
+  return { loaded, failed };
 }
 
 /**

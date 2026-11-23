@@ -14,6 +14,8 @@ import {
   fearColorsetData,
   fearDicePresets,
   fearRollIndexes,
+  loadDicePresets,
+  presetsNeedingLoad,
   wantsAura,
 } from '../scripts/dice3d/fear-dice.js';
 
@@ -113,4 +115,41 @@ test('wantsAura: só dados marcados com a aura e que não são fantasmas', () =>
   assert.equal(wantsAura({ sfx: { specialEffect: 'PlayAnimationOutline' } }), false);
   assert.equal(wantsAura({}), false);
   assert.equal(wantsAura(undefined), false);
+});
+
+/**
+ * Preset de mentira (v0.26.0): imita o `DicePreset` do Dice So Nice, com `modelLoaded` e um
+ * `loadTextures` que marca o preset como carregado (ou falha, se `fails`).
+ */
+const fakePreset = (type, { loaded = false, fails = false, noLoader = false } = {}) => {
+  const preset = { type, modelLoaded: loaded, calls: 0 };
+  if (!noLoader) {
+    preset.loadTextures = async () => {
+      preset.calls += 1;
+      if (fails) throw new Error('falhou');
+      preset.modelLoaded = true;
+    };
+  }
+  return preset;
+};
+
+test('presetsNeedingLoad: só os registrados e não carregados', () => {
+  const pending = fakePreset('d6');
+  const done = fakePreset('d8', { loaded: true });
+  const unknown = { type: 'd10' }; // outra versão do Dice So Nice, sem o campo: não mexe
+  assert.deepEqual(presetsNeedingLoad([pending, done, unknown, null]), [pending]);
+  assert.deepEqual(presetsNeedingLoad(new Map([['d6', pending]]).values()), [pending]);
+});
+
+test('loadDicePresets: carrega os pendentes e separa os que falham', async () => {
+  const ok = fakePreset('d6');
+  const done = fakePreset('d8', { loaded: true });
+  const broken = fakePreset('d12', { fails: true });
+  const noLoader = fakePreset('d20', { noLoader: true });
+  const { loaded, failed } = await loadDicePresets([ok, done, broken, noLoader]);
+  assert.deepEqual(loaded, [ok]);
+  assert.deepEqual(failed, [broken, noLoader]);
+  assert.equal(ok.modelLoaded, true);
+  assert.equal(done.calls, 0);
+  assert.deepEqual(await loadDicePresets([]), { loaded: [], failed: [] });
 });

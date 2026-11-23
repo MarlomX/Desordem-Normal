@@ -2,7 +2,8 @@
 /**
  * Ligação opcional com o módulo Dice So Nice (v0.25.2). Só faz algo se o módulo estiver ativo:
  * no hook `diceSoNiceReady` registra o conjunto de cores do dado de pavor, o efeito especial
- * «Aura de pavor» e (v0.25.6) o sistema de dados do pavor, com os números em brilho. Também
+ * «Aura de pavor» e (v0.25.6) o sistema de dados do pavor, com os números em brilho (que desde a
+ * 0.26.0 tem os presets carregados pelo próprio sistema). Também
  * (v0.25.6) liga a aura já no lançamento: no hook `diceSoNiceRollStart`, procura na mesa os dados
  * marcados com a aura. `markFearDice` é chamada por `executeTest` (scripts/rolls/chat.js) logo depois
  * de rolar, antes da mensagem ir ao chat, para todos os testes do sistema.
@@ -24,6 +25,7 @@ import {
   fearColorsetData,
   fearDicePresets,
   fearRollIndexes,
+  loadDicePresets,
   wantsAura,
 } from './fear-dice.js';
 
@@ -186,14 +188,10 @@ class FearAuraSfx {
  * @param {object} dice3d `game.dice3d`.
  */
 async function onDiceSoNiceReady(dice3d) {
-  try {
-    await document.fonts.load(`600 32px "${FEAR_FONT}"`);
-  } catch {
-    // Sem a fonte, o Dice So Nice usa a dele
-  }
   dice3d.addSFXMode(FearAuraSfx);
-  await dice3d.addColorset(fearColorsetData((key) => game.i18n.localize(key)));
-  // Sistema de dados do pavor (v0.25.6): números em brilho durante toda a animação
+  // Sistema de dados do pavor (v0.25.6): números em brilho durante toda a animação.
+  // Desde a 0.26.0 é registrado antes de esperar a fonte: o Dice So Nice não espera este hook, e
+  // uma rolagem com o sistema ainda não registrado daria erro na mesa de dados.
   dice3d.addSystem(
     {
       id: FEAR_DICE_SYSTEM,
@@ -203,8 +201,38 @@ async function onDiceSoNiceReady(dice3d) {
     'default',
   );
   for (const preset of fearDicePresets()) dice3d.addDicePreset(preset);
+  await loadFearPresets(dice3d);
+  try {
+    await document.fonts.load(`600 32px "${FEAR_FONT}"`);
+  } catch {
+    // Sem a fonte, o Dice So Nice usa a dele
+  }
+  await dice3d.addColorset(fearColorsetData((key) => game.i18n.localize(key)));
   // Aura já no lançamento (v0.25.6)
   Hooks.on('diceSoNiceRollStart', watchAuraDice);
+}
+
+/**
+ * Carrega os presets do sistema do pavor (v0.26.0). Sem isso, o Dice So Nice desenha as faces
+ * fora do lugar e deixa uma ou duas transparentes (o dado «translúcido» da 0.25.6).
+ * Se um preset não carregar, ele sai do sistema do pavor: o Dice So Nice usa então o dado padrão
+ * para aquele tipo (com as cores do pavor, sem o brilho dos números), em vez do dado com defeito.
+ * Usa partes internas do Dice So Nice (`DiceFactory.systems`, `dice`, `loadTextures`), conferidas
+ * na 5.1.4 e usadas no diagnóstico com a 5.3.4; se elas não existirem, só avisa no console.
+ * @param {object} dice3d `game.dice3d`.
+ */
+async function loadFearPresets(dice3d) {
+  const system = dice3d.DiceFactory?.systems?.get?.(FEAR_DICE_SYSTEM);
+  if (!(system?.dice instanceof Map)) {
+    console.warn(`${SYSTEM_ID} | Dice So Nice: sistema do dado de pavor não encontrado`);
+    return;
+  }
+  const { failed } = await loadDicePresets(system.dice.values());
+  for (const preset of failed) system.dice.delete(preset.type);
+  if (failed.length) {
+    const types = failed.map((preset) => preset.type).join(', ');
+    console.warn(`${SYSTEM_ID} | Dice So Nice: presets do pavor sem carregar (${types})`);
+  }
 }
 
 /**
