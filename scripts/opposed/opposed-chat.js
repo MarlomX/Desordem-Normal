@@ -18,6 +18,7 @@
  *    `guardian-chat.js`); com o Guardião gravado, o dano daquele acerto vai para ele.
  */
 import { SYSTEM_ID } from '../config.js';
+import { OPPOSED_ACTOR_TYPES, acceptCandidates } from './candidates.js';
 import { postMessage, render, skillName, skillTestOptions, rollTest } from '../rolls/chat.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import { resolveWithValues } from '../rolls/abilities.js';
@@ -65,7 +66,7 @@ import {
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/oposto-cartao.hbs`;
 const TEMPLATE_DIALOG = `systems/${SYSTEM_ID}/templates/dialog/oposto.hbs`;
 const SOCKET = `system.${SYSTEM_ID}`;
-const ACTOR_TYPES = ['personagem', 'criatura'];
+const ACTOR_TYPES = OPPOSED_ACTOR_TYPES;
 
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
@@ -126,25 +127,21 @@ function targetedOpponent(actor) {
 }
 
 /**
- * Atores com que este usuário pode aceitar um lado em aberto: os tokens selecionados, o
- * personagem dele e, para jogadores, todos os atores de que é dono (para o mestre, os tokens da
- * cena). Nunca o ator do outro lado.
+ * Atores com que este usuário pode aceitar um lado em aberto (regra em `acceptCandidates`): os
+ * tokens selecionados, o personagem dele e, para jogadores, todos os atores de que é dono; para o
+ * mestre, os tokens da cena e, se nenhum servir, qualquer personagem ou criatura do mundo (v0.25.3).
+ * Nunca o ator do outro lado.
  */
 function candidateActors(excludeUuid) {
-  const list = [];
-  const add = (actor) => {
-    if (!actor?.isOwner || !ACTOR_TYPES.includes(actor.type)) return;
-    if (actor.uuid === excludeUuid || list.includes(actor)) return;
-    list.push(actor);
-  };
-  for (const token of globalThis.canvas?.tokens?.controlled ?? []) add(token.actor);
-  add(game.user.character);
-  if (game.user.isGM) {
-    for (const token of globalThis.canvas?.scene?.tokens ?? []) add(token.actor);
-  } else {
-    for (const actor of game.actors) add(actor);
-  }
-  return list;
+  const actorsOf = (tokens) => [...(tokens ?? [])].map((token) => token.actor);
+  return acceptCandidates({
+    isGM: game.user.isGM,
+    controlled: actorsOf(globalThis.canvas?.tokens?.controlled),
+    character: game.user.character,
+    sceneActors: actorsOf(globalThis.canvas?.scene?.tokens),
+    worldActors: [...game.actors],
+    excludeUuid,
+  });
 }
 
 /**
