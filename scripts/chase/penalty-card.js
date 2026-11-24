@@ -25,7 +25,7 @@ import { postMessage, render } from '../rolls/chat.js';
 import { findStealth } from '../stealth/store.js';
 import { findChase } from './store.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET } from '../shared/socket.js';
+import { SOCKET, hasActiveGM } from '../shared/socket.js';
 
 const { DialogV2 } = foundry.applications.api;
 
@@ -222,10 +222,7 @@ export async function applyPenalty(message, combatantId, userId) {
 /** O mestre aplica direto; o jogador pede ao mestre ativo por socket. */
 function requestApply(message, combatantId) {
   if (game.user.isGM) return applyPenalty(message, combatantId, game.user.id);
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Perseguicao.Erro.SemMestre'));
-    return undefined;
-  }
+  if (!hasActiveGM()) return undefined;
   return game.socket.emit(SOCKET, { action: 'chasePenalty', messageId: message.id, combatantId });
 }
 

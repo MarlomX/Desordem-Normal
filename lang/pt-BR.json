@@ -2012,7 +2012,8 @@
         }
       },
       "Sistema": "Dado de pavor (Desordem-Normal)"
-    }
+    },
+    "SemMestre": "Não há mestre online para gravar esta ação."
   },
   "TYPES.Item.arma": "Arma",
   "TYPES.Item.armadura": "Armadura",

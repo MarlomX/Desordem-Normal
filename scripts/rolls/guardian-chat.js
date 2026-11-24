@@ -14,7 +14,7 @@ import { firstEffect, roundUseUpdate, usableThisRound, walletOf } from './abilit
 import { abilityNote } from './abilities-chat.js';
 import { guardianData } from './guardian.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, onSocketAction } from '../shared/socket.js';
+import { SOCKET, onSocketAction, hasActiveGM } from '../shared/socket.js';
 
 const ACTION = 'guardiao';
 
@@ -108,10 +108,7 @@ export function guardButtons(message, { kind, exclude, extra = {} }) {
 function requestGuard(data) {
   const payload = { ...data, userId: game.user.id };
   if (game.user.isGM) return handleGuard(payload);
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Efeito.Guardiao.SemMestre'));
-    return null;
-  }
+  if (!hasActiveGM('DESORDEM.Efeito.Guardiao.SemMestre')) return null;
   game.socket.emit(SOCKET, payload);
   return null;
 }

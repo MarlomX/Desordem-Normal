@@ -19,50 +19,39 @@ import {
   updateRow,
 } from '../rolls/creature-table.js';
 import { t } from '../shared/i18n.js';
+import { createWorldStore } from '../shared/world-store.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
 
 /** Nome da configuração do mundo que guarda as tabelas. */
 export const TABLES_SETTING = 'tabelasCriaturas';
 
-/** Quem precisa redesenhar quando as tabelas mudam (a janela de procura se registra aqui). */
-const listeners = new Set();
+const store = createWorldStore({
+  key: TABLES_SETTING,
+  empty: () => ({ tabelas: [] }),
+  normalize: normalizeTables,
+  name: 'tabelas das criaturas',
+  the: 'as tabelas das criaturas',
+  // A janela de edição se redesenha antes dos outros (a janela de procura se registra abaixo)
+  beforeListeners: () => TabelasApp.refresh(),
+});
 
 /** Avisa quando as tabelas mudam (devolve uma função para parar de ouvir). */
-export function onTablesChange(callback) {
-  listeners.add(callback);
-  return () => listeners.delete(callback);
-}
+export const onTablesChange = (callback) => store.onChange(callback);
 
 /** Registra a configuração (chamado uma vez, no init). */
-export function registerCreatureTables() {
-  game.settings.register(SYSTEM_ID, TABLES_SETTING, {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: { tabelas: [] },
-    onChange: () => {
-      TabelasApp.refresh();
-      for (const callback of listeners) callback();
-    },
-  });
-}
+export const registerCreatureTables = () => store.register();
 
 /** Tabelas guardadas, já limpas. */
-export function readTables() {
-  try {
-    return normalizeTables(game.settings.get(SYSTEM_ID, TABLES_SETTING));
-  } catch (error) {
-    console.warn(`${SYSTEM_ID} | tabelas das criaturas ilegíveis`, error);
-    return { tabelas: [] };
-  }
-}
+export const readTables = () => store.read();
 
-/** Grava as tabelas (só o mestre). */
-export async function saveTables(data) {
-  if (!game.user.isGM) return;
-  await game.settings.set(SYSTEM_ID, TABLES_SETTING, normalizeTables(data));
-}
+/**
+ * Muda as tabelas e grava (só o mestre), pela fila: `change` recebe as tabelas relidas na hora e
+ * devolve as novas (as mesmas, ou nada, não grava). Desde a v0.28.3 (antes, cada botão lia,
+ * esperava e gravava por conta própria, e um clique logo depois de editar um campo podia apagar
+ * a edição).
+ */
+export const mutateTables = (change) => store.mutate(change);
 
 /** Troca uma tabela da lista pela versão nova (mesmo id). */
 function replaceTable(data, table) {
@@ -215,24 +204,29 @@ export class TabelasApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async #commit(field) {
     this.#typing = false;
     this.#renderPending = false;
-    const data = readTables();
-    const table = this.#current(data);
-    if (!table) return;
     const { campo, rowId } = field.dataset;
-    let next = table;
-    if (campo === 'nome') next = { ...table, nome: field.value };
-    else if (campo === 'dado') next = { ...table, dado: normalizeTableDie(field.value) };
-    else if (rowId) next = updateRow(table, rowId, campo, field.value);
-    await saveTables(replaceTable(data, next));
+    const value = field.value;
+    await mutateTables((data) => {
+      const table = this.#current(data);
+      if (!table) return data;
+      let next = table;
+      if (campo === 'nome') next = { ...table, nome: value };
+      else if (campo === 'dado') next = { ...table, dado: normalizeTableDie(value) };
+      else if (rowId) next = updateRow(table, rowId, campo, value);
+      return replaceTable(data, next);
+    });
     this.render();
   }
 
   static async #onNewTable() {
-    const data = readTables();
-    if (data.tabelas.length >= MAX_TABLES) return;
-    const table = newTable(randomId(), t('DESORDEM.Furtividade.Tabela.NovaNome'));
-    this.#tableId = table.id;
-    await saveTables({ tabelas: [...data.tabelas, table] });
+    let created = null;
+    await mutateTables((data) => {
+      if (data.tabelas.length >= MAX_TABLES) return data;
+      created = newTable(randomId(), t('DESORDEM.Furtividade.Tabela.NovaNome'));
+      return { tabelas: [...data.tabelas, created] };
+    });
+    if (!created) return;
+    this.#tableId = created.id;
     this.render();
   }
 
@@ -252,28 +246,35 @@ export class TabelasApp extends HandlebarsApplicationMixin(ApplicationV2) {
     });
     if (answer !== true) return;
     this.#tableId = '';
-    await saveTables({ tabelas: data.tabelas.filter((entry) => entry.id !== table.id) });
+    // Relê as tabelas depois da confirmação (o diálogo pode ter ficado aberto um tempo)
+    await mutateTables((current) => ({
+      tabelas: current.tabelas.filter((entry) => entry.id !== table.id),
+    }));
     this.render();
   }
 
   static async #onAddRow() {
-    const data = readTables();
-    const table = this.#current(data);
-    if (!table || table.linhas.length >= MAX_ROWS) return;
-    const next = { ...table, linhas: [...table.linhas, newRow(randomId(), table)] };
-    await saveTables(replaceTable(data, next));
+    await mutateTables((data) => {
+      const table = this.#current(data);
+      if (!table || table.linhas.length >= MAX_ROWS) return data;
+      return replaceTable(data, {
+        ...table,
+        linhas: [...table.linhas, newRow(randomId(), table)],
+      });
+    });
     this.render();
   }
 
   static async #onRemoveRow(event, target) {
-    const data = readTables();
-    const table = this.#current(data);
-    if (!table) return;
-    const next = {
-      ...table,
-      linhas: table.linhas.filter((row) => row.id !== target.dataset.rowId),
-    };
-    await saveTables(replaceTable(data, next));
+    const { rowId } = target.dataset;
+    await mutateTables((data) => {
+      const table = this.#current(data);
+      if (!table) return data;
+      return replaceTable(data, {
+        ...table,
+        linhas: table.linhas.filter((row) => row.id !== rowId),
+      });
+    });
     this.render();
   }
 }

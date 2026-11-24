@@ -21,7 +21,7 @@ import {
 } from '../rolls/chase.js';
 import { findChase } from './store.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET } from '../shared/socket.js';
+import { SOCKET, hasActiveGM } from '../shared/socket.js';
 
 const FLAG = `flags.${SYSTEM_ID}.avanco`;
 
@@ -67,10 +67,7 @@ export async function applyAdvancePoints(message, userId) {
 /** O mestre aplica direto; o jogador pede ao mestre ativo por socket. */
 function requestApply(message) {
   if (game.user.isGM) return applyAdvancePoints(message, game.user.id);
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Perseguicao.Erro.SemMestre'));
-    return undefined;
-  }
+  if (!hasActiveGM('DESORDEM.Perseguicao.Erro.SemMestre')) return undefined;
   return game.socket.emit(SOCKET, { action: 'chaseAdvancePoints', messageId: message.id });
 }
 

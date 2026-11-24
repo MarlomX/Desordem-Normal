@@ -41,7 +41,7 @@ import {
 import { createPending } from './pending-table.js';
 import { disasterSync } from './critical-failure.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, onSocketAction } from '../shared/socket.js';
+import { SOCKET, onSocketAction, canWriteOrAsk } from '../shared/socket.js';
 
 const TEMPLATE_CURA = `systems/${SYSTEM_ID}/templates/chat/cura.hbs`;
 
@@ -540,6 +540,8 @@ export function registerAbilitySocket() {
 
 /** Usa a análise: o jogador escolhe os novos valores dos dados e gasta os marcadores. */
 async function useAnalysis(message, actor) {
+  // Sem poder reescrever o cartão (nem mestre para pedir), não gasta a análise
+  if (!canWriteOrAsk(message)) return;
   const info = testData(message);
   const resource = adjustResource(actor);
   if (!resource) return;
@@ -624,6 +626,8 @@ export function rerollLabel(actor) {
  * @param {Actor|null} speaker Quem fez o teste (para a escolha do mestre).
  */
 async function useReroll(message, speaker) {
+  // Sem poder reescrever o cartão (nem mestre para pedir), não gasta a habilidade
+  if (!canWriteOrAsk(message)) return;
   const info = testData(message);
   // Recalcula na hora do clique: o cartão pode ter sido desenhado numa rodada anterior
   const actors = rerollActors(speaker);

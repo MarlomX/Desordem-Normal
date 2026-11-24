@@ -114,12 +114,21 @@ export function resetFoundry({ user = makeUser('gm', { isGM: true }), activeGM =
     journal: collection(),
     settings: {
       values: new Map(),
-      register() {},
-      get(scope, key) {
-        return this.values.get(`${scope}.${key}`);
+      configs: new Map(),
+      /** Guarda a configuração (o padrão e o `onChange`), como o Foundry. */
+      register(scope, key, config) {
+        this.configs.set(`${scope}.${key}`, config);
       },
+      get(scope, key) {
+        const id = `${scope}.${key}`;
+        return this.values.has(id) ? this.values.get(id) : this.configs.get(id)?.default;
+      },
+      /** Grava e chama o `onChange` (o Foundry chama em todos os clientes). */
       async set(scope, key, value) {
-        this.values.set(`${scope}.${key}`, value);
+        const id = `${scope}.${key}`;
+        this.values.set(id, structuredClone(value));
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        this.configs.get(id)?.onChange?.(value);
         return value;
       },
     },

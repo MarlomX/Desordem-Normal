@@ -27,7 +27,7 @@ import { findStealth, postStealthNotice, stealthView } from './store.js';
 import { TabelasApp, onTablesChange, readTables } from './tables.js';
 import { t } from '../shared/i18n.js';
 import { renderTemplate } from '../shared/templates.js';
-import { SOCKET } from '../shared/socket.js';
+import { SOCKET, hasActiveGM } from '../shared/socket.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 
@@ -165,10 +165,7 @@ export function applySearch(message, ids, userId) {
 /** O mestre resolve direto; o jogador pede ao mestre ativo pelo socket. */
 function requestApply(message, ids) {
   if (game.user.isGM) return applySearch(message, ids, game.user.id);
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.SemMestre'));
-    return undefined;
-  }
+  if (!hasActiveGM()) return undefined;
   return game.socket.emit(SOCKET, {
     action: SEARCH_SOCKET_ACTION,
     messageId: message.id,

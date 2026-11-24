@@ -24,7 +24,7 @@ import {
 } from '../rolls/stealth.js';
 import { findStealth, postStealthNotice, requestHideOp, stealthInfoFor } from './store.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET } from '../shared/socket.js';
+import { SOCKET, hasActiveGM } from '../shared/socket.js';
 
 /** Ação de socket do botão do cartão. */
 export const ACTION_SOCKET_ACTION = 'stealthAction';
@@ -178,10 +178,7 @@ export async function applyStealthAction(message, userId, index) {
 /** O mestre grava direto; o jogador pede ao mestre ativo pelo socket. */
 function requestApply(message, index) {
   if (game.user.isGM) return applyStealthAction(message, game.user.id, index);
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.SemMestre'));
-    return undefined;
-  }
+  if (!hasActiveGM()) return undefined;
   return game.socket.emit(SOCKET, {
     action: ACTION_SOCKET_ACTION,
     messageId: message.id,

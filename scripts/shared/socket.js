@@ -7,6 +7,7 @@
  * que entrega cada pedido ao atendente da sua `action`.
  */
 import { SYSTEM_ID } from '../config.js';
+import { t } from './i18n.js';
 
 /** Canal de socket do sistema (o Foundry exige o prefixo `system.`). */
 export const SOCKET = `system.${SYSTEM_ID}`;
@@ -41,3 +42,28 @@ export function onSocketAction(action, handler) {
 
 /** Nomes das ações com atendente (para os testes conferirem que cada pedido tem quem atenda). */
 export const socketActions = () => [...handlers.keys()];
+
+/** Aviso padrão quando um pedido precisa do mestre e não há nenhum conectado (v0.28.3). */
+export const NO_GM_KEY = 'DESORDEM.SemMestre';
+
+/**
+ * Há um mestre ativo para atender um pedido? Sem nenhum conectado, avisa o jogador.
+ * @param {string} [warnKey] Chave do aviso (o padrão serve para qualquer botão).
+ * @returns {boolean}
+ */
+export function hasActiveGM(warnKey = NO_GM_KEY) {
+  if (game.users.activeGM) return true;
+  ui.notifications.warn(t(warnKey));
+  return false;
+}
+
+/**
+ * Este navegador grava `doc` sozinho, ou há um mestre ativo para pedir? Chamado antes de um botão
+ * gastar recursos ou abrir janelas: sem nenhum dos dois, avisa e o botão não faz nada (v0.28.3;
+ * antes o pedido saía sem ninguém para atender e o clique se perdia em silêncio).
+ * @param {{canUserModify: Function}} doc Mensagem (ou documento) que o botão vai mudar.
+ * @param {string} [warnKey] Chave do aviso.
+ */
+export function canWriteOrAsk(doc, warnKey = NO_GM_KEY) {
+  return doc.canUserModify(game.user, 'update') || hasActiveGM(warnKey);
+}

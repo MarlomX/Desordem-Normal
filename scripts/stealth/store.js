@@ -32,7 +32,7 @@ import {
 } from '../rolls/stealth.js';
 import { t } from '../shared/i18n.js';
 import { renderTemplate } from '../shared/templates.js';
-import { SOCKET } from '../shared/socket.js';
+import { SOCKET, hasActiveGM } from '../shared/socket.js';
 
 /* global getDocumentClass */
 
@@ -340,10 +340,7 @@ export async function adjustHideUses(combatant, delta) {
     await combatant.update({ system: { esconderUsos: next } });
     return;
   }
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.SemMestre'));
-    return;
-  }
+  if (!hasActiveGM()) return;
   game.socket.emit(SOCKET, {
     action: USES_SOCKET_ACTION,
     combatId: combatant.parent.id,
@@ -432,10 +429,7 @@ export async function requestHideOp(combatant, op, motivo) {
     if (!ok) ui.notifications.warn(t('DESORDEM.Furtividade.Erro.Operacao'));
     return ok;
   }
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.SemMestre'));
-    return false;
-  }
+  if (!hasActiveGM('DESORDEM.Furtividade.Erro.SemMestre')) return false;
   game.socket.emit(SOCKET, {
     action: HIDE_SOCKET_ACTION,
     combatId: combatant.parent.id,
@@ -508,10 +502,7 @@ export async function requestAttention(payload) {
     await commitAttention(payload, game.user.id);
     return;
   }
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.SemMestre'));
-    return;
-  }
+  if (!hasActiveGM()) return;
   game.socket.emit(SOCKET, { action: ATTENTION_SOCKET_ACTION, ...sanitizeAttention(payload) });
 }
 

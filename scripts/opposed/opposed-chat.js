@@ -57,7 +57,7 @@ import {
   weaponChoices,
 } from '../rolls/opposed-card.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, isActiveGM, onSocketAction } from '../shared/socket.js';
+import { SOCKET, isActiveGM, onSocketAction, canWriteOrAsk } from '../shared/socket.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/oposto-cartao.hbs`;
 const TEMPLATE_DIALOG = `systems/${SYSTEM_ID}/templates/dialog/oposto.hbs`;
@@ -593,6 +593,8 @@ async function requestDamage(message, side, event) {
   const entry = state?.dano?.[side];
   const target = foundry.utils.fromUuidSync(damageTargetUuid(state, side));
   if (!target?.isOwner || entry?.estado !== 'pendente') return;
+  // Sem poder marcar o cartão (nem mestre para pedir), nem abre a janela de dano
+  if (!canWriteOrAsk(message)) return;
   const choices = await askDamage(target, entry.valor, {
     nonLethal: entry.naoLetal,
     shift: Boolean(event?.shiftKey),

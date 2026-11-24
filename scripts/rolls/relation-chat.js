@@ -9,7 +9,7 @@ import { degreeKey, invokeCheck, updateRelation, buildInvocationContext } from '
 import { applyRecovery } from './recovery.js';
 import { pickReceiver } from './damage-dialog.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, onSocketAction } from '../shared/socket.js';
+import { SOCKET, onSocketAction, canWriteOrAsk } from '../shared/socket.js';
 
 const TEMPLATE_RELACAO = `systems/${SYSTEM_ID}/templates/chat/relacao.hbs`;
 const TEMPLATE_RECUPERACAO = `systems/${SYSTEM_ID}/templates/chat/recuperacao.hbs`;
@@ -129,6 +129,8 @@ async function markRecovered(message, name) {
 async function applyRecoveryFromMessage(message) {
   const data = message.flags?.[SYSTEM_ID]?.recuperacao;
   if (!data || data.curado) return false;
+  // Sem poder marcar o cartão (nem mestre para pedir), não aplica: senão daria para curar de novo
+  if (!canWriteOrAsk(message)) return false;
   // Cartões de cura apontam para o aliado; os de motivar valem para quem clicar
   const actor = data.alvoUuid
     ? await foundry.utils.fromUuid(data.alvoUuid)

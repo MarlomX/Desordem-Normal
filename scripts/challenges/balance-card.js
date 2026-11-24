@@ -51,7 +51,7 @@ import {
 } from '../rolls/challenge.js';
 import { getChallenge, mutateChallenge, worldActorId } from './store.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, onSocketAction } from '../shared/socket.js';
+import { SOCKET, onSocketAction, hasActiveGM } from '../shared/socket.js';
 
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 
@@ -105,10 +105,7 @@ export async function rollBalance(actor, challengeId) {
 /** O mestre atende direto; o jogador pede ao mestre ativo por socket. */
 function request(message, payload) {
   if (game.user.isGM) return applyBalanceStep(message, game.user.id, payload);
-  if (!game.users.activeGM) {
-    warn('DESORDEM.Perseguicao.Erro.SemMestre');
-    return undefined;
-  }
+  if (!hasActiveGM()) return undefined;
   return game.socket.emit(SOCKET, {
     action: 'challengeBalance',
     messageId: message.id,

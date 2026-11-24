@@ -118,3 +118,27 @@ test('markCompanionHurt marca o animal ferido uma vez e avisa no chat', async ()
   assert.match(created[0].content, /DESORDEM\.Habilidade\.AnimalFerido/);
   assert.deepEqual(log.errors, []);
 });
+
+test('hasActiveGM: com mestre conectado segue; sem mestre avisa (chave padrão ou a pedida)', async () => {
+  const { hasActiveGM } = await import('../scripts/shared/socket.js');
+  const player = makeUser('p');
+  resetFoundry({ user: player, activeGM: makeUser('gm', { isGM: true }) });
+  assert.equal(hasActiveGM(), true);
+  assert.deepEqual(log.warnings, []);
+  resetFoundry({ user: player, activeGM: null });
+  assert.equal(hasActiveGM(), false);
+  assert.equal(hasActiveGM('DESORDEM.Socorro.SemMestre'), false);
+  assert.deepEqual(log.warnings, ['DESORDEM.SemMestre', 'DESORDEM.Socorro.SemMestre']);
+});
+
+test('canWriteOrAsk: quem grava a mensagem não precisa de mestre; quem não grava, precisa', async () => {
+  const { canWriteOrAsk } = await import('../scripts/shared/socket.js');
+  const { makeMessage } = await import('./foundry-stub.js');
+  resetFoundry({ user: makeUser('p'), activeGM: null });
+  assert.equal(canWriteOrAsk(makeMessage('a', {}, { canModify: true })), true);
+  assert.deepEqual(log.warnings, []);
+  assert.equal(canWriteOrAsk(makeMessage('b')), false);
+  assert.deepEqual(log.warnings, ['DESORDEM.SemMestre']);
+  resetFoundry({ user: makeUser('p'), activeGM: makeUser('gm', { isGM: true }) });
+  assert.equal(canWriteOrAsk(makeMessage('c')), true);
+});

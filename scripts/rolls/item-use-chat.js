@@ -14,7 +14,7 @@ import { walletOf } from './ability-effects-actor.js';
 import { itemStepEffect } from './effects.js';
 import { pickReceiver } from './damage-dialog.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, onSocketAction } from '../shared/socket.js';
+import { SOCKET, onSocketAction, canWriteOrAsk } from '../shared/socket.js';
 
 const TEMPLATE_USO = `systems/${SYSTEM_ID}/templates/chat/item-uso.hbs`;
 const TEMPLATE_EFEITO = `systems/${SYSTEM_ID}/templates/chat/item-efeito.hbs`;
@@ -154,6 +154,8 @@ async function markStepReceived(message, name) {
 async function receiveStep(message) {
   const data = message.flags?.[SYSTEM_ID]?.passoItem;
   if (!data || data.recebido) return false;
+  // Sem poder marcar o cartão (nem mestre para pedir), não entrega: senão daria para receber de novo
+  if (!canWriteOrAsk(message)) return false;
   const actor = await stepReceiver();
   if (!actor?.isOwner || !Array.isArray(actor.system.efeitos)) {
     ui.notifications.warn(t('DESORDEM.Recuperacao.SemAlvo'));

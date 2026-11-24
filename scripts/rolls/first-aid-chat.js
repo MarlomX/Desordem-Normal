@@ -16,7 +16,7 @@ import { askRollChoices } from './roll-dialog-chat.js';
 import { resolveWithValues } from './abilities.js';
 import { firstAidDt, firstAidOutcome, firstAidStepMods, hasMedicalKit } from './first-aid.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, isActiveGM, onSocketAction } from '../shared/socket.js';
+import { SOCKET, isActiveGM, onSocketAction, hasActiveGM } from '../shared/socket.js';
 
 const TEMPLATE_DIALOG = `systems/${SYSTEM_ID}/templates/dialog/socorro.hbs`;
 const SKILL = 'medicina';
@@ -176,10 +176,7 @@ async function applyFirstAid({ messageId, userId }) {
 function requestFirstAid(message) {
   const data = { action: 'firstAid', messageId: message.id, userId: game.user.id };
   if (game.user.isGM) return enqueue(() => applyFirstAid(data));
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Socorro.SemMestre'));
-    return null;
-  }
+  if (!hasActiveGM('DESORDEM.Socorro.SemMestre')) return null;
   game.socket.emit(SOCKET, data);
   return null;
 }

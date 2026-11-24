@@ -1,13 +1,8 @@
 /**
- * Onde os desafios ficam guardados (Foundry): uma configuração do mundo (`game.settings`, escopo
- * "world", fora do menu de configurações). Todo cliente conectado lê a lista; só o mestre grava.
- * Quando o mestre grava, o Foundry manda o valor novo a todos e chama o `onChange` em cada
- * cliente: é ele que redesenha a guia, as janelas e as fichas.
- *
- * As gravações passam por uma fila (uma de cada vez, sempre relendo o valor atual), para dois
- * cliques seguidos não se sobreporem e um apagar o que o outro gravou.
+ * Onde os desafios ficam guardados (Foundry): uma configuração do mundo, pela store comum
+ * (`shared/world-store.js`: só o mestre grava, as gravações passam por uma fila e o `onChange`
+ * avisa a guia, as janelas e as fichas).
  */
-import { SYSTEM_ID } from '../config.js';
 import {
   appendChallenge,
   newChallenge,
@@ -16,73 +11,39 @@ import {
   replaceChallenge,
   sheetChallenges,
 } from '../rolls/challenge.js';
+import { createWorldStore } from '../shared/world-store.js';
 
 /** Nome da configuração do mundo que guarda os desafios. */
 export const CHALLENGES_SETTING = 'desafios';
 
-/** Quem precisa redesenhar quando os desafios mudam (guia, janelas, fichas). */
-const listeners = new Set();
+const store = createWorldStore({
+  key: CHALLENGES_SETTING,
+  empty: () => ({ desafios: [] }),
+  normalize: normalizeChallenges,
+  name: 'desafios',
+  the: 'os desafios',
+});
 
 /** Avisa quando os desafios mudam (devolve uma função para parar de ouvir). */
-export function onChallengesChange(callback) {
-  listeners.add(callback);
-  return () => listeners.delete(callback);
-}
+export const onChallengesChange = (callback) => store.onChange(callback);
 
 /** Registra a configuração (chamado uma vez, no init). */
-export function registerChallengeSetting() {
-  game.settings.register(SYSTEM_ID, CHALLENGES_SETTING, {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: { desafios: [] },
-    onChange: () => {
-      for (const callback of listeners) {
-        try {
-          callback();
-        } catch (error) {
-          console.error(`${SYSTEM_ID} | falha ao redesenhar os desafios`, error);
-        }
-      }
-    },
-  });
-}
+export const registerChallengeSetting = () => store.register();
 
 /** Desafios guardados, já limpos (uma configuração estragada vira lista vazia). */
-export function readChallenges() {
-  try {
-    return normalizeChallenges(game.settings.get(SYSTEM_ID, CHALLENGES_SETTING));
-  } catch (error) {
-    console.warn(`${SYSTEM_ID} | desafios ilegíveis`, error);
-    return { desafios: [] };
-  }
-}
+export const readChallenges = () => store.read();
 
 /** Um desafio pelo id (ou `null`). */
 export function getChallenge(id) {
   return readChallenges().desafios.find((entry) => entry.id === id) ?? null;
 }
 
-/** Fila das gravações do mestre (cada uma espera a anterior terminar). */
-let queue = Promise.resolve();
-
 /**
  * Muda a lista e grava (só o mestre). `change` recebe a lista atual (relida na hora) e devolve a
  * nova; se devolver a mesma, nada é gravado.
  * @param {(data: {desafios: object[]}) => {desafios: object[]}} change
  */
-export function mutateChallenges(change) {
-  if (!game.user.isGM) return Promise.resolve();
-  queue = queue
-    .then(async () => {
-      const data = readChallenges();
-      const next = change(data);
-      if (!next || next === data) return;
-      await game.settings.set(SYSTEM_ID, CHALLENGES_SETTING, normalizeChallenges(next));
-    })
-    .catch((error) => console.error(`${SYSTEM_ID} | falha ao gravar os desafios`, error));
-  return queue;
-}
+export const mutateChallenges = (change) => store.mutate(change);
 
 /** Muda um desafio só (pelo id). `change` recebe o desafio e devolve a versão nova. */
 export function mutateChallenge(id, change) {

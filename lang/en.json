@@ -2012,7 +2012,8 @@
         }
       },
       "Sistema": "Fear die (Desordem-Normal)"
-    }
+    },
+    "SemMestre": "There is no GM online to save this action."
   },
   "TYPES.Item.arma": "Weapon",
   "TYPES.Item.armadura": "Armor",

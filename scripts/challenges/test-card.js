@@ -39,7 +39,7 @@ import {
 } from '../rolls/challenge.js';
 import { getChallenge, mutateChallenge, readChallenges, worldActorId } from './store.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, onSocketAction } from '../shared/socket.js';
+import { SOCKET, onSocketAction, hasActiveGM } from '../shared/socket.js';
 
 /** Caminho do registro na mensagem (para `message.update`). */
 const FLAG = `flags.${SYSTEM_ID}.desafio`;
@@ -192,10 +192,7 @@ async function applyFailureNow(message, reserved, actor, result) {
 /** O mestre aplica direto; o jogador pede ao mestre ativo por socket. */
 function requestApply(message) {
   if (game.user.isGM) return applyChallengePoints(message, game.user.id);
-  if (!game.users.activeGM) {
-    ui.notifications.warn(t('DESORDEM.Perseguicao.Erro.SemMestre'));
-    return undefined;
-  }
+  if (!hasActiveGM()) return undefined;
   return game.socket.emit(SOCKET, { action: 'challengePoints', messageId: message.id });
 }
 

@@ -16,7 +16,7 @@ import { resolveWithValues } from './abilities.js';
 import { bonusDiceGranted, canPay, payUpdates } from './ability-effects.js';
 import { walletOf } from './ability-effects-actor.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, onSocketAction } from '../shared/socket.js';
+import { SOCKET, onSocketAction, hasActiveGM } from '../shared/socket.js';
 
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 
@@ -116,10 +116,7 @@ async function applyGrant({ messageId, userId }) {
 function requestGrant(message) {
   const data = { action: 'bonusDice', messageId: message.id, userId: game.user.id };
   if (game.user.isGM) return enqueue(() => applyGrant(data));
-  if (!game.users.activeGM) {
-    warn('DESORDEM.Plano.SemMestre');
-    return null;
-  }
+  if (!hasActiveGM('DESORDEM.Plano.SemMestre')) return null;
   game.socket.emit(SOCKET, data);
   return null;
 }

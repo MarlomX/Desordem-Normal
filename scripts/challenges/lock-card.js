@@ -47,7 +47,7 @@ import {
 } from '../rolls/lock-board.js';
 import { createChallenge, getChallenge, mutateChallenge, worldActorId } from './store.js';
 import { t } from '../shared/i18n.js';
-import { SOCKET, onSocketAction } from '../shared/socket.js';
+import { SOCKET, onSocketAction, hasActiveGM } from '../shared/socket.js';
 
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 const escape = (text) => Handlebars.escapeExpression(String(text ?? ''));
@@ -217,10 +217,7 @@ export async function createForceFromLock(challengeId) {
 /** O mestre atende direto; o jogador pede ao mestre ativo por socket. */
 function request(payload) {
   if (game.user.isGM) return handleRequest(payload, game.user.id);
-  if (!game.users.activeGM) {
-    warn('DESORDEM.Perseguicao.Erro.SemMestre');
-    return undefined;
-  }
+  if (!hasActiveGM()) return undefined;
   return game.socket.emit(SOCKET, payload);
 }
 
