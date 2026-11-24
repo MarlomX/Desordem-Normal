@@ -8,6 +8,7 @@ import { SYSTEM_ID } from '../config.js';
 import { normalizeCheckpoints } from '../rolls/chase.js';
 import { clearCheckpoints, deleteCheckpoint, findChase, setCheckpoint } from './store.js';
 import { t } from '../shared/i18n.js';
+import { TypingGuard } from '../shared/typing-guard.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
 
@@ -38,11 +39,8 @@ export default class PontosApp extends HandlebarsApplicationMixin(ApplicationV2)
     },
   };
 
-  /** A pessoa está digitando e ainda não confirmou? Se sim, não redesenha por cima. */
-  #typing = false;
-
-  /** Chegou uma atualização enquanto ela digitava: a janela é redesenhada quando terminar. */
-  #renderPending = false;
+  /** Espera quem está digitando antes de redesenhar (`shared/typing-guard.js`). */
+  #guard = new TypingGuard(this);
 
   /** Abre a janela (só o mestre) ou a traz para a frente se já estiver aberta. */
   static async open() {
@@ -56,13 +54,7 @@ export default class PontosApp extends HandlebarsApplicationMixin(ApplicationV2)
 
   /** Redesenha a janela se estiver aberta (a lista mudou), sem apagar o que está sendo digitado. */
   static refresh() {
-    const app = PontosApp.#instance;
-    if (!app?.rendered) return;
-    if (app.#typing) {
-      app.#renderPending = true;
-      return;
-    }
-    app.render();
+    PontosApp.#instance?.#guard.refresh();
   }
 
   async _prepareContext(options) {
@@ -87,21 +79,12 @@ export default class PontosApp extends HandlebarsApplicationMixin(ApplicationV2)
   _onRender(context, options) {
     super._onRender?.(context, options);
     for (const input of this.element.querySelectorAll('input')) {
-      input.addEventListener('input', () => {
-        this.#typing = true;
-      });
+      this.#guard.watch(input);
       input.addEventListener('keydown', (event) => {
         if (event.key !== 'Enter') return;
         event.preventDefault();
         if (input.dataset.campo === 'ponto-pa') input.blur();
         else this.element.querySelector('[data-action="addPoint"]')?.click();
-      });
-      input.addEventListener('blur', () => {
-        this.#typing = false;
-        if (!this.#renderPending) return;
-        this.#renderPending = false;
-        // Pequeno atraso: não troca a tela debaixo do clique no botão que veio logo depois
-        globalThis.setTimeout(() => this.render(), 250);
       });
     }
     for (const input of this.element.querySelectorAll('input[data-campo="ponto-pa"]')) {
@@ -111,8 +94,7 @@ export default class PontosApp extends HandlebarsApplicationMixin(ApplicationV2)
 
   /** Troca o PA de um ponto já existente. Valor inválido não grava; a janela é redesenhada. */
   async #commitPoint(input) {
-    this.#typing = false;
-    this.#renderPending = false;
+    this.#guard.done();
     const chase = findChase();
     if (chase) await setCheckpoint(chase, Number(input.dataset.rodada), input.value);
     this.render();
@@ -124,8 +106,7 @@ export default class PontosApp extends HandlebarsApplicationMixin(ApplicationV2)
     if (!chase) return;
     const round = this.element.querySelector('[name="novaRodada"]')?.value;
     const pa = this.element.querySelector('[name="novoPa"]')?.value;
-    this.#typing = false;
-    this.#renderPending = false;
+    this.#guard.done();
     const saved = await setCheckpoint(chase, round, pa);
     if (!saved) ui.notifications.warn(t('DESORDEM.Perseguicao.Pontos.Invalido'));
     this.render();

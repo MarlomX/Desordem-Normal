@@ -20,6 +20,7 @@ import {
 } from '../rolls/creature-table.js';
 import { t } from '../shared/i18n.js';
 import { createWorldStore } from '../shared/world-store.js';
+import { TypingGuard } from '../shared/typing-guard.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
 
@@ -92,8 +93,7 @@ export class TabelasApp extends HandlebarsApplicationMixin(ApplicationV2) {
   #tableId = '';
 
   /** Proteção da digitação, como nas outras janelas: redesenha só quando a pessoa termina. */
-  #typing = false;
-  #renderPending = false;
+  #guard = new TypingGuard(this);
 
   /** Abre o editor (opcionalmente numa tabela). */
   static async open(tableId) {
@@ -107,13 +107,7 @@ export class TabelasApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static refresh() {
-    const app = TabelasApp.#instance;
-    if (!app?.rendered) return;
-    if (app.#typing) {
-      app.#renderPending = true;
-      return;
-    }
-    app.render();
+    TabelasApp.#instance?.#guard.refresh();
   }
 
   /** Tabela atual (a primeira, se a escolhida não existe mais). */
@@ -180,9 +174,7 @@ export class TabelasApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this.render();
     });
     for (const field of this.element.querySelectorAll('[data-campo]')) {
-      field.addEventListener('input', () => {
-        this.#typing = true;
-      });
+      this.#guard.watch(field);
       field.addEventListener('change', () => this.#commit(field));
       if (field.tagName === 'INPUT') {
         field.addEventListener('keydown', (event) => {
@@ -191,19 +183,12 @@ export class TabelasApp extends HandlebarsApplicationMixin(ApplicationV2) {
           field.blur();
         });
       }
-      field.addEventListener('blur', () => {
-        this.#typing = false;
-        if (!this.#renderPending) return;
-        this.#renderPending = false;
-        globalThis.setTimeout(() => this.render(), 250);
-      });
     }
   }
 
   /** Grava um campo da tabela (nome, dado ou um campo de linha). */
   async #commit(field) {
-    this.#typing = false;
-    this.#renderPending = false;
+    this.#guard.done();
     const { campo, rowId } = field.dataset;
     const value = field.value;
     await mutateTables((data) => {

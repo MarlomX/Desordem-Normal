@@ -8,17 +8,13 @@ import { invokeRelation } from '../rolls/relation-chat.js';
 import { attackWithWeapon } from '../rolls/equipment-chat.js';
 import { useItem } from '../rolls/item-use-chat.js';
 import { armorSkillPenalties, weaponSkill } from '../rolls/equipment.js';
-import { removeEffect } from '../rolls/effects.js';
 import { hasContusion } from '../rolls/condition-tables.js';
 import {
   addEffectFromItem,
-  createConditionEffect,
   conditionEffectText,
   describeConditionEntry,
-  openConditionEffect,
-  pickConditionEffect,
 } from './condition-effects-ui.js';
-import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
+import { stepIndicator } from '../rolls/steps.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
 import {
   actorEffects,
@@ -27,9 +23,7 @@ import {
   roundUseUpdate,
   usableThisRound,
 } from '../rolls/ability-effects-actor.js';
-import { proposeOpposed } from '../opposed/opposed-chat.js';
 import { startFirstAid } from '../rolls/first-aid-chat.js';
-import { attributeChoiceUpdate } from '../rolls/attribute.js';
 import {
   EXTRA_GROUPS,
   MAX_EXTRAS,
@@ -111,6 +105,19 @@ import {
 } from './context.js';
 import { applyRelativeInput, limitsFromDataset, resolveRelativeFields } from './relative-input.js';
 import { CHARACTER_NOTES, buildNoteRows } from './notes.js';
+import {
+  addEffect,
+  attributeField,
+  deleteItem,
+  editEffect,
+  editItem,
+  enrichActorNote,
+  pickEffect,
+  proposeOpposedAction,
+  removeEffectAction,
+  stepSteps,
+  toggleAbilities,
+} from './actor-sheet-actions.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -147,14 +154,14 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       setRelationDegree: PersonagemSheet.#onSetRelationDegree,
       invokeRelation: PersonagemSheet.#onInvokeRelation,
       createItem: PersonagemSheet.#onCreateItem,
-      editItem: PersonagemSheet.#onEditItem,
-      deleteItem: PersonagemSheet.#onDeleteItem,
+      editItem: editItem,
+      deleteItem: deleteItem,
       attackWeapon: PersonagemSheet.#onAttackWeapon,
       useItem: PersonagemSheet.#onUseItem,
-      addEffect: PersonagemSheet.#onAddEffect,
-      editEffect: PersonagemSheet.#onEditEffect,
-      pickEffect: PersonagemSheet.#onPickEffect,
-      removeEffect: PersonagemSheet.#onRemoveEffect,
+      addEffect: addEffect,
+      editEffect: editEffect,
+      pickEffect: pickEffect,
+      removeEffect: removeEffectAction,
       useEffect: PersonagemSheet.#onUseEffect,
       stepAbilityResource: PersonagemSheet.#onStepAbilityResource,
       newScene: PersonagemSheet.#onNewScene,
@@ -169,13 +176,13 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       openLockBoard: PersonagemSheet.#onOpenLockBoard,
       adjustHideUses: PersonagemSheet.#onAdjustHideUses,
       setTab: PersonagemSheet.#onSetTab,
-      proposeOpposed: PersonagemSheet.#onProposeOpposed,
+      proposeOpposed: proposeOpposedAction,
       firstAid: PersonagemSheet.#onFirstAid,
       adjustResource: PersonagemSheet.#onAdjustResource,
       adjustSceneTests: PersonagemSheet.#onAdjustSceneTests,
       setPip: PersonagemSheet.#onSetPip,
-      stepSteps: PersonagemSheet.#onStepSteps,
-      toggleAbilities: PersonagemSheet.#onToggleAbilities,
+      stepSteps: stepSteps,
+      toggleAbilities: toggleAbilities,
     },
     // Itens podem ser arrastados da barra lateral ou de outra ficha para esta
     dragDrop: [{ dragSelector: '[data-item-id]', dropSelector: null }],
@@ -243,7 +250,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     // Aba Notas: o HTML gravado (o editor edita este) e o enriquecido (links @UUID) para leitura
     const notes = await buildNoteRows(CHARACTER_NOTES, system, {
       t,
-      enrich: (html) => this.#enrichNote(html),
+      enrich: (html) => enrichActorNote(this.document, html),
       fields: this.document.system.schema.fields,
     });
 
@@ -358,19 +365,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /**
-   * HTML de uma nota pronto para leitura: links de documentos (`@UUID[...]`), rolagens em linha e,
-   * para quem é dono, os blocos secretos.
-   * @param {string} html
-   */
-  #enrichNote(html) {
-    return foundry.applications.ux.TextEditor.implementation.enrichHTML(html, {
-      secrets: this.document.isOwner,
-      relativeTo: this.document,
-      rollData: this.document.getRollData?.() ?? {},
-    });
-  }
-
-  /**
    * Antes de gravar o formulário, faz a conta dos campos marcados com `data-relativo` (PV, PD,
    * bases, contadores da cena, armadura extra gasta): `-2` subtrai do valor gravado, `+3` soma.
    * Veja `scripts/sheets/relative-input.js`.
@@ -387,7 +381,7 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       field.addEventListener('change', (event) => this.#onRelationField(event.currentTarget));
     }
     for (const field of this.element.querySelectorAll('[data-attr-campo]')) {
-      field.addEventListener('change', (event) => this.#onAttributeField(event.currentTarget));
+      field.addEventListener('change', (event) => attributeField.call(this, event.currentTarget));
     }
     for (const field of this.element.querySelectorAll('[data-extra-campo]')) {
       field.addEventListener('change', (event) => this.#onExtraField(event.currentTarget));
@@ -583,21 +577,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     await this.#saveRelations(updateRelation(this.#relations(), index, changes));
   }
 
-  /**
-   * Troca do atributo-base de uma perícia, aptidão ou ofício pela etiqueta do atributo.
-   * A escolha fica guardada na ficha (campo sem `name`, fora do formulário); escolher o padrão
-   * volta ao atributo original.
-   */
-  async #onAttributeField(field) {
-    const change = attributeChoiceUpdate(
-      this.document.toObject().system,
-      field.dataset.key,
-      field.value,
-    );
-    if (!change) return;
-    await this.document.update({ [`system.${change.path}`]: change.value });
-  }
-
   /** Lista de áreas extras de um grupo (`aptidao` ou `oficio`) como dados simples. */
   #extras(group) {
     return this.document.toObject().system[EXTRA_GROUPS[group]];
@@ -644,21 +623,9 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     await startFirstAid(this.document, event);
   }
 
-  /** Propõe um teste oposto: escolhe a perícia e publica o cartão (o token mirado é o oponente). */
-  static async #onProposeOpposed() {
-    await proposeOpposed(this.document);
-  }
-
   /** Clique em uma aba. */
   static #onSetTab(event, target) {
     this.#setTab(target.dataset.tab);
-  }
-
-  /** Abre todas as habilidades ou, se todas já estiverem abertas, recolhe todas. */
-  static #onToggleAbilities() {
-    const all = [...this.element.querySelectorAll('details[data-habilidade]')];
-    const open = all.some((details) => !details.open);
-    for (const details of all) details.open = open;
   }
 
   /** Botões −/+ do PV e do PD: edição crua, sem teste de lesão ou de trauma. */
@@ -677,25 +644,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /** Clique em um marcador de ímpeto ou de análise do cabeçalho. */
-  /** Botões −/+ de passo temporário de um atributo ou do dado geral das perícias. */
-  static async #onStepSteps(event, target) {
-    const key = target.dataset.key;
-    const data = this.document.toObject().system;
-    const current = data.passos;
-    // O passo manual de um atributo não passa do que leva o dado a d12 (ou d4); o geral não tem limite
-    const limits =
-      key === 'pericias'
-        ? undefined
-        : stepLimits(
-            data.atributos[key],
-            stepIndicator({ steps: current, effects: data.efeitos, key }).effects,
-          );
-    const next = target.dataset.reset
-      ? setSteps(current, key, 0)
-      : stepBy(current, key, Number(target.dataset.delta), limits);
-    await this.document.update({ [`system.passos.${key}`]: next[key] });
-  }
-
   static async #onSetPip(event, target) {
     const key = target.dataset.resource;
     const { defs, values } = actorResources(this.document);
@@ -794,24 +742,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     item?.sheet.render(true);
   }
 
-  /** Abre a ficha do item. */
-  static async #onEditItem(event, target) {
-    this.document.items.get(target.dataset.itemId)?.sheet.render(true);
-  }
-
-  /** Remove o item da ficha, depois de confirmar. */
-  static async #onDeleteItem(event, target) {
-    const item = this.document.items.get(target.dataset.itemId);
-    if (!item) return;
-    const confirmed = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize('DESORDEM.Item.Remover') },
-      content: `<p>${game.i18n.localize('DESORDEM.Item.ConfirmarRemover')}</p>`,
-      rejectClose: false,
-      modal: true,
-    });
-    if (confirmed === true) await item.delete();
-  }
-
   /**
    * Aba Equipamento: linhas das armas, armaduras e itens (`buildEquipmentRows`), com o resumo dos
    * efeitos de cada item e a proficiência marcial (da caixa ou de uma habilidade).
@@ -886,30 +816,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   static async #onUseItem(event, target) {
     const item = this.document.items.get(target.dataset.itemId);
     if (item) await useItem(this.document, item);
-  }
-
-  /** Cria um efeito vazio na aba Condição e abre a janela dele. */
-  static async #onAddEffect() {
-    // Efeito vazio no fim da lista, já aberto na janela de edição
-    await createConditionEffect(this.document);
-  }
-
-  /** Abre a janela de edição do efeito clicado. */
-  static async #onEditEffect(event, target) {
-    await openConditionEffect(this.document, Number(target.dataset.index));
-  }
-
-  /** Lista «Do compêndio»: escolhe um Item de efeito e o copia para a ficha. */
-  static async #onPickEffect() {
-    await pickConditionEffect(this.document);
-  }
-
-  /** Remove o efeito temporário clicado. */
-  static async #onRemoveEffect(event, target) {
-    const effects = this.document.toObject().system.efeitos;
-    await this.document.update({
-      'system.efeitos': removeEffect(effects, Number(target.dataset.index)),
-    });
   }
 
   /**

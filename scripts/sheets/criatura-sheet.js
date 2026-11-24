@@ -14,18 +14,12 @@ import { endCreatureScene } from '../rolls/scene-macro.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
 import { weaponSkill } from '../rolls/equipment.js';
 import { askRollChoices } from '../rolls/roll-dialog-chat.js';
-import { proposeOpposed } from '../opposed/opposed-chat.js';
-import { attributeChoiceUpdate } from '../rolls/attribute.js';
-import { removeEffect } from '../rolls/effects.js';
 import {
   addEffectFromItem,
   conditionEffectText,
-  createConditionEffect,
   describeConditionEntry,
-  openConditionEffect,
-  pickConditionEffect,
 } from './condition-effects-ui.js';
-import { setSteps, stepBy, stepIndicator, stepLimits } from '../rolls/steps.js';
+import { stepIndicator } from '../rolls/steps.js';
 import { addExtra, canAddExtra, removeExtra, updateExtra } from '../rolls/extras.js';
 import {
   MAX_THREAT_SKILLS,
@@ -58,6 +52,19 @@ import {
 import { resolveRelativeFields } from './relative-input.js';
 import { CREATURE_NOTES, buildNoteRows } from './notes.js';
 import { t } from '../shared/i18n.js';
+import {
+  addEffect,
+  attributeField,
+  deleteItem,
+  editEffect,
+  editItem,
+  enrichActorNote,
+  pickEffect,
+  proposeOpposedAction,
+  removeEffectAction,
+  stepSteps,
+  toggleAbilities,
+} from './actor-sheet-actions.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -84,24 +91,24 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     form: { submitOnChange: true },
     actions: {
       setTab: CriaturaSheet.#onSetTab,
-      proposeOpposed: CriaturaSheet.#onProposeOpposed,
+      proposeOpposed: proposeOpposedAction,
       rollSkill: CriaturaSheet.#onRollSkill,
       rollExtraSkill: CriaturaSheet.#onRollExtraSkill,
       toggleAllSkills: CriaturaSheet.#onToggleAllSkills,
       addExtra: CriaturaSheet.#onAddExtra,
       removeExtra: CriaturaSheet.#onRemoveExtra,
       adjustResource: CriaturaSheet.#onAdjustResource,
-      stepSteps: CriaturaSheet.#onStepSteps,
-      addEffect: CriaturaSheet.#onAddEffect,
-      editEffect: CriaturaSheet.#onEditEffect,
-      pickEffect: CriaturaSheet.#onPickEffect,
-      removeEffect: CriaturaSheet.#onRemoveEffect,
+      stepSteps: stepSteps,
+      addEffect: addEffect,
+      editEffect: editEffect,
+      pickEffect: pickEffect,
+      removeEffect: removeEffectAction,
       createItem: CriaturaSheet.#onCreateItem,
-      editItem: CriaturaSheet.#onEditItem,
-      deleteItem: CriaturaSheet.#onDeleteItem,
+      editItem: editItem,
+      deleteItem: deleteItem,
       useEffect: CriaturaSheet.#onUseEffect,
       attackWeapon: CriaturaSheet.#onAttackWeapon,
-      toggleAbilities: CriaturaSheet.#onToggleAbilities,
+      toggleAbilities: toggleAbilities,
       toggleElementPicker: CriaturaSheet.#onToggleElementPicker,
       addSecondaryElement: CriaturaSheet.#onSecondaryElement,
       removeSecondaryElement: CriaturaSheet.#onSecondaryElement,
@@ -162,7 +169,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     // Aba Notas: estratégia e descrição, com o editor rico (v0.23.2)
     const notes = await buildNoteRows(CREATURE_NOTES, system, {
       t,
-      enrich: (html) => this.#enrichNote(html),
+      enrich: (html) => enrichActorNote(this.document, html),
       fields: system.schema.fields,
     });
 
@@ -226,19 +233,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
   }
 
   /**
-   * HTML de uma nota pronto para leitura: links de documentos (`@UUID[...]`), rolagens em linha e,
-   * para quem é dono (o mestre), os blocos secretos.
-   * @param {string} html
-   */
-  #enrichNote(html) {
-    return foundry.applications.ux.TextEditor.implementation.enrichHTML(html, {
-      secrets: this.document.isOwner,
-      relativeTo: this.document,
-      rollData: this.document.getRollData?.() ?? {},
-    });
-  }
-
-  /**
    * Antes de gravar o formulário, faz a conta dos campos marcados com `data-relativo` (valor e
    * base do PV): `-2` subtrai do valor gravado, `+3` soma. Veja `scripts/sheets/relative-input.js`.
    */
@@ -255,7 +249,7 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
         field.addEventListener('change', (event) => handler.call(this, event.currentTarget));
       }
     };
-    bind('[data-attr-campo]', this.#onAttributeField);
+    bind('[data-attr-campo]', attributeField);
     bind('[data-extra-campo]', this.#onExtraField);
     bind('[data-elemento-principal]', this.#onPrimaryElement);
     for (const details of this.element.querySelectorAll('details[data-habilidade]')) {
@@ -314,16 +308,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     CriaturaSheet.#openAbilities.set(this.document.id, nextOpenIds(current, id, details.open));
   }
 
-  /** Troca do atributo-base de uma perícia (do livro ou própria) pela etiqueta do atributo. */
-  async #onAttributeField(field) {
-    const change = attributeChoiceUpdate(
-      this.document.toObject().system,
-      field.dataset.key,
-      field.value,
-    );
-    if (change) await this.document.update({ [`system.${change.path}`]: change.value });
-  }
-
   /** Edição do nome ou do dado de uma perícia própria. */
   async #onExtraField(field) {
     const { id, extraCampo } = field.dataset;
@@ -358,11 +342,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       target.dataset.elemento,
     );
     await this.document.update({ 'system.elementos': next });
-  }
-
-  /** Propõe um teste oposto: escolhe a perícia e publica o cartão (o token mirado é o oponente). */
-  static async #onProposeOpposed() {
-    await proposeOpposed(this.document);
   }
 
   /** Clique em uma aba. */
@@ -423,48 +402,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     await this.document.update({ 'system.pv.value': value });
   }
 
-  /** Botões −/+ de passo temporário de um atributo ou do dado geral das perícias. */
-  static async #onStepSteps(event, target) {
-    const key = target.dataset.key;
-    const data = this.document.toObject().system;
-    const current = data.passos;
-    const limits =
-      key === 'pericias'
-        ? undefined
-        : stepLimits(
-            data.atributos[key],
-            stepIndicator({ steps: current, effects: data.efeitos, key }).effects,
-          );
-    const next = target.dataset.reset
-      ? setSteps(current, key, 0)
-      : stepBy(current, key, Number(target.dataset.delta), limits);
-    await this.document.update({ [`system.passos.${key}`]: next[key] });
-  }
-
-  /** Cria um efeito vazio (caído, atordoado...) e abre a janela dele. */
-  static async #onAddEffect() {
-    // Efeito vazio no fim da lista, já aberto na janela de edição
-    await createConditionEffect(this.document);
-  }
-
-  /** Abre a janela de edição do efeito clicado. */
-  static async #onEditEffect(event, target) {
-    await openConditionEffect(this.document, Number(target.dataset.index));
-  }
-
-  /** Lista «Do compêndio»: escolhe um Item de efeito e o copia para a ficha. */
-  static async #onPickEffect() {
-    await pickConditionEffect(this.document);
-  }
-
-  /** Remove o efeito temporário clicado. */
-  static async #onRemoveEffect(event, target) {
-    const effects = this.document.toObject().system.efeitos;
-    await this.document.update({
-      'system.efeitos': removeEffect(effects, Number(target.dataset.index)),
-    });
-  }
-
   /** Botão de um efeito de habilidade (ação com aviso): avisa no chat. */
   static async #onUseEffect(event, target) {
     await useAbilityEffect(this.document, target.dataset.itemId, target.dataset.efeitoId);
@@ -482,24 +419,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
     item?.sheet.render(true);
   }
 
-  /** Abre a ficha do item. */
-  static #onEditItem(event, target) {
-    this.document.items.get(target.dataset.itemId)?.sheet.render(true);
-  }
-
-  /** Remove o item da ficha, depois de confirmar. */
-  static async #onDeleteItem(event, target) {
-    const item = this.document.items.get(target.dataset.itemId);
-    if (!item) return;
-    const confirmed = await foundry.applications.api.DialogV2.confirm({
-      window: { title: t('DESORDEM.Item.Remover') },
-      content: `<p>${t('DESORDEM.Item.ConfirmarRemover')}</p>`,
-      rejectClose: false,
-      modal: true,
-    });
-    if (confirmed === true) await item.delete();
-  }
-
   /** Ataca: teste da perícia do ataque (DT 7) e, se acertar, cartão com o dano e o botão. */
   static async #onAttackWeapon(event, target) {
     const weapon = this.document.items.get(target.dataset.itemId);
@@ -514,13 +433,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
       },
       (options) => attackWithWeapon(this.document, weapon, options),
     );
-  }
-
-  /** Abre todas as habilidades ou, se todas já estiverem abertas, recolhe todas. */
-  static #onToggleAbilities() {
-    const all = [...this.element.querySelectorAll('details[data-habilidade]')];
-    const open = all.some((details) => !details.open);
-    for (const details of all) details.open = open;
   }
 
   /** Botão «Nova cena» (v0.23.3): passos a 0 e sem os efeitos de cena, depois de confirmar. */

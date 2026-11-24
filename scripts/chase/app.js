@@ -28,6 +28,7 @@ import {
 } from './store.js';
 import { t } from '../shared/i18n.js';
 import { renderTemplate } from '../shared/templates.js';
+import { TypingGuard } from '../shared/typing-guard.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
 
@@ -78,24 +79,15 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
     return app;
   }
 
-  /** A pessoa está digitando num campo e ainda não confirmou (Enter ou sair do campo)? */
-  #typing = false;
-
-  /** Chegou uma atualização enquanto ela digitava: a janela é redesenhada quando terminar. */
-  #renderPending = false;
+  /** Espera quem está digitando antes de redesenhar (`shared/typing-guard.js`). */
+  #guard = new TypingGuard(this);
 
   /**
    * Redesenha a janela se ela estiver aberta (chamado quando o estado muda). Se alguém está
    * digitando num campo, espera: redesenhar agora apagaria o que está sendo digitado.
    */
   static refresh() {
-    const app = PerseguicaoApp.#instance;
-    if (!app?.rendered) return;
-    if (app.#typing) {
-      app.#renderPending = true;
-      return;
-    }
-    app.render();
+    PerseguicaoApp.#instance?.#guard.refresh();
   }
 
   /**
@@ -107,22 +99,13 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
   _onRender(context, options) {
     super._onRender?.(context, options);
     for (const input of this.element.querySelectorAll('input[data-campo]')) {
-      input.addEventListener('input', () => {
-        this.#typing = true;
-      });
+      this.#guard.watch(input);
       input.addEventListener('change', () => this.#commitField(input));
       input.addEventListener('keydown', (event) => {
         // Enter confirma: tirar o foco do campo dispara o `change`
         if (event.key !== 'Enter') return;
         event.preventDefault();
         input.blur();
-      });
-      input.addEventListener('blur', () => {
-        this.#typing = false;
-        if (!this.#renderPending) return;
-        this.#renderPending = false;
-        // Pequeno atraso: não troca a tela debaixo do clique no botão que veio logo depois
-        globalThis.setTimeout(() => this.render(), 250);
       });
     }
   }
@@ -133,8 +116,7 @@ export default class PerseguicaoApp extends HandlebarsApplicationMixin(Applicati
    * O mestre decide a DT; PA e fôlego seguem a regra de `canEditParticipant` (store.js).
    */
   async #commitField(input) {
-    this.#typing = false;
-    this.#renderPending = false;
+    this.#guard.done();
     const chase = findChase();
     if (chase) {
       const { campo, combatantId } = input.dataset;

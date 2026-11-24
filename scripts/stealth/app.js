@@ -31,6 +31,7 @@ import {
 } from './store.js';
 import { t } from '../shared/i18n.js';
 import { renderTemplate } from '../shared/templates.js';
+import { TypingGuard } from '../shared/typing-guard.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
 
@@ -97,21 +98,12 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
     return app;
   }
 
-  /** A pessoa está digitando no campo da rodada e ainda não confirmou? */
-  #typing = false;
-
-  /** Chegou uma atualização enquanto ela digitava: redesenha quando terminar. */
-  #renderPending = false;
+  /** Espera quem está digitando antes de redesenhar (`shared/typing-guard.js`). */
+  #guard = new TypingGuard(this);
 
   /** Redesenha a janela se estiver aberta, sem apagar o que está sendo digitado. */
   static refresh() {
-    const app = FurtividadeApp.#instance;
-    if (!app?.rendered) return;
-    if (app.#typing) {
-      app.#renderPending = true;
-      return;
-    }
-    app.render();
+    FurtividadeApp.#instance?.#guard.refresh();
   }
 
   /**
@@ -121,28 +113,19 @@ export default class FurtividadeApp extends HandlebarsApplicationMixin(Applicati
   _onRender(context, options) {
     super._onRender?.(context, options);
     for (const input of this.element.querySelectorAll('input[data-campo]')) {
-      input.addEventListener('input', () => {
-        this.#typing = true;
-      });
+      this.#guard.watch(input);
       input.addEventListener('change', () => this.#commitField(input));
       input.addEventListener('keydown', (event) => {
         if (event.key !== 'Enter') return;
         event.preventDefault();
         input.blur();
       });
-      input.addEventListener('blur', () => {
-        this.#typing = false;
-        if (!this.#renderPending) return;
-        this.#renderPending = false;
-        globalThis.setTimeout(() => this.render(), 250);
-      });
     }
   }
 
   /** Grava a rodada digitada; valor inválido não grava e o campo volta ao valor guardado. */
   async #commitField(input) {
-    this.#typing = false;
-    this.#renderPending = false;
+    this.#guard.done();
     const stealth = findStealth();
     if (stealth && input.dataset.campo === 'rodada') {
       await setStealthRound(stealth, { raw: input.value });
