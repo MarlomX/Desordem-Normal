@@ -218,12 +218,37 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     },
   };
 
+  /**
+   * Partes que se redesenham sozinhas quando a perseguição, a furtividade ou um desafio mudam
+   * (`refreshOpenSheets`). Elas só leem os cartões, os efeitos e o pavor; quando o redesenho é só
+   * delas, o contexto não monta o resto da ficha (v0.28.6).
+   */
+  static #LIGHT_PARTS = new Set(['perseguicao', 'furtividade', 'desafios', 'condicao']);
+
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const { system } = this.document;
     const t = (key) => game.i18n.localize(key);
     const activeTab = resolveActiveTab(PersonagemSheet.#activeTabs.get(this.document.id));
     const tabs = buildTabs(activeTab, (id) => t(`DESORDEM.Ficha.Abas.${id}`));
+    // O que as partes leves leem (os cartões e a aba Condição); a ficha inteira também leva
+    const light = {
+      ...context,
+      perseguicao: chaseCardFor(this.document),
+      furtividade: stealthCardFor(this.document),
+      desafios: challengeCardFor(this.document),
+      sheetTabs: tabs.list,
+      tabState: tabs.state,
+      actor: this.document,
+      system,
+      editable: this.isEditable,
+      ...this.#conditionContext(t),
+    };
+    // Redesenho só dos cartões (e da aba Condição): sem notas, perícias, itens nem habilidades
+    const parts = options?.parts ?? [];
+    if (parts.length && parts.every((part) => PersonagemSheet.#LIGHT_PARTS.has(part))) {
+      return light;
+    }
     // Nome de uma perícia ou de uma área de Aptidão (botões dos testes das habilidades)
     // Passos temporários (manuais + efeitos) de cada atributo e do dado geral das perícias
     const stepsData = this.document.toObject().system;
@@ -255,13 +280,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     });
 
     return {
-      ...context,
+      ...light,
       notes,
-      perseguicao: chaseCardFor(this.document),
-      furtividade: stealthCardFor(this.document),
-      desafios: challengeCardFor(this.document),
-      sheetTabs: tabs.list,
-      tabState: tabs.state,
       pvPercent: resourcePercent(system.pv.value, system.pv.max),
       pdPercent: resourcePercent(system.pd.value, system.pd.max),
       pvLow: isResourceLow(system.pv.value, system.pv.max),
@@ -282,9 +302,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       bonusDice: groupBonusDice(system.dadosBonus)
         .map(({ die, count }) => `${count}d${die}`)
         .join(' + '),
-      actor: this.document,
-      system,
-      editable: this.isEditable,
       attributes: buildAttributeRows(
         system.atributos,
         ATRIBUTOS,
@@ -334,15 +351,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
       maxExtras: MAX_EXTRAS,
       nextInjuryDT: injuryDT(system.cena.testesLesao),
       nextTraumaDT: traumaDT(system.cena.testesTrauma),
-      fearChoices: buildFearChoices(system.estado.pavor, t('DESORDEM.Ficha.SemPavor')),
-      // Efeitos da aba Condição, em linhas compactas (a edição é na janela do efeito); as lesões
-      // e os traumas também são efeitos, com o texto traduzido pela chave
-      effects: buildEffectRows(system.efeitos, {
-        describe: describeConditionEntry,
-        text: conditionEffectText,
-        durationLabel: (key) => t(`DESORDEM.Efeito.Duracao.${key}`),
-        editable: this.isEditable,
-      }),
       abilities: buildAbilityRows(
         this.document.items
           .filter((item) => item.type === 'habilidade')
@@ -375,6 +383,24 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
   }
 
   /** Liga os campos de texto e a caixa "usada" das relações (sem `name`, fora do formulário). */
+  /**
+   * Aba Condição: o seletor do pavor e os efeitos em linhas compactas (a edição é na janela do
+   * efeito); as lesões e os traumas também são efeitos, com o texto traduzido pela chave.
+   * @param {(key: string) => string} t
+   */
+  #conditionContext(t) {
+    const { system } = this.document;
+    return {
+      fearChoices: buildFearChoices(system.estado.pavor, t('DESORDEM.Ficha.SemPavor')),
+      effects: buildEffectRows(system.efeitos, {
+        describe: describeConditionEntry,
+        text: conditionEffectText,
+        durationLabel: (key) => t(`DESORDEM.Efeito.Duracao.${key}`),
+        editable: this.isEditable,
+      }),
+    };
+  }
+
   async _onRender(context, options) {
     await super._onRender(context, options);
     for (const field of this.element.querySelectorAll('[data-relacao-campo]')) {

@@ -197,32 +197,49 @@ export async function rebuildTest({ plan, display, values, notes = [] }) {
 /**
  * Executa um teste de um ator: paga os PD de controlar/abraçar o pavor, rola e, se o dado de
  * pavor tirar 1, encerra o pavor guardado na ficha. Sem ator, só rola.
+ *
+ * Desde a v0.28.6 o ator é gravado no máximo duas vezes (antes eram até quatro): uma antes de
+ * rolar (PD e PV gastos) e uma depois (fim do pavor, recursos e dados bônus). Cada gravação vai
+ * ao servidor, passa pelos hooks e redesenha a ficha em todos os navegadores.
  * @returns {Promise<{result: object, rolls: Roll[], card: string}>}
  */
 export async function runTest(actor, options) {
-  if (actor && options.pdCost > 0) {
-    await actor.update({ 'system.pd.value': Math.max(0, actor.system.pd.value - options.pdCost) });
-  }
-  // PV gastos por habilidades marcadas na janela pré-teste
-  if (actor && options.pvCost > 0) {
-    await actor.update({ 'system.pv.value': Math.max(0, actor.system.pv.value - options.pvCost) });
+  if (actor) {
+    const payment = {};
+    if (options.pdCost > 0) {
+      payment['system.pd.value'] = Math.max(0, actor.system.pd.value - options.pdCost);
+    }
+    // PV gastos por habilidades marcadas na janela pré-teste
+    if (options.pvCost > 0) {
+      payment['system.pv.value'] = Math.max(0, actor.system.pv.value - options.pvCost);
+    }
+    if (Object.keys(payment).length) await actor.update(payment);
   }
   const outcome = await executeTest(options);
-  if (actor && options.fearStored && outcome.result.fear?.ended) {
-    await actor.update({ 'system.estado.pavor': 0 });
+  if (actor) {
+    const fearEnded = options.fearStored && outcome.result.fear?.ended;
+    await settleAbilities(
+      actor,
+      options,
+      outcome.result,
+      fearEnded ? { 'system.estado.pavor': 0 } : {},
+    );
   }
-  if (actor) await settleAbilities(actor, options, outcome.result);
   return outcome;
 }
 
 /**
  * Efeitos das habilidades depois de um teste: paga os recursos gastos na janela pré-teste
  * (ímpeto e outros), tira da reserva os dados bônus usados e dispara os ganhos de «ao falhar»
- * (efeitos `ganharRecurso`; ex.: enche a barra de ímpeto) se o teste com DT falhou.
+ * (efeitos `ganharRecurso`; ex.: enche a barra de ímpeto) se o teste com DT falhou. `extra` são
+ * outras mudanças do fim do teste (o fim do pavor), gravadas junto, numa gravação só.
  */
-async function settleAbilities(actor, options, result) {
-  // Ameaças (criaturas) não têm recursos de habilidade
-  if (!actor.system.recursosHab) return;
+async function settleAbilities(actor, options, result, extra = {}) {
+  // Ameaças (criaturas) não têm recursos de habilidade: só o que veio em `extra`
+  if (!actor.system.recursosHab) {
+    if (Object.keys(extra).length) await actor.update(extra);
+    return;
+  }
   const { values } = actorResources(actor);
   const paid = { ...values };
   const changed = {};
@@ -232,6 +249,7 @@ async function settleAbilities(actor, options, result) {
     changed[key] = paid[key];
   }
   const updates = {
+    ...extra,
     ...resourceUpdates(changed),
     ...(impetoFillsOnFailure(result, options.showDt)
       ? triggerUpdates(actor, 'falha', null, paid)
@@ -398,18 +416,22 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   // Habilidades escolhidas na janela pré-teste (efeitos `dadoExtra`: ímpeto, dado furtivo...); no
   // ataque, também os efeitos da arma (`weaponId`)
   const entries = actorEffects(actor, { weaponId });
+  // Recursos e opções de dados extras do ator, calculados uma vez (v0.28.6: antes duas vezes,
+  // uma para os dados do teste e outra para a linha «Usou»)
+  const actorRes = actorResources(actor, entries);
+  const diceOptions = dialogDiceOptions(entries, {
+    skillKey,
+    // Tipo do teste para os filtros dos dados extras (defesa, ataque corpo a corpo...)
+    testKind: allowDefense ? 'defesa' : testKind,
+    // Companheiro animal ferido nesta cena: a opção não vale, mesmo marcada (v0.27.0)
+    hurtCompanion: Boolean(system.cena?.animalFerido),
+    companion,
+  });
   const boosts = activeBoosts(active, {
     pd: resources.pd - fear.pdCost,
     pv: system.pv?.value ?? 0,
-    recursos: actorResources(actor, entries).values,
-    diceOptions: dialogDiceOptions(entries, {
-      skillKey,
-      // Tipo do teste para os filtros dos dados extras (defesa, ataque corpo a corpo...)
-      testKind: allowDefense ? 'defesa' : testKind,
-      // Companheiro animal ferido nesta cena: a opção não vale, mesmo marcada (v0.27.0)
-      hurtCompanion: Boolean(system.cena?.animalFerido),
-      companion,
-    }),
+    recursos: actorRes.values,
+    diceOptions,
     allowNonLethal,
     allowDefense,
   });
@@ -425,14 +447,9 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   // Dados da reserva de bônus escolhidos na janela (os maiores primeiro)
   const reserveDice = pickBonusDice(system.dadosBonus, useBonusDice);
   // Linha «Usou» do cartão: habilidades marcadas, Defender-se, não letal e dados da reserva
-  const resourceDefsNow = actorResources(actor, entries).defs;
+  const resourceDefsNow = actorRes.defs;
   const usos = usedSummary(boosts.used, {
-    diceOptions: dialogDiceOptions(entries, {
-      skillKey,
-      testKind: allowDefense ? 'defesa' : testKind,
-      hurtCompanion: Boolean(system.cena?.animalFerido),
-      companion,
-    }),
+    diceOptions,
     reserveDice,
     resourceNames: Object.fromEntries(
       Object.values(resourceDefsNow).map((def) => [def.chave, resourceName(def, localize)]),

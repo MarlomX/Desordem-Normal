@@ -23,6 +23,9 @@ class ApplicationV2 {
     this.options = options;
     this.rendered = false;
   }
+  async _prepareContext() {
+    return {};
+  }
   render() {
     this.rendered = true;
     return this;
@@ -109,6 +112,7 @@ export function resetFoundry({ user = makeUser('gm', { isGM: true }), activeGM =
       emit: (name, data) => log.emitted.push({ name, data }),
     },
     messages: collection(),
+    modules: collection(),
     actors: collection(),
     combats: collection(),
     journal: collection(),
