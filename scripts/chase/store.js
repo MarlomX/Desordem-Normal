@@ -29,15 +29,17 @@ import {
   startState,
   endState,
 } from '../rolls/chase.js';
-import { t } from '../shared/i18n.js';
 import { SOCKET } from '../shared/socket.js';
-
-/* global getDocumentClass */
+import {
+  createEncounter,
+  findEncounter,
+  updateAllParticipants,
+  userOwnsParticipant,
+  worldActorId,
+} from '../shared/encounter.js';
 
 /** A perseguição existente (nesta versão só pode haver uma por vez) ou `null`. */
-export function findChase() {
-  return game.combats.find((combat) => combat.type === CHASE_COMBAT_TYPE) ?? null;
-}
+export const findChase = () => findEncounter(CHASE_COMBAT_TYPE);
 
 /** Ids dos atores que já participam da perseguição. */
 export function participantActorIds(chase) {
@@ -46,14 +48,12 @@ export function participantActorIds(chase) {
 
 /** O personagem (ator) participa desta perseguição? */
 export function actorParticipates(chase, actor) {
-  const id = actor?.isToken ? actor.baseActor?.id : actor?.id;
+  const id = worldActorId(actor);
   return Boolean(id) && participantActorIds(chase).includes(id);
 }
 
 /** O usuário atual é dono de algum personagem que participa da perseguição? */
-export function userOwnsParticipant(chase) {
-  return chase.combatants.some((combatant) => combatant.actor?.isOwner);
-}
+export { userOwnsParticipant };
 
 /** Faces do dado de Vigor de um ator (o fôlego inicial depende dele). */
 const vigorOf = (actor) => actor?.system?.pericias?.vigor ?? 4;
@@ -134,7 +134,7 @@ export function chaseCardFor(actor) {
     isParticipant: actorParticipates(chase, actor),
   });
   if (!access.showCard) return null;
-  const id = actor.isToken ? actor.baseActor?.id : actor.id;
+  const id = worldActorId(actor);
   const combatant = chase.combatants.find((entry) => entry.actorId === id);
   const view = combatant ? participantView(chase, combatant) : null;
   return {
@@ -165,7 +165,7 @@ export function chaseCardFor(actor) {
 export function chaseInfoFor(actor, skillKey) {
   const chase = findChase();
   if (!chase?.system.ativa || !actor?.isOwner) return null;
-  const id = actor.isToken ? actor.baseActor?.id : actor.id;
+  const id = worldActorId(actor);
   const combatant = chase.combatants.find((entry) => entry.actorId === id);
   if (!combatant) return null;
   const participant = combatant.system;
@@ -184,24 +184,12 @@ export function chaseInfoFor(actor, skillKey) {
 }
 
 /** Cria a perseguição em preparação. Só o mestre cria; só pode existir uma. */
-export async function createChase() {
-  if (!game.user.isGM) return null;
-  if (findChase()) {
-    ui.notifications.warn(t('DESORDEM.Perseguicao.Erro.JaExiste'));
-    return null;
-  }
-  const Combat = getDocumentClass('Combat');
-  const data = { type: CHASE_COMBAT_TYPE, system: initialChaseState() };
-  try {
-    // Sem cena: a perseguição funciona sem mapa nem tokens.
-    return await Combat.create({ ...data, scene: null });
-  } catch (error) {
-    console.warn(
-      'desordem-normal | Combat sem cena não foi aceito; criando com a cena padrão.',
-      error,
-    );
-    return Combat.create(data);
-  }
+export function createChase() {
+  return createEncounter(
+    CHASE_COMBAT_TYPE,
+    initialChaseState(),
+    'DESORDEM.Perseguicao.Erro.JaExiste',
+  );
 }
 
 /**
@@ -210,22 +198,14 @@ export async function createChase() {
  */
 export async function startChase(chase) {
   if (!game.user.isGM) return;
-  const updates = chase.combatants.map((combatant) => ({
-    _id: combatant.id,
-    system: participantStart(vigorOf(combatant.actor)),
-  }));
-  if (updates.length) await chase.updateEmbeddedDocuments('Combatant', updates);
+  await updateAllParticipants(chase, (combatant) => participantStart(vigorOf(combatant.actor)));
   await chase.update({ system: startState() });
 }
 
 /** Encerra a perseguição: volta à preparação, mantendo os participantes mas zerando tudo. */
 export async function endChase(chase) {
   if (!game.user.isGM) return;
-  const updates = chase.combatants.map((combatant) => ({
-    _id: combatant.id,
-    system: participantReset(),
-  }));
-  if (updates.length) await chase.updateEmbeddedDocuments('Combatant', updates);
+  await updateAllParticipants(chase, () => participantReset());
   await chase.update({ system: endState() });
 }
 

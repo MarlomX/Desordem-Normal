@@ -14,6 +14,7 @@
  * Toda mudança passa pelo mestre (as funções abaixo só calculam o registro novo); cada uma devolve
  * `null` quando o passo não vale agora, e o mestre não grava nada.
  */
+import { CLAIM_TIMEOUT_MS, claimRules } from './claim.js';
 
 /** Faces dos dados do equilíbrio. */
 export const BALANCE_SIDES = 10;
@@ -23,7 +24,10 @@ export const BALANCE_BONUS_SIDES = 4;
 export const BALANCE_TOLERANCE = 1;
 
 /** Validade da reserva contra o duplo clique (a mesma dos outros cartões). */
-export const BALANCE_CLAIM_MS = 30_000;
+export const BALANCE_CLAIM_MS = CLAIM_TIMEOUT_MS;
+
+/** Reserva do cartão de equilíbrio (estado livre: 'aberto'). */
+const balanceClaim = claimRules({ free: 'aberto' });
 
 /** Máximo de notas guardadas no cartão (Análise, Prontidão). */
 const MAX_NOTES = 6;
@@ -59,19 +63,13 @@ export function balanceState(flag) {
 }
 
 /** O cartão ainda aceita cliques? (aberto, ou com a reserva do mestre já vencida) */
-export function balanceOpen(flag, now) {
-  if (flag?.estado === 'aberto') return true;
-  return flag?.estado === 'aplicando' && now - (flag.reservadoEm ?? 0) > BALANCE_CLAIM_MS;
-}
+export const balanceOpen = balanceClaim.claimable;
 
 /** Reserva o cartão para o mestre gravar (contra o duplo clique). `null` se não está aberto. */
-export function reserveBalance(flag, now) {
-  if (!balanceOpen(flag, now)) return null;
-  return { ...flag, estado: 'aplicando', reservadoEm: now };
-}
+export const reserveBalance = balanceClaim.reserve;
 
 /** Devolve o cartão a «aberto» (o passo não valeu ou deu erro). */
-export const releaseBalance = (flag) => ({ ...flag, estado: 'aberto', reservadoEm: null });
+export const releaseBalance = balanceClaim.release;
 
 const withNote = (flag, note) =>
   note ? [...(flag.notas ?? []), String(note).slice(0, 200)].slice(-MAX_NOTES) : flag.notas;

@@ -33,8 +33,13 @@ import {
 import { t } from '../shared/i18n.js';
 import { renderTemplate } from '../shared/templates.js';
 import { SOCKET, hasActiveGM } from '../shared/socket.js';
-
-/* global getDocumentClass */
+import {
+  createEncounter,
+  findEncounter,
+  updateAllParticipants,
+  userOwnsParticipant,
+  worldActorId,
+} from '../shared/encounter.js';
 
 /** Nome da ação de socket dos dados de esconderijo. */
 export const HIDE_SOCKET_ACTION = 'stealthHideDice';
@@ -63,22 +68,12 @@ export function hideRevealed(combatantId) {
 }
 
 /** A cena de furtividade existente (só pode haver uma por vez) ou `null`. */
-export function findStealth() {
-  return game.combats.find((combat) => combat.type === STEALTH_COMBAT_TYPE) ?? null;
-}
-
-/** Id do ator "de verdade" (num token sem vínculo, o ator base). */
-const actorIdOf = (actor) => (actor?.isToken ? actor.baseActor?.id : actor?.id);
+export const findStealth = () => findEncounter(STEALTH_COMBAT_TYPE);
 
 /** Participante (Combatant) de um personagem nesta cena, ou `undefined`. */
 export function combatantOf(stealth, actor) {
-  const id = actorIdOf(actor);
+  const id = worldActorId(actor);
   return id ? stealth.combatants.find((combatant) => combatant.actorId === id) : undefined;
-}
-
-/** O usuário atual é dono de algum personagem que participa da cena? */
-function userOwnsParticipant(stealth) {
-  return stealth.combatants.some((combatant) => combatant.actor?.isOwner);
 }
 
 /** Acesso do usuário atual à cena existente (as mesmas regras da perseguição). */
@@ -175,31 +170,17 @@ export function stealthCardFor(actor) {
 }
 
 /** Cria a cena em preparação. Só o mestre cria; só pode existir uma. */
-export async function createStealth() {
-  if (!game.user.isGM) return null;
-  if (findStealth()) {
-    ui.notifications.warn(t('DESORDEM.Furtividade.Erro.JaExiste'));
-    return null;
-  }
-  const Combat = getDocumentClass('Combat');
-  const data = { type: STEALTH_COMBAT_TYPE, system: initialStealthState() };
-  try {
-    // Sem cena do mapa: a furtividade funciona sem tokens
-    return await Combat.create({ ...data, scene: null });
-  } catch (error) {
-    console.warn('desordem-normal | Combat sem cena não foi aceito; criando com a padrão.', error);
-    return Combat.create(data);
-  }
+export function createStealth() {
+  return createEncounter(
+    STEALTH_COMBAT_TYPE,
+    initialStealthState(),
+    'DESORDEM.Furtividade.Erro.JaExiste',
+  );
 }
 
 /** Zera os dados de esconderijo de todos os participantes. */
-async function resetParticipants(stealth) {
-  const updates = stealth.combatants.map((combatant) => ({
-    _id: combatant.id,
-    system: stealthParticipantReset(),
-  }));
-  if (updates.length) await stealth.updateEmbeddedDocuments('Combatant', updates);
-}
+const resetParticipants = (stealth) =>
+  updateAllParticipants(stealth, () => stealthParticipantReset());
 
 /** Inicia a cena (rodada 1). Cada participante começa sem dados, aguardando o esconderijo. */
 export async function startStealth(stealth) {

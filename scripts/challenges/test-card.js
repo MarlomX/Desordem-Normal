@@ -40,6 +40,7 @@ import {
 import { getChallenge, mutateChallenge, readChallenges, worldActorId } from './store.js';
 import { t } from '../shared/i18n.js';
 import { SOCKET, onSocketAction, hasActiveGM } from '../shared/socket.js';
+import { createLock } from '../shared/lock.js';
 
 /** Caminho do registro na mensagem (para `message.update`). */
 const FLAG = `flags.${SYSTEM_ID}.desafio`;
@@ -96,20 +97,15 @@ const currentResult = (test) => resolveWithValues(test.plan, test.values);
  * confirma a gravação; esta trava local impede que dois pedidos chegados juntos (o duplo clique
  * do jogador e o do mestre, por exemplo) leiam os dois a mensagem ainda «pendente».
  */
-const inFlight = new Set();
+const inFlight = createLock();
 
 /**
  * Soma os pontos do teste ao desafio ou, na escalada que falhou, aplica a queda (executado pelo
  * mestre ativo, um pedido por mensagem).
  */
 export async function applyChallengePoints(message, userId) {
-  if (!message || inFlight.has(message.id)) return;
-  inFlight.add(message.id);
-  try {
-    await applyNow(message, userId);
-  } finally {
-    inFlight.delete(message.id);
-  }
+  if (!message) return;
+  await inFlight.run(message.id, () => applyNow(message, userId));
 }
 
 async function applyNow(message, userId) {

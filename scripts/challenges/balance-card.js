@@ -52,6 +52,7 @@ import {
 import { getChallenge, mutateChallenge, worldActorId } from './store.js';
 import { t } from '../shared/i18n.js';
 import { SOCKET, onSocketAction, hasActiveGM } from '../shared/socket.js';
+import { createLock } from '../shared/lock.js';
 
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 
@@ -221,7 +222,7 @@ async function requestReroll(message, speaker) {
 // ---------- O mestre grava ----------
 
 /** Mensagens sendo atendidas agora (dois pedidos juntos não leem o cartão ainda «aberto»). */
-const inFlight = new Set();
+const inFlight = createLock();
 
 /** O pedido pode ser feito por este usuário? */
 function allowed(op, actor, requester) {
@@ -238,13 +239,8 @@ function allowed(op, actor, requester) {
 
 /** Atende um passo do cartão (mestre ativo, um pedido por mensagem). */
 export async function applyBalanceStep(message, userId, payload) {
-  if (!message || inFlight.has(message.id) || !OPS.has(payload?.op)) return;
-  inFlight.add(message.id);
-  try {
-    await applyNow(message, userId, payload);
-  } finally {
-    inFlight.delete(message.id);
-  }
+  if (!message || !OPS.has(payload?.op)) return;
+  await inFlight.run(message.id, () => applyNow(message, userId, payload));
 }
 
 async function applyNow(message, userId, { op, value, index, values, note }) {

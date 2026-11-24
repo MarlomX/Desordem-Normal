@@ -8,6 +8,7 @@
  *                             └--(pending)--> pending   (a rolagem deu erro e foi desfeita)
  * "rolling" é a reserva feita no clique, para dois cliques não rolarem a mesma tabela duas vezes.
  */
+import { CLAIM_TIMEOUT_MS, claimRules } from './claim.js';
 
 /** Dado de cada tabela: lesão e trauma usam d20; o efeito de falha crítica usa d8. */
 const TABLE_DICE = Object.freeze({ lesion: 20, trauma: 20, disaster: 8 });
@@ -18,7 +19,15 @@ export const TABLE_KINDS = Object.freeze(Object.keys(TABLE_DICE));
 export const tableDie = (kind) => TABLE_DICE[kind];
 
 /** Depois deste tempo, uma reserva "rolling" é considerada abandonada (navegador fechado etc.). */
-export const CLAIM_TIMEOUT_MS = 30_000;
+export { CLAIM_TIMEOUT_MS };
+
+/** Reserva da rolagem da tabela (campos em inglês: `status` e `claimedAt`, já gravados assim). */
+const tableClaim = claimRules({
+  free: 'pending',
+  busy: 'rolling',
+  stateKey: 'status',
+  timeKey: 'claimedAt',
+});
 
 const MAX_ROLLS_STORED = 40;
 
@@ -46,12 +55,8 @@ export function createPending({ kind, nonLethal = false, testNumber = null, acto
 /** Quantos d20 aparecem na janela: 2 (fica o melhor) na lesão com dano não letal, senão 1. */
 export const tableDiceCount = (pending) => (pending.kind === 'lesion' && pending.nonLethal ? 2 : 1);
 
-/** A reserva "rolling" já passou do prazo e pode ser refeita? */
-const isStale = (pending, now) =>
-  pending.status === 'rolling' && now - (pending.claimedAt ?? 0) > CLAIM_TIMEOUT_MS;
-
 /** A tabela ainda pode ser rolada (pendente, ou com a reserva abandonada)? */
-export const isClaimable = (pending, now) => pending.status === 'pending' || isStale(pending, now);
+export const isClaimable = tableClaim.claimable;
 
 /**
  * Aceita só um resultado bem formado: { key: texto curto, rolls: números do dado da tabela }.

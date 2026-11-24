@@ -58,6 +58,7 @@ import {
 } from '../rolls/opposed-card.js';
 import { t } from '../shared/i18n.js';
 import { SOCKET, isActiveGM, onSocketAction, canWriteOrAsk } from '../shared/socket.js';
+import { createLock } from '../shared/lock.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/oposto-cartao.hbs`;
 const TEMPLATE_DIALOG = `systems/${SYSTEM_ID}/templates/dialog/oposto.hbs`;
@@ -270,7 +271,7 @@ export async function proposeOpposed(actor) {
 }
 
 /** Cliques em andamento neste navegador (mensagem + botão), contra o duplo clique. */
-const inFlight = new Set();
+const inFlight = createLock();
 
 /** Escolhe o ator de um lado em aberto (pergunta só se houver mais de um candidato). */
 async function pickActor(state, side, filter = null) {
@@ -628,16 +629,14 @@ function cardButton(message, key, label, iconName, action) {
   button.append(icon, document.createTextNode(` ${label}`));
   button.addEventListener('click', async (event) => {
     event.preventDefault();
-    const lock = `${message.id}:${key}`;
-    if (inFlight.has(lock)) return;
-    inFlight.add(lock);
-    button.disabled = true;
-    try {
-      await action(event);
-    } finally {
-      inFlight.delete(lock);
-      button.disabled = false;
-    }
+    await inFlight.run(`${message.id}:${key}`, async () => {
+      button.disabled = true;
+      try {
+        await action(event);
+      } finally {
+        button.disabled = false;
+      }
+    });
   });
   return button;
 }

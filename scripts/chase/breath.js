@@ -8,6 +8,7 @@ import { breathBlockReason, recoverBreathPatch } from '../rolls/chase.js';
 import { postMessage, render } from '../rolls/chat.js';
 import { findChase, updateParticipant } from './store.js';
 import { t } from '../shared/i18n.js';
+import { worldActorId } from '../shared/encounter.js';
 
 /**
  * Recupera o fôlego do personagem (dono ou mestre). Se a perseguição acabou ou o participante já
@@ -17,7 +18,7 @@ import { t } from '../shared/i18n.js';
 export async function recoverBreath(actor) {
   const chase = findChase();
   if (!chase || !actor?.isOwner) return;
-  const id = actor.isToken ? actor.baseActor?.id : actor.id;
+  const id = worldActorId(actor);
   const combatant = chase.combatants.find((entry) => entry.actorId === id);
   if (!combatant) return;
 

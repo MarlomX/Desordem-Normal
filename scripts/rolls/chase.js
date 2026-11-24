@@ -7,6 +7,7 @@
  * Ciclo de vida:  preparação (ativa: false, rodada 0) --iniciar--> em andamento (ativa: true,
  * rodada 1) --encerrar--> volta à preparação. Só pode existir uma perseguição por vez.
  */
+import { CLAIM_TIMEOUT_MS, claimRules } from './claim.js';
 
 /** Subtipo do encontro (Combat) e do participante (Combatant) registrados no system.json. */
 export const CHASE_COMBAT_TYPE = 'perseguicao';
@@ -103,7 +104,11 @@ export const CHASE_DT_MIN = 1;
 export const CHASE_DT_MAX = 40;
 
 /** Tempo (ms) até uma reserva de clique parada deixar de bloquear o botão. */
-export const ADVANCE_CLAIM_TIMEOUT_MS = 30_000;
+export const ADVANCE_CLAIM_TIMEOUT_MS = CLAIM_TIMEOUT_MS;
+
+/** Reserva do botão «adicionar PA» do cartão de avanço (estado livre: 'pendente'). */
+const advanceClaim = claimRules({ free: 'pendente' });
+const isStaleClaim = advanceClaim.stale;
 
 /** DT válida da perseguição: inteiro entre 1 e 40; qualquer outra coisa vira a padrão. */
 export function normalizeChaseDt(value) {
@@ -283,18 +288,11 @@ export function createAdvanceFlag({ combatantId, skillKey, dt }) {
   return { combatantId, skillKey, dt: normalizeChaseDt(dt), estado: 'pendente', ganho: null };
 }
 
-const isStaleClaim = (flag, now) =>
-  flag.estado === 'aplicando' && now - (flag.reservadoEm ?? 0) > ADVANCE_CLAIM_TIMEOUT_MS;
-
 /** O botão pode ser usado agora? (pendente, ou reserva parada há tempo demais) */
-export const isAdvanceClaimable = (flag, now) =>
-  flag.estado === 'pendente' || isStaleClaim(flag, now);
+export const isAdvanceClaimable = advanceClaim.claimable;
 
 /** Reserva o clique (contra o duplo clique). `null` se já foi usado ou está em uso. */
-export function reserveAdvance(flag, now) {
-  if (!isAdvanceClaimable(flag, now)) return null;
-  return { ...flag, estado: 'aplicando', reservadoEm: now };
-}
+export const reserveAdvance = advanceClaim.reserve;
 
 /** Conclui o clique: guarda quantos PA foram adicionados. */
 export function finishAdvanceFlag(flag, gain) {
@@ -302,9 +300,7 @@ export function finishAdvanceFlag(flag, gain) {
 }
 
 /** Desfaz a reserva quando a gravação falhou, para o jogador poder tentar de novo. */
-export function releaseAdvance(flag) {
-  return { ...flag, estado: 'pendente', reservadoEm: null };
-}
+export const releaseAdvance = advanceClaim.release;
 
 /**
  * O que a barra do cartão mostra. `kind` diz como o valor foi obtido (para o texto): `crit`,

@@ -12,6 +12,7 @@
  * perseguição: `chaseAccess`, `trackerAction`, `shouldAutoOpen` e `addableActors` de chase.js
  * servem às duas cenas.
  */
+import { CLAIM_TIMEOUT_MS, claimRules } from './claim.js';
 
 /** Subtipos do encontro (Combat) e do participante (Combatant) registrados no system.json. */
 export const STEALTH_COMBAT_TYPE = 'furtividade';
@@ -249,7 +250,11 @@ export function sanitizeReason(motivo) {
 export const HIDE_TEST_KEEP = 3;
 
 /** Tempo (ms) até uma reserva de clique parada deixar de bloquear o botão. */
-export const HIDE_CLAIM_TIMEOUT_MS = 30_000;
+export const HIDE_CLAIM_TIMEOUT_MS = CLAIM_TIMEOUT_MS;
+
+/** Reserva do botão «guardar dados de esconderijo» (estado livre: 'pendente'). */
+const hideClaim = claimRules({ free: 'pendente' });
+const isStaleHideClaim = hideClaim.stale;
 
 /**
  * A janela pré-teste deve oferecer o teste de esconderijo? Só com a cena em andamento, para um
@@ -272,18 +277,11 @@ export function createHideFlag({ combatantId }) {
   };
 }
 
-const isStaleHideClaim = (flag, now) =>
-  flag.estado === 'aplicando' && now - (flag.reservadoEm ?? 0) > HIDE_CLAIM_TIMEOUT_MS;
-
 /** O botão pode ser usado agora? (pendente, ou reserva parada há tempo demais) */
-export const isHideClaimable = (flag, now) =>
-  flag?.estado === 'pendente' || isStaleHideClaim(flag ?? {}, now);
+export const isHideClaimable = hideClaim.claimable;
 
 /** Reserva o clique (contra o duplo clique). `null` se já foi usado ou está em uso. */
-export function reserveHide(flag, now) {
-  if (!isHideClaimable(flag, now)) return null;
-  return { ...flag, estado: 'aplicando', reservadoEm: now };
-}
+export const reserveHide = hideClaim.reserve;
 
 /** Conclui o clique: guarda os dados que viraram esconderijo e o dado extra do crítico. */
 export function finishHide(flag, { dados, extra }) {
@@ -291,9 +289,7 @@ export function finishHide(flag, { dados, extra }) {
 }
 
 /** Desfaz a reserva quando a gravação falhou, para o jogador poder tentar de novo. */
-export function releaseHide(flag) {
-  return { ...flag, estado: 'pendente', reservadoEm: null };
-}
+export const releaseHide = hideClaim.release;
 
 /**
  * Índices dos dados que ficam por padrão: todos, se o teste rolou até 3; com 4, os 3 maiores

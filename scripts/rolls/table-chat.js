@@ -13,6 +13,7 @@ import { ownedTableKeys } from './condition-tables.js';
 import { drawDisaster, applyDisasterDraw, disasterChoices } from './critical-chat.js';
 import { t } from '../shared/i18n.js';
 import { SOCKET, onSocketAction, canWriteOrAsk } from '../shared/socket.js';
+import { createLock } from '../shared/lock.js';
 
 const TEMPLATE_JANELA = `systems/${SYSTEM_ID}/templates/dialog/tabela.hbs`;
 
@@ -22,7 +23,7 @@ const TUMBLE_STEP_MS = 80;
 const SHOW_RESULT_MS = 900;
 
 /** Cartões cuja tabela está sendo rolada neste navegador (barra o duplo clique local). */
-const busy = new Set();
+const busy = createLock();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -166,29 +167,28 @@ async function askAndDraw(message, pending, actor) {
 
 /** Fluxo completo do botão: janela, sorteio, aplicação à ficha e marca de "tabela rolada". */
 async function rollTableFromMessage(message) {
-  if (busy.has(message.id)) return;
-  busy.add(message.id);
-  try {
-    const pending = tableData(message);
-    const actor = tableActor(message);
-    if (!pending || !actor?.isOwner) return;
-    // Sem poder gravar o cartão (nem mestre para pedir), nem abre a janela
-    if (!canWriteOrAsk(message)) return;
-    const drawn = await askAndDraw(message, pending, actor);
-    if (!drawn) return;
-    if (pending.kind === 'lesion') await applyLesionDraw(actor, pending, drawn);
-    else if (pending.kind === 'trauma') await applyTraumaDraw(actor, pending, drawn);
-    else await applyDisasterDraw(actor, pending, drawn);
-    await requestTableState(message, {
-      status: 'rolled',
-      result: { key: drawn.entry.key, rolls: drawn.rolls.map((roll) => roll.total) },
-    });
-  } catch (error) {
-    console.error(`${SYSTEM_ID} | erro ao rolar a tabela`, error);
-    ui.notifications.error(t('DESORDEM.Tabela.Erro.Rolar'));
-  } finally {
-    busy.delete(message.id);
-  }
+  // Um clique de cada vez por cartão (o segundo é ignorado enquanto o primeiro roda)
+  await busy.run(message.id, async () => {
+    try {
+      const pending = tableData(message);
+      const actor = tableActor(message);
+      if (!pending || !actor?.isOwner) return;
+      // Sem poder gravar o cartão (nem mestre para pedir), nem abre a janela
+      if (!canWriteOrAsk(message)) return;
+      const drawn = await askAndDraw(message, pending, actor);
+      if (!drawn) return;
+      if (pending.kind === 'lesion') await applyLesionDraw(actor, pending, drawn);
+      else if (pending.kind === 'trauma') await applyTraumaDraw(actor, pending, drawn);
+      else await applyDisasterDraw(actor, pending, drawn);
+      await requestTableState(message, {
+        status: 'rolled',
+        result: { key: drawn.entry.key, rolls: drawn.rolls.map((roll) => roll.total) },
+      });
+    } catch (error) {
+      console.error(`${SYSTEM_ID} | erro ao rolar a tabela`, error);
+      ui.notifications.error(t('DESORDEM.Tabela.Erro.Rolar'));
+    }
+  });
 }
 
 /**

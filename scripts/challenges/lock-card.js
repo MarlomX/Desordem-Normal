@@ -48,6 +48,7 @@ import {
 import { createChallenge, getChallenge, mutateChallenge, worldActorId } from './store.js';
 import { t } from '../shared/i18n.js';
 import { SOCKET, onSocketAction, hasActiveGM } from '../shared/socket.js';
+import { createLock } from '../shared/lock.js';
 
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 const escape = (text) => Handlebars.escapeExpression(String(text ?? ''));
@@ -260,7 +261,7 @@ function respondFromCard(message) {
 }
 
 /** Pedidos atendidos agora (evita que dois cliques juntos contem duas vezes a mesma coisa). */
-const inFlight = new Set();
+const inFlight = createLock();
 
 async function handleRequest(payload, userId) {
   // O quadro não tem trava local: cada mudança é pequena e passa pela fila de gravação do mestre
@@ -269,14 +270,10 @@ async function handleRequest(payload, userId) {
     return;
   }
   const key = payload.messageId ?? `${payload.challengeId}:${payload.actorId}`;
-  if (inFlight.has(key)) return;
-  inFlight.add(key);
-  try {
+  await inFlight.run(key, async () => {
     if (payload.action === 'lockAttempt') await applyAttempt(payload, userId);
     else if (payload.action === 'lockRespond') await applyResponse(payload, userId);
-  } finally {
-    inFlight.delete(key);
-  }
+  });
 }
 
 // ---------- Quadro de teoria ----------

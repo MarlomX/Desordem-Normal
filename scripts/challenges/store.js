@@ -12,6 +12,7 @@ import {
   sheetChallenges,
 } from '../rolls/challenge.js';
 import { createWorldStore } from '../shared/world-store.js';
+import { worldActorId as baseWorldActorId } from '../shared/encounter.js';
 
 /** Nome da configuração do mundo que guarda os desafios. */
 export const CHALLENGES_SETTING = 'desafios';
@@ -68,7 +69,7 @@ export function deleteChallenge(id) {
 }
 
 /** Id do ator do mundo por trás de uma ficha (a ficha de um token aponta para o ator base). */
-export const worldActorId = (actor) => (actor?.isToken ? actor.baseActor?.id : actor?.id) ?? '';
+export const worldActorId = (actor) => baseWorldActorId(actor) ?? '';
 
 /** Nome e imagem de um ator do mundo, ou `null` se ele não existe mais. */
 export function actorInfo(id) {

@@ -26,6 +26,7 @@ import { findStealth } from '../stealth/store.js';
 import { findChase } from './store.js';
 import { t } from '../shared/i18n.js';
 import { SOCKET, hasActiveGM } from '../shared/socket.js';
+import { createLock } from '../shared/lock.js';
 
 const { DialogV2 } = foundry.applications.api;
 
@@ -34,7 +35,7 @@ const FLAG = `flags.${SYSTEM_ID}.penalidade`;
 const typeLabel = (tipo) => t(`DESORDEM.Perseguicao.Penalidade.${tipo === 'pd' ? 'PD' : 'PV'}`);
 
 /** Cliques que o mestre está processando agora (barra o duplo clique de um mesmo participante). */
-const inFlight = new Set();
+const inFlight = createLock();
 
 /** Encontro (perseguição ou furtividade) da penalidade. */
 const sceneOf = (flag) => (penaltyScene(flag) === 'furtividade' ? findStealth() : findChase());
@@ -199,10 +200,7 @@ export async function applyPenalty(message, combatantId, userId) {
   // Nunca confia no pedido: só um dono do personagem (ou o mestre) aplica a penalidade dele.
   if (!actor.testUserPermission(requester, 'OWNER')) return;
 
-  const key = `${message.id}:${combatantId}`;
-  if (inFlight.has(key)) return;
-  inFlight.add(key);
-  try {
+  await inFlight.run(`${message.id}:${combatantId}`, async () => {
     // Usa o PV (ou PD) de agora, que pode ter mudado desde a mensagem
     const result = applyPenaltyTo(flag, combatantId, actor.system[flag.tipo].value);
     if (!result) return;
@@ -214,9 +212,7 @@ export async function applyPenalty(message, combatantId, userId) {
       console.error(`${SYSTEM_ID} | falha ao descontar a penalidade`, error);
       await message.update({ [FLAG]: flag });
     }
-  } finally {
-    inFlight.delete(key);
-  }
+  });
 }
 
 /** O mestre aplica direto; o jogador pede ao mestre ativo por socket. */
