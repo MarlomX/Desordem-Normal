@@ -31,6 +31,8 @@
           </span>
           <button type="button" class="desordem-quadro__marca is-igual{{#if igual}} is-ligada{{/if}}" data-action="toggleMark" data-row-id="{{../id}}" data-index="{{index}}" data-mark="igual" title="{{localize "DESORDEM.Desafio.Quadro.Igual"}}" aria-pressed="{{#if igual}}true{{else}}false{{/if}}"{{#unless @root.editar}} disabled{{/unless}}>=</button>
           <button type="button" class="desordem-quadro__marca is-baixo{{#if baixo}} is-ligada{{/if}}" data-action="toggleMark" data-row-id="{{../id}}" data-index="{{index}}" data-mark="baixo" title="{{localize "DESORDEM.Desafio.Quadro.Baixo"}}" aria-pressed="{{#if baixo}}true{{else}}false{{/if}}"{{#unless @root.editar}} disabled{{/unless}}><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
+          {{! Som ouvido nesta posição (v0.27.3): editável em todas as linhas; o texto inteiro aparece ao passar o mouse }}
+          <input type="text" class="desordem-quadro__som" data-campo="som" data-row-id="{{../id}}" data-index="{{index}}" value="{{som}}" maxlength="{{@root.maxSom}}" placeholder="{{localize "DESORDEM.Desafio.Quadro.SomVazio"}}" title="{{#if som}}{{som}}{{else}}{{localize "DESORDEM.Desafio.Quadro.SomDica"}}{{/if}}" aria-label="{{localize "DESORDEM.Desafio.Quadro.SomDica"}}" autocomplete="off"{{#unless @root.editar}} disabled{{/unless}}>
         </div>
         {{/each}}
       </div>

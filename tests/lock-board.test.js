@@ -97,6 +97,7 @@ test('vista do quadro: numeração separada de tentativas e teorias', () => {
     cima: false,
     baixo: false,
     igual: false,
+    som: '',
   });
   assert.equal(view[1].dados[0].editavel, true);
 });

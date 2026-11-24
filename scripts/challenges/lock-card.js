@@ -39,7 +39,9 @@ import {
 import {
   addAttemptRow,
   addManualRow,
+  fillAttemptSounds,
   removeBoardRow,
+  setBoardSound,
   setBoardValue,
   toggleBoardMark,
 } from '../rolls/lock-board.js';
@@ -291,8 +293,11 @@ export function canEditBoard(challenge, user = game.user) {
   );
 }
 
-/** Operações do quadro: nova linha, número de uma linha de teoria, marca e apagar linha. */
-const BOARD_OPS = new Set(['nova', 'valor', 'marca', 'apagar']);
+/**
+ * Operações do quadro: nova linha, número de uma linha de teoria, marca, som anotado (v0.27.3) e
+ * apagar linha.
+ */
+const BOARD_OPS = new Set(['nova', 'valor', 'marca', 'som', 'apagar']);
 
 /**
  * Pede uma mudança no quadro (janela do quadro). O mestre aplica direto; o jogador pede ao mestre.
@@ -316,6 +321,8 @@ async function applyBoardChange({ challengeId, op, rowId, index, value, mark }, 
       if (op === 'nova') return addManualRow(lock, newId);
       if (op === 'valor') return setBoardValue(lock, String(rowId), position, value) ?? lock;
       if (op === 'marca') return toggleBoardMark(lock, String(rowId), position, mark) ?? lock;
+      // Som anotado: o texto é limpo e cortado na lógica pura (`setBoardSound`)
+      if (op === 'som') return setBoardSound(lock, String(rowId), position, value) ?? lock;
       return removeBoardRow(lock, String(rowId)) ?? lock;
     }),
   );
@@ -341,13 +348,14 @@ async function applyAttempt({ challengeId, actorId, values }, userId) {
     const counted = registerAttempt(challenge.fechadura);
     if (!counted) return challenge;
     const answers = secret ? lockAnswers(secret, guess) : null;
-    // A tentativa também entra no quadro de teoria (números travados)
-    const withRow = addAttemptRow(counted, rowId, guess);
+    // O que o cartão público guarda: com sons, só os sons (o significado não sai do mestre)
+    const shown = publicAnswer(answers, sounds);
+    // A tentativa também entra no quadro de teoria (números travados), já com os sons, se houver
+    const withRow = addAttemptRow(counted, rowId, guess, shown.sons);
     const lock = allCorrect(answers) ? markUnlocked(withRow) : withRow;
     // O cartão do chat é público: só leva o máximo se os jogadores podem vê-lo
     outcome = {
-      // O que o cartão público guarda: com sons, só os sons (o significado não sai do mestre)
-      ...publicAnswer(answers, sounds),
+      ...shown,
       status: lockStatus(lock),
       usadas: lock.usadas,
       maximo: maximumVisible(lock, { isGM: false }) ? lock.maximo : null,
@@ -366,6 +374,8 @@ async function applyAttempt({ challengeId, actorId, values }, userId) {
         desafioId: challengeId,
         actorId,
         valores: guess,
+        // Linha desta tentativa no quadro (a resposta dada depois preenche os sons nela)
+        linha: rowId,
         respostas: outcome.respostas,
         sons: outcome.sons,
         status: outcome.status,
@@ -390,15 +400,22 @@ async function applyResponse({ messageId }, userId) {
     warn('DESORDEM.Desafio.Fechadura.SemSenha');
     return;
   }
-  let status = flag.status;
-  if (allCorrect(answers)) {
-    await mutateChallenge(flag.desafioId, (current) =>
-      withLock(current, (lock) => markUnlocked(lock)),
-    );
-    status = 'destrancada';
-  }
   // Com sons, o cartão guarda só os sons (o significado fica com o mestre)
   const shown = publicAnswer(answers, readSounds(challenge));
+  const unlocked = allCorrect(answers);
+  // Uma gravação só: destranca e, com sons, preenche a linha da tentativa no quadro
+  if (unlocked || (shown.sons && flag.linha)) {
+    await mutateChallenge(flag.desafioId, (current) =>
+      withLock(current, (lock) => {
+        const filled =
+          shown.sons && flag.linha
+            ? (fillAttemptSounds(lock, String(flag.linha), shown.sons) ?? lock)
+            : lock;
+        return unlocked ? markUnlocked(filled) : filled;
+      }),
+    );
+  }
+  const status = unlocked ? 'destrancada' : flag.status;
   await message.update({
     [`flags.${SYSTEM_ID}.tentativa.respostas`]: shown.respostas,
     [`flags.${SYSTEM_ID}.tentativa.sons`]: shown.sons,

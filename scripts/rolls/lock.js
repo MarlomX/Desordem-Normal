@@ -12,7 +12,7 @@
  * infinitas; o mestre pode esconder o máximo dos jogadores (`mostrarMaximo`).
  */
 
-import { normalizeBoard } from './lock-board.js';
+import { MAX_SOUND, cleanSound, normalizeBoard } from './lock-board.js';
 
 /** Faces possíveis dos dados da fechadura. */
 export const LOCK_FACES = Object.freeze([4, 6, 8, 10, 12, 20]);
@@ -237,15 +237,9 @@ export function secretFromFlag(flag, challengeId, lock) {
 
 // ---------- Sons (v0.27.2) ----------
 
-/** Tamanho máximo do texto de cada som. */
-export const MAX_SOUND = 20;
-
-/** Um som limpo: uma linha só, sem espaços sobrando, até `MAX_SOUND` caracteres. */
-export const cleanSound = (raw) =>
-  String(raw ?? '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, MAX_SOUND);
+// `MAX_SOUND` e `cleanSound` moram em lock-board.js (o quadro também anota sons) e são
+// reexportados daqui, para quem já os importava de lock.js
+export { MAX_SOUND, cleanSound };
 
 /** Os três sons, um por resposta (`{alto, baixo, certo}`), limpos; os que faltam ficam vazios. */
 export function normalizeSounds(raw) {

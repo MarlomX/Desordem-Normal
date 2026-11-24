@@ -1392,7 +1392,7 @@
       "Quadro": {
         "Titulo": "Quadro da fechadura",
         "TituloNome": "Fechadura: {nome}",
-        "Dica": "Rascunho do grupo: cada tentativa entra aqui sozinha, e «Nova linha» cria uma linha de teoria. Use ▲, = e ▼ do jeito que fizer sentido para vocês; nada aqui é conferido com a senha.",
+        "Dica": "Rascunho do grupo: cada tentativa entra aqui sozinha, e «Nova linha» cria uma linha de teoria. Use ▲, = e ▼ do jeito que fizer sentido para vocês, e anote embaixo de cada dado o som que ouviram; nada aqui é conferido com a senha.",
         "Tentativa": "Tentativa {n}",
         "Teoria": "Teoria {n}",
         "Apagar": "Apagar linha",
@@ -1401,7 +1401,9 @@
         "Baixo": "Marca ▼",
         "Vazio": "Nenhuma linha ainda: tente uma senha ou crie uma linha de teoria.",
         "NovaLinha": "Nova linha",
-        "AbrirDica": "Abre o quadro de teoria da fechadura"
+        "AbrirDica": "Abre o quadro de teoria da fechadura",
+        "SomVazio": "som",
+        "SomDica": "Som que você ouviu nesta posição"
       },
       "Visibilidade": {
         "todos": "Todos",

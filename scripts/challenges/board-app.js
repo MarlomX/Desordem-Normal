@@ -4,11 +4,11 @@
  *
  * O quadro mostra cada linha (tentativas enviadas e linhas de teoria) com os dados lado a lado e,
  * em cada dado, as marcas ▲, = e ▼, que ligam e desligam com um clique. Nas linhas de teoria os
- * números são digitáveis. Toda mudança vai ao mestre (requestBoardChange), que grava no desafio;
+ * números são digitáveis, e em todas as linhas cada dado tem um campo para anotar o som ouvido. Toda mudança vai ao mestre (requestBoardChange), que grava no desafio;
  * a janela é redesenhada quando o desafio muda (sem perder o que alguém está digitando).
  */
 import { SYSTEM_ID } from '../config.js';
-import { boardView } from '../rolls/lock-board.js';
+import { MAX_SOUND, boardView } from '../rolls/lock-board.js';
 import { lockComposition, lockStatus, maximumVisible } from '../rolls/lock.js';
 import { canEditBoard, requestBoardChange } from './lock-card.js';
 import { challengeVisibleTo } from '../rolls/challenge.js';
@@ -108,15 +108,20 @@ export default class QuadroApp extends HandlebarsApplicationMixin(ApplicationV2)
       destrancada: status === 'destrancada',
       estragada: status === 'estragada',
       linhas: boardView(lock),
+      // Tamanho máximo do som anotado (o mesmo dos sons da fechadura)
+      maxSom: MAX_SOUND,
     };
   }
 
-  /** Liga os campos de número (gravam ao confirmar: Enter ou sair do campo). */
+  /**
+   * Liga os campos de número e de som (gravam ao confirmar: Enter ou sair do campo). O `op` do
+   * pedido vem do próprio campo: `valor` (número das linhas de teoria) ou `som` (o som anotado).
+   */
   _onRender(context, options) {
     super._onRender?.(context, options);
     const titleElement = this.window?.title;
     if (titleElement && 'textContent' in titleElement) titleElement.textContent = this.title;
-    for (const field of this.element.querySelectorAll('[data-campo="valor"]')) {
+    for (const field of this.element.querySelectorAll('[data-campo="valor"], [data-campo="som"]')) {
       field.addEventListener('input', () => {
         this.#typing = true;
       });
@@ -128,7 +133,7 @@ export default class QuadroApp extends HandlebarsApplicationMixin(ApplicationV2)
       field.addEventListener('change', () => {
         this.#typing = false;
         requestBoardChange(this.#challengeId, {
-          op: 'valor',
+          op: field.dataset.campo,
           rowId: field.dataset.rowId,
           index: Number(field.dataset.index),
           value: field.value,

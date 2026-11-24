@@ -1392,7 +1392,7 @@
       "Quadro": {
         "Titulo": "Lock board",
         "TituloNome": "Lock: {nome}",
-        "Dica": "The group's scratchpad: each attempt shows up here on its own, and “New row” creates a theory row. Use ▲, = and ▼ however makes sense to you; nothing here is checked against the code.",
+        "Dica": "The group's scratchpad: each attempt shows up here on its own, and “New row” creates a theory row. Use ▲, = and ▼ however makes sense to you, and write under each die the sound you heard; nothing here is checked against the code.",
         "Tentativa": "Attempt {n}",
         "Teoria": "Theory {n}",
         "Apagar": "Delete row",
@@ -1401,7 +1401,9 @@
         "Baixo": "Mark ▼",
         "Vazio": "No rows yet: try a code or create a theory row.",
         "NovaLinha": "New row",
-        "AbrirDica": "Opens the lock's theory board"
+        "AbrirDica": "Opens the lock's theory board",
+        "SomVazio": "sound",
+        "SomDica": "Sound you heard at this position"
       },
       "Visibilidade": {
         "todos": "Everyone",

@@ -3179,12 +3179,13 @@ button.desordem-desafios-cartao__nome:hover {
   gap: 8px;
 }
 
+/* v0.27.3: um pouco mais largo, para caber o som anotado embaixo do dado */
 .desordem-quadro__dado {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  width: 3.4em;
+  width: 4.2em;
 }
 
 /* O desenho do dado da posição fica no fundo (v0.18.9); o número (texto ou campo) vai por cima */
@@ -3254,6 +3255,22 @@ button.desordem-desafios-cartao__nome:hover {
 .desordem-quadro__marca.is-baixo.is-ligada {
   border-color: var(--dn-pv, #b03a2e);
   background: var(--dn-pv, #b03a2e);
+}
+
+/* Som anotado embaixo de cada dado (v0.27.3): texto pequeno, centralizado, largura do dado. Um
+   texto maior que o campo rola dentro dele; o inteiro aparece ao passar o mouse (title) */
+.desordem-quadro__som {
+  box-sizing: border-box;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  padding: 0 2px;
+  font-size: 0.75em;
+  text-align: center;
+}
+
+.desordem-quadro__som::placeholder {
+  opacity: 0.5;
 }
 
 /* Guia: botão do quadro ao lado do nome do desafio */

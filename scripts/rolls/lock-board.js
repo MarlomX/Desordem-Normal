@@ -5,10 +5,22 @@
  *   - «Nova linha» cria uma linha de teoria («manual»), com os números editáveis (serve também
  *     para anotar tentativas feitas de boca na mesa);
  *   - em cada dado, as marcas ▲ (cima), ▼ (baixo) e = (igual) ligam e desligam livremente. O
- *     significado é do jogador: é só anotação, nada é conferido com a senha.
+ *     significado é do jogador: é só anotação, nada é conferido com a senha;
+ *   - em cada dado, um campo de texto para anotar o som ouvido (ex.: «treck»; v0.27.3), editável
+ *     em todas as linhas. Quando a fechadura tem sons, a linha da tentativa já entra com eles.
  * O quadro fica na fechadura (`fechadura.quadro`), no máximo `MAX_BOARD_ROWS` linhas (ao passar,
  * a linha mais antiga sai).
  */
+
+/** Tamanho máximo do texto de cada som (o mesmo dos sons da fechadura). */
+export const MAX_SOUND = 20;
+
+/** Um som limpo: uma linha só, sem espaços sobrando, até `MAX_SOUND` caracteres. */
+export const cleanSound = (raw) =>
+  String(raw ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_SOUND);
 
 /** Quantas linhas o quadro guarda. */
 export const MAX_BOARD_ROWS = 30;
@@ -43,6 +55,8 @@ function normalizeRow(row, lados) {
         igual: marks.igual === true,
       };
     }),
+    // Som anotado em cada dado (quadros antigos, sem o campo, ficam vazios)
+    sons: lados.map((_, i) => cleanSound(row.sons?.[i])),
   };
 }
 
@@ -64,13 +78,21 @@ function appendRow(lock, row) {
   return { ...lock, quadro: [...(lock.quadro ?? []), row].slice(-MAX_BOARD_ROWS) };
 }
 
-/** Uma tentativa enviada vira linha do quadro (números travados). */
-export function addAttemptRow(lock, id, values) {
+/**
+ * Uma tentativa enviada vira linha do quadro (números travados). Com os sons da resposta (quando a
+ * fechadura tem sons e a tentativa já foi respondida), eles entram preenchidos.
+ * @param {object} lock
+ * @param {string} id
+ * @param {number[]} values
+ * @param {string[]|null} [sounds] Som de cada posição (`null` = campos vazios).
+ */
+export function addAttemptRow(lock, id, values, sounds = null) {
   return appendRow(lock, {
     id,
     origem: 'tentativa',
     valores: lock.lados.map((sides, i) => cellValue(values?.[i], sides)),
     marcas: lock.lados.map(emptyMarks),
+    sons: lock.lados.map((_, i) => cleanSound(sounds?.[i])),
   });
 }
 
@@ -81,6 +103,7 @@ export function addManualRow(lock, id) {
     origem: 'manual',
     valores: lock.lados.map(() => null),
     marcas: lock.lados.map(emptyMarks),
+    sons: lock.lados.map(() => ''),
   });
 }
 
@@ -129,6 +152,34 @@ export function toggleBoardMark(lock, rowId, index, mark) {
   });
 }
 
+/**
+ * Escreve o som anotado num dado (texto vazio apaga). Vale em todas as linhas, também nas das
+ * tentativas (o mestre pode responder de boca). `null` se a linha não existe ou nada mudou.
+ */
+export function setBoardSound(lock, rowId, index, raw) {
+  return changeRow(lock, rowId, (row) => {
+    if (!Number.isInteger(index) || index < 0 || index >= row.sons.length) return null;
+    const sound = cleanSound(raw);
+    if (row.sons[index] === sound) return null;
+    const sons = [...row.sons];
+    sons[index] = sound;
+    return { ...row, sons };
+  });
+}
+
+/**
+ * Preenche a linha de uma tentativa com os sons da resposta (resposta dada depois, pelo botão do
+ * mestre). Só os campos ainda vazios mudam: o que o jogador já anotou fica. `null` se a linha não
+ * existe, não é de tentativa ou nada mudou.
+ */
+export function fillAttemptSounds(lock, rowId, sounds) {
+  return changeRow(lock, rowId, (row) => {
+    if (row.origem !== 'tentativa' || !Array.isArray(sounds)) return null;
+    const sons = row.sons.map((current, i) => current || cleanSound(sounds[i]));
+    return sons.every((sound, i) => sound === row.sons[i]) ? null : { ...row, sons };
+  });
+}
+
 /** Apaga uma linha. `null` se ela não existe. */
 export function removeBoardRow(lock, rowId) {
   const rows = lock.quadro ?? [];
@@ -160,6 +211,8 @@ export function boardView(lock) {
         lados: lock.lados[i],
         editavel: !tentativa,
         ...row.marcas[i],
+        // Som anotado (editável em todas as linhas)
+        som: row.sons?.[i] ?? '',
       })),
     };
   });
