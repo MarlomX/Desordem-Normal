@@ -7,6 +7,7 @@
  * As escolhas ficam em funções puras (`mobile.js`); aqui só a conversa com o Foundry.
  */
 import {
+  CHAT_HOOKS,
   CONTROL_SELECTOR,
   chatLimit,
   chatWidth,
@@ -20,9 +21,6 @@ const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localiz
 
 /** Classe da lista de mensagens dentro da janela (o estilo fica em styles/main.css). */
 const LOG_CLASS = 'desordem-chat-janela';
-
-/** Hooks do chat que pedem uma atualização da janela. */
-const CHAT_HOOKS = ['createChatMessage', 'updateChatMessage', 'deleteChatMessage'];
 
 /** Espera (ms) antes de redesenhar: várias mensagens seguidas viram uma atualização só. */
 const REFRESH_DELAY = 150;

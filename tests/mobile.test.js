@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  CHAT_HOOKS,
   CHAT_LIMIT,
   CHAT_LIMIT_MAX,
   chatLimit,
@@ -74,4 +75,12 @@ test('sheetAction: abrir, voltar ao tamanho normal ou trazer para a frente', () 
   assert.equal(sheetAction({ rendered: false }), 'render');
   assert.equal(sheetAction({ rendered: true, minimized: true }), 'restore');
   assert.equal(sheetAction({ rendered: true, minimized: false }), 'front');
+});
+
+test('CHAT_HOOKS: a janela do chat também se atualiza no fim da animação do Dice So Nice', () => {
+  for (const hook of ['createChatMessage', 'updateChatMessage', 'deleteChatMessage']) {
+    assert.ok(CHAT_HOOKS.includes(hook), hook);
+  }
+  // Sem este hook, a mensagem nova ficava escondida (dsn-hide) na janela até reabrir
+  assert.ok(CHAT_HOOKS.includes('diceSoNiceRollComplete'));
 });

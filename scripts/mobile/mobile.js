@@ -17,6 +17,20 @@ export const NEAR_BOTTOM_PX = 80;
 export const CHAT_WIDTH = 420;
 export const SCREEN_MARGIN = 20;
 
+/**
+ * Hooks que pedem uma atualização da janela do chat.
+ * `diceSoNiceRollComplete` (v0.27.4): com o Dice So Nice, a mensagem nova chega escondida (classe
+ * `dsn-hide`) enquanto os dados 3D rolam, e o módulo só a mostra no chat de verdade quando a
+ * animação acaba; a cópia da janela ficava escondida para sempre. Este hook (do Dice So Nice, com o
+ * id da mensagem) avisa o fim da animação; sem o módulo ele nunca é chamado.
+ */
+export const CHAT_HOOKS = [
+  'createChatMessage',
+  'updateChatMessage',
+  'deleteChatMessage',
+  'diceSoNiceRollComplete',
+];
+
 /** Controles de uma mensagem cujo clique é repassado para a mensagem real do chat. */
 export const CONTROL_SELECTOR = 'button, a, [data-action]';
 
