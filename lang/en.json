@@ -1380,7 +1380,14 @@
         "Posicao": "Die of position {n}",
         "MaximoDica": "0 = unlimited attempts",
         "MostrarMaximo": "Show the maximum attempts to players",
-        "ContagemSemMaximo": "Attempts: {usadas}."
+        "ContagemSemMaximo": "Attempts: {usadas}.",
+        "SonsTitulo": "Sounds of the lock «{nome}»",
+        "SonsMestre": "For the GM: {respostas}",
+        "Sons": "Answer sounds",
+        "SomVazio": "e.g. tick",
+        "SonsAtivos": "Players only hear the sound of each position; the meaning stays in a whisper for the GMs only.",
+        "SonsAviso": "Sounds only work with all three filled in and different. Until then, answers come out as Higher, Lower and Correct.",
+        "SonsDica": "Optional: write a sound for each answer (e.g. tick, tock, clack). Left empty, answers come out as Higher, Lower and Correct."
       },
       "Quadro": {
         "Titulo": "Lock board",

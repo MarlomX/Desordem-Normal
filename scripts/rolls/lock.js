@@ -79,6 +79,9 @@ export function normalizeLock(raw) {
     // Verificação automática: o mestre deixa o sistema responder pela senha guardada
     auto: raw?.auto === true,
     senhaMsg: typeof raw?.senhaMsg === 'string' ? raw.senhaMsg : '',
+    // Sons (v0.27.2): só o id do sussurro aos mestres com o que cada som quer dizer. O texto e o
+    // significado nunca ficam aqui, porque esta configuração é lida por todos os clientes
+    sonsMsg: typeof raw?.sonsMsg === 'string' ? raw.sonsMsg : '',
     destrancou: raw?.destrancou === true,
     // Quadro de teoria dos jogadores (veja lock-board.js)
     quadro: normalizeBoard(raw?.quadro, resizeSides(listed, dados, fallback)),
@@ -168,7 +171,10 @@ export const markUnlocked = (lock) => ({ ...lock, destrancou: true });
 /** Guarda o id da mensagem sussurrada com a senha (vazio = sem senha). */
 export const setSecretMessage = (lock, id) => ({ ...lock, senhaMsg: String(id ?? '') });
 
-/** Nova fechadura: zera as tentativas, tira o «destrancou», esquece a senha e limpa o quadro. */
+/**
+ * Nova fechadura: zera as tentativas, tira o «destrancou», esquece a senha e limpa o quadro. Os
+ * sons continuam (são do mecanismo, não da combinação).
+ */
 export const resetLock = (lock) => ({
   ...lock,
   usadas: 0,
@@ -228,3 +234,68 @@ export function secretFromFlag(flag, challengeId, lock) {
   if (!flag || flag.desafioId !== challengeId) return null;
   return validSequence(flag.valores, lock) ? [...flag.valores] : null;
 }
+
+// ---------- Sons (v0.27.2) ----------
+
+/** Tamanho máximo do texto de cada som. */
+export const MAX_SOUND = 20;
+
+/** Um som limpo: uma linha só, sem espaços sobrando, até `MAX_SOUND` caracteres. */
+export const cleanSound = (raw) =>
+  String(raw ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_SOUND);
+
+/** Os três sons, um por resposta (`{alto, baixo, certo}`), limpos; os que faltam ficam vazios. */
+export function normalizeSounds(raw) {
+  return Object.fromEntries(LOCK_ANSWERS.map((answer) => [answer, cleanSound(raw?.[answer])]));
+}
+
+/**
+ * Os sons valem? Só com os três preenchidos e diferentes entre si (sem diferença de maiúsculas).
+ * Com um só faltando, o jogador descobriria o significado dele pela palavra que aparecesse no
+ * lugar; com dois iguais, a resposta ficaria ambígua. Sem sons válidos, a fechadura responde com
+ * as palavras de sempre (Alto, Baixo, Certo).
+ */
+export function soundsActive(sounds) {
+  const list = LOCK_ANSWERS.map((answer) => cleanSound(sounds?.[answer]));
+  if (list.some((sound) => sound === '')) return false;
+  return new Set(list.map((sound) => sound.toLocaleLowerCase('pt-BR'))).size === list.length;
+}
+
+/** Edita um som (janela do mestre). Resposta desconhecida devolve os sons sem mudança. */
+export function setSound(sounds, answer, raw) {
+  const current = normalizeSounds(sounds);
+  if (!LOCK_ANSWERS.includes(answer)) return current;
+  return { ...current, [answer]: cleanSound(raw) };
+}
+
+/** O som de cada posição de uma resposta (`['tic', 'clack', 'toc']`). */
+export const answerSounds = (answers, sounds) =>
+  answers.map((answer) => cleanSound(sounds?.[answer]));
+
+/**
+ * Os sons guardados no sussurro aos mestres, se a mensagem é desta fechadura (`null` se não é).
+ * @param {{desafioId: string, alto: string, baixo: string, certo: string}|undefined} flag Flag
+ *   `sons` da mensagem.
+ */
+export function soundsFromFlag(flag, challengeId) {
+  if (!flag || flag.desafioId !== challengeId) return null;
+  return normalizeSounds(flag);
+}
+
+/**
+ * O que o cartão da tentativa guarda depois de respondido (público: todos os clientes leem). Com
+ * sons válidos, só os sons (`sons`), nunca o significado; sem eles, as respostas de sempre.
+ * @returns {{respostas: string[]|null, sons: string[]|null}}
+ */
+export function publicAnswer(answers, sounds) {
+  if (!answers) return { respostas: null, sons: null };
+  return soundsActive(sounds)
+    ? { respostas: null, sons: answerSounds(answers, sounds) }
+    : { respostas: answers, sons: null };
+}
+
+/** A tentativa já foi respondida (com palavras ou com sons)? */
+export const attemptAnswered = (flag) => Boolean(flag?.respostas || flag?.sons);

@@ -50,6 +50,7 @@ test('fechadura: padrões e limites (1 a 10 dados, d4 a d20)', () => {
     usadas: 0,
     auto: false,
     senhaMsg: '',
+    sonsMsg: '',
     destrancou: false,
     quadro: [],
   });

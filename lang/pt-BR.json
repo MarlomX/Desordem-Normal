@@ -1380,7 +1380,14 @@
         "Posicao": "Dado da {n}ª posição",
         "MaximoDica": "0 = tentativas infinitas",
         "MostrarMaximo": "Mostrar o máximo de tentativas aos jogadores",
-        "ContagemSemMaximo": "Tentativas: {usadas}."
+        "ContagemSemMaximo": "Tentativas: {usadas}.",
+        "SonsTitulo": "Sons da fechadura «{nome}»",
+        "SonsMestre": "Para o mestre: {respostas}",
+        "Sons": "Sons das respostas",
+        "SomVazio": "ex.: tic",
+        "SonsAtivos": "Os jogadores ouvem só o som de cada posição; o significado fica num sussurro só para os mestres.",
+        "SonsAviso": "Os sons só valem com os três preenchidos e diferentes. Até lá, as respostas saem como Alto, Baixo e Certo.",
+        "SonsDica": "Opcional: escreva um som para cada resposta (ex.: tic, toc, clack). Vazios, as respostas saem como Alto, Baixo e Certo."
       },
       "Quadro": {
         "Titulo": "Quadro da fechadura",

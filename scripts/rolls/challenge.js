@@ -138,8 +138,18 @@ const cleanName = (value) =>
     .trim()
     .slice(0, MAX_NAME);
 
+/**
+ * Teto dos pontos de um participante: no alcançar, 2 (alcançou); no escalar, a PA (subindo ou
+ * descendo, ninguém passa da altura; v0.27.2); nos outros, o limite geral.
+ */
+export function pointsCap(challenge) {
+  if (challenge.tipo === 'alcancar') return REACH_TARGET;
+  if (challenge.tipo === 'escalar') return challenge.pa;
+  return MAX_POINTS;
+}
+
 /** Limpa a lista de participantes: ids de texto, sem repetição, pontos dentro dos limites. */
-function normalizeParticipants(list) {
+function normalizeParticipants(list, cap = MAX_POINTS) {
   const seen = new Set();
   const result = [];
   for (const entry of Array.isArray(list) ? list : []) {
@@ -150,7 +160,7 @@ function normalizeParticipants(list) {
     const reserva = storedInt(entry.reserva, 0, MAX_BALANCE_DICE, null);
     result.push({
       actorId,
-      pontos: storedInt(entry.pontos, 0, MAX_POINTS, 0),
+      pontos: storedInt(entry.pontos, 0, cap, 0),
       ...(reserva === null ? {} : { reserva }),
     });
   }
@@ -185,10 +195,11 @@ export function normalizeChallenge(entry) {
     visibilidade: pick(entry.visibilidade, CHALLENGE_VISIBILITY, 'todos'),
     ativo: entry.ativo !== false,
     total: storedInt(entry.total, 0, MAX_POINTS, 0),
-    participantes: normalizeParticipants(entry.participantes).slice(
-      0,
-      tipo === 'sustentar' ? 1 : MAX_PARTICIPANTS,
-    ),
+    // Escalar: os pontos guardados nunca passam da PA (dados antigos ou PA diminuída depois)
+    participantes: normalizeParticipants(
+      entry.participantes,
+      tipo === 'escalar' ? storedInt(entry.pa, 1, MAX_TARGET, DEFAULT_TARGET) : MAX_POINTS,
+    ).slice(0, tipo === 'sustentar' ? 1 : MAX_PARTICIPANTS),
     // Escalar: subir ou descer (desafios antigos, sem o campo, sobem)
     ...(tipo === 'escalar' ? { sentido: pick(entry.sentido, CLIMB_DIRECTIONS, 'subir') } : {}),
     // Destrancar: a fechadura (dados, faces, tentativas; a senha fica num sussurro ao mestre)
@@ -270,7 +281,10 @@ export function updateChallengeField(challenge, campo, raw) {
     case 'pa': {
       if (challenge.tipo === 'alcancar') return challenge;
       const value = parseInteger(raw);
-      return value === null ? challenge : { ...challenge, pa: clampInt(value, 1, MAX_TARGET) };
+      if (value === null) return challenge;
+      const next = { ...challenge, pa: clampInt(value, 1, MAX_TARGET) };
+      // Escalar: diminuir a PA puxa para baixo quem já tinha mais pontos que a altura nova
+      return challenge.tipo === 'escalar' ? normalizeChallenge(next) : next;
     }
     case 'dt': {
       const value = parseInteger(raw);
@@ -353,8 +367,8 @@ export function currentPoints(challenge, actorId) {
  */
 export function setPoints(challenge, actorId, value) {
   if (!Number.isFinite(value)) return challenge;
-  // Alcançar: no máximo 2 (alcançou)
-  const next = clampInt(value, 0, challenge.tipo === 'alcancar' ? REACH_TARGET : MAX_POINTS);
+  // Alcançar: no máximo 2 (alcançou); escalar: no máximo a PA (a altura; v0.27.2)
+  const next = clampInt(value, 0, pointsCap(challenge));
   if (challenge.modo === 'grupo') return { ...challenge, total: next };
   if (!challenge.participantes.some((entry) => entry.actorId === actorId)) return challenge;
   return {

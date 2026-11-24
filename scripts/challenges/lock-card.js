@@ -15,18 +15,25 @@ import { SYSTEM_ID } from '../config.js';
 import { postMessage, render } from '../rolls/chat.js';
 import { addParticipants, participantIds, withLock } from '../rolls/challenge.js';
 import {
+  LOCK_ANSWERS,
   allCorrect,
+  attemptAnswered,
   crimeAttemptsPerRound,
   lockAnswers,
   lockRollFormula,
   lockStatus,
   maximumVisible,
   markUnlocked,
+  normalizeSounds,
   parseSequence,
+  publicAnswer,
   registerAttempt,
   resetLock,
   secretFromFlag,
   setSecretMessage,
+  setSound,
+  soundsActive,
+  soundsFromFlag,
   validSequence,
 } from '../rolls/lock.js';
 import {
@@ -76,6 +83,67 @@ async function storeSecret(challenge, values, rolls = []) {
   });
   await mutateChallenge(challenge.id, (current) =>
     withLock(current, (lock) => setSecretMessage(lock, message.id)),
+  );
+}
+
+// ---------- Sons (o mestre; v0.27.2) ----------
+
+/**
+ * Os sons como estão no sussurro aos mestres (os três textos, mesmo incompletos), para a janela do
+ * mestre. Sem mensagem (ou de outra fechadura), os três vazios. Só os mestres recebem o sussurro,
+ * então num jogador isto sempre volta vazio.
+ */
+export function soundsDraft(challenge) {
+  const id = challenge?.fechadura?.sonsMsg;
+  const message = id ? game.messages.get(id) : null;
+  return soundsFromFlag(message?.flags?.[SYSTEM_ID]?.sons, challenge?.id) ?? normalizeSounds({});
+}
+
+/** Os sons que valem nesta fechadura (os três preenchidos e diferentes), ou `null`. */
+export function readSounds(challenge) {
+  const sounds = soundsDraft(challenge);
+  return soundsActive(sounds) ? sounds : null;
+}
+
+/** Texto do sussurro dos sons: «Alto = tic · Baixo = toc · Certo = clack». */
+function soundsContent(challenge, sounds) {
+  const lines = LOCK_ANSWERS.map(
+    (answer) =>
+      `${escape(t(`DESORDEM.Desafio.Fechadura.Resposta.${answer}`))} = ${escape(sounds[answer] || '—')}`,
+  ).join(' · ');
+  return `<p><strong>${escape(t('DESORDEM.Desafio.Fechadura.SonsTitulo', { nome: shownName(challenge) }))}</strong></p><p>${lines}</p>`;
+}
+
+/**
+ * O mestre escreve um som (janela do desafio). Os três ficam num sussurro só para os mestres: a
+ * primeira vez cria a mensagem e guarda o id dela na fechadura; depois, só atualiza a mensagem.
+ * Os cartões já respondidos continuam com o som que tinham.
+ * @param {string} challengeId
+ * @param {string} answer 'alto', 'baixo' ou 'certo'.
+ * @param {string} raw Texto digitado.
+ */
+export async function storeSound(challengeId, answer, raw) {
+  const challenge = getChallenge(challengeId);
+  if (!game.user.isGM || challenge?.tipo !== 'destrancar') return;
+  const sounds = setSound(soundsDraft(challenge), answer, raw);
+  const flag = { desafioId: challenge.id, ...sounds };
+  const existing = challenge.fechadura.sonsMsg
+    ? game.messages.get(challenge.fechadura.sonsMsg)
+    : null;
+  if (existing) {
+    await existing.update({
+      content: soundsContent(challenge, sounds),
+      [`flags.${SYSTEM_ID}.sons`]: flag,
+    });
+    return;
+  }
+  const message = await ChatMessage.create({
+    content: soundsContent(challenge, sounds),
+    whisper: ChatMessage.getWhisperRecipients('GM').map((user) => user.id),
+    flags: { [SYSTEM_ID]: { sons: flag } },
+  });
+  await mutateChallenge(challenge.id, (current) =>
+    withLock(current, (lock) => ({ ...lock, sonsMsg: message.id })),
   );
 }
 
@@ -265,6 +333,8 @@ async function applyAttempt({ challengeId, actorId, values }, userId) {
   if (!validSequence(guess, before.fechadura)) return;
 
   const secret = before.fechadura.auto ? readSecret(before) : null;
+  // Sons da fechadura (lidos do sussurro aos mestres; este código roda no mestre ativo)
+  const sounds = secret ? readSounds(before) : null;
   const rowId = foundry.utils.randomID();
   let outcome = null;
   await mutateChallenge(challengeId, (challenge) => {
@@ -276,7 +346,8 @@ async function applyAttempt({ challengeId, actorId, values }, userId) {
     const lock = allCorrect(answers) ? markUnlocked(withRow) : withRow;
     // O cartão do chat é público: só leva o máximo se os jogadores podem vê-lo
     outcome = {
-      answers,
+      // O que o cartão público guarda: com sons, só os sons (o significado não sai do mestre)
+      ...publicAnswer(answers, sounds),
       status: lockStatus(lock),
       usadas: lock.usadas,
       maximo: maximumVisible(lock, { isGM: false }) ? lock.maximo : null,
@@ -295,7 +366,8 @@ async function applyAttempt({ challengeId, actorId, values }, userId) {
         desafioId: challengeId,
         actorId,
         valores: guess,
-        respostas: outcome.answers,
+        respostas: outcome.respostas,
+        sons: outcome.sons,
         status: outcome.status,
         usadas: outcome.usadas,
         maximo: outcome.maximo,
@@ -310,7 +382,7 @@ async function applyResponse({ messageId }, userId) {
   if (!game.users.get(userId)?.isGM) return;
   const message = game.messages.get(messageId);
   const flag = message?.flags?.[SYSTEM_ID]?.tentativa;
-  if (!flag || flag.respostas) return;
+  if (!flag || attemptAnswered(flag)) return;
   const challenge = getChallenge(flag.desafioId);
   const secret = readSecret(challenge);
   const answers = secret && lockAnswers(secret, flag.valores);
@@ -325,8 +397,11 @@ async function applyResponse({ messageId }, userId) {
     );
     status = 'destrancada';
   }
+  // Com sons, o cartão guarda só os sons (o significado fica com o mestre)
+  const shown = publicAnswer(answers, readSounds(challenge));
   await message.update({
-    [`flags.${SYSTEM_ID}.tentativa.respostas`]: answers,
+    [`flags.${SYSTEM_ID}.tentativa.respostas`]: shown.respostas,
+    [`flags.${SYSTEM_ID}.tentativa.sons`]: shown.sons,
     [`flags.${SYSTEM_ID}.tentativa.status`]: status,
   });
 }
@@ -378,6 +453,19 @@ export function renderLockAttempt(message, html) {
     }),
   );
   if (flag.respostas) line('desordem-fechadura__resposta', answersText(flag.respostas));
+  if (flag.sons) {
+    // Sons: o jogador ouve só o som de cada posição («tic · clack · toc»)
+    line('desordem-fechadura__resposta', flag.sons.join(' · '));
+    // O mestre vê também o significado, recalculado pela senha guardada (só ele recebe o sussurro)
+    const secret = game.user.isGM ? readSecret(getChallenge(flag.desafioId)) : null;
+    const meaning = secret && lockAnswers(secret, flag.valores);
+    if (meaning) {
+      line(
+        'desordem-ficha__dica',
+        t('DESORDEM.Desafio.Fechadura.SonsMestre', { respostas: answersText(meaning) }),
+      );
+    }
+  }
   line(
     'desordem-ficha__dica',
     flag.maximo
@@ -391,7 +479,7 @@ export function renderLockAttempt(message, html) {
   }
 
   // Sem resposta ainda: o mestre pode responder pela senha guardada (ou na mesa)
-  if (!flag.respostas && game.user.isGM && readSecret(getChallenge(flag.desafioId))) {
+  if (!attemptAnswered(flag) && game.user.isGM && readSecret(getChallenge(flag.desafioId))) {
     const button = doc.createElement('button');
     button.type = 'button';
     button.textContent = t('DESORDEM.Desafio.Fechadura.Responder');

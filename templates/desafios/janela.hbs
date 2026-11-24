@@ -70,6 +70,17 @@
     <button type="button" data-action="resetLock" title="{{localize "DESORDEM.Desafio.Fechadura.NovaDica"}}"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Fechadura.Nova"}}</button>
   </div>
   <p class="desordem-ficha__dica">{{localize "DESORDEM.Desafio.Fechadura.Dica"}}</p>
+  {{! Sons (v0.27.2): o jogador ouve o som de cada posição; o significado fica num sussurro aos mestres }}
+  <div class="desordem-desafio__grade desordem-fechadura__sons">
+    <span class="desordem-perseguicao__rotulo desordem-desafio__campo--largo"><i class="fa-solid fa-volume-high" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Fechadura.Sons"}}</span>
+    {{#each sons}}
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{label}}</span>
+      <input type="text" data-campo="som.{{answer}}" value="{{value}}" maxlength="{{@root.maxSom}}" placeholder="{{localize "DESORDEM.Desafio.Fechadura.SomVazio"}}" autocomplete="off">
+    </label>
+    {{/each}}
+  </div>
+  <p class="desordem-ficha__dica">{{#if sonsAtivos}}{{localize "DESORDEM.Desafio.Fechadura.SonsAtivos"}}{{else}}{{#if sonsAviso}}{{localize "DESORDEM.Desafio.Fechadura.SonsAviso"}}{{else}}{{localize "DESORDEM.Desafio.Fechadura.SonsDica"}}{{/if}}{{/if}}</p>
   {{#if fechaduraEstragada}}
   <div class="desordem-fechadura__estragou">
     <span>{{localize "DESORDEM.Desafio.Fechadura.Estragou"}}</span>

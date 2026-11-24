@@ -33,11 +33,20 @@ import {
   mutateChallenge,
   worldActorId,
 } from './store.js';
-import { LOCK_FACES, lockStatus, updateLockField } from '../rolls/lock.js';
+import {
+  LOCK_ANSWERS,
+  LOCK_FACES,
+  MAX_SOUND,
+  lockStatus,
+  soundsActive,
+  updateLockField,
+} from '../rolls/lock.js';
 import {
   createForceFromLock,
   defineSecret,
   generateSecret,
+  soundsDraft,
+  storeSound,
   resetChallengeLock,
   secretText,
 } from './lock-card.js';
@@ -63,6 +72,27 @@ const TYPE_HINTS = {
 };
 
 /** Campos de configuração que a janela grava pelo `change` (os demais são pontos). */
+/**
+ * Campos de som da fechadura na janela: um por resposta (Alto, Baixo, Certo), com o texto atual,
+ * e um aviso quando há algum som escrito mas eles ainda não valem (falta um, ou dois iguais).
+ */
+function soundsContext(challenge) {
+  const draft = soundsDraft(challenge);
+  const filled = LOCK_ANSWERS.some((answer) => draft[answer] !== '');
+  const active = soundsActive(draft);
+  return {
+    sons: LOCK_ANSWERS.map((answer) => ({
+      answer,
+      value: draft[answer],
+      // Chaves montadas (conferidas à mão): DESORDEM.Desafio.Fechadura.Resposta.{alto,baixo,certo}
+      label: t(`DESORDEM.Desafio.Fechadura.Resposta.${answer}`),
+    })),
+    maxSom: MAX_SOUND,
+    sonsAtivos: active,
+    sonsAviso: filled && !active,
+  };
+}
+
 const CONFIG_FIELDS = new Set([
   'nome',
   'pa',
@@ -227,6 +257,8 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
               opcoes: LOCK_FACES.map((value) => ({ value, selected: value === sides })),
             })),
             senhaTexto: secretText(challenge),
+            // Sons (v0.27.2): os três textos, lidos do sussurro aos mestres, e se já valem
+            ...soundsContext(challenge),
             mostrarSenha: this.#showSecret,
             fechaduraEstragada: lockStatus(challenge.fechadura) === 'estragada',
           }
@@ -279,6 +311,12 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
     this.#renderPending = false;
     const { campo, actorId } = field.dataset;
     const value = field.type === 'checkbox' ? field.checked : field.value;
+    // Sons da fechadura: vão para o sussurro aos mestres, não para a configuração do mundo
+    if (campo?.startsWith('som.')) {
+      await storeSound(this.#challengeId, campo.slice(4), value);
+      this.render();
+      return;
+    }
     await mutateChallenge(this.#challengeId, (challenge) => {
       if (CONFIG_FIELDS.has(campo)) return updateChallengeField(challenge, campo, value);
       // Na descida, o número digitado é a altura que falta (veja `typeShownPoints`)
