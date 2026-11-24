@@ -78,10 +78,10 @@ import { createChallenge, getChallenge, readChallenges } from '../challenges/sto
 import { CHALLENGE_TYPES } from '../rolls/challenge.js';
 import { escapeHtml } from '../sheets/notes.js';
 import { t } from '../shared/i18n.js';
+import { askReceivingActor, askRevealUsers, canSeePage, pointPlayers } from './point-dialogs.js';
 
 const { JournalEntryPageHandlebarsSheet } = foundry.applications.sheets.journal;
 const { DialogV2 } = foundry.applications.api;
-const { renderTemplate } = foundry.applications.handlebars;
 
 /** Pasta dos templates das páginas do diário. */
 const TEMPLATES = `systems/${SYSTEM_ID}/templates/diario`;
@@ -587,20 +587,10 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
     }
   }
 
-  /** Jogadores do mundo (todos os usuários que não são mestre). */
-  static #players() {
-    return game.users.filter((user) => !user.isGM);
-  }
-
-  /** O jogador pode ver esta página (Observador ou mais, contando a permissão do diário)? */
-  #canSee(user) {
-    return this.document.testUserPermission(user, 'OBSERVER');
-  }
-
   /** Revelar para todos não adianta se nenhum jogador pode ver a página: avisa o mestre. */
   #warnIfNobodySees() {
-    const players = PontoInteresseSheet.#players();
-    if (players.length && !players.some((user) => this.#canSee(user))) {
+    const players = pointPlayers();
+    if (players.length && !players.some((user) => canSeePage(this.document, user))) {
       ui.notifications.warn(t('DESORDEM.Ponto.AvisoNinguem'));
     }
   }
@@ -611,7 +601,7 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       .find((block) => block.id === blockId)
       ?.linhas.find((entry) => entry.id === lineId);
     if (!line) return;
-    const chosen = await this.#askUsers(line.reveladaPara);
+    const chosen = await askRevealUsers(this.document, line.reveladaPara);
     if (!chosen) return;
     await this.#saveBlocks((blocks) =>
       setLineUsers(
@@ -627,7 +617,7 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
   async #chooseLinkUsers(linkId) {
     const link = this.#links().find((entry) => entry.id === linkId);
     if (!link) return;
-    const chosen = await this.#askUsers(link.reveladoPara);
+    const chosen = await askRevealUsers(this.document, link.reveladoPara);
     if (!chosen) return;
     await this.#saveLinks((links) =>
       setLinkUsers(
@@ -636,62 +626,6 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         chosen.map((user) => user.id),
       ),
     );
-  }
-
-  /**
-   * Janela «Revelar para quem?»: caixas dos jogadores, com os já escolhidos marcados. Avisa de
-   * quem não tem permissão na página.
-   * @param {string[]} selected Ids já escolhidos.
-   * @returns {Promise<User[]|null>} Jogadores escolhidos, ou `null` se cancelou.
-   */
-  async #askUsers(selected) {
-    const players = PontoInteresseSheet.#players();
-    if (!players.length) {
-      ui.notifications.info(t('DESORDEM.Ponto.Jogadores.Nenhum'));
-      return null;
-    }
-    const content = await renderTemplate(`${TEMPLATES}/ponto-jogadores.hbs`, {
-      jogadores: players.map((user) => ({
-        id: user.id,
-        nome: user.name,
-        personagem: user.character?.name ?? '',
-        marcado: selected.includes(user.id),
-        semAcesso: !this.#canSee(user),
-      })),
-    });
-    const answer = await DialogV2.wait({
-      window: { title: t('DESORDEM.Ponto.Jogadores.Titulo') },
-      classes: ['desordem-normal', 'desordem-ponto-dialogo'],
-      content,
-      modal: true,
-      rejectClose: false,
-      buttons: [
-        {
-          action: 'salvar',
-          label: t('DESORDEM.Ponto.Jogadores.Salvar'),
-          icon: 'fa-solid fa-user-check',
-          default: true,
-          callback: (event, button, dialog) => ({
-            confirmed: true,
-            ids: [...dialog.element.querySelectorAll('[name="jogador"]:checked')].map(
-              (input) => input.value,
-            ),
-          }),
-        },
-        { action: 'cancelar', label: t('DESORDEM.Ponto.Jogadores.Cancelar') },
-      ],
-    });
-    // Só {confirmed: true} confirma: fechar no X ou cancelar devolve outra coisa
-    if (answer?.confirmed !== true) return null;
-    // Nunca confia no que veio da janela: só vale quem estava na lista oferecida
-    const chosen = players.filter((user) => answer.ids.includes(user.id));
-    const blind = chosen.filter((user) => !this.#canSee(user));
-    if (blind.length) {
-      ui.notifications.warn(
-        t('DESORDEM.Ponto.AvisoSemAcesso', { nomes: blind.map((user) => user.name).join(', ') }),
-      );
-    }
-    return chosen;
   }
 
   /**
@@ -730,7 +664,7 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
       ui.notifications.warn(t('DESORDEM.Ponto.Vinculo.Sumiu'));
       return;
     }
-    const actor = await this.#askActor(link.rotulo || item.name);
+    const actor = await askReceivingActor(link.rotulo || item.name);
     if (!actor) return;
     const same = actor.items.find(
       (owned) =>
@@ -753,45 +687,6 @@ export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet
         t('DESORDEM.Ponto.Vinculo.Entregue', { item: item.name, personagem: actor.name }),
       )}</p></div>`,
     });
-  }
-
-  /**
-   * Janela para escolher quem recebe o item: os personagens do mundo, com os de jogadores primeiro.
-   * @returns {Promise<Actor|null>}
-   */
-  async #askActor(itemName) {
-    const characters = game.actors
-      .filter((actor) => actor.type === 'personagem')
-      .sort((a, b) => Number(b.hasPlayerOwner) - Number(a.hasPlayerOwner));
-    if (!characters.length) {
-      ui.notifications.warn(t('DESORDEM.Ponto.Vinculo.SemPersonagens'));
-      return null;
-    }
-    const options = characters
-      .map((actor) => `<option value="${actor.id}">${escapeHtml(actor.name)}</option>`)
-      .join('');
-    const answer = await DialogV2.wait({
-      window: { title: t('DESORDEM.Ponto.Vinculo.EntregarTitulo', { item: itemName }) },
-      classes: ['desordem-normal', 'desordem-ponto-dialogo'],
-      content: `<div class="form-group"><label>${escapeHtml(t('DESORDEM.Ponto.Vinculo.Quem'))}</label><div class="form-fields"><select name="personagem">${options}</select></div></div>`,
-      modal: true,
-      rejectClose: false,
-      buttons: [
-        {
-          action: 'entregar',
-          label: t('DESORDEM.Ponto.Vinculo.Entregar'),
-          icon: 'fa-solid fa-hand-holding',
-          default: true,
-          callback: (event, button, dialog) => ({
-            confirmed: true,
-            id: dialog.element.querySelector('[name="personagem"]')?.value,
-          }),
-        },
-        { action: 'cancelar', label: t('DESORDEM.Ponto.Jogadores.Cancelar') },
-      ],
-    });
-    if (answer?.confirmed !== true) return null;
-    return characters.find((actor) => actor.id === answer.id) ?? null;
   }
 
   /** Esconde todas as linhas da página, depois de confirmar. */
