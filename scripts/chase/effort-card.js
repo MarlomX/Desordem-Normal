@@ -19,8 +19,7 @@ import {
   releaseAdvance,
   reserveAdvance,
 } from '../rolls/chase.js';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+import { t } from '../shared/i18n.js';
 
 const FLAG = `flags.${SYSTEM_ID}.esforco`;
 

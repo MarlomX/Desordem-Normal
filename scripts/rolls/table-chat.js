@@ -11,16 +11,15 @@ import { drawLesion, applyLesionDraw } from './health.js';
 import { drawTrauma, applyTraumaDraw } from './mind.js';
 import { ownedTableKeys } from './condition-tables.js';
 import { drawDisaster, applyDisasterDraw, disasterChoices } from './critical-chat.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
 const TEMPLATE_JANELA = `systems/${SYSTEM_ID}/templates/dialog/tabela.hbs`;
-const SOCKET = `system.${SYSTEM_ID}`;
 
 /** Duração do "sorteio" (números trocando no dado) e do tempo com o resultado à mostra. */
 const TUMBLE_MS = 900;
 const TUMBLE_STEP_MS = 80;
 const SHOW_RESULT_MS = 900;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Cartões cuja tabela está sendo rolada neste navegador (barra o duplo clique local). */
 const busy = new Set();
@@ -244,9 +243,7 @@ export function renderTableCard(message, html) {
  * atende, e só se o pedido vier de um dono do personagem do cartão.
  */
 export function registerTableSocket() {
-  game.socket.on(SOCKET, async (data, userId) => {
-    if (data?.action !== 'tableState') return;
-    if (game.users.activeGM?.id !== game.user.id) return;
+  onSocketAction('tableState', async (data, userId) => {
     const message = game.messages.get(data.messageId);
     const current = message && tableData(message);
     if (!current) return;

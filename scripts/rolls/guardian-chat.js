@@ -13,11 +13,10 @@ import { canPay, payUpdates } from './ability-effects.js';
 import { firstEffect, roundUseUpdate, usableThisRound, walletOf } from './ability-effects-actor.js';
 import { abilityNote } from './abilities-chat.js';
 import { guardianData } from './guardian.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
-const SOCKET = `system.${SYSTEM_ID}`;
 const ACTION = 'guardiao';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Tratadores por tipo de cartão (veja `registerGuardHandler`). */
 const handlers = new Map();
@@ -155,8 +154,7 @@ async function guard(handler, { messageId, actorUuid, userId, ...rest }) {
 
 /** Registra o ouvinte do socket (chamar uma vez, no `ready`). */
 export function registerGuardianSocket() {
-  game.socket.on(SOCKET, (data) => {
-    if (data?.action !== ACTION || game.users.activeGM?.id !== game.user.id) return;
+  onSocketAction(ACTION, (data) => {
     handleGuard(data);
   });
 }

@@ -12,7 +12,6 @@ import { ProcuraApp, SEARCH_SOCKET_ACTION, handleSearchSocket } from './search.j
 import { ACTION_SOCKET_ACTION, countActionUse, handleActionSocket } from './action.js';
 import {
   HIDE_SOCKET_ACTION,
-  SOCKET,
   USES_SOCKET_ACTION,
   ATTENTION_SOCKET_ACTION,
   commitAttention,
@@ -23,24 +22,14 @@ import {
   handleUsesSocket,
   hideRevealed,
 } from './store.js';
-
-const t = (key) => game.i18n.localize(key);
+import { t } from '../shared/i18n.js';
+import { onSocketAction } from '../shared/socket.js';
+import { refreshOpenSheets } from '../shared/sheets.js';
 
 /** O documento (Combat ou Combatant) pertence a uma cena de furtividade? */
 function isStealthDocument(doc) {
   const combat = doc?.documentName === 'Combatant' ? doc.parent : doc;
   return combat?.type === STEALTH_COMBAT_TYPE;
-}
-
-/**
- * Redesenha o cartão de furtividade e a aba Condição (contador de esconder-se) das fichas abertas.
- */
-function refreshSheets() {
-  for (const app of foundry.applications.instances.values()) {
-    if (app.rendered && app.constructor.PARTS?.furtividade) {
-      app.render({ parts: ['furtividade', 'condicao'] });
-    }
-  }
 }
 
 /**
@@ -98,7 +87,8 @@ export function registerStealthHooks() {
       if (!isStealthDocument(doc)) return;
       FurtividadeApp.refresh();
       ProcuraApp.refresh();
-      refreshSheets();
+      // O cartão de furtividade e a aba Condição (contador de esconder-se) das fichas abertas
+      refreshOpenSheets(['furtividade', 'condicao']);
     });
   }
 
@@ -143,20 +133,18 @@ export function registerStealthHooks() {
 
 /** Socket: só o mestre ativo atende os pedidos dos jogadores sobre os dados de esconderijo. */
 export function registerStealthSocket() {
-  game.socket.on(SOCKET, async (data, userId) => {
-    if (game.users.activeGM?.id !== game.user.id) return;
-    if (data?.action === HIDE_SOCKET_ACTION) await handleHideSocket(data, userId);
-    // Botão «Guardar dados de esconderijo» do cartão do teste (só o id da mensagem e os índices)
-    if (data?.action === HIDE_TEST_SOCKET_ACTION) await handleHideTestSocket(data, userId);
-    // Botão «Conferir meus dados» do cartão da procura (só ids)
-    if (data?.action === SEARCH_SOCKET_ACTION) await handleSearchSocket(data, userId);
-    // Botão «Guardar dado» do esconder-se e do distrair (só o id da mensagem e o índice)
-    if (data?.action === ACTION_SOCKET_ACTION) await handleActionSocket(data, userId);
-    // Contador de esconder-se ajustado na aba Condição (só ids e ±1)
-    if (data?.action === USES_SOCKET_ACTION) await handleUsesSocket(data, userId);
-    // «Chamar atenção» (mexe em dois participantes, por isso sempre pelo mestre)
-    if (data?.action === ATTENTION_SOCKET_ACTION) await commitAttention(data, userId);
-  });
+  // Operação nos dados de esconderijo pedida por um dono do personagem
+  onSocketAction(HIDE_SOCKET_ACTION, handleHideSocket);
+  // Botão «Guardar dados de esconderijo» do cartão do teste (só o id da mensagem e os índices)
+  onSocketAction(HIDE_TEST_SOCKET_ACTION, handleHideTestSocket);
+  // Botão «Conferir meus dados» do cartão da procura (só ids)
+  onSocketAction(SEARCH_SOCKET_ACTION, handleSearchSocket);
+  // Botão «Guardar dado» do esconder-se e do distrair (só o id da mensagem e o índice)
+  onSocketAction(ACTION_SOCKET_ACTION, handleActionSocket);
+  // Contador de esconder-se ajustado na aba Condição (só ids e ±1)
+  onSocketAction(USES_SOCKET_ACTION, handleUsesSocket);
+  // «Chamar atenção» (mexe em dois participantes, por isso sempre pelo mestre)
+  onSocketAction(ATTENTION_SOCKET_ACTION, commitAttention);
 }
 
 /** Interface para macros e testes no console: `game.desordem.furtividade`. */

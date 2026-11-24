@@ -7,10 +7,9 @@
 import { SYSTEM_ID } from '../config.js';
 import { normalizeCheckpoints } from '../rolls/chase.js';
 import { clearCheckpoints, deleteCheckpoint, findChase, setCheckpoint } from './store.js';
+import { t } from '../shared/i18n.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
-
-const t = (key) => game.i18n.localize(key);
 
 export default class PontosApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Instância única: abrir de novo só traz a janela existente para a frente. */

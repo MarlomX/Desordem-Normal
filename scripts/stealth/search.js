@@ -23,8 +23,11 @@ import {
   searchValues,
 } from '../rolls/stealth.js';
 import { findRow, maxHideSides, rowToSearchState } from '../rolls/creature-table.js';
-import { SOCKET, findStealth, postStealthNotice, stealthView } from './store.js';
+import { findStealth, postStealthNotice, stealthView } from './store.js';
 import { TabelasApp, onTablesChange, readTables } from './tables.js';
+import { t } from '../shared/i18n.js';
+import { renderTemplate } from '../shared/templates.js';
+import { SOCKET } from '../shared/socket.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 
@@ -32,9 +35,6 @@ const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 export const SEARCH_SOCKET_ACTION = 'stealthSearch';
 
 const FLAG = `flags.${SYSTEM_ID}.procura`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
-const renderTemplate = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
 
 /**
  * Escondidos da cena agora ({id, name, maxSides}), na ordem da lista de participantes. `maxSides`

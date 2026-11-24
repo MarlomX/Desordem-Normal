@@ -10,10 +10,9 @@ import { damageCandidates, resolveDamage, shieldReduction } from './damage-resol
 import { armorAvailable } from './armor-chat.js';
 import { actorEffects } from './ability-effects-actor.js';
 import { isThreat, threatDamage } from './threat.js';
+import { t } from '../shared/i18n.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/dialog/dano.hbs`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /**
  * Redução do escudo do ator para um dano de teste oposto: o efeito `reducaoEscudo` do escudo

@@ -77,6 +77,7 @@ import DesafioApp from '../challenges/app.js';
 import { createChallenge, getChallenge, readChallenges } from '../challenges/store.js';
 import { CHALLENGE_TYPES } from '../rolls/challenge.js';
 import { escapeHtml } from '../sheets/notes.js';
+import { t } from '../shared/i18n.js';
 
 const { JournalEntryPageHandlebarsSheet } = foundry.applications.sheets.journal;
 const { DialogV2 } = foundry.applications.api;
@@ -97,9 +98,6 @@ function resolveDoc(uuid) {
     return null;
   }
 }
-
-/** Traduz uma chave (com dados, usa `format` para trocar os `{marcadores}`). */
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 export default class PontoInteresseSheet extends JournalEntryPageHandlebarsSheet {
   /** Subtipo de página desta folha. */

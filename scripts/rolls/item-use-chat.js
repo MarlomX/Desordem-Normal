@@ -13,12 +13,11 @@ import { bagUpdates, costShortfall, itemUsePlan, ownEffects } from './ability-ef
 import { walletOf } from './ability-effects-actor.js';
 import { itemStepEffect } from './effects.js';
 import { pickReceiver } from './damage-dialog.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
 const TEMPLATE_USO = `systems/${SYSTEM_ID}/templates/chat/item-uso.hbs`;
 const TEMPLATE_EFEITO = `systems/${SYSTEM_ID}/templates/chat/item-efeito.hbs`;
-const SOCKET = `system.${SYSTEM_ID}`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Texto do passo de um item: «Físico +1». */
 const stepText = ({ atributo, passos }) =>
@@ -208,9 +207,7 @@ export function renderItemUseCard(message, html) {
 
 /** O mestre ativo marca os cartões de passo recebidos a pedido dos jogadores. */
 export function registerItemUseSocket() {
-  game.socket.on(SOCKET, async (data) => {
-    if (data?.action !== 'itemStepReceived') return;
-    if (game.users.activeGM?.id !== game.user.id) return;
+  onSocketAction('itemStepReceived', async (data) => {
     const message = game.messages.get(data.messageId);
     if (!message || message.flags?.[SYSTEM_ID]?.passoItem?.recebido) return;
     await message.update({

@@ -25,12 +25,11 @@ import {
   investigationRows,
   normalizeBlocks,
 } from './point.js';
+import { t } from '../shared/i18n.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 const TEMPLATES = `systems/${SYSTEM_ID}/templates/diario`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Jogadores do mundo (usuários que não são mestre). */
 const players = () => game.users.filter((user) => !user.isGM);

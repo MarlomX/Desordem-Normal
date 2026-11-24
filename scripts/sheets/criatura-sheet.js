@@ -57,12 +57,12 @@ import {
 } from './creature-context.js';
 import { resolveRelativeFields } from './relative-input.js';
 import { CREATURE_NOTES, buildNoteRows } from './notes.js';
+import { t } from '../shared/i18n.js';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
 const TEMPLATES = `systems/${SYSTEM_ID}/templates/criatura`;
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Campo da ficha que guarda as perícias próprias (grupo `pericia` das áreas extras). */
 const EXTRA_FIELD = 'periciasExtras';

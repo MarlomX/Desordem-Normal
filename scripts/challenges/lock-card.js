@@ -45,10 +45,10 @@ import {
   setBoardValue,
   toggleBoardMark,
 } from '../rolls/lock-board.js';
-import { SOCKET } from '../chase/store.js';
 import { createChallenge, getChallenge, mutateChallenge, worldActorId } from './store.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 const escape = (text) => Handlebars.escapeExpression(String(text ?? ''));
 
@@ -425,18 +425,15 @@ async function applyResponse({ messageId }, userId) {
 
 /** Socket: o mestre ativo atende as tentativas dos jogadores. */
 export function registerLockSocket() {
-  game.socket.on(SOCKET, async (data, userId) => {
-    if (game.users.activeGM?.id !== game.user.id) return;
-    if (data?.action === 'lockBoard') {
-      // Só os campos conhecidos (o resto do pedido é ignorado)
-      const { challengeId, op, rowId, index, value, mark } = data;
-      await handleRequest(
-        { action: 'lockBoard', challengeId, op, rowId, index, value, mark },
-        userId,
-      );
-      return;
-    }
-    if (data?.action !== 'lockAttempt') return;
+  onSocketAction('lockBoard', async (data, userId) => {
+    // Só os campos conhecidos (o resto do pedido é ignorado)
+    const { challengeId, op, rowId, index, value, mark } = data;
+    await handleRequest(
+      { action: 'lockBoard', challengeId, op, rowId, index, value, mark },
+      userId,
+    );
+  });
+  onSocketAction('lockAttempt', async (data, userId) => {
     await handleRequest(
       {
         action: 'lockAttempt',

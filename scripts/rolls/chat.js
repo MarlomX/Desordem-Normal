@@ -18,7 +18,8 @@ import {
   activeBoosts,
   resolveWithValues,
 } from './abilities.js';
-import { markCompanionHurt } from './abilities-chat.js';
+import { markCompanionHurt } from './ability-notes.js';
+import { render, postMessage } from './chat-post.js';
 import {
   companionHurt,
   dialogDiceOptions,
@@ -48,8 +49,8 @@ import { markFearDice } from '../dice3d/dice3d.js';
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/teste.hbs`;
 const TEMPLATE_OPOSTO = `systems/${SYSTEM_ID}/templates/chat/oposto.hbs`;
 
-export const render = (template, context) =>
-  foundry.applications.handlebars.renderTemplate(template, context);
+// O básico do chat mora em chat-post.js; reexportado para quem já importava daqui
+export { render, postMessage };
 
 /**
  * Rola os dados pelo motor do Foundry (assíncrono, respeita a configuração de dados do jogador).
@@ -59,22 +60,6 @@ export const render = (template, context) =>
  */
 function rollDice(sides) {
   return Promise.all(sides.map((faces) => new Roll(`1d${faces}`).evaluate()));
-}
-
-/**
- * Publica uma mensagem de rolagem no chat, respeitando o modo de rolagem. `rollMode` força um modo
- * (por exemplo 'selfroll', só quem rolou vê); sem ele, vale o modo escolhido no chat.
- */
-export async function postMessage({ actor, content, rolls = [], flags, rollMode }) {
-  const messageData = {
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content,
-    rolls,
-    sound: rolls.length ? CONFIG.sounds.dice : undefined,
-    ...(flags ? { flags: { [SYSTEM_ID]: flags } } : {}),
-  };
-  ChatMessage.applyRollMode(messageData, rollMode ?? game.settings.get('core', 'rollMode'));
-  return ChatMessage.create(messageData);
 }
 
 /**

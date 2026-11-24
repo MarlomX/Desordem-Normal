@@ -18,13 +18,12 @@ import {
   tableWarnings,
   updateRow,
 } from '../rolls/creature-table.js';
+import { t } from '../shared/i18n.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
 
 /** Nome da configuração do mundo que guarda as tabelas. */
 export const TABLES_SETTING = 'tabelasCriaturas';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Quem precisa redesenhar quando as tabelas mudam (a janela de procura se registra aqui). */
 const listeners = new Set();

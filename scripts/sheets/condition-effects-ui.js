@@ -25,6 +25,7 @@ import { normalizeEffects } from '../rolls/ability-effects.js';
 import { describeEffect } from '../rolls/ability-effects-editor.js';
 import { buildEffectPicker, matchesSearch } from './context.js';
 import ConditionEffectApp from './condition-effect-app.js';
+import { t } from '../shared/i18n.js';
 
 const TEMPLATE_PICKER = `systems/${SYSTEM_ID}/templates/dialog/efeito-compendio.hbs`;
 /** Partials: nome usado no template → arquivo. */
@@ -35,9 +36,6 @@ const PARTIALS = {
   'desordem-normal.efeito-linha': `systems/${SYSTEM_ID}/templates/partials/efeito-linha.hbs`,
   'desordem-normal.efeitos-botoes': `systems/${SYSTEM_ID}/templates/partials/efeitos-botoes.hbs`,
 };
-
-/** Tradução com ou sem dados. */
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Nome traduzido de uma perícia (para os resumos). */
 const skillLabel = (key) => (PERICIAS[key] ? t(`DESORDEM.Pericias.${key}`) : key);

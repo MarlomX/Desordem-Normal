@@ -49,10 +49,10 @@ import {
   registerBalanceRound,
   spendBalanceDie,
 } from '../rolls/challenge.js';
-import { SOCKET } from '../chase/store.js';
 import { getChallenge, mutateChallenge, worldActorId } from './store.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 
 /** Caminho do registro na mensagem (para `message.update`). */
@@ -322,9 +322,7 @@ async function finishRound(flag, op) {
 
 /** Socket: o mestre ativo atende os botões do cartão de equilíbrio. */
 export function registerBalanceSocket() {
-  game.socket.on(SOCKET, async (data, userId) => {
-    if (game.users.activeGM?.id !== game.user.id) return;
-    if (data?.action !== 'challengeBalance') return;
+  onSocketAction('challengeBalance', async (data, userId) => {
     const { op, value, index, values, note } = data;
     await applyBalanceStep(game.messages.get(data.messageId), userId, {
       op,

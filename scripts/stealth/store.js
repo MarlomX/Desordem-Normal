@@ -30,11 +30,11 @@ import {
   stealthRoundChange,
   stealthStartState,
 } from '../rolls/stealth.js';
+import { t } from '../shared/i18n.js';
+import { renderTemplate } from '../shared/templates.js';
+import { SOCKET } from '../shared/socket.js';
 
 /* global getDocumentClass */
-
-/** Canal de socket do sistema (o mesmo das outras partes; cada uma filtra pela `action`). */
-export const SOCKET = `system.${SYSTEM_ID}`;
 
 /** Nome da ação de socket dos dados de esconderijo. */
 export const HIDE_SOCKET_ACTION = 'stealthHideDice';
@@ -44,9 +44,6 @@ export const USES_SOCKET_ACTION = 'stealthHideUses';
 
 /** Nome da ação de socket do «chamar atenção». */
 export const ATTENTION_SOCKET_ACTION = 'stealthAttention';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
-const renderTemplate = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
 
 /**
  * Participantes cujos dados o mestre revelou NESTE cliente (ids de Combatant). Fica só na memória

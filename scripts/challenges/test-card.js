@@ -37,10 +37,9 @@ import {
   loseHitPoints,
   sustainStepMods,
 } from '../rolls/challenge.js';
-import { SOCKET } from '../chase/store.js';
 import { getChallenge, mutateChallenge, readChallenges, worldActorId } from './store.js';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
 /** Caminho do registro na mensagem (para `message.update`). */
 const FLAG = `flags.${SYSTEM_ID}.desafio`;
@@ -202,11 +201,9 @@ function requestApply(message) {
 
 /** Socket: o mestre ativo atende os botões «somar pontos» e «aplicar queda» dos jogadores. */
 export function registerChallengeSocket() {
-  game.socket.on(SOCKET, async (data, userId) => {
-    if (game.users.activeGM?.id !== game.user.id) return;
-    if (data?.action !== 'challengePoints') return;
-    await applyChallengePoints(game.messages.get(data.messageId), userId);
-  });
+  onSocketAction('challengePoints', (data, userId) =>
+    applyChallengePoints(game.messages.get(data.messageId), userId),
+  );
 }
 
 /** Ator do registro (sempre um ator do mundo). */

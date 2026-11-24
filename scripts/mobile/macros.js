@@ -16,8 +16,7 @@ import {
   pickSheetActor,
   sheetAction,
 } from './mobile.js';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+import { t } from '../shared/i18n.js';
 
 /** Classe da lista de mensagens dentro da janela (o estilo fica em styles/main.css). */
 const LOG_CLASS = 'desordem-chat-janela';

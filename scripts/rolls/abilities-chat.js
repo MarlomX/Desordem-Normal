@@ -3,10 +3,13 @@
  * o próximo teste e reinício de cena. Os botões de análise e de repetir dado aparecem nos cartões
  * de teste, só para quem pode usá-los.
  */
-import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES } from '../config.js';
-import { describeEffect } from './ability-effects-editor.js';
+import { SYSTEM_ID, ATRIBUTOS } from '../config.js';
 import { render, postMessage, rebuildTest, rollTest, skillTestOptions } from './chat.js';
 import { startGroupDice } from './bonus-dice-chat.js';
+import { abilityNote, markCompanionHurt, skillName } from './ability-notes.js';
+
+// Reexportados de ability-notes.js (os outros módulos continuam importando daqui)
+export { abilityNote, markCompanionHurt, skillName };
 import { adjustLabel, resourceName } from '../sheets/ability-controls.js';
 import { applyAnalysis, rerollCandidates, replaceDie, sceneReset } from './abilities.js';
 import { newStepEffect } from './effects.js';
@@ -37,65 +40,12 @@ import {
 } from './ability-effects-actor.js';
 import { createPending } from './pending-table.js';
 import { disasterSync } from './critical-failure.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
-const TEMPLATE_HABILIDADE = `systems/${SYSTEM_ID}/templates/chat/habilidade.hbs`;
 const TEMPLATE_CURA = `systems/${SYSTEM_ID}/templates/chat/cura.hbs`;
-const SOCKET = `system.${SYSTEM_ID}`;
 
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const warn = (key, data) => ui.notifications.warn(t(key, data));
-
-/**
- * Aviso de habilidade no chat. O personagem já aparece no cabeçalho da mensagem; o título do
- * cartão é o nome da habilidade (sem ele, o nome do personagem), e abaixo vem o resumo do efeito
- * usado, se houver.
- * @param {Actor} actor
- * @param {Object} note
- * @param {string} [note.title] Nome da habilidade.
- * @param {string} note.text O que aconteceu («rola de novo o d6: 3 → 1.»).
- * @param {string} [note.detail] Linha extra (ex.: «3/4»).
- * @param {object} [note.entry] Efeito usado: o cartão mostra o resumo dele.
- * @param {Roll[]} [note.rolls]
- */
-export async function abilityNote(
-  actor,
-  { title = '', text, detail = '', entry = null, rolls = [] },
-) {
-  const effect = entry ? describeEffect(entry, { t, skill: skillName }) : '';
-  return postMessage({
-    actor,
-    content: await render(TEMPLATE_HABILIDADE, {
-      title: title || entry?.itemName || actor.name,
-      text,
-      detail,
-      effect,
-    }),
-    rolls,
-  });
-}
-
-/**
- * O companheiro animal se feriu (o dado dele deu 1): marca `system.cena.animalFerido` (ele não
- * ajuda mais até a Nova cena) e avisa no chat. Personagens e criaturas têm o mesmo campo.
- * @param {Actor} actor
- */
-export async function markCompanionHurt(actor) {
-  if (actor.system.cena?.animalFerido) return;
-  await actor.update({ 'system.cena.animalFerido': true });
-  await abilityNote(actor, {
-    entry: firstEffect(actor, 'companheiro'),
-    text: t('DESORDEM.Habilidade.AnimalFerido'),
-  });
-}
-
-/** Nome de uma perícia ou de uma área de Aptidão (resumos dos efeitos). */
-export function skillName(key) {
-  if (PERICIAS[key]) return t(`DESORDEM.Pericias.${key}`);
-  if (APTIDOES.includes(key)) {
-    return `${t('DESORDEM.Ficha.Aptidoes')}: ${t(`DESORDEM.Aptidoes.${key}`)}`;
-  }
-  return key;
-}
 
 /** Diálogo simples com um campo; devolve o valor escolhido ou null se for cancelado. */
 async function ask({ title, content, read }) {
@@ -580,9 +530,7 @@ function cleanPatch(patch = {}) {
 
 /** Escuta os pedidos de alteração de cartões (só o mestre ativo atende). */
 export function registerAbilitySocket() {
-  game.socket.on(SOCKET, async (data) => {
-    if (data?.action !== 'rewriteTest') return;
-    if (game.users.activeGM?.id !== game.user.id) return;
+  onSocketAction('rewriteTest', async (data) => {
     const message = game.messages.get(data.messageId);
     const info = message && testData(message);
     if (!info || !validValues(info, data.values)) return;

@@ -13,10 +13,9 @@ import { lockComposition, lockStatus, maximumVisible } from '../rolls/lock.js';
 import { canEditBoard, requestBoardChange } from './lock-card.js';
 import { challengeVisibleTo } from '../rolls/challenge.js';
 import { getChallenge } from './store.js';
+import { t } from '../shared/i18n.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 export default class QuadroApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Uma janela por desafio (id do desafio → janela). */

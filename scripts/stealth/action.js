@@ -22,14 +22,14 @@ import {
   reserveHide,
   validActionChoice,
 } from '../rolls/stealth.js';
-import { SOCKET, findStealth, postStealthNotice, requestHideOp, stealthInfoFor } from './store.js';
+import { findStealth, postStealthNotice, requestHideOp, stealthInfoFor } from './store.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET } from '../shared/socket.js';
 
 /** Ação de socket do botão do cartão. */
 export const ACTION_SOCKET_ACTION = 'stealthAction';
 
 const FLAG = `flags.${SYSTEM_ID}.acaoFurtiva`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /**
  * Transforma as opções da janela num teste de esconder-se ou distrair. Se a opção deixou de valer

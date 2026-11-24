@@ -26,11 +26,10 @@ import {
   startChase,
   toggleReveal,
 } from './store.js';
+import { t } from '../shared/i18n.js';
+import { renderTemplate } from '../shared/templates.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
-
-const t = (key) => game.i18n.localize(key);
-const renderTemplate = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
 
 export default class PerseguicaoApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Instância única: abrir de novo só traz a janela existente para a frente. */

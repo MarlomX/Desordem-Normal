@@ -50,11 +50,10 @@ import {
   resetChallengeLock,
   secretText,
 } from './lock-card.js';
+import { t } from '../shared/i18n.js';
+import { renderTemplate } from '../shared/templates.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
-const renderTemplate = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
 
 /** Nome mostrado de um desafio (o padrão, se o mestre apagou o nome). */
 export const challengeName = (challenge) =>

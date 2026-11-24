@@ -20,12 +20,10 @@ import {
 import { ammoOptions, markWeaponAttack, weaponTestKind } from './ability-effects.js';
 import { guardButtons, registerGuardHandler } from './guardian-chat.js';
 import { canGuardWeaponCard, guardWeaponCard } from './guardian.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
 const TEMPLATE_ATAQUE = `systems/${SYSTEM_ID}/templates/chat/ataque.hbs`;
-
-const SOCKET = `system.${SYSTEM_ID}`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Marca do cartão de ataque (dano, Guardião, aplicado), ou null. */
 const weaponFlag = (message) => message?.flags?.[SYSTEM_ID]?.danoArma ?? null;
@@ -289,13 +287,10 @@ async function applyCreatureDamage(data) {
 
 /** Escuta os pedidos dos jogadores (só o mestre ativo atende): marcar o dano e dano em criatura. */
 export function registerEquipmentSocket() {
-  game.socket.on(SOCKET, (data) => {
-    if (game.users.activeGM?.id !== game.user.id) return;
-    if (data?.action === 'weaponDamageCreature') {
-      enqueue(() => applyCreatureDamage(data));
-      return;
-    }
-    if (data?.action !== 'weaponDamageApplied') return;
+  onSocketAction('weaponDamageCreature', (data) => {
+    enqueue(() => applyCreatureDamage(data));
+  });
+  onSocketAction('weaponDamageApplied', (data) => {
     const message = game.messages.get(data.messageId);
     if (!weaponFlag(message) || weaponFlag(message).aplicado) return;
     enqueue(() => message.update({ [`flags.${SYSTEM_ID}.danoArma.aplicado`]: true }));

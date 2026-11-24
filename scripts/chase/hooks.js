@@ -13,9 +13,10 @@ import { applyAdvancePoints } from './advance-card.js';
 import PerseguicaoApp from './app.js';
 import PontosApp from './points-app.js';
 import { applyPenalty } from './penalty-card.js';
-import { SOCKET, createChase, currentAccess, findChase } from './store.js';
-
-const t = (key) => game.i18n.localize(key);
+import { createChase, currentAccess, findChase } from './store.js';
+import { t } from '../shared/i18n.js';
+import { onSocketAction } from '../shared/socket.js';
+import { refreshOpenSheets } from '../shared/sheets.js';
 
 /** O documento (Combat ou Combatant) pertence a uma perseguição? */
 function isChaseDocument(doc) {
@@ -23,17 +24,11 @@ function isChaseDocument(doc) {
   return combat?.type === CHASE_COMBAT_TYPE;
 }
 
-/** Redesenha só o cartão de perseguição das fichas abertas (as demais partes ficam como estão). */
-function refreshSheets() {
-  for (const app of foundry.applications.instances.values()) {
-    if (app.rendered && app.constructor.PARTS?.perseguicao) app.render({ parts: ['perseguicao'] });
-  }
-}
-
 /** Atualiza tudo que mostra o estado da perseguição. */
 function refreshAll() {
   PerseguicaoApp.refresh();
-  refreshSheets();
+  // Só o cartão de perseguição das fichas abertas (as demais partes ficam como estão)
+  refreshOpenSheets(['perseguicao']);
 }
 
 /**
@@ -126,19 +121,16 @@ export function registerChaseHooks() {
  * grave. O mestre confere que o pedido vem de um dono do personagem e limpa os dados recebidos.
  */
 export function registerChaseSocket() {
-  game.socket.on(SOCKET, async (data, userId) => {
-    if (game.users.activeGM?.id !== game.user.id) return;
-    // Botão "adicionar PA" do cartão do teste de avanço (só o id da mensagem vem do jogador)
-    if (data?.action === 'chaseAdvancePoints') {
-      await applyAdvancePoints(game.messages.get(data.messageId), userId);
-      return;
-    }
-    // Botão «Aplicar penalidade» do cartão do chat (só os ids vêm do jogador)
-    if (data?.action === 'chasePenalty') {
-      await applyPenalty(game.messages.get(data.messageId), data.combatantId, userId);
-      return;
-    }
-    if (data?.action !== 'chaseParticipant') return;
+  // Botão "adicionar PA" do cartão do teste de avanço (só o id da mensagem vem do jogador)
+  onSocketAction('chaseAdvancePoints', (data, userId) =>
+    applyAdvancePoints(game.messages.get(data.messageId), userId),
+  );
+  // Botão «Aplicar penalidade» do cartão do chat (só os ids vêm do jogador)
+  onSocketAction('chasePenalty', (data, userId) =>
+    applyPenalty(game.messages.get(data.messageId), data.combatantId, userId),
+  );
+  // PA, fôlego ou «já agiu» de um participante, pedido por um dono do personagem
+  onSocketAction('chaseParticipant', async (data, userId) => {
     const combat = game.combats.get(data.combatId);
     if (combat?.type !== CHASE_COMBAT_TYPE) return;
     const combatant = combat.combatants.get(data.combatantId);

@@ -29,10 +29,9 @@ import { lockStatus } from '../rolls/lock.js';
 import DesafioApp, { confirmDeleteChallenge } from './app.js';
 import QuadroApp from './board-app.js';
 import { actorInfo, createChallenge, mutateChallenge, readChallenges } from './store.js';
+import { t } from '../shared/i18n.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
-
-const t = (key) => game.i18n.localize(key);
 
 /** Nome da guia (chave em `Sidebar.TABS` e em `ui`). */
 export const TAB_NAME = 'desafios';

@@ -29,11 +29,10 @@ import {
   startStealth,
   stealthView,
 } from './store.js';
+import { t } from '../shared/i18n.js';
+import { renderTemplate } from '../shared/templates.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2, DialogV2 } = foundry.applications.api;
-
-const t = (key) => game.i18n.localize(key);
-const renderTemplate = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
 
 /** Pergunta sim/não; só `true` confirma (fechar no X não confirma). */
 async function confirm(titleKey, textKey, data) {

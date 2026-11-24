@@ -26,7 +26,9 @@ import {
   releaseHide,
   reserveHide,
 } from '../rolls/stealth.js';
-import { SOCKET, findStealth, hideTestInfoFor, postStealthNotice } from './store.js';
+import { findStealth, hideTestInfoFor, postStealthNotice } from './store.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET } from '../shared/socket.js';
 
 /** Ação de socket do botão do cartão. */
 export const HIDE_TEST_SOCKET_ACTION = 'stealthHideTest';
@@ -35,8 +37,6 @@ export const HIDE_TEST_SOCKET_ACTION = 'stealthHideTest';
 const SELF_ROLL = 'selfroll';
 
 const FLAG = `flags.${SYSTEM_ID}.esconderijo`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /**
  * Transforma as opções da janela num teste de esconderijo. Se a opção deixou de valer enquanto a

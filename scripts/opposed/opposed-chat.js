@@ -56,14 +56,13 @@ import {
   resolveState,
   weaponChoices,
 } from '../rolls/opposed-card.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, isActiveGM, onSocketAction } from '../shared/socket.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/chat/oposto-cartao.hbs`;
 const TEMPLATE_DIALOG = `systems/${SYSTEM_ID}/templates/dialog/oposto.hbs`;
 const TEMPLATE_PICKER = `systems/${SYSTEM_ID}/templates/dialog/oposto-ator.hbs`;
-const SOCKET = `system.${SYSTEM_ID}`;
 const ACTOR_TYPES = OPPOSED_ACTOR_TYPES;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Estado do cartão guardado na mensagem (ou null, se a mensagem não é um cartão de oposto). */
 const cardState = (message) => message?.flags?.[SYSTEM_ID]?.oposto ?? null;
@@ -853,8 +852,6 @@ function enqueue(task) {
   return queue;
 }
 
-const isActiveGM = () => game.users.activeGM?.id === game.user.id;
-
 /**
  * Assumir ataque no cartão oposto de ataque × defesa: o mestre confere que o dano do lado ainda
  * está pendente, que ninguém assumiu e que o Guardião não é o atacante nem o alvo, e grava.
@@ -895,9 +892,6 @@ export function registerOpposedHooks() {
     enqueue(() => refreshAnswer(message));
   });
   Hooks.once('ready', () => {
-    game.socket.on(SOCKET, (data) => {
-      if (data?.action !== 'opposedDamage' || !isActiveGM()) return;
-      enqueue(() => reserveDamage(data));
-    });
+    onSocketAction('opposedDamage', (data) => enqueue(() => reserveDamage(data)));
   });
 }

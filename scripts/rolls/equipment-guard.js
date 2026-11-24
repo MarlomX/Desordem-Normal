@@ -6,8 +6,7 @@
 import { checkEquipment, isShield } from './equipment.js';
 import { hasMartialProficiency } from './ability-effects.js';
 import { actorEffects } from './ability-effects-actor.js';
-
-const t = (key) => game.i18n.localize(key);
+import { t } from '../shared/i18n.js';
 
 /** Itens do personagem no formato usado pela lógica pura, sem o item indicado. */
 function siblingsOf(item) {

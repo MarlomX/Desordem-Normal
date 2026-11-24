@@ -21,13 +21,7 @@ import {
   readChallenges,
   registerChallengeSetting,
 } from './store.js';
-
-/** Redesenha só o cartão de desafios das fichas abertas (as demais partes ficam como estão). */
-function refreshSheets() {
-  for (const app of foundry.applications.instances.values()) {
-    if (app.rendered && app.constructor.PARTS?.desafios) app.render({ parts: ['desafios'] });
-  }
-}
+import { refreshOpenSheets } from '../shared/sheets.js';
 
 /** Registra tudo que precisa existir antes do mundo carregar (chamado uma vez, no init). */
 export function registerChallenges() {
@@ -37,7 +31,8 @@ export function registerChallenges() {
     refreshChallengeList();
     DesafioApp.refreshAll();
     QuadroApp.refreshAll();
-    refreshSheets();
+    // Só o cartão de desafios das fichas abertas (as demais partes ficam como estão)
+    refreshOpenSheets(['desafios']);
   });
   // Um ator renomeado (ou com outra imagem) ou apagado muda o que a lista mostra
   const hasChallenges = () => readChallenges().desafios.length > 0;

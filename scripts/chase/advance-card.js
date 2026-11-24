@@ -19,9 +19,9 @@ import {
   releaseAdvance,
   reserveAdvance,
 } from '../rolls/chase.js';
-import { SOCKET, findChase } from './store.js';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+import { findChase } from './store.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET } from '../shared/socket.js';
 
 const FLAG = `flags.${SYSTEM_ID}.avanco`;
 

@@ -13,10 +13,9 @@ import {
   applyDisaster,
 } from './critical-failure.js';
 import { buildTableResultContext } from './presenter.js';
+import { t } from '../shared/i18n.js';
 
 const TEMPLATE_TABELA = `systems/${SYSTEM_ID}/templates/chat/tabela.hbs`;
-
-const t = (key) => game.i18n.localize(key);
 
 /** Opções da lista "escolher o efeito" da janela (só o mestre vê). */
 export const disasterChoices = () =>

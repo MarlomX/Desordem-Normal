@@ -33,14 +33,12 @@ import {
 } from '../rolls/ability-effects-editor.js';
 import { buildChoices } from './context.js';
 import { effectText } from '../rolls/condition-tables.js';
+import { t } from '../shared/i18n.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /** Tipo de item cujos tipos de efeito a janela oferece (os da aba Condição). */
 const ITEM_TYPE = 'efeito';
-
-/** Tradução com ou sem dados (`{n}` etc.). */
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 export default class ConditionEffectApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {

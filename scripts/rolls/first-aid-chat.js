@@ -15,12 +15,11 @@ import { postMessage, render, rollTest, skillTestOptions, testDicePreview } from
 import { askRollChoices } from './roll-dialog-chat.js';
 import { resolveWithValues } from './abilities.js';
 import { firstAidDt, firstAidOutcome, firstAidStepMods, hasMedicalKit } from './first-aid.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, isActiveGM, onSocketAction } from '../shared/socket.js';
 
 const TEMPLATE_DIALOG = `systems/${SYSTEM_ID}/templates/dialog/socorro.hbs`;
-const SOCKET = `system.${SYSTEM_ID}`;
 const SKILL = 'medicina';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Marca de primeiros socorros guardada no teste. */
 const aidFlag = (message) => message?.flags?.[SYSTEM_ID]?.primeirosSocorros ?? null;
@@ -222,8 +221,6 @@ function enqueue(task) {
   return queue;
 }
 
-const isActiveGM = () => game.users.activeGM?.id === game.user.id;
-
 /**
  * O mestre conta a tentativa no paciente (contador da cena, que sobe a DT da próxima). Só conta
  * testes de quem é dono do curandeiro.
@@ -245,9 +242,6 @@ export function registerFirstAidHooks() {
     if (isActiveGM() && aidFlag(message)) enqueue(() => countAttempt(message));
   });
   Hooks.once('ready', () => {
-    game.socket.on(SOCKET, (data) => {
-      if (data?.action !== 'firstAid' || !isActiveGM()) return;
-      enqueue(() => applyFirstAid(data));
-    });
+    onSocketAction('firstAid', (data) => enqueue(() => applyFirstAid(data)));
   });
 }

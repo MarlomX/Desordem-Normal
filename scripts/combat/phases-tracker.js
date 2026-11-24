@@ -21,8 +21,7 @@ import {
   movePhase,
   shiftPhase,
 } from '../rolls/phases.js';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+import { t } from '../shared/i18n.js';
 
 /** Classe posta na raiz do rastreador quando as fases estão ligadas (o CSS esconde a iniciativa). */
 const ROOT_CLASS = 'desordem-combate-fases';

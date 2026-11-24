@@ -8,13 +8,12 @@ import { render, postMessage } from './chat.js';
 import { degreeKey, invokeCheck, updateRelation, buildInvocationContext } from './relation.js';
 import { applyRecovery } from './recovery.js';
 import { pickReceiver } from './damage-dialog.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
 const TEMPLATE_RELACAO = `systems/${SYSTEM_ID}/templates/chat/relacao.hbs`;
 const TEMPLATE_RECUPERACAO = `systems/${SYSTEM_ID}/templates/chat/recuperacao.hbs`;
 const TEMPLATE_CURADO = `systems/${SYSTEM_ID}/templates/chat/curado.hbs`;
-const SOCKET = `system.${SYSTEM_ID}`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Relação do índice informado (erro se ela não existir). */
 function relationOf(actor, index) {
@@ -222,9 +221,7 @@ export function renderRelationCard(message, html) {
 
 /** Escuta o pedido dos jogadores para marcar cartões como aplicados (só o mestre ativo atende). */
 export function registerRelationSocket() {
-  game.socket.on(SOCKET, async (data) => {
-    if (data?.action !== 'markRecovered') return;
-    if (game.users.activeGM?.id !== game.user.id) return;
+  onSocketAction('markRecovered', async (data) => {
     const message = game.messages.get(data.messageId);
     if (!message || message.flags?.[SYSTEM_ID]?.recuperacao?.curado) return;
     await message.update(recoveredChanges(String(data.by ?? '')));

@@ -38,7 +38,7 @@ import {
   removeExtra,
   updateExtra,
 } from '../rolls/extras.js';
-import { useAbilityEffect, rollDodge, endScene } from '../rolls/abilities-chat.js';
+import { useAbilityEffect, rollDodge, endScene, skillName } from '../rolls/abilities-chat.js';
 import {
   armorExtraPoints,
   groupBonusDice,
@@ -218,13 +218,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     const activeTab = resolveActiveTab(PersonagemSheet.#activeTabs.get(this.document.id));
     const tabs = buildTabs(activeTab, (id) => t(`DESORDEM.Ficha.Abas.${id}`));
     // Nome de uma perícia ou de uma área de Aptidão (botões dos testes das habilidades)
-    const skillName = (key) => {
-      if (PERICIAS[key]) return t(`DESORDEM.Pericias.${key}`);
-      if (APTIDOES.includes(key)) {
-        return `${t('DESORDEM.Ficha.Aptidoes')}: ${t(`DESORDEM.Aptidoes.${key}`)}`;
-      }
-      return key;
-    };
     // Passos temporários (manuais + efeitos) de cada atributo e do dado geral das perícias
     const stepsData = this.document.toObject().system;
     const attrStepOf = (key) =>

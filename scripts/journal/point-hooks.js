@@ -43,6 +43,7 @@ import {
 } from './point.js';
 import { readSeen } from './point-seen.js';
 import PontoInteresseSheet from './point-sheet.js';
+import { t } from '../shared/i18n.js';
 
 /**
  * Linhas já avisadas nesta sessão, por página (uuid → ids). Evita avisar de novo a mesma linha
@@ -52,9 +53,6 @@ const notified = new Map();
 
 /** Nome da configuração (do usuário) que mostra a barra «Usar no ponto» nos cartões de teste. */
 export const POINT_BAR_SETTING = 'barraPontoInteresse';
-
-/** Traduz uma chave. */
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** A página é um ponto de interesse? */
 const isPoint = (page) => page?.type === POINT_TYPE;

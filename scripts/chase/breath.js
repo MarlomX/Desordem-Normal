@@ -7,8 +7,7 @@ import { SYSTEM_ID } from '../config.js';
 import { breathBlockReason, recoverBreathPatch } from '../rolls/chase.js';
 import { postMessage, render } from '../rolls/chat.js';
 import { findChase, updateParticipant } from './store.js';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+import { t } from '../shared/i18n.js';
 
 /**
  * Recupera o fôlego do personagem (dono ou mestre). Se a perseguição acabou ou o participante já

@@ -23,11 +23,11 @@ import {
 } from '../rolls/chase.js';
 import { postMessage, render } from '../rolls/chat.js';
 import { findStealth } from '../stealth/store.js';
-import { SOCKET, findChase } from './store.js';
+import { findChase } from './store.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET } from '../shared/socket.js';
 
 const { DialogV2 } = foundry.applications.api;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 const FLAG = `flags.${SYSTEM_ID}.penalidade`;
 

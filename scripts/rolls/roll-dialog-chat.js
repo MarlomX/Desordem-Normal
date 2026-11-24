@@ -25,10 +25,9 @@ import {
   evaluateSelection,
   selectionToOptions,
 } from './roll-dialog.js';
+import { t } from '../shared/i18n.js';
 
 const TEMPLATE = `systems/${SYSTEM_ID}/templates/dialog/pre-teste.hbs`;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Opções da janela com rótulo e origem próprios no idioma; as outras usam os genéricos. */
 const KNOWN_OPTIONS = ['impetoDado', 'sorrateiro', 'naoLetal', 'defesa'];

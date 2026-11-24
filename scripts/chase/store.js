@@ -3,7 +3,6 @@
  * (hoje num Combat do tipo `perseguicao`). Se o subtipo de Combat não funcionar no Foundry real,
  * só este arquivo precisa ser trocado; a janela e a lógica pura continuam iguais.
  */
-import { SYSTEM_ID } from '../config.js';
 import {
   CHASE_COMBAT_TYPE,
   CHASE_COMBATANT_TYPE,
@@ -30,13 +29,10 @@ import {
   startState,
   endState,
 } from '../rolls/chase.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET } from '../shared/socket.js';
 
 /* global getDocumentClass */
-
-/** Canal de socket do sistema (o mesmo das outras partes; cada uma filtra pela `action`). */
-export const SOCKET = `system.${SYSTEM_ID}`;
-
-const t = (key) => game.i18n.localize(key);
 
 /** A perseguição existente (nesta versão só pode haver uma por vez) ou `null`. */
 export function findChase() {

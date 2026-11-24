@@ -23,10 +23,9 @@ import {
   selectOptions,
   styleOverrides,
 } from './fear-style.js';
+import { t } from '../shared/i18n.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /** Variável CSS da prévia para cada campo de cor (lida em styles/main.css). */
 const PREVIEW_VARS = Object.freeze({

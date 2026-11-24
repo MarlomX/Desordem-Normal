@@ -15,9 +15,9 @@ import { postMessage, rollTest, skillTestOptions } from './chat.js';
 import { resolveWithValues } from './abilities.js';
 import { bonusDiceGranted, canPay, payUpdates } from './ability-effects.js';
 import { walletOf } from './ability-effects-actor.js';
+import { t } from '../shared/i18n.js';
+import { SOCKET, onSocketAction } from '../shared/socket.js';
 
-const SOCKET = `system.${SYSTEM_ID}`;
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const warn = (key, data) => ui.notifications.warn(t(key, data));
 
 /** Marca do teste que dá dados ao grupo. */
@@ -158,14 +158,9 @@ function enqueue(task) {
   return queue;
 }
 
-const isActiveGM = () => game.users.activeGM?.id === game.user.id;
-
 /** Registra o ouvinte do socket (chamar uma vez, no `init`). */
 export function registerBonusDiceHooks() {
   Hooks.once('ready', () => {
-    game.socket.on(SOCKET, (data) => {
-      if (data?.action !== 'bonusDice' || !isActiveGM()) return;
-      enqueue(() => applyGrant(data));
-    });
+    onSocketAction('bonusDice', (data) => enqueue(() => applyGrant(data)));
   });
 }

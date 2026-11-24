@@ -6,6 +6,8 @@ export default [
       sourceType: 'module',
       globals: {
         game: 'readonly',
+        foundry: 'readonly',
+        ChatMessage: 'readonly',
         Handlebars: 'readonly',
         Hooks: 'readonly',
         CONFIG: 'readonly',
@@ -32,6 +34,11 @@ export default [
         process: 'readonly',
         URL: 'readonly',
         structuredClone: 'readonly',
+        setTimeout: 'readonly',
+        // Globais do Foundry de mentira (tests/foundry-stub.js)
+        game: 'readonly',
+        foundry: 'readonly',
+        ChatMessage: 'readonly',
       },
     },
     rules: {

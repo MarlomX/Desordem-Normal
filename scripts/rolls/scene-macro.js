@@ -6,8 +6,7 @@
  */
 import { creatureSceneReset, sceneTargets } from './abilities.js';
 import { endScene } from './abilities-chat.js';
-
-const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+import { t } from '../shared/i18n.js';
 
 /** Nomes separados por vírgula, já escapados para entrar no HTML do chat ou do diálogo. */
 const escapedNames = (actors) =>
