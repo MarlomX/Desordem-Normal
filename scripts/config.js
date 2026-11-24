@@ -21,7 +21,7 @@ export const PERICIAS = {
   persuasao: 'emocao',
   pontaria: 'fisico',
   sobrevivencia: 'mente',
-  vigor: 'fisico'
+  vigor: 'fisico',
 };
 
 // Aptidão (atributo-base: mente) possui áreas próprias

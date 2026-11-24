@@ -381,7 +381,6 @@
   opacity: 0.6;
 }
 
-
 /* Relações */
 
 .desordem-relacao {
@@ -1857,7 +1856,8 @@
   border-style: none;
 }
 
-.desordem-attr-etiqueta:has(.desordem-attr-etiqueta__select:disabled) .desordem-attr-etiqueta__select {
+.desordem-attr-etiqueta:has(.desordem-attr-etiqueta__select:disabled)
+  .desordem-attr-etiqueta__select {
   cursor: default;
 }
 

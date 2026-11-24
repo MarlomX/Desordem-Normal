@@ -26,7 +26,7 @@ import {
   firstWeaponAttack,
   weaponAttackEffects,
   pickBonusDice,
-  spendBonusDice
+  spendBonusDice,
 } from './ability-effects.js';
 import {
   GAINS_HOOK,
@@ -143,7 +143,7 @@ export async function executeTest({
   skillLabel,
   showDt = true,
   usos = [],
-  embracedFearIndex = null
+  embracedFearIndex = null,
 }) {
   const helped = applyHelpers({ stepMods, extraDice }, helpers);
 
@@ -314,7 +314,9 @@ export async function rollTest({
     skillLabel,
   });
   // O cartão guarda o teste para as habilidades que mudam os dados depois da rolagem
-  const flags = actor ? { teste: { plan, display, sides, values, notes: [], used: {} } } : undefined;
+  const flags = actor
+    ? { teste: { plan, display, sides, values, notes: [], used: {} } }
+    : undefined;
   if (flags && avancoFlag) flags.avanco = avancoFlag;
   if (flags && esconderijoFlag) flags.esconderijo = esconderijoFlag;
   if (flags && acaoFlag) flags.acaoFurtiva = acaoFlag;
@@ -358,7 +360,7 @@ export function testDicePreview(actor, skillKey, attribute, extraStepMods = [], 
         effects: system.efeitos,
         attrKey,
         skillKey,
-        testKind
+        testKind,
       }),
     ],
   });
@@ -444,26 +446,30 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
       skillKey,
       testKind: allowDefense ? 'defesa' : testKind,
       hurtCompanion: Boolean(system.cena?.animalFerido),
-      companion
+      companion,
     }),
     reserveDice,
     resourceNames: Object.fromEntries(
-      Object.values(resourceDefsNow).map((def) => [def.chave, resourceName(def, localize)])
+      Object.values(resourceDefsNow).map((def) => [def.chave, resourceName(def, localize)]),
     ),
-    t: localize
+    t: localize,
   });
   // Penalidade passiva das armaduras e escudos em uso nesta perícia (passos a menos)
   const penaltyLine = armorPenaltyLine(armorSkillPenalties(actor.items), skillKey);
   // Munição marcada na janela (ex.: aljava): passos no ataque (o dano fica no cartão de ataque)
   const weaponItem = weaponId ? actor.items.get(weaponId) : null;
-  const ammo = municaoId && weaponItem
-    ? ammoOptions([...actor.items], weaponItem.system).find((a) => a.id === municaoId) ?? null
-    : null;
-  if (ammo) usos.push(localize('DESORDEM.Teste.UsouArma.municao', {
-    nome: ammo.name,
-    passos: ammo.passos,
-    dano: ammo.dano
-  }));
+  const ammo =
+    municaoId && weaponItem
+      ? (ammoOptions([...actor.items], weaponItem.system).find((a) => a.id === municaoId) ?? null)
+      : null;
+  if (ammo)
+    usos.push(
+      localize('DESORDEM.Teste.UsouArma.municao', {
+        nome: ammo.name,
+        passos: ammo.passos,
+        dano: ammo.dano,
+      }),
+    );
   // Linha «Usou» do cartão: também os efeitos da arma que entraram neste ataque e a penalidade
   usos.push(...attackUsedLines([...attack.lines, ...(penaltyLine ? [penaltyLine] : [])], localize));
   // Dados extras do teste; o pavor abraçado vira um dado bônus e entra por último
@@ -496,7 +502,7 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
         effects: system.efeitos,
         attrKey,
         skillKey,
-        testKind: allowDefense ? 'defesa' : testKind
+        testKind: allowDefense ? 'defesa' : testKind,
       }),
     ],
     extraDice,
@@ -504,12 +510,13 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     embracedFearIndex: fear.bonusDie ? extraDice.length - 1 : null,
     // Companheiro animal (v0.27.0): posição e faces do dado dele nos dados extras, para a rolagem
     // conferir se deu 1 (os bônus manuais vêm antes dele; veja `companionHurt`)
-    companionDie: boosts.companionAt === null
-      ? null
-      : {
-          index: (rest.extraDice ?? []).length + boosts.companionAt,
-          sides: boosts.extraDice[boosts.companionAt]
-        },
+    companionDie:
+      boosts.companionAt === null
+        ? null
+        : {
+            index: (rest.extraDice ?? []).length + boosts.companionAt,
+            sides: boosts.extraDice[boosts.companionAt],
+          },
     // Crítico ampliado da arma (sem ele, o padrão de `resolveTest`)
     ...(attack.critMin ? { critMin: attack.critMin } : {}),
     modifier:
@@ -613,7 +620,7 @@ export async function rollOpposed(a, b) {
       loserActor,
       loserBefore,
       resourceChanges(loserUpdates),
-      'perdeOposto'
+      'perdeOposto',
     );
   }
 

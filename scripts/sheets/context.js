@@ -451,17 +451,20 @@ export function itemThumb(img) {
  *   subtipo com a categoria já traduzida («Armadura marcial», «Escudo simples»).
  * @param {boolean} [options.editable=true]
  */
-export function buildEquipmentRows(items, {
-  kindLabel,
-  handsLabel,
-  skillLabel,
-  categoryLabel = (category) => category,
-  effectsText = () => '',
-  proficient = true,
-  armorBonus = {},
-  armorKindLabel = (kind, category) => `${kind} ${category}`,
-  editable = true,
-}) {
+export function buildEquipmentRows(
+  items,
+  {
+    kindLabel,
+    handsLabel,
+    skillLabel,
+    categoryLabel = (category) => category,
+    effectsText = () => '',
+    proficient = true,
+    armorBonus = {},
+    armorKindLabel = (kind, category) => `${kind} ${category}`,
+    editable = true,
+  },
+) {
   const of = (type) => items.filter((item) => item.type === type);
   const weapons = of('arma');
   const armors = of('armadura');
@@ -473,7 +476,10 @@ export function buildEquipmentRows(items, {
   // Equipar fica bloqueado se o item não está equipado e não cabe
   const cannotHold = (system) => !system.empunhada && hands.used + handsOf(system) > HANDS;
   // Resumo dos efeitos, uma linha por efeito (fica visível embaixo do nome, sem passar o mouse)
-  const effectLines = (item) => String(effectsText(item) ?? '').split('\n').filter(Boolean);
+  const effectLines = (item) =>
+    String(effectsText(item) ?? '')
+      .split('\n')
+      .filter(Boolean);
   return {
     weapons: weapons.map((item) => {
       const { id, name, system } = item;
@@ -615,8 +621,8 @@ export function buildAbilityRows(
     editable = true,
     openIds = [],
     t = (key) => key,
-    skill = (key) => key
-  }
+    skill = (key) => key,
+  },
 ) {
   const rows = items.map((item) => {
     const { id, name, system } = item;
@@ -634,14 +640,13 @@ export function buildAbilityRows(
       counters: controls.counters,
       buttons: controls.buttons,
       showCompanion: controls.showCompanion,
-      animalFerido: hurtCompanion
+      animalFerido: hurtCompanion,
     };
   });
   return rows.sort(
     (a, b) => Number(b.perfil) - Number(a.perfil) || a.name.localeCompare(b.name, 'pt-BR'),
   );
 }
-
 
 /** Abas da ficha, na ordem de exibição (`icon` é uma classe do Font Awesome). */
 export const SHEET_TABS = [

@@ -59,7 +59,12 @@ test('um 1 e um 2 não é falha crítica', () => {
 });
 
 test('com 4 dados rolados somam-se os 3 maiores e o menor fica só para exibição', () => {
-  const r = resolveTest({ attrDie: 6, skillDie: 8, extraDice: [6, 4], rng: fixedRng([2, 5, 6, 4]) });
+  const r = resolveTest({
+    attrDie: 6,
+    skillDie: 8,
+    extraDice: [6, 4],
+    rng: fixedRng([2, 5, 6, 4]),
+  });
   assert.equal(r.dice.length, 4);
   assert.equal(r.total, 15);
   assert.equal(r.highRoll, 6);
@@ -87,7 +92,12 @@ test('falha crítica com extras exige que todos os dados rolados sejam 1', () =>
 
 test('redução de passo só na perícia', () => {
   const rng = fixedRng([3, 3]);
-  const r = resolveTest({ attrDie: 8, skillDie: 8, stepMods: [{ target: 'skill', steps: -1 }], rng });
+  const r = resolveTest({
+    attrDie: 8,
+    skillDie: 8,
+    stepMods: [{ target: 'skill', steps: -1 }],
+    rng,
+  });
   assert.deepEqual(rng.calls, [8, 6]);
   assert.equal(r.base.skill.final, 6);
   assert.equal(r.base.attribute.final, 8);
@@ -115,7 +125,13 @@ test('efeito em ambos os dados e passos acumulados com limite na escada', () => 
 
 test('alvo de passo inválido gera erro', () => {
   assert.throws(
-    () => resolveTest({ attrDie: 6, skillDie: 6, stepMods: [{ target: 'x', steps: 1 }], rng: fixedRng([1, 1]) }),
+    () =>
+      resolveTest({
+        attrDie: 6,
+        skillDie: 6,
+        stepMods: [{ target: 'x', steps: 1 }],
+        rng: fixedRng([1, 1]),
+      }),
     RangeError,
   );
 });
@@ -153,6 +169,12 @@ test('modificador fixo soma ao total, mas não muda RA, RB nem críticos', () =>
   const falha = resolveTest({ attrDie: 6, skillDie: 8, modifier: -3, rng: fixedRng([4, 5]) });
   assert.equal(falha.success, false);
 
-  const critico = resolveTest({ attrDie: 8, skillDie: 8, modifier: -9, dt: 99, rng: fixedRng([6, 6]) });
+  const critico = resolveTest({
+    attrDie: 8,
+    skillDie: 8,
+    modifier: -9,
+    dt: 99,
+    rng: fixedRng([6, 6]),
+  });
   assert.equal(critico.success, true);
 });

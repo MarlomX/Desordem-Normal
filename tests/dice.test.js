@@ -30,7 +30,10 @@ test('stepShift rejeita dado fora da escada', () => {
 });
 
 test('rollDie valida o gerador', () => {
-  assert.equal(rollDie(6, () => 4), 4);
+  assert.equal(
+    rollDie(6, () => 4),
+    4,
+  );
   assert.throws(() => rollDie(6, () => 7), RangeError);
   assert.throws(() => rollDie(6, () => 0), RangeError);
   assert.throws(() => rollDie(1), RangeError);

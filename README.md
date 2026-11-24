@@ -10,7 +10,7 @@ aprovação ou endosso dos detentores dos direitos.
 
 ## Instalação
 
-No Setup do Foundry, em *Game Systems > Install System*, cole a URL do manifesto:
+No Setup do Foundry, em _Game Systems > Install System_, cole a URL do manifesto:
 
 `https://github.com/SEU_USUARIO/desordem-normal/releases/latest/download/system.json`
 

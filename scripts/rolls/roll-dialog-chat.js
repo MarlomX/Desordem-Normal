@@ -185,7 +185,8 @@ function selectedChallengeDt(form) {
   if (!option) return Number.NaN;
   if (option.dataset.tipo === 'alcancar') {
     // Arriscada: a DT da segura (do ambiente) +3
-    const risky = form.querySelector('input[name="estendidoAlcance"]:checked')?.value === 'arriscada';
+    const risky =
+      form.querySelector('input[name="estendidoAlcance"]:checked')?.value === 'arriscada';
     return Math.min(40, Number(option.dataset.dt) + (risky ? 3 : 0));
   }
   if (option.dataset.tipo !== 'escalar') return Number(option.dataset.dt);
@@ -225,7 +226,10 @@ function refresh(form, root, model) {
         Boolean(form.querySelector('input[name="naoAtacou"]:checked')),
       )
     ];
-  const evaluation = evaluateSelection(variant ? { ...model, ...variant } : model, readSelection(form));
+  const evaluation = evaluateSelection(
+    variant ? { ...model, ...variant } : model,
+    readSelection(form),
+  );
 
   // Espaços de dado extra (refeitos a cada mudança; os bônus manuais mantêm seus valores)
   let manualIndex = 0;
@@ -294,8 +298,12 @@ function refresh(form, root, model) {
   const kind = form.elements.estendidoId?.selectedOptions?.[0]?.dataset.tipo;
   root.querySelector('[data-estendido-escalar]')?.classList.toggle('is-oculta', kind !== 'escalar');
   // Alcançar: segura ou arriscada; sustentar: o aviso das reduções de passo
-  root.querySelector('[data-estendido-alcancar]')?.classList.toggle('is-oculta', kind !== 'alcancar');
-  root.querySelector('[data-estendido-sustentar]')?.classList.toggle('is-oculta', kind !== 'sustentar');
+  root
+    .querySelector('[data-estendido-alcancar]')
+    ?.classList.toggle('is-oculta', kind !== 'alcancar');
+  root
+    .querySelector('[data-estendido-sustentar]')
+    ?.classList.toggle('is-oculta', kind !== 'sustentar');
   for (const radio of root.querySelectorAll('input[name="furtivaAcao"]')) {
     if (radio.value === '') continue;
     // A ação chamativa já desliga esconder-se e distrair (acima); aqui desliga todas as três
@@ -444,9 +452,7 @@ export async function askRollChoices(
   if (shift) {
     const withAmmo = defaultAmmo ? { municaoId: defaultAmmo.id } : {};
     const active = [...(allowDefense ? ['defesa'] : []), ...companionKeys];
-    return active.length
-      ? { active, ...kind, ...withAmmo }
-      : { ...kind, ...withAmmo };
+    return active.length ? { active, ...kind, ...withAmmo } : { ...kind, ...withAmmo };
   }
   // Efeitos da arma do ataque (só com `weaponId`): os automáticos já entram na prévia dos dados
   // (o passo no dado da perícia), e a caixa «quem ainda não me atacou» vira uma opção da janela
@@ -643,7 +649,8 @@ export async function askRollChoices(
           ? ''
           : t('DESORDEM.Teste.Pre.Arma.MunicaoRestam', { n: option.remaining }),
     })),
-    hasItems: ammo.length > 0 ||
+    hasItems:
+      ammo.length > 0 ||
       abilityRows.some((ability) => ability.group === 'item') ||
       attack.lines.length + penaltyLines.length > 0,
     fear: model.fear && {

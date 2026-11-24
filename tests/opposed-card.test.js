@@ -412,7 +412,12 @@ test('esquiva: o lado guarda o nome da habilidade (só na esquiva)', () => {
     esquivaNome: 'Passo do Lobo',
   });
   assert.equal(buildOpposedCardContext(dodge).b.esquivaNome, 'Passo do Lobo');
-  const defend = registerSide(state, 'b', { ...B, skill: 'acrobacia', testId: 'm2', esquivaNome: 'X' });
+  const defend = registerSide(state, 'b', {
+    ...B,
+    skill: 'acrobacia',
+    testId: 'm2',
+    esquivaNome: 'X',
+  });
   assert.equal(defend.b.esquivaNome, '');
 });
 

@@ -3,7 +3,7 @@ import {
   migrateCraftSkill,
   migrateAbilityResources,
   migrateConditionEffects,
-  migrateConditionTables
+  migrateConditionTables,
 } from './migrations.js';
 import { effectiveMax } from '../rolls/effects.js';
 import { conditionEffectsField } from './condition-effects.js';
@@ -29,7 +29,7 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       new f.SchemaField({
         value: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 }),
         base: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 }),
-        max: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 })
+        max: new f.NumberField({ required: true, integer: true, min: 0, initial: 10 }),
       });
 
     // Áreas extras de Aptidão e Ofício criadas pelo jogador (além das do livro)
@@ -40,8 +40,8 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
           nome: new f.StringField({ required: true, blank: true, initial: '' }),
           dado: dado(4),
           // Atributo-base escolhido na ficha ('' = padrão, Mente)
-          atributo: new f.StringField({ required: true, blank: true, initial: '' })
-        })
+          atributo: new f.StringField({ required: true, blank: true, initial: '' }),
+        }),
       );
 
     const mapear = (chaves, fabrica) =>
@@ -62,7 +62,10 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       oficios: new f.SchemaField(mapear(OFICIOS, () => dado(4))),
       // Atributo-base escolhido na ficha para cada perícia, aptidão e ofício do livro ('' = padrão)
       atributosPericias: new f.SchemaField(
-        mapear(OVERRIDABLE_KEYS, () => new f.StringField({ required: true, blank: true, initial: '' }))
+        mapear(
+          OVERRIDABLE_KEYS,
+          () => new f.StringField({ required: true, blank: true, initial: '' }),
+        ),
       ),
       aptidoesExtras: extras(),
       oficiosExtras: extras(),
@@ -77,7 +80,7 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         // Estado mental: dado de pavor (0 = sem pavor, ou 4 a 20), estupor e colapso total
         pavor: new f.NumberField({ required: true, integer: true, min: 0, max: 20, initial: 0 }),
         estupor: new f.BooleanField({ initial: false }),
-        colapso: new f.BooleanField({ initial: false })
+        colapso: new f.BooleanField({ initial: false }),
       }),
       cena: new f.SchemaField({
         testesLesao: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
@@ -89,7 +92,7 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         animalFerido: new f.BooleanField({ initial: false }),
         // Armas (ids) que já atacaram nesta cena: o «primeiro ataque da cena» do efeito
         // `passoAtaque` é o primeiro DA ARMA. Zera na Nova cena e no início do combate.
-        armasAtacaram: new f.ArrayField(new f.StringField({ required: true, blank: false }))
+        armasAtacaram: new f.ArrayField(new f.StringField({ required: true, blank: false })),
       }),
       // Proficiência marcial marcada à mão (também pode vir de uma habilidade, pelo efeito
       // `proficienciaMarcial`). Sem ela, a ficha não deixa empunhar armas marciais.
@@ -100,25 +103,25 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
       // Recursos das habilidades (v0.20.0): valor atual de cada recurso, pela chave do efeito
       // `recurso` (ex.: { impeto: 2, analise: 0 }). O máximo vem do efeito, não daqui.
       recursosHab: objetoDe(
-        new f.NumberField({ required: true, integer: true, min: 0, max: 20, initial: 0 })
+        new f.NumberField({ required: true, integer: true, min: 0, max: 20, initial: 0 }),
       ),
       // Último uso, por efeito, das habilidades limitadas a uma vez por rodada de combate
       // (chave `itemId-efeitoId`; vale enquanto o combate e a rodada forem os mesmos)
       usosRodada: objetoDe(
         new f.SchemaField({
           combate: new f.StringField({ required: true, blank: true, initial: '' }),
-          rodada: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 })
-        })
+          rodada: new f.NumberField({ required: true, integer: true, min: 0, initial: 0 }),
+        }),
       ),
       // Reserva de dados bônus recebidos (ex.: plano de ação): o tamanho de cada dado. Esvazia na
       // Nova cena; o gasto na janela pré-teste chega na v0.20.5
       dadosBonus: new f.ArrayField(
-        new f.NumberField({ required: true, integer: true, min: 4, max: 12, initial: 6 })
+        new f.NumberField({ required: true, integer: true, min: 4, max: 12, initial: 6 }),
       ),
       // Campos antigos (até a v0.19.x), só lidos pela migração para `recursosHab`
       recursos: new f.SchemaField({
         impeto: new f.NumberField({ required: true, integer: true, min: 0, max: 5, initial: 0 }),
-        analise: new f.NumberField({ required: true, integer: true, min: 0, max: 4, initial: 0 })
+        analise: new f.NumberField({ required: true, integer: true, min: 0, max: 4, initial: 0 }),
       }),
       // (Lesões e traumas são efeitos da aba Condição desde a v0.22.2: veja `efeitos`)
       // Relações: grau 0 a 3 (as bolinhas), descrição narrativa e marcador "usada"
@@ -127,8 +130,8 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
           pessoa: new f.StringField({ required: true, blank: true, initial: '' }),
           grau: new f.NumberField({ required: true, integer: true, min: 0, max: 3, initial: 1 }),
           descricao: new f.StringField({ required: true, blank: true, initial: '' }),
-          usada: new f.BooleanField({ initial: false })
-        })
+          usada: new f.BooleanField({ initial: false }),
+        }),
       ),
       // Passos temporários ajustados à mão (por exemplo, ajuda de um aliado): um por atributo e um
       // geral para o dado das perícias. Zeram no reinício de cena.
@@ -136,11 +139,11 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         fisico: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
         mente: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
         emocao: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
-        pericias: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 })
+        pericias: new f.NumberField({ required: true, integer: true, min: -4, max: 4, initial: 0 }),
       }),
       // Efeitos da aba Condição, no formato modular (v0.22.0; veja rolls/effects.js e
       // data/condition-effects.js)
-      efeitos: conditionEffectsField()
+      efeitos: conditionEffectsField(),
     };
   }
 
