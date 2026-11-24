@@ -37,7 +37,8 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  * @param {string} input.skillKey Perícia (ou aptidão) do teste.
  * @param {number} input.attrDie Dado do atributo já com passos e contusão.
  * @param {number} input.skillDie Dado da perícia já com passos.
- * @param {number[]} [input.baseExtraDice] Dados extras fixos do teste (companheiro, não letal...).
+ * @param {number[]} [input.baseExtraDice] Dados extras fixos do teste (dados que entram sempre; o
+ *   companheiro animal é uma opção de `diceOptions` desde a v0.27.0).
  * @param {{impeto?: boolean, sorrateiro?: boolean, naoLetal?: boolean}} input.has Opções do
  *   teste: `naoLetal` só no teste de lesão (+d6, sem custo); `defesa` só no teste de Defender-se
  *   (+d6, sem custo, já marcado). `impeto` e `sorrateiro` são um atalho para os dados das
@@ -92,8 +93,9 @@ export function buildRollModel({
       { skillKey },
     );
   for (const option of options) {
-    // Indisponível pelo primeiro saldo que não dá: 'pd', 'pv' ou a chave do recurso
-    const reason = costShortfall(option.cost, wallet)[0] ?? null;
+    // Indisponível por um motivo próprio da opção ('ferido': o companheiro animal ferido) ou pelo
+    // primeiro saldo que não dá: 'pd', 'pv' ou a chave do recurso
+    const reason = option.unavailable ?? costShortfall(option.cost, wallet)[0] ?? null;
     abilities.push({
       key: option.key,
       die: option.die,
@@ -101,7 +103,8 @@ export function buildRollModel({
       available: reason === null,
       reason,
       ...(option.itemName ? { itemName: option.itemName } : {}),
-      ...(option.checked ? { checked: true } : {}),
+      // Marcada por padrão só se der para usar (o companheiro ferido vem apagado e desmarcado)
+      ...(option.checked && reason === null ? { checked: true } : {}),
       // Seção da janela: efeitos de itens vão para «Itens» (mesmo com grupo «Ação»); as ações das
       // habilidades, para «Ações»; o resto, para «Habilidades»
       ...(option.source === 'item'
@@ -230,7 +233,7 @@ export function emptySelection(dt) {
  * Efeito de uma escolha: custos, dado de pavor resultante, espaços de dado extra e erros.
  *
  * Todo dado extra ocupa um dos dois espaços (limite de 4 dados rolados com atributo e perícia),
- * nesta ordem: dados fixos do teste (companheiro, não letal), fôlego do avanço, habilidades
+ * nesta ordem: dados fixos do teste, fôlego do avanço, habilidades (o companheiro animal primeiro)
  * marcadas, dados da reserva de bônus, pavor abraçado e, por último, os bônus escolhidos à mão. O
  * que não cabe é ignorado. O dado de pavor normal não ocupa espaço.
  * @returns {{

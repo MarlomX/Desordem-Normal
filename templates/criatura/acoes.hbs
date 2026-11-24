@@ -32,9 +32,11 @@
       </summary>
       <p class="desordem-ficha__dica desordem-criatura__texto">{{#if descricao}}{{descricao}}{{else}}{{localize "DESORDEM.Ficha.Hab.SemDescricao"}}{{/if}}</p>
     </details>
-    {{#if buttons.length}}
+    {{#if (or buttons.length showCompanion)}}
     <div class="desordem-habilidade__controles">
       {{#each buttons}}<button type="button" data-action="useEffect" data-item-id="{{../id}}" data-efeito-id="{{effectId}}">{{label}}</button>{{/each}}
+      {{! Companheiro animal: ferido (dado em 1) não ajuda até a Nova cena; o mestre desmarca à mão }}
+      {{#if showCompanion}}<label class="desordem-ficha__campo"><input type="checkbox" name="system.cena.animalFerido" {{#if animalFerido}}checked{{/if}} {{#if locked}}disabled{{/if}}> <span>{{localize "DESORDEM.Habilidade.AnimalFeridoMarca"}}</span></label>{{/if}}
     </div>
     {{/if}}
   </div>

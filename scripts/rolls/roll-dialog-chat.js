@@ -369,7 +369,7 @@ function refresh(form, root, model) {
  * @param {Object} config
  * @param {string} config.skillKey Perícia ou aptidão do teste.
  * @param {string} [config.attribute] Atributo, se não for o padrão da perícia.
- * @param {number[]} [config.baseExtraDice] Dados extras fixos do teste (companheiro, não letal).
+ * @param {number[]} [config.baseExtraDice] Dados extras fixos do teste (dados que entram sempre).
  * @param {boolean} [config.ignoreFear] Testes que não sofrem o dado de pavor.
  * @param {number} [config.dt=7] DT padrão do teste (editável na janela).
  * @param {boolean} [config.showDt=true] Falso em testes sem DT (esquiva).
@@ -387,6 +387,8 @@ function refresh(form, root, model) {
  *   entrarem na janela. Volta nas escolhas (a rolagem usa o mesmo).
  * @param {object[]} [config.stepMods] Passos próprios deste teste, só para a prévia dos dados
  *   (quem rola precisa passar os mesmos passos ao teste).
+ * @param {boolean} [config.companion=true] Falso nos testes que não são de perícia (lesão e
+ *   trauma): o companheiro animal não aparece. Volta nas escolhas.
  * @param {boolean} [config.shift] Pular a janela (Shift+clique).
  */
 export async function askRollChoices(
@@ -406,6 +408,7 @@ export async function askRollChoices(
     testKind = 'qualquer',
     weaponId = null,
     stepMods = [],
+    companion = true,
     shift = false,
   },
 ) {
@@ -414,8 +417,25 @@ export async function askRollChoices(
   const kind = {
     ...(testKind === 'qualquer' ? {} : { testKind }),
     ...(weaponId ? { weaponId } : {}),
+    // Testes sem o companheiro animal (lesão e trauma): a rolagem também não o oferece
+    ...(companion ? {} : { companion: false }),
   };
-  // Pular a janela usa as escolhas padrão: na defesa, o +d6 (que vem marcado)
+  // Efeitos do ator; no ataque, também os da arma (`weaponId`)
+  const entries = actorEffects(actor, { weaponId });
+  // Dados extras dos efeitos (ímpeto, furtivo, companheiro animal...), filtrados pela perícia e
+  // pelo tipo do teste. O companheiro vem marcado, ou apagado se o animal estiver ferido.
+  const diceOptions = dialogDiceOptions(entries, {
+    skillKey,
+    testKind: allowDefense ? 'defesa' : testKind,
+    hurtCompanion: Boolean(actor.system.cena?.animalFerido),
+    companion,
+  });
+  // O que o Shift+clique usa sem abrir a janela: o companheiro animal, se puder ajudar (v0.27.0)
+  const companionKeys = diceOptions
+    .filter((option) => option.companion && !option.unavailable)
+    .map((option) => option.key);
+  // Pular a janela usa as escolhas padrão: na defesa, o +d6 (que vem marcado), e o companheiro
+  // animal, se ele ajuda neste teste e não está ferido
   // Munições que valem neste ataque (efeito `municao`, ex.: aljava): a primeira vem marcada; no
   // Shift+clique, ela é usada direto
   const weaponItem = weaponId ? actor.items.get(weaponId) : null;
@@ -423,13 +443,13 @@ export async function askRollChoices(
   const defaultAmmo = ammo[0] ?? null;
   if (shift) {
     const withAmmo = defaultAmmo ? { municaoId: defaultAmmo.id } : {};
-    return allowDefense
-      ? { active: ['defesa'], ...kind, ...withAmmo }
+    const active = [...(allowDefense ? ['defesa'] : []), ...companionKeys];
+    return active.length
+      ? { active, ...kind, ...withAmmo }
       : { ...kind, ...withAmmo };
   }
   // Efeitos da arma do ataque (só com `weaponId`): os automáticos já entram na prévia dos dados
   // (o passo no dado da perícia), e a caixa «quem ainda não me atacou» vira uma opção da janela
-  const entries = actorEffects(actor, { weaponId });
   const attack = weaponId
     ? weaponAttackEffects(entries, {
         firstAttack: firstWeaponAttack(actor.system.cena, weaponId),
@@ -480,11 +500,8 @@ export async function askRollChoices(
     skillDie: dice.skillDie,
     baseExtraDice,
     has: { naoLetal: allowNonLethal, defesa: allowDefense },
-    // Dados extras dos efeitos das habilidades (ímpeto, furtivo...), filtrados pela perícia
-    diceOptions: dialogDiceOptions(entries, {
-      skillKey,
-      testKind: allowDefense ? 'defesa' : testKind,
-    }),
+    // Dados extras dos efeitos das habilidades (ímpeto, furtivo, companheiro animal...)
+    diceOptions,
     resources: {
       pd: resources.pd,
       pv: actor.system.pv?.value ?? 0,
@@ -518,8 +535,9 @@ export async function askRollChoices(
     ]
       .filter(Boolean)
       .join(' · ');
+  // Motivo de uma opção apagada: falta de PD, PV ou recurso, ou o companheiro animal ferido
   const reasonText = (reason) =>
-    ['pd', 'pv', 'impeto'].includes(reason)
+    ['pd', 'pv', 'impeto', 'ferido'].includes(reason)
       ? t(`DESORDEM.Teste.Pre.Indisponivel.${reason}`)
       : t('DESORDEM.Teste.Pre.Indisponivel.recurso', {
           nome: model.resourceNames[reason] ?? reason,

@@ -32,16 +32,9 @@ import {
   usableThisRound,
 } from '../rolls/ability-effects-actor.js';
 import { weaponDamageLabel, weaponSkill } from '../rolls/equipment.js';
-import {
-  afterWeaponAttack,
-  ammoFor,
-  canAttackWith,
-  spendAmmo,
-  defenseCompanionDice,
-  weaponCompanionDice,
-} from '../rolls/equipment-chat.js';
+import { afterWeaponAttack, ammoFor, canAttackWith, spendAmmo } from '../rolls/equipment-chat.js';
 import { ammoEffectOf, weaponTestKind } from '../rolls/ability-effects.js';
-import { abilityNote, announceGains } from '../rolls/abilities-chat.js';
+import { announceGains } from '../rolls/abilities-chat.js';
 import { damageActor } from '../rolls/health.js';
 import { askDamage } from '../rolls/damage-dialog.js';
 import { guardButtons, registerGuardHandler } from '../rolls/guardian-chat.js';
@@ -440,8 +433,8 @@ async function pickChoice(state, side, actor) {
 
 /**
  * Rola um lado do cartão: escolhe o ator (lado em aberto) e o que ele usa, passa pela janela
- * pré-teste e publica o teste comum com a marca do cartão. Ataque: perícia da arma (com o dado
- * do companheiro animal, como no ataque comum); Defender-se: a perícia + d6.
+ * pré-teste e publica o teste comum com a marca do cartão. Ataque: perícia da arma; Defender-se:
+ * a perícia + d6. O companheiro animal é uma opção da janela (v0.27.0), como no ataque comum.
  */
 async function rollSide(message, side, event, { dodge = false } = {}) {
   const state = cardState(message);
@@ -487,17 +480,10 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
     shift: event?.shiftKey,
   });
   if (!options) return;
-  // Companheiro: o dado dele no ataque (conforme a arma) ou na defesa (Defender-se e esquiva)
-  const companion = weapon
-    ? weaponCompanionDice(actor, weapon)
-    : data.papel === 'defesa'
-      ? defenseCompanionDice(actor)
-      : [];
   const test = skillTestOptions(actor, skill, undefined, {
     ...options,
     showDt: false,
     allowDefense,
-    extraDice: [...companion, ...(options.extraDice ?? [])],
   });
   const what =
     data.papel === 'ataque'
@@ -533,14 +519,6 @@ async function rollSide(message, side, event, { dodge = false } = {}) {
   // Munição usada: gasta uma unidade, acertando ou não
   const usedAmmo = result && weapon ? ammoFor(actor, weapon, options.municaoId) : null;
   if (usedAmmo) await spendAmmo(actor, usedAmmo.id);
-  // Companheiro animal: o primeiro dado extra em 1 fere o animal (como no ataque comum)
-  if (companion.length && result?.dice?.[2]?.source === 'extra' && result.dice[2].value === 1) {
-    await actor.update({ 'system.cena.animalFerido': true });
-    await abilityNote(actor, {
-      entry: firstEffect(actor, 'companheiro'),
-      text: t('DESORDEM.Habilidade.AnimalFerido'),
-    });
-  }
   // Gastou a ação para se defender (Defender-se com o d6; a esquiva livre não conta): ganhos de
   // «ao se defender» (ex.: um marcador de análise)
   if (result && allowDefense && options.active?.includes('defesa')) {

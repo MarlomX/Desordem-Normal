@@ -8,7 +8,7 @@
  */
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS } from '../config.js';
 import { rollSkill, rollExtraSkill, testDicePreview } from '../rolls/chat.js';
-import { attackWithWeapon, weaponCompanionDice } from '../rolls/equipment-chat.js';
+import { attackWithWeapon } from '../rolls/equipment-chat.js';
 import { useAbilityEffect } from '../rolls/abilities-chat.js';
 import { endCreatureScene } from '../rolls/scene-macro.js';
 import { weaponTestKind } from '../rolls/ability-effects.js';
@@ -219,6 +219,8 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
         editable: this.isEditable,
         t: (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key)),
         skill: (key) => (PERICIAS[key] ? t(`DESORDEM.Pericias.${key}`) : key),
+        // O companheiro animal está ferido nesta cena (caixa marcada na habilidade)
+        hurtCompanion: Boolean(system.cena?.animalFerido),
       }),
     };
   }
@@ -509,8 +511,6 @@ export default class CriaturaSheet extends HandlebarsApplicationMixin(ActorSheet
         testKind: weaponTestKind(weapon.system),
         // Os efeitos da arma (dado extra) entram na janela só neste ataque
         weaponId: weapon.id,
-        // Companheiro da criatura (efeito): o dado dele aparece na prévia do ataque
-        baseExtraDice: weaponCompanionDice(this.document, weapon),
       },
       (options) => attackWithWeapon(this.document, weapon, options),
     );

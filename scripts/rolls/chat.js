@@ -18,7 +18,9 @@ import {
   activeBoosts,
   resolveWithValues,
 } from './abilities.js';
+import { markCompanionHurt } from './abilities-chat.js';
 import {
+  companionHurt,
   dialogDiceOptions,
   ammoOptions,
   firstWeaponAttack,
@@ -303,6 +305,7 @@ export async function rollTest({
   socorroFlag,
   planoFlag,
   rollMode,
+  companionDie = null,
   ...options
 }) {
   const { result, rolls, card, plan, display, sides, values } = await runTest(actor, {
@@ -326,6 +329,8 @@ export async function rollTest({
     flags.tabela = createPending({ kind: 'disaster', actorUuid: actor.uuid });
   }
   await postMessage({ actor, content: card, rolls, flags, rollMode });
+  // Companheiro animal (v0.27.0): o dado dele em 1 o fere até o fim da cena
+  if (actor && companionHurt(result, companionDie)) await markCompanionHurt(actor);
   // Quem pediu o teste pode reagir ao resultado (por exemplo, a perseguição soma os pontos de avanço)
   if (typeof onResult === 'function') await onResult(result);
   return result;
@@ -385,6 +390,8 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     naoAtacou = false,
     municaoId = null,
     useBonusDice = 0,
+    // Falso nos testes que não são de perícia (lesão e trauma): o companheiro animal não ajuda
+    companion = true,
     ...rest
   } = options;
   let fear;
@@ -413,6 +420,9 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
       skillKey,
       // Tipo do teste para os filtros dos dados extras (defesa, ataque corpo a corpo...)
       testKind: allowDefense ? 'defesa' : testKind,
+      // Companheiro animal ferido nesta cena: a opção não vale, mesmo marcada (v0.27.0)
+      hurtCompanion: Boolean(system.cena?.animalFerido),
+      companion,
     }),
     allowNonLethal,
     allowDefense,
@@ -433,7 +443,9 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   const usos = usedSummary(boosts.used, {
     diceOptions: dialogDiceOptions(entries, {
       skillKey,
-      testKind: allowDefense ? 'defesa' : testKind
+      testKind: allowDefense ? 'defesa' : testKind,
+      hurtCompanion: Boolean(system.cena?.animalFerido),
+      companion
     }),
     reserveDice,
     resourceNames: Object.fromEntries(
@@ -491,6 +503,14 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
     extraDice,
     // Pavor abraçado (v0.25.2): posição dele nos dados extras, para levar a aura no Dice So Nice
     embracedFearIndex: fear.bonusDie ? extraDice.length - 1 : null,
+    // Companheiro animal (v0.27.0): posição e faces do dado dele nos dados extras, para a rolagem
+    // conferir se deu 1 (os bônus manuais vêm antes dele; veja `companionHurt`)
+    companionDie: boosts.companionAt === null
+      ? null
+      : {
+          index: (rest.extraDice ?? []).length + boosts.companionAt,
+          sides: boosts.extraDice[boosts.companionAt]
+        },
     // Crítico ampliado da arma (sem ele, o padrão de `resolveTest`)
     ...(attack.critMin ? { critMin: attack.critMin } : {}),
     modifier:

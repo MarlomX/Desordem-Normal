@@ -23,6 +23,7 @@ test('activeBoosts: dano não letal dá +d6 sem custo, mas só quando o teste o 
     resourceCosts: {},
     impetoCost: 0,
     used: ['naoLetal'],
+    companionAt: null,
   });
   assert.deepEqual(activeBoosts(['naoLetal'], context).extraDice, []);
   assert.deepEqual(activeBoosts([], { ...context, allowNonLethal: true }).extraDice, []);

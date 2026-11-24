@@ -118,6 +118,7 @@ export async function rollTraumaTest(actor, { extraDice = [], active = [], dt } 
     extraDice,
     active,
     ignoreFear: true, // o teste de trauma não sofre o dado de pavor
+    companion: false, // nem o companheiro animal (não é um teste de perícia)
     label: `${actor.name}: ${game.i18n.localize('DESORDEM.Trauma.TesteTitulo')}`,
   });
   const { result, rolls, card } = await runTest(actor, options);

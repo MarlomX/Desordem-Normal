@@ -65,7 +65,8 @@
           "impeto": "sem ímpeto suficiente",
           "pd": "sem PD suficiente",
           "pv": "sem PV suficiente",
-          "recurso": "sem {nome} suficiente"
+          "recurso": "sem {nome} suficiente",
+          "ferido": "animal ferido nesta cena"
         },
         "CustoPD": "{n} PD",
         "CustoImpeto": "{n} de ímpeto",

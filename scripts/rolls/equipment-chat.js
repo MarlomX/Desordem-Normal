@@ -17,9 +17,7 @@ import {
   weaponAmmoChanges,
   weaponReady,
 } from './equipment.js';
-import { firstEffect } from './ability-effects-actor.js';
 import { ammoOptions, markWeaponAttack, weaponTestKind } from './ability-effects.js';
-import { abilityNote } from './abilities-chat.js';
 import { guardButtons, registerGuardHandler } from './guardian-chat.js';
 import { canGuardWeaponCard, guardWeaponCard } from './guardian.js';
 
@@ -34,39 +32,6 @@ const weaponFlag = (message) => message?.flags?.[SYSTEM_ID]?.danoArma ?? null;
 
 /** Quem atacou (o ator que fala pela mensagem). */
 const attackerOf = (message) => ChatMessage.getSpeakerActor(message.speaker);
-
-/**
- * Ataque com uma arma: teste da perícia da arma (DT 7 por padrão) e, se acertar, um cartão com o
- * dano (rolagem alta + modificador da arma) e o botão de aplicá-lo aos alvos mirados.
- * @param {Actor} actor
- * @param {Item} weapon Item do tipo arma.
- * @param {Object} [options] Opções do teste de perícia (dt, extraDice, stepMods, helpers...).
- * @returns {Promise<{result: object, amount: (number|null)}>}
- */
-/**
- * Companheiro animal (efeito `companheiro`): o dado dele nos ataques do tipo do efeito (corpo a
- * corpo, por padrão), até o animal se ferir (dado em 1).
- * @returns {number[]} [dado] se o companheiro ajuda neste ataque, senão [].
- */
-export function weaponCompanionDice(actor, weapon) {
-  const { system } = weapon;
-  const companion = firstEffect(actor, 'companheiro');
-  if (!companion || actor.system.cena?.animalFerido) return [];
-  const kind = system.tipo === 'corpo' ? 'ataqueCorpo' : 'ataqueDistancia';
-  const fits = companion.params.teste === 'qualquer' || companion.params.teste === kind;
-  return fits ? [companion.params.dado] : [];
-}
-
-/**
- * Companheiro na defesa (efeito `companheiro` de «Defesa» ou «Qualquer teste»): o dado dele no
- * teste de defesa do cartão (Defender-se ou esquiva), até o animal se ferir.
- * @returns {number[]} [dado] se o companheiro ajuda na defesa, senão [].
- */
-export function defenseCompanionDice(actor) {
-  const companion = firstEffect(actor, 'companheiro');
-  if (!companion || actor.system.cena?.animalFerido) return [];
-  return ['defesa', 'qualquer'].includes(companion.params.teste) ? [companion.params.dado] : [];
-}
 
 /**
  * A arma pode atacar? A consumível sem unidades não pode (avisa e devolve `false`).
@@ -133,11 +98,19 @@ export async function spendAmmo(actor, ammoId) {
   });
 }
 
+/**
+ * Ataque com uma arma: teste da perícia da arma (DT 7 por padrão) e, se acertar, um cartão com o
+ * dano (rolagem alta + modificador da arma) e o botão de aplicá-lo aos alvos mirados.
+ * @param {Actor} actor
+ * @param {Item} weapon Item do tipo arma.
+ * @param {Object} [options] Opções do teste de perícia (dt, extraDice, stepMods, helpers...).
+ * @returns {Promise<{result: object, amount: (number|null)}>}
+ */
 export async function attackWithWeapon(actor, weapon, options = {}) {
   const { system } = weapon;
   if (!canAttackWith(weapon)) return { result: null, amount: null };
-  const companionDice = weaponCompanionDice(actor, weapon);
-  const companion = companionDice.length > 0;
+  // O companheiro animal (v0.27.0) é uma opção da janela pré-teste, como as outras habilidades:
+  // quando marcado, entra pelas escolhas (`active`) e a rolagem confere se o dado dele deu 1
   const result = await rollSkill(actor, weaponSkill(system), {
     dt: 7,
     // Tipo do ataque para os filtros dos dados extras (a janela pré-teste já manda o mesmo)
@@ -145,21 +118,12 @@ export async function attackWithWeapon(actor, weapon, options = {}) {
     ...options,
     // Os efeitos da arma só valem no ataque com ela
     weaponId: weapon.id,
-    extraDice: [...companionDice, ...(options.extraDice ?? [])],
   });
   // O teste foi feito: marca o ataque da cena e gasta a unidade da arma consumível
   await afterWeaponAttack(actor, weapon);
   // Munição marcada na janela (ex.: aljava): gasta uma unidade, acertando ou não
   const ammo = ammoFor(actor, weapon, options.municaoId);
   if (ammo) await spendAmmo(actor, ammo.id);
-  // O dado do companheiro é o primeiro dado extra do teste
-  if (companion && result.dice[2]?.source === 'extra' && result.dice[2].value === 1) {
-    await actor.update({ 'system.cena.animalFerido': true });
-    await abilityNote(actor, {
-      entry: firstEffect(actor, 'companheiro'),
-      text: t('DESORDEM.Habilidade.AnimalFerido'),
-    });
-  }
   if (!result.success) return { result, amount: null };
   // Dano: RA (ou RB) + modificador da arma + bônus da munição
   const amount = computeDamage(result, system.bonusDano + (ammo?.dano ?? 0), system.baseDano);

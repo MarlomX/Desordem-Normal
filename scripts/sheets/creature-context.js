@@ -75,13 +75,19 @@ export function buildAttackRows(items, { kindLabel, skillLabel, diceOf, editable
  */
 export function buildCreatureAbilityRows(
   items,
-  { openIds = [], editable = true, t = (key) => key, skill = (key) => key } = {},
+  {
+    openIds = [],
+    editable = true,
+    t = (key) => key,
+    skill = (key) => key,
+    hurtCompanion = false,
+  } = {},
 ) {
   return items
     .filter((item) => item.type === 'habilidade')
     .map((item) => {
       const { id, name, system } = item;
-      const { buttons } = abilityControls(item, {}, { t, skill });
+      const { buttons, showCompanion } = abilityControls(item, {}, { t, skill });
       return {
         id,
         name,
@@ -91,6 +97,9 @@ export function buildCreatureAbilityRows(
         open: openIds.includes(id),
         locked: !editable,
         buttons: buttons.filter((button) => CREATURE_EFFECT_TYPES.includes(button.tipo)),
+        // Companheiro animal (v0.27.0): a caixa «companheiro ferido», como na ficha do personagem
+        showCompanion,
+        animalFerido: showCompanion && hurtCompanion,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));

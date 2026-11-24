@@ -74,6 +74,20 @@ export async function abilityNote(
   });
 }
 
+/**
+ * O companheiro animal se feriu (o dado dele deu 1): marca `system.cena.animalFerido` (ele não
+ * ajuda mais até a Nova cena) e avisa no chat. Personagens e criaturas têm o mesmo campo.
+ * @param {Actor} actor
+ */
+export async function markCompanionHurt(actor) {
+  if (actor.system.cena?.animalFerido) return;
+  await actor.update({ 'system.cena.animalFerido': true });
+  await abilityNote(actor, {
+    entry: firstEffect(actor, 'companheiro'),
+    text: t('DESORDEM.Habilidade.AnimalFerido'),
+  });
+}
+
 /** Nome de uma perícia ou de uma área de Aptidão (resumos dos efeitos). */
 export function skillName(key) {
   if (PERICIAS[key]) return t(`DESORDEM.Pericias.${key}`);

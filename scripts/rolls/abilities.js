@@ -124,7 +124,9 @@ const LEGACY_DICE = [...legacyEffects('impeto'), ...legacyEffects('sorrateiro')]
  * @param {boolean} [context.allowNonLethal=false] Só o teste de lesão aceita o dano não letal.
  * @param {boolean} [context.allowDefense=false] Só o teste de Defender-se aceita o d6 da defesa.
  * @returns {{extraDice: number[], pdCost: number, pvCost: number,
- *   resourceCosts: Object<string, number>, impetoCost: number, used: string[]}}
+ *   resourceCosts: Object<string, number>, impetoCost: number, used: string[],
+ *   companionAt: number|null}} `companionAt`: posição do dado do companheiro animal em
+ *   `extraDice` (`null` se ele não entrou neste teste).
  */
 export function activeBoosts(
   active,
@@ -144,10 +146,15 @@ export function activeBoosts(
   const used = [];
   let total = emptyCostBag();
   const options = diceOptions ?? dialogDiceOptions(LEGACY_DICE, { skillKey });
+  // Posição do dado do companheiro animal em `extraDice` (`null` = ele não entrou)
+  let companionAt = null;
   for (const option of options) {
     if (!active.includes(option.key)) continue;
+    // Opção apagada por um motivo próprio (o companheiro ferido) não entra, mesmo marcada
+    if (option.unavailable) continue;
     // Cada opção confere o saldo inteiro (como a janela pré-teste)
     if (costShortfall(option.cost, wallet).length) continue;
+    if (option.companion) companionAt = extraDice.length;
     extraDice.push(option.die);
     total = addCostBags(total, option.cost);
     used.push(option.key);
@@ -170,6 +177,7 @@ export function activeBoosts(
     resourceCosts: total.recursos,
     impetoCost: total.recursos.impeto ?? 0,
     used,
+    companionAt,
   };
 }
 
@@ -218,7 +226,8 @@ export function sceneReset(state) {
 
 /**
  * Nova cena de uma criatura (botão da ficha, v0.23.3): os passos temporários voltam a 0 e saem os
- * efeitos que duram até o fim da cena. PV e o resto ficam como estão (a criatura não tem testes
+ * efeitos que duram até o fim da cena, e o companheiro animal deixa de estar ferido (v0.27.0).
+ * PV e o resto ficam como estão (a criatura não tem testes
  * de lesão, recursos de habilidade nem dados bônus).
  * @param {object[]} efeitos `system.efeitos` gravados (`toObject()`).
  * @returns {Object} Valores novos, nas chaves da ficha (`system.*`).
@@ -230,6 +239,8 @@ export function creatureSceneReset(efeitos) {
     'system.passos.emocao': 0,
     'system.passos.pericias': 0,
     'system.efeitos': keepAfterScene(efeitos),
+    // O companheiro animal da criatura volta a ajudar (v0.27.0)
+    'system.cena.animalFerido': false,
   };
 }
 

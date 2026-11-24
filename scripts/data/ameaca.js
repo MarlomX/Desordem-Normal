@@ -65,6 +65,11 @@ export class AmeacaModel extends foundry.abstract.TypeDataModel {
       }),
       // Efeitos da aba Condição, no formato modular (v0.22.0; veja data/condition-effects.js)
       efeitos: conditionEffectsField(),
+      // Estado da cena (v0.27.0): o companheiro animal ferido (dado dele em 1) não ajuda mais até
+      // a Nova cena. Fichas antigas, sem o campo, abrem com o valor padrão (falso).
+      cena: new f.SchemaField({
+        animalFerido: new f.BooleanField({ initial: false }),
+      }),
     };
   }
 

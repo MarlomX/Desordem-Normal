@@ -742,17 +742,74 @@ export function costShortfall(bag, wallet) {
 }
 
 /**
- * Dados extras que a janela pré-teste oferece (efeitos `dadoExtra`), no formato de
- * `buildRollModel`. O custo vem como saco (PD, PV ou um recurso).
+ * Opção do companheiro animal na janela pré-teste (v0.27.0), ou `null` se ele não ajuda neste
+ * teste. Só o primeiro efeito `companheiro` do ator conta (o «animal ferido» da ficha é um só).
+ * Vale nos testes do tipo do efeito; «qualquer teste» vale em todos os testes de perícia. Vem
+ * marcada por padrão; com o animal ferido, aparece apagada (`unavailable: 'ferido'`).
  * @param {object[]} entries Efeitos do ator.
- * @param {{skillKey: string, testKind?: string}} context `testKind`: qualquer, ataqueCorpo,
- *   ataqueDistancia ou defesa. Um efeito de «qualquer teste» vale em todos.
- * @returns {{key: string, die: number, cost: CostBag, itemName: string, group: string,
- *   checked: boolean, source: string}[]}
+ * @param {{testKind: string, hurt: boolean}} context
  */
-export function dialogDiceOptions(entries, { skillKey, testKind = 'qualquer' }) {
+export function companionOption(entries, { testKind, hurt }) {
+  const entry = effectsOfType(entries, 'companheiro')[0];
+  if (!entry) return null;
+  const { dado, teste } = entry.params;
+  if (teste !== 'qualquer' && teste !== testKind) return null;
+  return {
+    key: entry.id,
+    die: dado,
+    cost: emptyCostBag(),
+    itemName: entry.itemName ?? '',
+    group: 'habilidade',
+    // Marcada por padrão, a não ser que o animal esteja ferido
+    checked: !hurt,
+    source: 'habilidade',
+    // Marca a opção como o companheiro (a rolagem procura este dado para ver se deu 1)
+    companion: true,
+    ...(hurt ? { unavailable: 'ferido' } : {}),
+  };
+}
+
+/** Dados-base de todo teste (atributo e perícia): os extras vêm depois deles em `result.dice`. */
+const BASE_DICE = 2;
+
+/**
+ * O dado do companheiro animal deu 1 neste teste? Ele é achado pela posição que a rolagem guardou
+ * (`companionDie.index`, entre os dados extras) e conferido pela origem e pelas faces, para uma
+ * posição errada nunca ferir o animal por engano.
+ * @param {{dice: {sides: number, value: number, source: string}[]}|null} result
+ * @param {{index: number, sides: number}|null} companionDie `null` = o companheiro não entrou.
+ */
+export function companionHurt(result, companionDie) {
+  if (!companionDie || !Array.isArray(result?.dice)) return false;
+  const die = result.dice[BASE_DICE + companionDie.index];
+  return Boolean(
+    die && die.source === 'extra' && die.sides === companionDie.sides && die.value === 1,
+  );
+}
+
+/**
+ * Dados extras que a janela pré-teste oferece (efeitos `dadoExtra` e o companheiro animal), no
+ * formato de `buildRollModel`. O custo vem como saco (PD, PV ou um recurso).
+ * @param {object[]} entries Efeitos do ator.
+ * @param {{skillKey: string, testKind?: string, hurtCompanion?: boolean, companion?: boolean}}
+ *   context `testKind`: qualquer, ataqueCorpo, ataqueDistancia ou defesa. Um efeito de «qualquer
+ *   teste» vale em todos. `hurtCompanion`: o animal está ferido nesta cena (opção apagada).
+ *   `companion: false` tira o companheiro (testes de lesão e de trauma, que não são de perícia).
+ * @returns {{key: string, die: number, cost: CostBag, itemName: string, group: string,
+ *   checked: boolean, source: string, companion?: boolean, unavailable?: string}[]}
+ */
+export function dialogDiceOptions(
+  entries,
+  { skillKey, testKind = 'qualquer', hurtCompanion = false, companion = true },
+) {
   const seen = new Set();
   const options = [];
+  // Companheiro animal primeiro: é o primeiro dado de habilidade do teste
+  const pet = companion ? companionOption(entries, { testKind, hurt: hurtCompanion }) : null;
+  if (pet) {
+    seen.add(pet.key);
+    options.push(pet);
+  }
   for (const entry of effectsOfType(entries, 'dadoExtra')) {
     const { dado, pericias, teste, custo, grupo, marcado } = entry.params;
     if (seen.has(entry.id)) continue;

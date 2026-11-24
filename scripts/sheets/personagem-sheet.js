@@ -5,7 +5,7 @@ import { injuryDT, injuryTestOptions } from '../rolls/injury.js';
 import { rollTraumaTest } from '../rolls/mind.js';
 import { traumaDT } from '../rolls/emotional.js';
 import { invokeRelation } from '../rolls/relation-chat.js';
-import { attackWithWeapon, weaponCompanionDice } from '../rolls/equipment-chat.js';
+import { attackWithWeapon } from '../rolls/equipment-chat.js';
 import { useItem } from '../rolls/item-use-chat.js';
 import { armorSkillPenalties, weaponSkill } from '../rolls/equipment.js';
 import { removeEffect } from '../rolls/effects.js';
@@ -741,7 +741,15 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
     // "Dano não letal" aparece na janela como uma habilidade que acrescenta +d6 ao teste
     await this.#rollWithChoices(
       event,
-      { skillKey: 'vigor', ignoreFear: true, dt: rule.dt, allowNonLethal: true, chase: false },
+      {
+        skillKey: 'vigor',
+        ignoreFear: true,
+        dt: rule.dt,
+        allowNonLethal: true,
+        chase: false,
+        // O companheiro animal não ajuda no teste de lesão (v0.27.0)
+        companion: false,
+      },
       (options) => rollInjuryTest(this.document, options),
     );
   }
@@ -754,6 +762,8 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         skillKey: 'disciplina',
         ignoreFear: true,
         chase: false,
+        // O companheiro animal não ajuda no teste de trauma (v0.27.0)
+        companion: false,
         dt: traumaDT(this.document.system.cena.testesTrauma),
       },
       (options) => rollTraumaTest(this.document, options),
@@ -874,7 +884,6 @@ export default class PersonagemSheet extends HandlebarsApplicationMixin(ActorShe
         testKind: weaponTestKind(weapon.system),
         // Os efeitos da arma (dado extra) entram na janela só neste ataque
         weaponId: weapon.id,
-        baseExtraDice: weaponCompanionDice(this.document, weapon),
       },
       (options) => attackWithWeapon(this.document, weapon, options),
     );

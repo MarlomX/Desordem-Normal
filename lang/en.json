@@ -65,7 +65,8 @@
           "impeto": "not enough drive",
           "pd": "not enough DP",
           "pv": "not enough HP",
-          "recurso": "not enough {nome}"
+          "recurso": "not enough {nome}",
+          "ferido": "companion hurt this scene"
         },
         "CustoPD": "{n} DP",
         "CustoImpeto": "{n} drive",

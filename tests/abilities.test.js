@@ -97,6 +97,7 @@ test('activeBoosts: ímpeto dá +d4 por 1 espaço; a furtiva dá +d8 por 3 PD s�
     resourceCosts: { impeto: 1 },
     impetoCost: 1,
     used: ['impetoDado'],
+    companionAt: null,
   });
   assert.deepEqual(activeBoosts(['sorrateiro'], { skillKey: 'furtividade', impeto: 0, pd: 5 }), {
     extraDice: [8],
@@ -105,6 +106,7 @@ test('activeBoosts: ímpeto dá +d4 por 1 espaço; a furtiva dá +d8 por 3 PD s�
     resourceCosts: {},
     impetoCost: 0,
     used: ['sorrateiro'],
+    companionAt: null,
   });
   assert.deepEqual(activeBoosts(['sorrateiro'], { skillKey: 'luta', impeto: 0, pd: 5 }).used, []);
   assert.deepEqual(activeBoosts(['sorrateiro'], { skillKey: 'crime', impeto: 0, pd: 2 }).used, []);
@@ -178,6 +180,7 @@ test('activeBoosts usa os dados extras informados (efeitos) no lugar dos antigos
     resourceCosts: {},
     impetoCost: 0,
     used: ['e1', 'e2'],
+    companionAt: null,
   });
   assert.deepEqual(
     activeBoosts(['e1'], { skillKey: 'luta', impeto: 0, pd: 1, diceOptions }).used,

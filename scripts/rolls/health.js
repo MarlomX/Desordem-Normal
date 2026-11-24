@@ -145,6 +145,7 @@ export async function rollInjuryTest(
     active,
     allowNonLethal: true,
     ignoreFear: true, // o teste de lesão não sofre o dado de pavor
+    companion: false, // nem o companheiro animal (não é um teste de perícia)
     label: `${actor.name}: ${game.i18n.localize('DESORDEM.Lesao.TesteTitulo')}`,
   });
   const { result, rolls, card } = await runTest(actor, options);
