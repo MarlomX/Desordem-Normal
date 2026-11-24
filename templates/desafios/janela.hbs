@@ -84,12 +84,17 @@
     </label>
     {{#if view.temPa}}
     <label class="desordem-desafio__campo">
-      <span class="desordem-perseguicao__rotulo">{{#if view.equilibrio}}{{localize "DESORDEM.Desafio.Equilibrio.Rodadas"}}{{else}}{{localize "DESORDEM.Desafio.PAAlvo"}}{{/if}}</span>
+      <span class="desordem-perseguicao__rotulo">{{#if view.equilibrio}}{{localize "DESORDEM.Desafio.Equilibrio.Rodadas"}}{{else}}{{#if view.descer}}{{localize "DESORDEM.Desafio.Altura"}}{{else}}{{localize "DESORDEM.Desafio.PAAlvo"}}{{/if}}{{/if}}</span>
       <input type="number" class="desordem-perseguicao__campo" data-campo="pa" value="{{view.pa}}" min="1" max="999" step="1" inputmode="numeric">
     </label>
     {{/if}}
     {{#if view.escalar}}
     {{! Escalada: sempre individual; rápida soma a RA, cautelosa soma a RB, falhar é queda }}
+    {{! Sentido (v0.27.1): subir (de 0 até a PA) ou descer (da altura, a PA, até 0) }}
+    <label class="desordem-desafio__campo">
+      <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.SentidoRotulo"}}</span>
+      <select data-campo="sentido">{{#each sentidos}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
     <label class="desordem-desafio__campo">
       <span class="desordem-perseguicao__rotulo">{{localize "DESORDEM.Desafio.DtRapida"}}</span>
       <input type="number" class="desordem-perseguicao__campo" data-campo="dtRapida" value="{{view.dtRapida}}" min="1" max="40" step="1" inputmode="numeric">
@@ -132,7 +137,8 @@
     {{#unless view.sustentar}}
     <label class="desordem-desafio__marcar desordem-desafio__campo--largo">
       <input type="checkbox" data-campo="revelarPa"{{#if view.revelarPa}} checked{{/if}}>
-      <span>{{localize "DESORDEM.Desafio.RevelarPa"}}</span>
+      {{! Na descida, a PA é a altura: mostrar a PA mostra a altura que falta }}
+      <span>{{#if view.descer}}{{localize "DESORDEM.Desafio.RevelarAltura"}}{{else}}{{localize "DESORDEM.Desafio.RevelarPa"}}{{/if}}</span>
     </label>
     {{/unless}}
   </div>

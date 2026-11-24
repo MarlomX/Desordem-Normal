@@ -283,7 +283,11 @@ function appliedText(view, nome) {
   const withZero = (text) =>
     view.appliedZerou ? `${text} ${t('DESORDEM.Desafio.Barra.ZeroPv')}` : text;
   if (view.appliedFalha === 'queda') {
-    return withZero(t('DESORDEM.Desafio.Barra.QuedaAplicada', { dano: view.appliedDano, nome }));
+    // Descida: caiu da altura que faltava e chegou embaixo (Barra.Descida.QuedaAplicada)
+    const key = view.descer
+      ? 'DESORDEM.Desafio.Barra.Descida.QuedaAplicada'
+      : 'DESORDEM.Desafio.Barra.QuedaAplicada';
+    return withZero(t(key, { dano: view.appliedDano, nome }));
   }
   if (view.appliedFalha === 'dano') {
     return withZero(t('DESORDEM.Desafio.Barra.DanoAplicado', { dano: view.appliedDano, nome }));
@@ -297,11 +301,21 @@ function appliedText(view, nome) {
   if (view.tipo === 'sustentar') {
     return t('DESORDEM.Desafio.Barra.Sustentando', { nome, n: view.appliedDepois ?? 1 });
   }
+  // Descida: os pontos somados são o quanto desceu (Barra.Descida.Somado)
+  if (view.descer) {
+    return t('DESORDEM.Desafio.Barra.Descida.Somado', { pontos: view.appliedPontos, nome });
+  }
   return t('DESORDEM.Desafio.Barra.Somado', { pontos: view.appliedPontos, nome });
 }
 
 /** O que o teste vale, antes do clique (o detalhe depois de «Nome (DT x):»). */
 function pendingDetail(view) {
+  if (view.falha === 'queda' && view.descer) {
+    // Descida: com a PA escondida, o jogador não vê de que altura cai (Barra.Descida.QuedaOculta)
+    return view.danoOculto
+      ? t('DESORDEM.Desafio.Barra.Descida.QuedaOculta')
+      : t('DESORDEM.Desafio.Barra.Descida.Queda', { dano: view.dano });
+  }
   if (view.falha === 'queda') return t('DESORDEM.Desafio.Barra.Queda', { dano: view.dano });
   if (view.falha === 'dano') {
     return t(view.zera ? 'DESORDEM.Desafio.Barra.DanoZera' : 'DESORDEM.Desafio.Barra.Dano', {
@@ -318,7 +332,9 @@ function pendingDetail(view) {
   }
   if (view.tipo === 'sustentar') return t('DESORDEM.Desafio.Barra.PassouSustenta');
   // Chaves montadas (conferidas à mão): DESORDEM.Desafio.Barra.{passou,falhou,crit,falhaCritica}
-  return t(`DESORDEM.Desafio.Barra.${view.kind}`, { pontos: view.pontos });
+  // e, na descida, DESORDEM.Desafio.Barra.Descida.{passou,crit} (falhar na escalada é queda)
+  const prefix = view.descer ? 'DESORDEM.Desafio.Barra.Descida' : 'DESORDEM.Desafio.Barra';
+  return t(`${prefix}.${view.kind}`, { pontos: view.pontos });
 }
 
 /** Texto da barra principal. */
@@ -341,6 +357,10 @@ function mainText(view) {
 
 /** Rótulo do botão principal (o que o clique faz). */
 function buttonLabel(view) {
+  // Descida com a PA escondida: o botão não mostra o dano (Barra.Descida.AplicarQuedaOculta)
+  if (view.falha === 'queda' && view.danoOculto) {
+    return t('DESORDEM.Desafio.Barra.Descida.AplicarQuedaOculta');
+  }
   if (view.falha === 'queda') return t('DESORDEM.Desafio.Barra.AplicarQueda', { dano: view.dano });
   if (view.falha === 'dano') return t('DESORDEM.Desafio.Barra.AplicarDano', { dano: view.dano });
   if (view.falha === 'soltar') return t('DESORDEM.Desafio.Barra.BotaoSoltar');
@@ -352,6 +372,8 @@ function buttonLabel(view) {
     );
   }
   if (view.tipo === 'sustentar') return t('DESORDEM.Desafio.Barra.BotaoContinuar');
+  // Descida: «Descer N» (Barra.Descida.Somar)
+  if (view.descer) return t('DESORDEM.Desafio.Barra.Descida.Somar', { pontos: view.pontos });
   return t('DESORDEM.Desafio.Barra.Somar', { pontos: view.pontos });
 }
 
@@ -364,6 +386,8 @@ function mainBar(message, flag, test, doc) {
     claimable,
     busy: flag.estado === 'aplicando' && !claimable,
     challenge: getChallenge(flag.desafioId),
+    // O mestre sempre vê o dano da queda na descida (o jogador, só com a PA revelada)
+    isGM: game.user.isGM,
   });
   const bar = doc.createElement('div');
   bar.className = 'desordem-teste__avanco desordem-teste__desafio';

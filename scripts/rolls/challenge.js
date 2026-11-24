@@ -81,6 +81,13 @@ export const CHALLENGE_VISIBILITY = Object.freeze(['todos', 'participantes', 'me
 /** Abordagens da escalada. */
 export const CLIMB_APPROACHES = Object.freeze(['rapida', 'cautelosa']);
 
+/**
+ * Sentido da escalada (v0.27.1): «subir» (de 0 até a PA) ou «descer» (começa na altura, a PA, e
+ * desce até 0). Os pontos guardados são sempre o progresso feito; na descida, a altura que falta
+ * é a PA menos o progresso (`climbHeight`), e é ela que as telas mostram.
+ */
+export const CLIMB_DIRECTIONS = Object.freeze(['subir', 'descer']);
+
 /** Modos do teste estendido. */
 export const CHALLENGE_MODES = Object.freeze(['individual', 'grupo']);
 
@@ -182,6 +189,8 @@ export function normalizeChallenge(entry) {
       0,
       tipo === 'sustentar' ? 1 : MAX_PARTICIPANTS,
     ),
+    // Escalar: subir ou descer (desafios antigos, sem o campo, sobem)
+    ...(tipo === 'escalar' ? { sentido: pick(entry.sentido, CLIMB_DIRECTIONS, 'subir') } : {}),
     // Destrancar: a fechadura (dados, faces, tentativas; a senha fica num sussurro ao mestre)
     ...(tipo === 'destrancar' ? { fechadura: normalizeLock(entry.fechadura) } : {}),
   };
@@ -251,7 +260,7 @@ export function appendChallenge(data, challenge) {
  * opção desconhecida) devolve o desafio sem mudança.
  * @param {object} challenge Desafio limpo.
  * @param {string} campo nome, pa, dt, dtRapida, dtCautelosa, custoPv, modo, somaPassar, somaFalhar,
- *   revelarPa ou ativo. Na escalada o modo não muda (é sempre individual).
+ *   sentido (só na escalada), revelarPa ou ativo. Na escalada o modo não muda (é sempre individual).
  * @param {unknown} raw Valor do campo (texto, ou booleano nas caixas de marcar).
  */
 export function updateChallengeField(challenge, campo, raw) {
@@ -287,6 +296,11 @@ export function updateChallengeField(challenge, campo, raw) {
       return ON_FAIL.includes(raw) ? { ...challenge, somaFalhar: raw } : challenge;
     case 'visibilidade':
       return CHALLENGE_VISIBILITY.includes(raw) ? { ...challenge, visibilidade: raw } : challenge;
+    case 'sentido':
+      // Só a escalada tem sentido (subir ou descer)
+      return challenge.tipo === 'escalar' && CLIMB_DIRECTIONS.includes(raw)
+        ? { ...challenge, sentido: raw }
+        : challenge;
     case 'revelarPa':
     case 'ativo':
       return typeof raw === 'boolean' ? { ...challenge, [campo]: raw } : challenge;
@@ -364,6 +378,54 @@ export function typePoints(challenge, actorId, raw) {
   return value === null ? challenge : setPoints(challenge, actorId, value);
 }
 
+// ---------- Descida (v0.27.1) ----------
+
+/** O desafio é uma escalada para baixo? */
+export const isDescent = (challenge) =>
+  challenge?.tipo === 'escalar' && challenge.sentido === 'descer';
+
+/** Altura que ainda falta na descida: a PA menos o progresso (nunca abaixo de 0). */
+export const climbHeight = (challenge, pontos) =>
+  Math.max(0, challenge.pa - Math.max(0, Math.trunc(Number(pontos) || 0)));
+
+/**
+ * O número que as telas mostram para um participante. Na descida, a altura que falta, se a pessoa
+ * pode ver a PA (`targetVisible`); senão, quanto ele já desceu (a altura entregaria a PA). Nos
+ * outros desafios, os pontos guardados.
+ * @param {object} challenge
+ * @param {number} pontos Progresso guardado do participante.
+ * @param {{isGM: boolean}} viewer
+ */
+export function shownPoints(challenge, pontos, { isGM }) {
+  if (!isDescent(challenge) || !targetVisible(challenge, { isGM })) return pontos;
+  return climbHeight(challenge, pontos);
+}
+
+/**
+ * Chave da unidade mostrada ao lado dos pontos (`DESORDEM.Desafio.Unidade.<chave>`): o tipo do
+ * desafio; na descida, «descer» (altura que falta) ou, com a PA escondida, «descerOculto» (quanto
+ * já desceu).
+ */
+export function unitKey(challenge, { isGM }) {
+  if (!isDescent(challenge)) return challenge.tipo;
+  return targetVisible(challenge, { isGM }) ? 'descer' : 'descerOculto';
+}
+
+/**
+ * Pontos digitados pelo mestre na janela do desafio. Na descida ele digita a altura que falta
+ * (é o número que a janela mostra), convertida em progresso (PA − altura).
+ */
+export function typeShownPoints(challenge, actorId, raw) {
+  if (!isDescent(challenge)) return typePoints(challenge, actorId, raw);
+  const value = parseInteger(raw);
+  return value === null ? challenge : setPoints(challenge, actorId, challenge.pa - value);
+}
+
+/** Botões −/+ da janela: na descida, agem na altura mostrada (− desce, + sobe de volta). */
+export function adjustShownPoints(challenge, actorId, delta) {
+  return adjustPoints(challenge, actorId, isDescent(challenge) ? -delta : delta);
+}
+
 /**
  * O desafio está concluído? No modo grupo, quando o total chega à PA; no individual, quando todos
  * os participantes (pelo menos um) chegam.
@@ -420,6 +482,11 @@ export function challengeView(challenge, { isGM, actorInfo }) {
     id: challenge.id,
     tipo: challenge.tipo,
     escalar: challenge.tipo === 'escalar',
+    // Escalada para baixo: a janela mostra a altura que falta (v0.27.1)
+    descer: isDescent(challenge),
+    sentido: challenge.sentido ?? null,
+    // Chave da unidade dos pontos (`DESORDEM.Desafio.Unidade.<chave>`)
+    unidadeChave: unitKey(challenge, { isGM }),
     alcancar: challenge.tipo === 'alcancar',
     sustentar: challenge.tipo === 'sustentar',
     equilibrio: challenge.tipo === 'equilibrio',
@@ -454,7 +521,8 @@ export function challengeView(challenge, { isGM, actorInfo }) {
         name: info?.name ?? '',
         img: info?.img ?? '',
         missing: !info,
-        pontos: entry.pontos,
+        // Na descida, a altura que falta (ou o quanto desceu, com a PA escondida)
+        pontos: shownPoints(challenge, entry.pontos, { isGM }),
         // Equilíbrio: d4 que restam (`null` = reserva cheia, calculada da Acrobacia ao usar)
         reserva: entry.reserva ?? null,
         reservaCheia: entry.reserva === undefined,
@@ -512,6 +580,7 @@ export function sheetChallenges(data, actorId, { isGM }) {
         destrancar: challenge.tipo === 'destrancar',
         sustentar,
         grupo: challenge.modo === 'grupo',
+        unidadeChave: challenge.tipo,
       };
       if (challenge.tipo === 'destrancar') {
         // Destrancar: as tentativas do grupo (usadas / máximo) e o botão de tentar enquanto aberta
@@ -527,9 +596,11 @@ export function sheetChallenges(data, actorId, { isGM }) {
       }
       return {
         ...base,
-        pontos,
+        // Na descida, a altura que falta (ou o quanto desceu, com a PA escondida)
+        pontos: shownPoints(challenge, pontos, { isGM }),
         pa: showTarget && !sustentar ? challenge.pa : null,
         chegou: showTarget && !sustentar && pontos >= challenge.pa,
+        unidadeChave: unitKey(challenge, { isGM }),
       };
     });
 }
@@ -681,11 +752,14 @@ export function createChallengeTestFlag({ challenge, actorId, dt, abordagem }) {
     zeraAoFalhar: false,
   };
   if (tipo === 'escalar') {
-    // Rápida soma a RA, cautelosa a RB; falhar é queda (dano = pontos acumulados, e zera)
+    // Rápida soma a RA, cautelosa a RB; falhar é queda. Subindo, o dano são os pontos acumulados
+    // (e eles zeram); descendo, a altura que falta (e ele chega embaixo). O sentido fica no
+    // registro: se o mestre trocar no meio, o cartão já rolado aplica a queda que valia
     Object.assign(rules, {
       somaPassar: approach === 'cautelosa' ? 'rb' : 'ra',
       somaFalhar: 'nada',
       falha: 'queda',
+      sentido: challenge.sentido === 'descer' ? 'descer' : 'subir',
     });
   } else if (tipo === 'alcancar') {
     // Segura: cada sucesso é uma das duas ações; falhar dá dano = RB e recomeça.
@@ -785,7 +859,7 @@ export function applyChallengeFailure(challenge, flag, result) {
   if (!kind || !challenge?.ativo) return null;
   const entry = challenge.participantes.find((item) => item.actorId === flag.actorId);
   if (!entry) return null;
-  if (kind === 'queda') return { ...applyFall(challenge, flag.actorId), kind };
+  if (kind === 'queda') return { ...applyFall(challenge, flag.actorId, flag.sentido), kind };
   if (kind === 'soltar') return { challenge: setPoints(challenge, flag.actorId, 0), dano: 0, kind };
   return {
     challenge: flag.zeraAoFalhar ? setPoints(challenge, flag.actorId, 0) : challenge,
@@ -805,15 +879,25 @@ export function applyChallengeTest(challenge, actorId, gain) {
 }
 
 /**
- * Queda da escalada (o mestre, ao clicar em «aplicar queda»): o dano é igual aos pontos que o
- * personagem tinha acumulado, e os pontos voltam a 0. `null` se o desafio não está ativo ou o
- * personagem saiu dele.
+ * Queda da escalada (o mestre, ao clicar em «aplicar queda»). Subindo: o dano é igual aos pontos
+ * que o personagem tinha acumulado, e os pontos voltam a 0. Descendo (v0.27.1): o dano é a altura
+ * que ainda faltava (começou em 10, desceu 4: cai de 6, −6 PV), e ele chega embaixo (progresso =
+ * PA), terminando o desafio. `null` se o desafio não está ativo ou o personagem saiu dele.
+ * @param {object} challenge
+ * @param {string} actorId
+ * @param {string} [sentido] O do registro do teste; sem ele (cartões antigos), «subir».
  * @returns {{challenge: object, dano: number}|null}
  */
-export function applyFall(challenge, actorId) {
+export function applyFall(challenge, actorId, sentido = 'subir') {
   if (!challenge?.ativo) return null;
   const entry = challenge.participantes.find((item) => item.actorId === actorId);
   if (!entry) return null;
+  if (sentido === 'descer') {
+    return {
+      challenge: setPoints(challenge, actorId, challenge.pa),
+      dano: climbHeight(challenge, entry.pontos),
+    };
+  }
   return { challenge: setPoints(challenge, actorId, 0), dano: entry.pontos };
 }
 
@@ -831,20 +915,30 @@ export function loseHitPoints(pv, loss) {
  * @param {object} result Resultado atual do teste (com os dados que o cartão mostra agora).
  * Na escalada, um teste que falhou vira «queda» (`queda: true`): o botão aplica o dano igual aos
  * pontos acumulados (`dano`, os pontos de agora) e zera os pontos.
- * @param {{canApply: boolean, claimable: boolean, busy: boolean, challenge: object|null}} viewer
- *   `claimable` e `busy` vêm da reserva do botão (veja `isAdvanceClaimable` em chase.js).
+ * Na descida, o dano é a altura que falta; com a PA escondida, o jogador não vê o número antes do
+ * clique (`danoOculto`).
+ * @param {{canApply: boolean, claimable: boolean, busy: boolean, challenge: object|null,
+ *   isGM?: boolean}} viewer `claimable` e `busy` vêm da reserva do botão (veja
+ *   `isAdvanceClaimable` em chase.js); `isGM` decide se a PA escondida aparece.
  */
-export function challengeBarView(flag, result, { canApply, claimable, busy, challenge }) {
+export function challengeBarView(
+  flag,
+  result,
+  { canApply, claimable, busy, challenge, isGM = false },
+) {
   const pontos = challengeTestGain(result, flag);
   const failed = !challengeTestSuccess(result, flag.dt);
   const falha = failed ? failureKind(flag) : null;
   const queda = falha === 'queda';
+  // Descida (v0.27.1): o sentido de quando o teste foi rolado
+  const descer = flag.sentido === 'descer';
   const atuais = challenge
     ? (challenge.participantes.find((entry) => entry.actorId === flag.actorId)?.pontos ?? 0)
     : 0;
-  // Dano mostrado antes do clique: na queda, os pontos de agora; no alcançar, a RB ou a RA
+  // Dano mostrado antes do clique: na queda, os pontos de agora (descendo, a altura que falta);
+  // no alcançar, a RB ou a RA
   let dano = 0;
-  if (falha === 'queda') dano = atuais;
+  if (falha === 'queda') dano = descer && challenge ? climbHeight(challenge, atuais) : atuais;
   else if (falha === 'dano') dano = Math.max(0, rollPart(result, flag.danoRolagem));
   let kind = 'passou';
   if (result.criticalFailure) kind = 'falhaCritica';
@@ -863,6 +957,9 @@ export function challengeBarView(flag, result, { canApply, claimable, busy, chal
     abordagem: flag.abordagem ?? null,
     falha,
     queda,
+    descer,
+    // Descida com a PA escondida: o jogador não vê o dano antes do clique (entregaria a altura)
+    danoOculto: queda && descer && Boolean(challenge) && !targetVisible(challenge, { isGM }),
     zera: Boolean(flag.zeraAoFalhar),
     dano,
     passos: flag.passos ?? 0,

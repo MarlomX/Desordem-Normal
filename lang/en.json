@@ -1256,7 +1256,17 @@
         "Soltou": "{nome}: the object was dropped (rounds reset).",
         "Alcancou": "{nome}: reached it!",
         "AcaoRegistrada": "{nome}: action {n} of 2 recorded.",
-        "Sustentando": "{nome}: holding for {n} rounds."
+        "Sustentando": "{nome}: holding for {n} rounds.",
+        "Descida": {
+          "passou": "passed, goes down {pontos}",
+          "crit": "critical success, goes down {pontos}",
+          "Somar": "Go down {pontos}",
+          "Somado": "{nome}: went down {pontos}.",
+          "Queda": "failed: falls for {dano} HP and reaches the bottom",
+          "QuedaOculta": "failed: fall",
+          "AplicarQuedaOculta": "Apply fall",
+          "QuedaAplicada": "Fall on {nome}: −{dano} HP, reached the bottom."
+        }
       },
       "Tipo": {
         "estendido": "Extended test",
@@ -1274,7 +1284,8 @@
       "DtRapida": "Fast DT (adds HR)",
       "DtCautelosa": "Careful DT (adds LR)",
       "Escalar": {
-        "Dica": "Always individual. Each test picks fast or careful in the pre-test window. Failing is a fall: the test's card gets the button that deals damage equal to the accumulated points and resets the points."
+        "Dica": "Always individual. Each test picks fast or careful in the pre-test window. Failing is a fall: the test's card gets the button that deals damage equal to the accumulated points and resets the points.",
+        "DicaDescida": "Always individual. The character starts at the height (the target) and each passed test goes down by the high roll (fast) or the low roll (careful), until reaching 0. Failing is a fall: the card button deals damage equal to the height still left, and the character reaches the bottom."
       },
       "Abordagem": {
         "rapida": "fast",
@@ -1290,7 +1301,9 @@
         "alcancar": "actions",
         "sustentar": "rounds held",
         "equilibrio": "rounds",
-        "destrancar": "attempts"
+        "destrancar": "attempts",
+        "descer": "height left",
+        "descerOculto": "descended"
       },
       "DtSegura": "Environment DT (safe)",
       "DtArriscada": "Risky DT (+3)",
@@ -1388,7 +1401,14 @@
         "participantes": "Participants only",
         "mestre": "GM only"
       },
-      "VisibilidadeRotulo": "Visible to"
+      "VisibilidadeRotulo": "Visible to",
+      "SentidoRotulo": "Direction",
+      "Altura": "Height",
+      "RevelarAltura": "Show the height to players",
+      "Sentido": {
+        "subir": "Climb up",
+        "descer": "Climb down"
+      }
     },
     "Elementos": {
       "morte": "Death",

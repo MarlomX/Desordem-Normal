@@ -37,12 +37,13 @@
         {{else}}
         <span>{{#if grupo}}{{localize "DESORDEM.Desafio.Modo.grupo"}}{{else}}{{localize "DESORDEM.Desafio.Modo.individual"}}{{/if}}</span>
         {{#if escalar}}
+        {{#if descer}}<span><i class="fa-solid fa-arrow-down" aria-hidden="true"></i> {{localize "DESORDEM.Desafio.Sentido.descer"}}</span>{{/if}}
         <span>{{localize "DESORDEM.Perseguicao.DT"}} <strong>{{dtRapida}}/{{dtCautelosa}}</strong></span>
         {{else}}
         <span>{{localize "DESORDEM.Perseguicao.DT"}} <strong>{{dt}}</strong></span>
         {{/if}}
         {{#if custoPv}}<span>{{localize "DESORDEM.Desafio.CustoCurto"}} <strong>{{localize "DESORDEM.Desafio.CustoValor" pv=custoPv}}</strong></span>{{/if}}
-        {{#if mostrarPa}}<span>{{localize "DESORDEM.Desafio.PA"}} <strong>{{pa}}</strong></span>{{/if}}
+        {{#if mostrarPa}}<span>{{#if descer}}{{localize "DESORDEM.Desafio.Altura"}}{{else}}{{localize "DESORDEM.Desafio.PA"}}{{/if}} <strong>{{pa}}</strong></span>{{/if}}
         {{/if}}
       </div>
       {{#if grupo}}

@@ -124,8 +124,8 @@ export function challengeCardFor(actor) {
     isGM: game.user.isGM,
   }).map((entry) => ({
     ...entry,
-    // Chave montada (conferida à mão): DESORDEM.Desafio.Unidade.{tipo}
-    unidade: game.i18n.localize(`DESORDEM.Desafio.Unidade.${entry.tipo}`),
+    // Chave montada (conferida à mão): DESORDEM.Desafio.Unidade.{tipo, descer, descerOculto}
+    unidade: game.i18n.localize(`DESORDEM.Desafio.Unidade.${entry.unidadeChave}`),
   }));
   return list.length ? { lista: list, isGM: game.user.isGM } : null;
 }

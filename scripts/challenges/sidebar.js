@@ -21,6 +21,7 @@ import {
   TYPE_ICONS,
   challengeView,
   sidebarOrder,
+  unitKey,
   updateChallengeField,
   visibleChallenges,
 } from '../rolls/challenge.js';
@@ -72,8 +73,8 @@ async function listContext() {
         isGM && challenge.visibilidade !== 'todos'
           ? t(`DESORDEM.Desafio.Visibilidade.${challenge.visibilidade}`)
           : '',
-      // Chave montada (conferida à mão): DESORDEM.Desafio.Unidade.{tipo}
-      unidade: t(`DESORDEM.Desafio.Unidade.${challenge.tipo}`),
+      // Chave montada (conferida à mão): DESORDEM.Desafio.Unidade.{tipo, descer, descerOculto}
+      unidade: t(`DESORDEM.Desafio.Unidade.${unitKey(challenge, { isGM })}`),
       // Destrancar: selo de fechadura estragada (o «concluído» já vem da vista)
       estragada: challenge.tipo === 'destrancar' && lockStatus(challenge.fechadura) === 'estragada',
     })),

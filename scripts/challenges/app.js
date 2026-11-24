@@ -8,16 +8,20 @@ import { SYSTEM_ID } from '../config.js';
 import {
   CHALLENGE_MODES,
   CHALLENGE_VISIBILITY,
+  CLIMB_DIRECTIONS,
   ON_FAIL,
   ON_PASS,
   TYPE_ICONS,
   addParticipants,
   addableChallengeActors,
-  adjustPoints,
+  adjustShownPoints,
   challengeView,
+  isDescent,
   removeParticipant,
   typePoints,
   typeReserve,
+  typeShownPoints,
+  unitKey,
   updateChallengeField,
   withLock,
 } from '../rolls/challenge.js';
@@ -69,6 +73,7 @@ const CONFIG_FIELDS = new Set([
   'modo',
   'somaPassar',
   'somaFalhar',
+  'sentido',
   'revelarPa',
   'visibilidade',
 ]);
@@ -200,8 +205,17 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
       // Chave montada (conferida à mão): DESORDEM.Desafio.Tipo.{estendido,arrombar,escalar}
       tipoRotulo: t(`DESORDEM.Desafio.Tipo.${challenge.tipo}`),
       // Dica e unidade dos pontos de cada tipo (chaves montadas, conferidas à mão)
-      dica: t(`DESORDEM.Desafio.${TYPE_HINTS[challenge.tipo] ?? 'Estendido'}.Dica`),
-      pontosRotulo: t(`DESORDEM.Desafio.Unidade.${challenge.tipo}`),
+      // A descida tem dica própria (DESORDEM.Desafio.Escalar.DicaDescida)
+      dica: isDescent(challenge)
+        ? t('DESORDEM.Desafio.Escalar.DicaDescida')
+        : t(`DESORDEM.Desafio.${TYPE_HINTS[challenge.tipo] ?? 'Estendido'}.Dica`),
+      // Na descida, a unidade é a altura que falta (chave: DESORDEM.Desafio.Unidade.descer)
+      pontosRotulo: t(`DESORDEM.Desafio.Unidade.${unitKey(challenge, { isGM: true })}`),
+      // Escalar: subir ou descer (chaves montadas, conferidas à mão: DESORDEM.Desafio.Sentido.*)
+      sentidos:
+        challenge.tipo === 'escalar'
+          ? CLIMB_DIRECTIONS.map(option('DESORDEM.Desafio.Sentido', challenge.sentido))
+          : [],
       // Destrancar: faces possíveis, a senha guardada (lida do sussurro) e se a fechadura estragou
       ...(challenge.tipo === 'destrancar'
         ? {
@@ -267,7 +281,8 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
     const value = field.type === 'checkbox' ? field.checked : field.value;
     await mutateChallenge(this.#challengeId, (challenge) => {
       if (CONFIG_FIELDS.has(campo)) return updateChallengeField(challenge, campo, value);
-      if (campo === 'pontos') return typePoints(challenge, actorId, value);
+      // Na descida, o número digitado é a altura que falta (veja `typeShownPoints`)
+      if (campo === 'pontos') return typeShownPoints(challenge, actorId, value);
       if (campo === 'total') return typePoints(challenge, null, value);
       if (campo === 'reserva') return typeReserve(challenge, actorId, value);
       // Destrancar: campos da fechadura (lock.dados, lock.faces, lock.lado.N, lock.maximo,
@@ -285,8 +300,9 @@ export default class DesafioApp extends HandlebarsApplicationMixin(ApplicationV2
   static async #onAdjustPoints(event, target) {
     const delta = Number(target.dataset.delta);
     const actorId = target.dataset.actorId ?? null;
+    // Na descida, os botões agem na altura mostrada (− desce, + sobe de volta)
     await mutateChallenge(this.#challengeId, (challenge) =>
-      adjustPoints(challenge, actorId, delta),
+      adjustShownPoints(challenge, actorId, delta),
     );
   }
 

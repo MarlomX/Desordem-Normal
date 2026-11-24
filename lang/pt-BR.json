@@ -1256,7 +1256,17 @@
         "Soltou": "{nome}: o objeto foi solto (rodadas zeradas).",
         "Alcancou": "{nome}: alcançou!",
         "AcaoRegistrada": "{nome}: ação {n} de 2 registrada.",
-        "Sustentando": "{nome}: sustentando há {n} rodadas."
+        "Sustentando": "{nome}: sustentando há {n} rodadas.",
+        "Descida": {
+          "passou": "passou, desce {pontos}",
+          "crit": "sucesso crítico, desce {pontos}",
+          "Somar": "Descer {pontos}",
+          "Somado": "{nome}: desceu {pontos}.",
+          "Queda": "falhou: queda de {dano} PV, e chega embaixo",
+          "QuedaOculta": "falhou: queda",
+          "AplicarQuedaOculta": "Aplicar queda",
+          "QuedaAplicada": "Queda em {nome}: −{dano} PV, chegou embaixo."
+        }
       },
       "Tipo": {
         "estendido": "Teste estendido",
@@ -1274,7 +1284,8 @@
       "DtRapida": "DT rápida (soma a RA)",
       "DtCautelosa": "DT cautelosa (soma a RB)",
       "Escalar": {
-        "Dica": "Sempre individual. Cada teste escolhe rápida ou cautelosa na janela pré-teste. Falhar é uma queda: o cartão do teste ganha o botão que aplica o dano igual aos pontos acumulados e zera os pontos."
+        "Dica": "Sempre individual. Cada teste escolhe rápida ou cautelosa na janela pré-teste. Falhar é uma queda: o cartão do teste ganha o botão que aplica o dano igual aos pontos acumulados e zera os pontos.",
+        "DicaDescida": "Sempre individual. O personagem começa na altura (a PA) e cada teste passado desce a RA (rápida) ou a RB (cautelosa), até chegar a 0. Falhar é uma queda: o botão do cartão aplica o dano igual à altura que ainda faltava, e o personagem chega embaixo."
       },
       "Abordagem": {
         "rapida": "rápida",
@@ -1290,7 +1301,9 @@
         "alcancar": "ações",
         "sustentar": "rodadas sustentadas",
         "equilibrio": "rodadas",
-        "destrancar": "tentativas"
+        "destrancar": "tentativas",
+        "descer": "de altura",
+        "descerOculto": "descidos"
       },
       "DtSegura": "DT do ambiente (segura)",
       "DtArriscada": "DT arriscada (+3)",
@@ -1388,7 +1401,14 @@
         "participantes": "Só os participantes",
         "mestre": "Só o mestre"
       },
-      "VisibilidadeRotulo": "Visível para"
+      "VisibilidadeRotulo": "Visível para",
+      "SentidoRotulo": "Sentido",
+      "Altura": "Altura",
+      "RevelarAltura": "Mostrar a altura aos jogadores",
+      "Sentido": {
+        "subir": "Subir",
+        "descer": "Descer"
+      }
     },
     "Elementos": {
       "morte": "Morte",
