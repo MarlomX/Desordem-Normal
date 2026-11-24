@@ -12,8 +12,9 @@ import {
   evaluateSelection,
   selectionToOptions,
 } from '../scripts/rolls/roll-dialog.js';
+import { legacyDice } from './helpers.js';
 
-const context = { skillKey: 'vigor', impeto: 0, pd: 0 };
+const context = { pd: 0, recursos: { impeto: 0 }, diceOptions: legacyDice('vigor') };
 
 test('activeBoosts: dano não letal dá +d6 sem custo, mas só quando o teste o permite', () => {
   assert.deepEqual(activeBoosts(['naoLetal'], { ...context, allowNonLethal: true }), {
@@ -32,7 +33,7 @@ test('activeBoosts: dano não letal dá +d6 sem custo, mas só quando o teste o 
 test('activeBoosts: o dano não letal soma ao dado de ímpeto', () => {
   const boosts = activeBoosts(['impetoDado', 'naoLetal'], {
     ...context,
-    impeto: 2,
+    recursos: { impeto: 2 },
     allowNonLethal: true,
   });
   assert.deepEqual(boosts.extraDice, [4, 6]);

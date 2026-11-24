@@ -7,6 +7,7 @@ import {
   evaluateSelection,
   selectionToOptions,
 } from '../scripts/rolls/roll-dialog.js';
+import { legacyDice } from './helpers.js';
 
 const baseInput = {
   skillKey: 'atletismo',
@@ -107,7 +108,8 @@ test('todo tipo de dado do preview tem rótulo em português e em inglês', () =
   const model = buildRollModel({
     ...baseInput,
     baseExtraDice: [6],
-    has: { impeto: true, sorrateiro: true, naoLetal: true },
+    has: { naoLetal: true },
+    diceOptions: legacyDice('furtividade'),
     skillKey: 'furtividade',
     resources: { impeto: 5, pd: 9 },
     fearDie: 6,

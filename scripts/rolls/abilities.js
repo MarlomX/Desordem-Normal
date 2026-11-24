@@ -14,9 +14,7 @@ import {
   SNEAK_SKILLS,
   addCostBags,
   costShortfall,
-  dialogDiceOptions,
   emptyCostBag,
-  legacyEffects,
 } from './ability-effects.js';
 
 // Os números das habilidades antigas agora moram no catálogo de efeitos (ability-effects.js)
@@ -107,20 +105,15 @@ export function resolveWithValues(plan, values) {
   return resolveTest({ ...plan, rng: sequenceRng(values) });
 }
 
-/** Dados extras das automações antigas de ímpeto e furtividade (padrão de `activeBoosts`). */
-const LEGACY_DICE = [...legacyEffects('impeto'), ...legacyEffects('sorrateiro')];
-
 /**
  * Bônus das habilidades marcadas na janela pré-teste, e o que cada uma gasta.
  * @param {string[]} active Opções marcadas (ids dos efeitos `dadoExtra`, 'naoLetal', 'defesa').
  * @param {Object} context
- * @param {string} context.skillKey Perícia do teste.
  * @param {number} context.pd PD disponíveis (já descontado o custo do pavor).
  * @param {number} [context.pv] PV disponíveis.
  * @param {Object<string, number>} [context.recursos] Recursos das habilidades (ímpeto...).
- * @param {number} [context.impeto] Atalho antigo: espaços de ímpeto (se `recursos` faltar).
  * @param {object[]} [context.diceOptions] Dados extras do ator (`dialogDiceOptions`); sem isso,
- *   valem os das automações antigas de ímpeto e furtividade.
+ *   nenhum dado extra entra (só o não letal e o da defesa).
  * @param {boolean} [context.allowNonLethal=false] Só o teste de lesão aceita o dano não letal.
  * @param {boolean} [context.allowDefense=false] Só o teste de Defender-se aceita o d6 da defesa.
  * @returns {{extraDice: number[], pdCost: number, pvCost: number,
@@ -130,22 +123,13 @@ const LEGACY_DICE = [...legacyEffects('impeto'), ...legacyEffects('sorrateiro')]
  */
 export function activeBoosts(
   active,
-  {
-    skillKey,
-    impeto = 0,
-    pd,
-    pv = 0,
-    recursos,
-    diceOptions,
-    allowNonLethal = false,
-    allowDefense = false,
-  },
+  { pd, pv = 0, recursos, diceOptions, allowNonLethal = false, allowDefense = false },
 ) {
-  const wallet = { pd, pv, recursos: recursos ?? { impeto } };
+  const wallet = { pd, pv, recursos: recursos ?? {} };
   const extraDice = [];
   const used = [];
   let total = emptyCostBag();
-  const options = diceOptions ?? dialogDiceOptions(LEGACY_DICE, { skillKey });
+  const options = diceOptions ?? [];
   // Posição do dado do companheiro animal em `extraDice` (`null` = ele não entrou)
   let companionAt = null;
   for (const option of options) {

@@ -7,16 +7,19 @@ import {
   normalizeDt,
   selectionToOptions,
 } from '../scripts/rolls/roll-dialog.js';
+import { legacyDice } from './helpers.js';
 
-const base = (overrides = {}) =>
-  buildRollModel({
+// `legacy` diz quais habilidades antigas o personagem tem (os dados vão prontos em `diceOptions`)
+const base = ({ legacy = { impeto: true, sorrateiro: true }, ...overrides } = {}) => {
+  const input = {
     skillKey: 'luta',
     attrDie: 8,
     skillDie: 6,
-    has: { impeto: true, sorrateiro: true },
     resources: { impeto: 2, pd: 10 },
     ...overrides,
-  });
+  };
+  return buildRollModel({ diceOptions: legacyDice(input.skillKey, legacy), ...input });
+};
 
 test('a sorrateira só aparece em Crime e Furtividade', () => {
   assert.deepEqual(
@@ -30,7 +33,7 @@ test('a sorrateira só aparece em Crime e Furtividade', () => {
 });
 
 test('só mostra habilidades que o personagem tem', () => {
-  assert.deepEqual(base({ has: {} }).abilities, []);
+  assert.deepEqual(base({ legacy: { impeto: false, sorrateiro: false } }).abilities, []);
 });
 
 test('habilidade sem recurso fica indisponível com o motivo', () => {

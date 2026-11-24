@@ -514,8 +514,7 @@ export function sameIds(a, b) {
 /** Dados que o jogador diz no Investigar e no Observar (o valor do dado é o limite da DT). */
 export const INVESTIGATION_DICE = Object.freeze([4, 6, 8, 10, 12]);
 
-/** Modos da janela: Investigar/Observar (valor do dado) ou Examinar (resultado do teste). */
-export const INVESTIGATION_MODES = Object.freeze(['investigar', 'examinar']);
+// Modos da janela: Investigar/Observar (valor do dado) ou Examinar (resultado do teste).
 
 /** Chave de um grupo de perícia: o nome do bloco em minúsculas (como o jogador vê, juntado). */
 export const blockGroupKey = (block, t) => blockLabel(block, t).toLocaleLowerCase('pt-BR');

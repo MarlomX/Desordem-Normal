@@ -120,8 +120,6 @@ export default class PersonagemModel extends foundry.abstract.TypeDataModel {
         impeto: new f.NumberField({ required: true, integer: true, min: 0, max: 5, initial: 0 }),
         analise: new f.NumberField({ required: true, integer: true, min: 0, max: 4, initial: 0 })
       }),
-      // Habilidades ativadas para o próximo teste (ex.: dado extra de ímpeto)
-      ativas: new f.ArrayField(new f.StringField({ required: true, blank: false })),
       // (Lesões e traumas são efeitos da aba Condição desde a v0.22.2: veja `efeitos`)
       // Relações: grau 0 a 3 (as bolinhas), descrição narrativa e marcador "usada"
       relacoes: new f.ArrayField(

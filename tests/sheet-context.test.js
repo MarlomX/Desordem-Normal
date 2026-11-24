@@ -5,7 +5,6 @@ import {
   buildAttributeRows,
   buildSkillRows,
   buildAreaRows,
-  buildLesionRows,
   buildFearChoices,
   buildRelationRows,
   buildEffectRows,
@@ -21,13 +20,10 @@ import {
   resourcePercent,
   stepResource,
   stepCounter,
-  PIP_MAX,
-  buildPips,
   togglePip,
   buildStatusTags,
   isResourceLow,
   normalizeSearch,
-  rowMatches,
   filterSkillRows,
   nextOpenIds,
 } from '../scripts/sheets/context.js';
@@ -95,20 +91,6 @@ test('buildAreaRows lista as áreas na ordem e marca o dado de cada uma', () => 
   assert.equal(linhas[0].options.find((o) => o.selected).value, 8);
   assert.equal(linhas[1].options.find((o) => o.selected).value, 4);
 });
-test('buildLesionRows agrupa lesões repetidas e mantém a ordem', () => {
-  const linhas = buildLesionRows(['semOlho', 'lacearacaoProfunda', 'lacearacaoProfunda'], (k) =>
-    k.toUpperCase(),
-  );
-  assert.deepEqual(linhas, [
-    { key: 'semOlho', label: 'SEMOLHO', count: 1, repeated: false },
-    { key: 'lacearacaoProfunda', label: 'LACEARACAOPROFUNDA', count: 2, repeated: true },
-  ]);
-  assert.deepEqual(
-    buildLesionRows([], (k) => k),
-    [],
-  );
-});
-
 test('buildFearChoices marca o dado atual e rotula a opção sem pavor', () => {
   const opcoes = buildFearChoices(8, 'Sem pavor');
   assert.deepEqual(
@@ -159,15 +141,6 @@ test('buildRelationRows trava tudo quando a ficha não é editável', () => {
   });
   assert.equal(row.locked, true);
   assert.equal(row.canInvoke, false);
-});
-
-test('buildLesionRows acrescenta a descrição só quando há uma função para isso', () => {
-  const [row] = buildLesionRows(
-    ['semOlho'],
-    (k) => k,
-    (k) => `desc:${k}`,
-  );
-  assert.equal(row.description, 'desc:semOlho');
 });
 
 test('buildEffectRows: linha compacta com resumo, duração e descrição', () => {
@@ -574,12 +547,7 @@ test('stepCounter nunca fica abaixo de 0', () => {
   assert.equal(stepCounter(2, 1), 3);
 });
 
-test('buildPips preenche até o valor e togglePip apaga o último ao clicar nele', () => {
-  assert.deepEqual(
-    buildPips(2, PIP_MAX.analise).map((p) => p.filled),
-    [true, true, false, false],
-  );
-  assert.equal(buildPips(0, PIP_MAX.impeto).length, 5);
+test('togglePip apaga o último marcador ao clicar nele e leva o recurso até os outros', () => {
   assert.equal(togglePip(2, 4), 4);
   assert.equal(togglePip(2, 2), 1);
   assert.equal(togglePip(1, 1), 0);

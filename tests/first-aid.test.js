@@ -108,7 +108,7 @@ test('Defender-se: o +d6 vem marcado na janela e entra nos dados (desmarcado, n√
   );
   const marcado = evaluateSelection(model, { ...emptySelection(7), active: ['defesa'] });
   assert.ok(marcado.slots.some((slot) => slot.sides === 6));
-  const opcoes = { skillKey: 'acrobacia', impeto: 0, pd: 0 };
+  const opcoes = { pd: 0, recursos: { impeto: 0 } };
   assert.deepEqual(activeBoosts(['defesa'], { ...opcoes, allowDefense: true }).extraDice, [6]);
   assert.deepEqual(activeBoosts([], { ...opcoes, allowDefense: true }).extraDice, []);
   // Fora da defesa, a caixa n√£o vale nada mesmo que venha marcada

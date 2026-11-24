@@ -14,6 +14,7 @@ import {
   creatureSceneReset,
   sceneTargets,
 } from '../scripts/rolls/abilities.js';
+import { legacyDice } from './helpers.js';
 
 test('só testes com DT que falharam enchem o ímpeto; o perdedor do oposto também', () => {
   assert.equal(impetoFillsOnFailure({ success: false }), true);
@@ -90,28 +91,67 @@ test('resolveWithValues mantém o dado de pavor por último', () => {
 });
 
 test('activeBoosts: ímpeto dá +d4 por 1 espaço; a furtiva dá +d8 por 3 PD só em Crime e Furtividade', () => {
-  assert.deepEqual(activeBoosts(['impetoDado'], { skillKey: 'luta', impeto: 2, pd: 0 }), {
-    extraDice: [4],
-    pdCost: 0,
-    pvCost: 0,
-    resourceCosts: { impeto: 1 },
-    impetoCost: 1,
-    used: ['impetoDado'],
-    companionAt: null,
+  assert.deepEqual(
+    activeBoosts(['impetoDado'], {
+      pd: 0,
+      recursos: { impeto: 2 },
+      diceOptions: legacyDice('luta'),
+    }),
+    {
+      extraDice: [4],
+      pdCost: 0,
+      pvCost: 0,
+      resourceCosts: { impeto: 1 },
+      impetoCost: 1,
+      used: ['impetoDado'],
+      companionAt: null,
+    },
+  );
+  assert.deepEqual(
+    activeBoosts(['sorrateiro'], {
+      pd: 5,
+      recursos: { impeto: 0 },
+      diceOptions: legacyDice('furtividade'),
+    }),
+    {
+      extraDice: [8],
+      pdCost: 3,
+      pvCost: 0,
+      resourceCosts: {},
+      impetoCost: 0,
+      used: ['sorrateiro'],
+      companionAt: null,
+    },
+  );
+  assert.deepEqual(
+    activeBoosts(['sorrateiro'], {
+      pd: 5,
+      recursos: { impeto: 0 },
+      diceOptions: legacyDice('luta'),
+    }).used,
+    [],
+  );
+  assert.deepEqual(
+    activeBoosts(['sorrateiro'], {
+      pd: 2,
+      recursos: { impeto: 0 },
+      diceOptions: legacyDice('crime'),
+    }).used,
+    [],
+  );
+  assert.deepEqual(
+    activeBoosts(['impetoDado'], {
+      pd: 9,
+      recursos: { impeto: 0 },
+      diceOptions: legacyDice('luta'),
+    }).used,
+    [],
+  );
+  const both = activeBoosts(['impetoDado', 'sorrateiro'], {
+    pd: 3,
+    recursos: { impeto: 1 },
+    diceOptions: legacyDice('crime'),
   });
-  assert.deepEqual(activeBoosts(['sorrateiro'], { skillKey: 'furtividade', impeto: 0, pd: 5 }), {
-    extraDice: [8],
-    pdCost: 3,
-    pvCost: 0,
-    resourceCosts: {},
-    impetoCost: 0,
-    used: ['sorrateiro'],
-    companionAt: null,
-  });
-  assert.deepEqual(activeBoosts(['sorrateiro'], { skillKey: 'luta', impeto: 0, pd: 5 }).used, []);
-  assert.deepEqual(activeBoosts(['sorrateiro'], { skillKey: 'crime', impeto: 0, pd: 2 }).used, []);
-  assert.deepEqual(activeBoosts(['impetoDado'], { skillKey: 'luta', impeto: 0, pd: 9 }).used, []);
-  const both = activeBoosts(['impetoDado', 'sorrateiro'], { skillKey: 'crime', impeto: 1, pd: 3 });
   assert.deepEqual(both.extraDice, [4, 8]);
 });
 
@@ -167,9 +207,8 @@ test('activeBoosts usa os dados extras informados (efeitos) no lugar dos antigos
     { key: 'e2', die: 6, cost: { pd: 0, pv: 0, recursos: {} } },
   ];
   const boosts = activeBoosts(['e1', 'e2', 'impetoDado'], {
-    skillKey: 'luta',
-    impeto: 5,
     pd: 2,
+    recursos: { impeto: 5 },
     diceOptions,
   });
   // `impetoDado` não está entre as opções informadas: não vale
@@ -182,10 +221,7 @@ test('activeBoosts usa os dados extras informados (efeitos) no lugar dos antigos
     used: ['e1', 'e2'],
     companionAt: null,
   });
-  assert.deepEqual(
-    activeBoosts(['e1'], { skillKey: 'luta', impeto: 0, pd: 1, diceOptions }).used,
-    [],
-  );
+  assert.deepEqual(activeBoosts(['e1'], { pd: 1, recursos: { impeto: 0 }, diceOptions }).used, []);
 });
 
 test('creatureSceneReset zera os passos e tira só os efeitos de cena (v0.23.3)', () => {

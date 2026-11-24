@@ -22,6 +22,7 @@ import {
   releaseHide,
   reserveHide,
 } from '../scripts/rolls/stealth.js';
+import { legacyDice } from './helpers.js';
 
 // ---------------------------------------------------------------------------------------------
 // Janela pré-teste
@@ -99,7 +100,7 @@ test('bônus manuais e Sorrateiro continuam entrando no teste de esconderijo', (
   const model = buildRollModel({
     ...baseInput,
     stealth: { teste: true },
-    has: { sorrateiro: true },
+    diceOptions: legacyDice('furtividade', { impeto: false }),
   });
   const evaluated = evaluateSelection(
     model,

@@ -327,38 +327,86 @@ test('dialogDiceOptions filtra pelo tipo de teste, ignora repetidos e aceita qua
   assert.deepEqual([last.group, last.checked, last.itemName], ['acao', true, 'Escudo']);
 });
 
-test('equivalência: a janela pré-teste com os efeitos antigos é igual à de antes', () => {
+// Os dois testes abaixo comparavam os efeitos antigos com o atalho `has` da janela, removido na
+// v0.28.0. Os valores esperados são os que o atalho dava (conferidos na v0.27.3).
+test('equivalência: a janela pré-teste com os efeitos antigos dá as mesmas opções de antes', () => {
   const base = {
     attrDie: 8,
     skillDie: 6,
     resources: { impeto: 1, pd: 2 },
   };
+  const impeto = {
+    key: 'impetoDado',
+    die: 4,
+    cost: { pd: 0, pv: 0, recursos: { impeto: 1 } },
+    available: true,
+    reason: null,
+  };
+  const sorrateiro = {
+    key: 'sorrateiro',
+    die: 8,
+    cost: { pd: 3, pv: 0, recursos: {} },
+    available: false,
+    reason: 'pd',
+  };
+  const expected = { furtividade: [impeto, sorrateiro], luta: [impeto] };
   for (const skillKey of ['furtividade', 'luta']) {
-    const before = buildRollModel({ ...base, skillKey, has: { impeto: true, sorrateiro: true } });
     const after = buildRollModel({
       ...base,
       skillKey,
       diceOptions: dialogDiceOptions(legacyActor('impeto', 'sorrateiro'), { skillKey }),
     });
     const strip = (abilities) => abilities.map(({ itemName, ...rest }) => rest);
-    assert.deepEqual(strip(after.abilities), strip(before.abilities), skillKey);
+    assert.deepEqual(strip(after.abilities), expected[skillKey], skillKey);
   }
 });
 
 test('equivalência: activeBoosts com os efeitos antigos dá os mesmos dados e custos de antes', () => {
+  const none = { extraDice: [], pdCost: 0, pvCost: 0, resourceCosts: {}, impetoCost: 0, used: [] };
   const cases = [
-    [['impetoDado'], 'luta', 2, 0],
-    [['sorrateiro'], 'furtividade', 0, 5],
-    [['sorrateiro'], 'luta', 0, 5],
-    [['impetoDado', 'sorrateiro'], 'crime', 1, 3],
-    [['impetoDado'], 'luta', 0, 9],
+    [
+      ['impetoDado'],
+      'luta',
+      2,
+      0,
+      {
+        ...none,
+        extraDice: [4],
+        resourceCosts: { impeto: 1 },
+        impetoCost: 1,
+        used: ['impetoDado'],
+      },
+    ],
+    [
+      ['sorrateiro'],
+      'furtividade',
+      0,
+      5,
+      { ...none, extraDice: [8], pdCost: 3, used: ['sorrateiro'] },
+    ],
+    [['sorrateiro'], 'luta', 0, 5, none],
+    [
+      ['impetoDado', 'sorrateiro'],
+      'crime',
+      1,
+      3,
+      {
+        ...none,
+        extraDice: [4, 8],
+        pdCost: 3,
+        resourceCosts: { impeto: 1 },
+        impetoCost: 1,
+        used: ['impetoDado', 'sorrateiro'],
+      },
+    ],
+    [['impetoDado'], 'luta', 0, 9, none],
   ];
-  for (const [active, skillKey, impeto, pd] of cases) {
+  for (const [active, skillKey, impeto, pd, expected] of cases) {
     const diceOptions = dialogDiceOptions(legacyActor('impeto', 'sorrateiro'), { skillKey });
-    assert.deepEqual(
-      activeBoosts(active, { skillKey, impeto, pd, diceOptions }),
-      activeBoosts(active, { skillKey, impeto, pd }),
-    );
+    assert.deepEqual(activeBoosts(active, { pd, recursos: { impeto }, diceOptions }), {
+      ...expected,
+      companionAt: null,
+    });
   }
 });
 

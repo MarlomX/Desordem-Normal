@@ -412,7 +412,6 @@ export function skillTestOptions(actor, skillKey, attribute, options) {
   // ataque, também os efeitos da arma (`weaponId`)
   const entries = actorEffects(actor, { weaponId });
   const boosts = activeBoosts(active, {
-    skillKey,
     pd: resources.pd - fear.pdCost,
     pv: system.pv?.value ?? 0,
     recursos: actorResources(actor, entries).values,

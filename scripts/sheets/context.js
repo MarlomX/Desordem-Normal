@@ -296,23 +296,6 @@ export function buildExtraRows(extras, group, { emptyLabel, skillStep }) {
 }
 
 /**
- * Lesões do personagem agrupadas por tipo (ex.: duas lacerações viram uma linha com ×2).
- * @param {string[]} keys Chaves das lesões, na ordem em que foram recebidas.
- * @param {(key: string) => string} label Devolve o nome traduzido.
- */
-export function buildLesionRows(keys, label, describe) {
-  const counts = new Map();
-  for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
-  return [...counts].map(([key, count]) => ({
-    key,
-    label: label(key),
-    count,
-    repeated: count > 1,
-    ...(describe ? { description: describe(key) } : {}),
-  }));
-}
-
-/**
  * Opções do seletor do dado de pavor (0 = sem pavor, d4 a d12 e d20).
  * @param {number} current Dado de pavor atual.
  * @param {string} noneLabel Texto de "sem pavor".
@@ -723,14 +706,6 @@ export function stepResource(resource, delta) {
 /** Contador de testes da cena (lesão ou trauma) após −/+; nunca abaixo de 0. */
 export function stepCounter(current, delta) {
   return Math.max(0, current + delta);
-}
-
-/** Máximo de marcadores clicáveis de cada recurso de habilidade. */
-export const PIP_MAX = { impeto: 5, analise: 4 };
-
-/** Marcadores (bolinhas) de um recurso: `filled` para os que já estão preenchidos. */
-export function buildPips(value, max) {
-  return Array.from({ length: max }, (_, i) => ({ n: i + 1, filled: i + 1 <= value }));
 }
 
 /**

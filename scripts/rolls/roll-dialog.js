@@ -3,14 +3,7 @@
  * controlar ou abraçar o pavor), com custos e uma prévia dos dados. Lógica pura, sem Foundry.
  */
 import { DEFENSE_BONUS_DIE } from './abilities.js';
-import {
-  DIE_SIDES,
-  addCostBags,
-  costShortfall,
-  dialogDiceOptions,
-  emptyCostBag,
-  legacyEffects,
-} from './ability-effects.js';
+import { DIE_SIDES, addCostBags, costShortfall, emptyCostBag } from './ability-effects.js';
 import { NON_LETHAL_BONUS_DIE } from './injury.js';
 import { BONUS_SLOTS, bonusDice, normalizeBonus } from './bonus.js';
 import { CONTROL_FEAR_COST, EMBRACE_FEAR_COST, FEAR_MIN_DIE, fearStepShift } from './fear.js';
@@ -39,11 +32,11 @@ export function normalizeDt(value, fallback = DEFAULT_DT) {
  * @param {number} input.skillDie Dado da perícia já com passos.
  * @param {number[]} [input.baseExtraDice] Dados extras fixos do teste (dados que entram sempre; o
  *   companheiro animal é uma opção de `diceOptions` desde a v0.27.0).
- * @param {{impeto?: boolean, sorrateiro?: boolean, naoLetal?: boolean}} input.has Opções do
- *   teste: `naoLetal` só no teste de lesão (+d6, sem custo); `defesa` só no teste de Defender-se
- *   (+d6, sem custo, já marcado). `impeto` e `sorrateiro` são um atalho para os dados das
- *   automações antigas, usado só quando `diceOptions` não é informado.
- * @param {object[]} [input.diceOptions] Dados extras dos efeitos do ator (`dialogDiceOptions`).
+ * @param {{naoLetal?: boolean, defesa?: boolean}} input.has Opções do teste: `naoLetal` só no
+ *   teste de lesão (+d6, sem custo); `defesa` só no teste de Defender-se (+d6, sem custo, já
+ *   marcado).
+ * @param {object[]} [input.diceOptions] Dados extras dos efeitos do ator (`dialogDiceOptions`);
+ *   sem isso, a seção de habilidades só tem as opções de `has`.
  * @param {{pd: number, pv?: number, impeto?: number, recursos?: Object<string, number>,
  *   dadosBonus?: number[]}} input.resources PD, PV e recursos das habilidades atuais (`impeto`
  *   sozinho é o atalho antigo para `recursos.impeto`) e a reserva de dados bônus.
@@ -83,15 +76,7 @@ export function buildRollModel({
   const abilities = [];
   const wallet = walletFrom(resources);
   // Dados extras dos efeitos (ímpeto, furtividade...): cada um com o seu custo (PD, PV, recurso)
-  const options =
-    diceOptions ??
-    dialogDiceOptions(
-      [
-        ...(has.impeto ? legacyEffects('impeto') : []),
-        ...(has.sorrateiro ? legacyEffects('sorrateiro') : []),
-      ],
-      { skillKey },
-    );
+  const options = diceOptions ?? [];
   for (const option of options) {
     // Indisponível por um motivo próprio da opção ('ferido': o companheiro animal ferido) ou pelo
     // primeiro saldo que não dá: 'pd', 'pv' ou a chave do recurso

@@ -275,8 +275,7 @@
       },
       "Bonus": {
         "Titulo": "Dados Bônus",
-        "Vazio": "Sem dado",
-        "Dica": "Até 2 dados extras, só para este teste."
+        "Vazio": "Sem dado"
       },
       "PrimeirosSocorrosDica": "Quantas vezes este personagem recebeu primeiros socorros nesta cena. Cada uma soma +3 à DT da próxima (o mestre soma sozinho a cada tentativa).",
       "DadosBonusDica": "Dados bônus recebidos (somem na Nova cena).",
@@ -331,7 +330,6 @@
       "AceitarTitulo": "Responder ao teste oposto",
       "Contra": "Contra: {nome}",
       "ContraQualquer": "Sem alvo: qualquer outro personagem ou criatura pode aceitar.",
-      "Ator": "Quem disputa",
       "Pericia": "Perícia",
       "Descricao": "O que está em disputa",
       "DescricaoDica": "opcional, ex.: pegar a arma caída",
@@ -794,15 +792,12 @@
       "AnaliseInvalida": "Valores inválidos ou marcadores insuficientes.",
       "AnaliseNota": "{nome} usa {habilidade}: {pontos} marcador(es) para ajustar os dados.",
       "AnaliseBotao": "Usar análise ({pontos})",
-      "ProntidaoJaUsada": "Esta habilidade já foi usada neste teste.",
-      "ProntidaoSemPD": "PD insuficientes para repetir o dado.",
       "ProntidaoTitulo": "Repetir um dado",
       "ProntidaoEscolha": "Dado a rolar de novo:",
       "ProntidaoNota": "{nome} usa {habilidade}: rola de novo o d{dado}: {de} → {para}.",
       "ProntidaoBotao": "{nome} ({custo} PD)",
       "AnimalFerido": "se feriu e não ajuda mais nesta cena.",
       "Impeto": "Ímpeto",
-      "ImpetoDado": "+d4 no próximo teste (1 espaço)",
       "ImpetoPasso": "Subir atributo (3)",
       "ImpetoAcao": "Ação extra (3)",
       "Marcadores": "Marcadores",
@@ -810,8 +805,6 @@
       "Esquivar": "Esquivar",
       "Curar": "Curar aliado",
       "AnimalFeridoMarca": "Companheiro ferido",
-      "Sorrateiro": "+d8 no próximo teste de Crime ou Furtividade (3 PD)",
-      "ProntidaoRodada": "Esta habilidade já foi usada nesta rodada de combate.",
       "ProntidaoQuem": "Personagem:",
       "ProntidaoIndisponivel": "Nenhum personagem seu pode usar esta habilidade agora (já usada nesta rodada ou sem PD).",
       "ProntidaoRolou": "rola de novo o d{dado}: {de} → {para}."
@@ -925,7 +918,6 @@
       },
       "Erro": {
         "JaExiste": "Já existe uma perseguição. Exclua-a antes de criar outra.",
-        "JaAgiu": "{nome} já agiu nesta rodada.",
         "NaoEmAndamento": "A perseguição não está em andamento.",
         "SemMestre": "Não há mestre online para somar os pontos de avanço.",
         "AvancoBloqueado": "O teste não vale mais como avanço (já agiu nesta rodada). Ele foi feito como um teste comum."

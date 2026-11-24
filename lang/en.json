@@ -275,8 +275,7 @@
       },
       "Bonus": {
         "Titulo": "Bonus Dice",
-        "Vazio": "No die",
-        "Dica": "Up to 2 extra dice, for this test only."
+        "Vazio": "No die"
       },
       "PrimeirosSocorrosDica": "How many times this character received first aid in this scene. Each adds +3 to the next DC (the GM adds it automatically on each attempt).",
       "DadosBonusDica": "Bonus dice received (lost at New scene).",
@@ -331,7 +330,6 @@
       "AceitarTitulo": "Answer the opposed test",
       "Contra": "Against: {nome}",
       "ContraQualquer": "No target: any other character or creature can accept.",
-      "Ator": "Who contests",
       "Pericia": "Skill",
       "Descricao": "What is contested",
       "DescricaoDica": "optional, e.g. grab the fallen weapon",
@@ -794,15 +792,12 @@
       "AnaliseInvalida": "Invalid values or not enough markers.",
       "AnaliseNota": "{nome} uses {habilidade}: {pontos} marker(s) to adjust the dice.",
       "AnaliseBotao": "Use analysis ({pontos})",
-      "ProntidaoJaUsada": "This ability has already been used on this test.",
-      "ProntidaoSemPD": "Not enough DP to reroll the die.",
       "ProntidaoTitulo": "Reroll a die",
       "ProntidaoEscolha": "Die to roll again:",
       "ProntidaoNota": "{nome} uses {habilidade}: rerolls the d{dado}: {de} → {para}.",
       "ProntidaoBotao": "{nome} ({custo} DP)",
       "AnimalFerido": "got hurt and won't help for the rest of the scene.",
       "Impeto": "Drive",
-      "ImpetoDado": "+d4 on the next test (1 space)",
       "ImpetoPasso": "Raise attribute (3)",
       "ImpetoAcao": "Extra action (3)",
       "Marcadores": "Markers",
@@ -810,8 +805,6 @@
       "Esquivar": "Dodge",
       "Curar": "Heal ally",
       "AnimalFeridoMarca": "Companion hurt",
-      "Sorrateiro": "+d8 on the next Crime or Stealth test (3 DP)",
-      "ProntidaoRodada": "This ability was already used this combat round.",
       "ProntidaoQuem": "Character:",
       "ProntidaoIndisponivel": "None of your characters can use this ability now (already used this round or not enough DP).",
       "ProntidaoRolou": "rerolls the d{dado}: {de} → {para}."
@@ -925,7 +918,6 @@
       },
       "Erro": {
         "JaExiste": "A chase already exists. Delete it before creating another.",
-        "JaAgiu": "{nome} has already acted this round.",
         "NaoEmAndamento": "The chase is not in progress.",
         "SemMestre": "There is no GM online to add the advance points.",
         "AvancoBloqueado": "The test no longer counts as an advance (already acted this round). It was rolled as a normal test."

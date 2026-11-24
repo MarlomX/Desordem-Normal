@@ -35,14 +35,7 @@ import { resolveDefense, resolveMelee, resolveSimple } from './opposed-rules.js'
 /** Tipos de cartão. */
 export const OPPOSED_TYPES = Object.freeze(['simples', 'corpo', 'defesa']);
 
-/** Estados do cartão. */
-export const OPPOSED_STATES = Object.freeze([
-  'aberto',
-  'resolvido',
-  'empate',
-  'cancelado',
-  'repetido',
-]);
+// Estados do cartão (campo `estado`): aberto, resolvido, empate, cancelado e repetido.
 
 /** Lados do cartão. */
 export const SIDES = Object.freeze(['a', 'b']);

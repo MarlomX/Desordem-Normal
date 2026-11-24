@@ -10,8 +10,7 @@
 /** Dados que têm desenho (por número de lados). Qualquer outro usa o desenho neutro (d0). */
 export const DIE_FACE_SIDES = Object.freeze([4, 6, 8, 10, 12, 20]);
 
-/** Tamanhos: 'padrao' (o da linha de texto), 'grande' (dados do cartão) e 'mini' (setas de passo). */
-export const DIE_FACE_SIZES = Object.freeze(['padrao', 'grande', 'mini']);
+// Tamanhos: 'padrao' (o da linha de texto), 'grande' (dados do cartão) e 'mini' (setas de passo).
 
 /** Brilho de passo: 'up' (azul, o dado subiu) ou 'down' (vermelho, o dado desceu). */
 export const DIE_FACE_STEPS = Object.freeze(['up', 'down']);
