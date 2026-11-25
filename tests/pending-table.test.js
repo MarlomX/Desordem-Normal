@@ -1,3 +1,4 @@
+// Tabelas pendentes no chat: criação, reserva e não letal.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

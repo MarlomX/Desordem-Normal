@@ -1,3 +1,4 @@
+// Dano: rolagem alta, modificador da arma, crítico e limites.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { computeDamage, applyDamage } from '../scripts/rolls/damage.js';

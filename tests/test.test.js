@@ -1,3 +1,4 @@
+// Teste básico: soma, DT, críticos e dados extras.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveTest, planDice } from '../scripts/rolls/test.js';

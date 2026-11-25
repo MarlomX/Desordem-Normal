@@ -1,7 +1,7 @@
 /**
  * Quem pode aceitar o lado em aberto de um teste oposto (v0.25.3), em função pura (testada em
  * tests/opposed-candidates.test.js). A leitura do Foundry (tokens, atores, usuário) fica em
- * `opposed-chat.js`.
+ * `chat/common.js`.
  */
 
 /** Tipos de ator que entram num teste oposto. */

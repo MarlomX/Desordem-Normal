@@ -1,3 +1,4 @@
+// Apresentação do resultado: sucesso, falha, críticos e título.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveTest } from '../scripts/rolls/test.js';

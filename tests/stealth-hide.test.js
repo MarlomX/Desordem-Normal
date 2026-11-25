@@ -1,3 +1,4 @@
+// Furtividade: teste de esconderijo pela janela pré-teste.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

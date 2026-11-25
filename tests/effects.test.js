@@ -1,3 +1,4 @@
+// Efeitos ativos: criação, passos, duração e o formato antigo.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

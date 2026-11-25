@@ -1,3 +1,4 @@
+// Janela pré-teste: custos em PD, PV e recursos, e o que sobra.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { effectView, newStepEffect } from '../scripts/rolls/effects.js';

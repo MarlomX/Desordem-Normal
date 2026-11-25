@@ -1,3 +1,4 @@
+// Tabelas de lesão e trauma: o que fica na ficha e os efeitos de cada resultado.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

@@ -1,3 +1,4 @@
+// Teste de lesão: DT da cena, dano não letal e resultado.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

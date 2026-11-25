@@ -1,3 +1,4 @@
+// Recuperação de PV, PD e Sanidade sem passar do máximo.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyRecovery } from '../scripts/rolls/recovery.js';

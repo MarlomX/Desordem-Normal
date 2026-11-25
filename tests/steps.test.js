@@ -1,3 +1,4 @@
+// Passos manuais e de efeitos: limites, saldo, indicador e origens.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

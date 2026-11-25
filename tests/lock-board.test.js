@@ -1,3 +1,4 @@
+// Quadro da fechadura: tentativas, linhas de teoria e marcas.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

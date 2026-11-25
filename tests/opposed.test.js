@@ -1,3 +1,4 @@
+// Resultado do teste oposto: vencedor, margem, empate e críticos.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveOpposed } from '../scripts/rolls/opposed.js';

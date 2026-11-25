@@ -1,3 +1,4 @@
+// Guardião: assumir o ataque por outro personagem e o vínculo do token.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { canGuardWeaponCard, guardWeaponCard, guardianData } from '../scripts/rolls/guardian.js';

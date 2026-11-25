@@ -1,3 +1,4 @@
+// Ajuda: passos dados por cada tamanho de dado.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { canHelp, helpSteps, applyHelp } from '../scripts/rolls/help.js';

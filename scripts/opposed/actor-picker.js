@@ -1,7 +1,7 @@
 /**
  * Janela «Responder ao teste oposto» (v0.25.4): abas Personagens/Criaturas, lista com retrato e
  * busca por nome. Aqui ficam as decisões, em funções puras (tests/opposed-picker.test.js); o
- * desenho e os cliques ficam em `opposed-chat.js` e `templates/dialog/oposto-ator.hbs`.
+ * desenho e os cliques ficam em `chat/propose.js` e `templates/dialog/oposto-ator.hbs`.
  */
 import { normalizeSearch } from '../sheets/context.js';
 import { OPPOSED_ACTOR_TYPES } from './candidates.js';

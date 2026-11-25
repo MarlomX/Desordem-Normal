@@ -1,3 +1,5 @@
+// Modelo de dados do personagem (system.*): atributos, perícias, aptidões, ofícios, PV/PD/Sanidade,
+// passos, recursos e condição. Os dados antigos passam pelas migrações de migrations.js ao abrir.
 import { ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import {
   migrateCraftSkill,

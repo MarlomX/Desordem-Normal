@@ -1,3 +1,4 @@
+// Dano não letal pela habilidade: dado extra e tabela de lesão.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { activeBoosts } from '../scripts/rolls/abilities.js';

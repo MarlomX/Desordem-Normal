@@ -1,3 +1,4 @@
+// Ficha da criatura: abas, itens aceitos e perícias visíveis.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

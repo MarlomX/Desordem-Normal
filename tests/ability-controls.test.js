@@ -1,3 +1,4 @@
+// Botões das habilidades na ficha: quais efeitos viram botão e o rótulo de cada um.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

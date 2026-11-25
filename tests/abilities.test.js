@@ -1,3 +1,4 @@
+// Habilidades automáticas: ímpeto, análise e os dados que cada uma acrescenta ao teste.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

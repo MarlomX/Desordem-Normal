@@ -1,3 +1,4 @@
+// Migrações dos dados antigos: Ofício, recursos das habilidades e notas da criatura.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

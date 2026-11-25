@@ -1,3 +1,4 @@
+// Contexto da ficha: opções de dado e as linhas de atributos, perícias, relações e efeitos.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

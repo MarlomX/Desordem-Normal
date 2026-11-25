@@ -1,3 +1,4 @@
+// Desenho do dado de pavor: tamanhos, camadas do número e valor mostrado.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

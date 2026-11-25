@@ -1,3 +1,4 @@
+// Dados bônus: normalização, espaços preenchidos e a ordem entre os dados rolados.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BONUS_SLOTS, normalizeBonus, bonusDice } from '../scripts/rolls/bonus.js';

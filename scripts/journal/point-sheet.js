@@ -26,6 +26,9 @@
  * ator; cada vínculo tem olho próprio, jogadores específicos e pode ser amarrado a uma linha. Um
  * clique abre o documento; itens têm «Entregar a…» (só o mestre) com quantidade disponível. A
  * permissão de ver o documento é dada em `point-hooks.js` quando o vínculo é revelado.
+ *
+ * v0.28.8: as janelas de escolha (para quem revelar, que ator recebe um item) e a lista de
+ * jogadores ficam em `point-dialogs.js`; aqui fica o que usa o estado da folha.
  */
 import { SYSTEM_ID, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import {

@@ -1,3 +1,4 @@
+// Modelo dos desafios: padrões, números digitados e normalização.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

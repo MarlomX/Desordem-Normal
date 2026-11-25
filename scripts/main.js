@@ -1,3 +1,5 @@
+// Ponto de entrada do sistema: registra modelos, fichas, configurações, ganchos, sockets e a API
+// em game.desordem (init / setup / ready).
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from './config.js';
 import PersonagemModel from './data/personagem.js';
 import { CriaturaModel } from './data/ameaca.js';

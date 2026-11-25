@@ -1,3 +1,4 @@
+// Estado do cartão do teste oposto: lados, alvos e registro.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

@@ -1,3 +1,4 @@
+// Perseguição: ciclo de vida, participantes e o que o mestre e o jogador podem ver e abrir.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';

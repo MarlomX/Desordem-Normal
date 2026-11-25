@@ -1,3 +1,4 @@
+// Fechadura: senha, respostas por posição, padrões e limites.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

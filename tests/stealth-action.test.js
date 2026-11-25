@@ -1,3 +1,4 @@
+// Furtividade: DT das ações, vaga na janela e destinos do distrair.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

@@ -1,3 +1,4 @@
+// Furtividade: ação chamativa e chamar atenção.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

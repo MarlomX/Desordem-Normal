@@ -1,3 +1,4 @@
+// Desafios de arrombar e escalar: predefinições, DTs e custos.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

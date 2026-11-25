@@ -1,3 +1,4 @@
+// Penalidades da perseguição e consequência da furtividade.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

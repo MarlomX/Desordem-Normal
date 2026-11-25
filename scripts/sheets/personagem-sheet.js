@@ -1,3 +1,5 @@
+// Ficha do personagem (ApplicationV2): abas, rolagens pelos botões, equipamento, condição, efeitos
+// e as partes leves (#LIGHT_PARTS) que redesenham sem montar a ficha inteira.
 import { SYSTEM_ID, ATRIBUTOS, PERICIAS, APTIDOES, OFICIOS } from '../config.js';
 import { rollSkill, rollAptitude, rollCraft } from '../rolls/chat.js';
 import { rollInjuryTest } from '../rolls/health.js';

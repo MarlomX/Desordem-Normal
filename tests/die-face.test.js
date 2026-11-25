@@ -1,3 +1,4 @@
+// Face do dado no chat e na ficha: classes, número e tamanhos.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveTest } from '../scripts/rolls/test.js';

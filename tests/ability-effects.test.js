@@ -1,3 +1,4 @@
+// Catálogo de efeitos das habilidades: normalização, parâmetros e números de formulário.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

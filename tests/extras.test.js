@@ -1,3 +1,4 @@
+// Áreas extras de aptidão e ofício: chaves, busca, acrescentar, editar e remover.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

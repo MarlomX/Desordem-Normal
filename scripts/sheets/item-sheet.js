@@ -1,3 +1,5 @@
+// Folha dos itens (arma, armadura, item, habilidade e efeito): campos de cada tipo e o editor da
+// lista de efeitos das habilidades e equipamentos.
 import { SYSTEM_ID, PERICIAS } from '../config.js';
 import {
   ARMOR_KINDS,

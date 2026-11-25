@@ -1,3 +1,4 @@
+// Tabela de falha crítica: os 8 resultados e os efeitos de cada um.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { effectView } from '../scripts/rolls/effects.js';

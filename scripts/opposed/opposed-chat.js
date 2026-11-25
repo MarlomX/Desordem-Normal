@@ -18,7 +18,11 @@
  */
 
 // Desde a v0.28.8 o código mora em `chat/`; este arquivo só reexporta (os imports de
-// fora continuam iguais).
+// fora continuam iguais):
+//   - chat/common.js: templates, estado do módulo (pedidos em andamento, fila) e as escolhas;
+//   - chat/propose.js: as janelas da ficha e a proposta (passo 1 e a escolha do ator);
+//   - chat/card.js: os botões do cartão (rolar, cancelar, repetir, aplicar dano; passos 2 e 4);
+//   - chat/gm.js: o que só o mestre ativo grava e os ganchos do chat (passo 3).
 export { proposeOpposed } from './chat/propose.js';
 export { renderOpposedCard } from './chat/card.js';
 export { registerOpposedHooks } from './chat/gm.js';

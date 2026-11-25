@@ -1,3 +1,4 @@
+// Desafio de alcançar: modos seguro e arriscado, progresso e dano.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

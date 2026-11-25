@@ -1,3 +1,4 @@
+// Fases do combate: ordem, áreas e rodada atual.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

@@ -1,3 +1,4 @@
+// Editor da lista de efeitos: acrescentar, remover, mover e editar parâmetros.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

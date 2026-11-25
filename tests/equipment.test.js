@@ -1,3 +1,4 @@
+// Equipamento: armadura, mãos em uso, perícia e dano da arma, usos dos itens.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

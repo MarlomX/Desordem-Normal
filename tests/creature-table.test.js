@@ -1,3 +1,4 @@
+// Tabelas das criaturas (furtividade): faixas, dado e linhas.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

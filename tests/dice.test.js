@@ -1,3 +1,4 @@
+// Escada de dados: subir e descer passos entre d4 e d12.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { stepUp, stepDown, stepShift, rollDie, sequenceRng } from '../scripts/rolls/dice.js';

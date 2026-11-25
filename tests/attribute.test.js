@@ -1,3 +1,4 @@
+// Atributo de cada perícia, aptidão e ofício, e a troca de atributo na ficha.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PERICIAS, APTIDOES, OFICIOS } from '../scripts/config.js';

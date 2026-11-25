@@ -1,3 +1,4 @@
+// Desafio de equilíbrio: diferença dos d10, registro e reserva.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

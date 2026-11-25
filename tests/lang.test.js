@@ -1,3 +1,4 @@
+// Idiomas: mesmas chaves e marcadores em pt-BR e en, e chaves usadas nos templates.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';

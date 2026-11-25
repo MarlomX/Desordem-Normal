@@ -1,3 +1,4 @@
+// Notas da ficha: campos e HTML gravado e enriquecido.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

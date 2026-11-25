@@ -1,3 +1,4 @@
+// Direção dos passos na ficha (para cima, para baixo, no limite).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

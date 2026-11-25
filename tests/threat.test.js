@@ -1,3 +1,4 @@
+// Criaturas: reconhecimento, recursos e dano com RD.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

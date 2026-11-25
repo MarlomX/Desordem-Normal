@@ -1,3 +1,4 @@
+// Teste estendido pela janela pré-teste: opções, registro e resultado.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {

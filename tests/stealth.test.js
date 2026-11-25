@@ -1,3 +1,4 @@
+// Furtividade: ciclo de vida, rodadas, dados de esconderijo e visibilidade.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
