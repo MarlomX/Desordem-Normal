@@ -1,0 +1,49 @@
+/* Desordem-Normal — Base: fonte dos números e as variáveis de cor e superfície (temas claro e escuro).
+   Carregado na ordem de system.json (styles). */
+
+/* Fonte dos números (dados, DT, custos): Atkinson Hyperlegible Mono, licença OFL (styles/fontes/OFL.txt).
+   Só dígitos e sinais, para não afetar o resto do texto. */
+@font-face {
+  font-family: 'Desordem Numeros';
+  src: url('fontes/numeros-600.woff2') format('woff2');
+  font-weight: 600;
+  unicode-range: U+0030-0039, U+002B, U+002D, U+002E, U+2212;
+}
+
+@font-face {
+  font-family: 'Desordem Numeros';
+  src: url('fontes/numeros-700.woff2') format('woff2');
+  font-weight: 700 900;
+  unicode-range: U+0030-0039, U+002B, U+002D, U+002E, U+2212;
+}
+
+/* ===== Ficha em abas e visual (v0.12.x) ===== */
+/* Cores e superfícies da ficha. Funcionam nos temas claro e escuro: as superfícies são
+   camadas translúcidas da própria cor do texto. */
+.desordem-normal,
+.desordem-teste {
+  --dn-contorno-numero: rgb(0 0 0 / 0.9);
+  --dn-fonte-numeros: 'Desordem Numeros', var(--font-primary), sans-serif;
+  --dn-accent: #3fa7b5;
+  --dn-accent-line: color-mix(in srgb, var(--dn-accent) 55%, transparent);
+  --dn-accent-soft: color-mix(in srgb, var(--dn-accent) 20%, transparent);
+  --dn-surface: color-mix(in srgb, currentColor 6%, transparent);
+  --dn-surface-strong: color-mix(in srgb, currentColor 12%, transparent);
+  --dn-border: color-mix(in srgb, currentColor 25%, transparent);
+  --dn-pv: #c8453f;
+  --dn-pd: #4a7fd0;
+  --dn-mental: #8a67d6;
+  --dn-pavor-brilho: #9fd6ee;
+  --dn-gold: #d4a017;
+  --dn-die: #8a8f98;
+}
+
+.theme-light .desordem-normal,
+.theme-light .desordem-teste,
+.desordem-normal.theme-light {
+  --dn-accent: #1f7f8d;
+  --dn-pv: #b3302a;
+  --dn-pd: #2f62b8;
+  --dn-mental: #6f48c0;
+  --dn-gold: #a77a00;
+}

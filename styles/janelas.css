@@ -1,0 +1,423 @@
+/* Desordem-Normal — Janela de pré-teste: custos, atributos, prévia e tipos de teste.
+   Carregado na ordem de system.json (styles). */
+
+/* Janela pré-teste: prévia dos dados, grupos de escolhas e resumo de custos */
+.desordem-pre {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Largura fixa: a janela não muda de tamanho (nem desloca a DT) quando aparecem custos e erros */
+  width: 400px;
+  max-width: 100%;
+}
+
+.desordem-pre__titulo {
+  margin: 0;
+  font-size: 1.35em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.desordem-pre__previa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 3.8em;
+}
+
+/* Dados da prévia: bem maiores que antes, com número grande e em negrito */
+.desordem-pre__previa .desordem-forma {
+  --dn-forma-tam: 3.4em;
+}
+
+.desordem-pre__previa .desordem-forma__valor {
+  font-size: calc(var(--dn-forma-tam) * 0.4);
+}
+
+.desordem-pre__grupo {
+  margin: 0;
+  padding: 6px 10px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+}
+
+.desordem-pre__grupo legend {
+  padding: 0 6px;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.desordem-pre__opcao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.desordem-pre__opcao.is-indisponivel {
+  opacity: 0.55;
+}
+
+.desordem-pre__nome {
+  font-weight: 600;
+}
+
+.desordem-pre__custo,
+.desordem-pre__motivo {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+/* Janela pré-teste: DT, espaços de dado extra e custos em destaque */
+.desordem-pre__dt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.desordem-pre__dt .desordem-passos-ctl {
+  justify-content: center;
+}
+
+.desordem-pre__dt-nome {
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.desordem-pre__dt input {
+  width: 3.6em;
+  height: 1.8em;
+  text-align: center;
+  font-size: 1.3em;
+  font-weight: 700;
+}
+
+.desordem-pre__slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.desordem-pre__slot.is-travado .desordem-forma {
+  filter: drop-shadow(0 0 4px var(--dn-accent));
+}
+
+.desordem-pre__origem {
+  font-size: 0.7em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.desordem-pre__custos {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  min-height: 3.2em;
+}
+
+.desordem-custo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.5em;
+  padding: 4px 14px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+  line-height: 1.1;
+}
+
+.desordem-custo strong {
+  font-size: 1.9em;
+  font-weight: 800;
+}
+
+.desordem-custo__unidade {
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.desordem-custo small {
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+
+.desordem-custo--pd {
+  border-color: var(--dn-pd);
+  color: var(--dn-pd);
+}
+
+.desordem-custo--impeto {
+  border-color: var(--dn-accent);
+  color: var(--dn-accent);
+}
+
+.desordem-custo.is-negativo {
+  border-color: #e0675a;
+  color: #e0675a;
+}
+
+.desordem-custo__nenhum {
+  align-self: center;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.desordem-pre__erro {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-align: center;
+  color: #e0675a;
+}
+
+/* Números com a fonte legível (DT, custos, controle geral de passos) */
+.desordem-pre__dt input,
+.desordem-custo strong,
+.desordem-passos-ctl__valor,
+.desordem-passos-ctl button {
+  font-family: var(--dn-fonte-numeros);
+  font-variant-numeric: tabular-nums;
+}
+
+.desordem-previa-pavor {
+  display: inline-flex;
+}
+
+/* Áreas extras de Aptidão e Ofício: nome editável, botão de rolar, dado e remover */
+.desordem-extra__nome {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 3px 8px;
+  border: none;
+  border-bottom: 1px dashed rgba(128, 128, 128, 0.5);
+  background: transparent;
+  box-shadow: none;
+}
+
+.desordem-extra__adicionar {
+  width: auto;
+  margin: 6px 0 0;
+  padding: 2px 10px;
+}
+
+.desordem-extra__adicionar:disabled {
+  opacity: 0.5;
+}
+
+/* Etiqueta do atributo-base: mostra o atributo e abre a lista de troca (select invisível por cima) */
+.desordem-attr-etiqueta {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border: 1px dashed rgba(128, 128, 128, 0.6);
+  border-radius: 10px;
+  font-size: 0.7em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.desordem-attr-etiqueta__texto {
+  opacity: 0.75;
+}
+
+.desordem-attr-etiqueta__select {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.desordem-attr-etiqueta:has(.desordem-attr-etiqueta__select:disabled) {
+  border-style: none;
+}
+
+.desordem-attr-etiqueta:has(.desordem-attr-etiqueta__select:disabled)
+  .desordem-attr-etiqueta__select {
+  cursor: default;
+}
+
+.desordem-attr-etiqueta:focus-within {
+  border-color: var(--dn-accent);
+}
+
+/* Atributo diferente do padrão da perícia */
+.desordem-attr-etiqueta.is-alterado {
+  border-style: solid;
+  border-color: var(--dn-accent);
+  color: var(--dn-accent);
+}
+
+.desordem-attr-etiqueta.is-alterado .desordem-attr-etiqueta__texto {
+  opacity: 1;
+}
+
+/* ===== Perseguição: avanço na janela pré-teste (v0.16.2) ===== */
+.desordem-pre__avanco {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.desordem-pre__avanco.is-oculta {
+  display: none;
+}
+
+.desordem-pre__avanco-campo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.desordem-pre__aviso {
+  margin: 2px 0 0;
+  font-size: 0.8em;
+}
+
+/* ===== Furtividade: teste de esconderijo (v0.17.1) ===== */
+/* Janela pré-teste: sem DT e sem pavor enquanto «usar como teste de esconderijo» está marcado */
+.desordem-pre .desordem-pre__dt.is-oculta,
+.desordem-pre .desordem-pre__grupo.is-oculta {
+  display: none;
+}
+
+/* ===== Furtividade: esconder-se e distrair (v0.17.6) ===== */
+/* Destino do distrair: só aparece com «Distrair» marcado */
+.desordem-pre [data-furtiva-destino].is-oculta {
+  display: none;
+}
+
+/* ===== Janela pré-teste com rolagem e chamar atenção (v0.17.7) ===== */
+/* A janela pré-teste cresceu (furtividade, distrair): o conteúdo rola e os botões ficam à vista */
+.desordem-normal.desordem-pre-teste .dialog-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Reserva: se a janela não tiver .dialog-content, ela mesma nunca passa da altura da tela */
+.desordem-normal.desordem-pre-teste .window-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.desordem-pre [data-chamativa-dado].is-oculta {
+  display: none;
+}
+
+/* ===== PV ou PD em dois botões que se excluem (v0.17.8) ===== */
+/* Rádios com aparência de botão: o marcado fica aceso e o outro, apagado */
+.desordem-tipo-botoes {
+  display: flex;
+  gap: 6px;
+}
+
+.desordem-tipo-botoes__opcao {
+  position: relative;
+  flex: 1 1 0;
+  cursor: pointer;
+}
+
+.desordem-tipo-botoes__opcao input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.desordem-tipo-botoes__opcao span {
+  display: block;
+  padding: 6px 10px;
+  border: 2px solid var(--dn-border, currentColor);
+  border-radius: 6px;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0.45;
+}
+
+.desordem-tipo-botoes__opcao input:checked + span {
+  opacity: 1;
+}
+
+.desordem-tipo-botoes__opcao--pv input:checked + span {
+  border-color: var(--dn-pv, #c0392b);
+  color: var(--dn-pv, #c0392b);
+}
+
+.desordem-tipo-botoes__opcao--pd input:checked + span {
+  border-color: var(--dn-pd, #2f6fb5);
+  color: var(--dn-pd, #2f6fb5);
+}
+
+/* Teclado: o botão em foco ganha contorno */
+.desordem-tipo-botoes__opcao input:focus-visible + span {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Janela pré-teste: rápida ou cautelosa só com um desafio de escalada escolhido */
+.desordem-pre [data-estendido-escalar].is-oculta {
+  display: none;
+}
+
+.desordem-pre [data-estendido-escalar] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ===== Desafios: alcançar e sustentar (v0.18.3) ===== */
+/* Janela pré-teste: segura ou arriscada só com um desafio de alcançar escolhido; o aviso das
+   reduções de passo só com um desafio de sustentar */
+.desordem-pre [data-estendido-alcancar].is-oculta,
+.desordem-pre [data-estendido-sustentar].is-oculta {
+  display: none;
+}
+
+.desordem-pre [data-estendido-alcancar] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ===== Janela pré-teste genérica (v0.20.5) ===== */
+.desordem-custo--pv {
+  border-color: var(--dn-pv);
+  color: var(--dn-pv);
+}
+
+/* Custo em outro recurso de habilidade (o nome vai na unidade) */
+.desordem-custo--recurso {
+  border-color: var(--dn-mental);
+  color: var(--dn-mental);
+}

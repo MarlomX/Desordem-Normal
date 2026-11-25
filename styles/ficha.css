@@ -1,0 +1,765 @@
+/* Desordem-Normal — Fichas: cabeçalho, abas, recursos, barras, perícias, criaturas e elementos.
+   Carregado na ordem de system.json (styles). */
+
+/* Ficha de personagem */
+.desordem-ficha__nome {
+  font-size: 1.4em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: none;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  padding-left: 0;
+}
+
+.desordem-ficha__campo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.desordem-ficha__secao h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 2px solid var(--dn-accent-line);
+  font-size: 0.95em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dn-accent);
+}
+
+.desordem-ficha__atributos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.desordem-ficha__dica {
+  margin: 0 0 4px;
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.desordem-ficha__pericias {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 12px;
+}
+
+.desordem-ficha__pericia {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 2px;
+  border-radius: 6px;
+  background: var(--dn-surface);
+  /* Borda da linha na cor do dado final da perícia (a classe desordem-d-N define --dn-die) */
+  box-shadow: inset 0 0 0 2px var(--dn-die, transparent);
+}
+
+.desordem-ficha__rolar {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 3px 8px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+
+.desordem-ficha__estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-bottom: 4px;
+}
+
+.desordem-ficha__remover {
+  width: auto;
+  height: auto;
+  margin: 0 0 0 4px;
+  padding: 0 4px;
+  line-height: 1.2;
+}
+
+/* Relações */
+.desordem-relacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-relacao--usada .desordem-relacao__pessoa,
+.desordem-relacao--usada .desordem-relacao__descricao {
+  opacity: 0.6;
+}
+
+.desordem-relacao__grau {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.desordem-relacao__bolinha {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  line-height: 1;
+  font-size: 1.2em;
+}
+
+.desordem-relacao__pessoa {
+  flex: 1 1 8em;
+}
+
+.desordem-relacao__descricao {
+  flex: 3 1 14em;
+}
+
+.desordem-ficha__equipamento h4 {
+  margin: 8px 0 4px;
+}
+
+/* Botão «Nova cena» da criatura, abaixo dos efeitos */
+.desordem-criatura__nova-cena {
+  margin-top: 6px;
+}
+
+.desordem-ficha__alerta {
+  color: #c0392b;
+}
+
+/* Filtro de perícias */
+.desordem-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-bottom: 6px;
+}
+
+.desordem-filtro__busca {
+  display: flex;
+  flex: 1 1 12em;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 6px;
+  background: var(--dn-surface);
+}
+
+.desordem-filtro__busca input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.desordem-filtro__ordenar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.desordem-filtro__ordenar select {
+  width: auto;
+  height: auto;
+}
+
+.desordem-ficha__pericia.is-oculta,
+[data-filtro-vazio][hidden] {
+  display: none;
+}
+
+.desordem-ficha__soma {
+  opacity: 0.6;
+  font-size: 0.85em;
+}
+
+.desordem-ficha__pericia.is-destreinada .desordem-ficha__rolar {
+  opacity: 0.65;
+}
+
+/* A janela vira uma coluna: cabeçalho e abas fixos, cada aba rola sozinha. */
+.desordem-normal.personagem .window-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+  container: desordem / inline-size;
+}
+
+.desordem-aba {
+  display: none;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+}
+
+.desordem-aba.is-active {
+  display: flex;
+}
+
+/* Cabeçalho */
+.desordem-cab {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  background: linear-gradient(to bottom, var(--dn-accent-soft), transparent);
+}
+
+.desordem-cab__topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.desordem-ficha__retrato {
+  width: 68px;
+  height: 68px;
+  object-fit: cover;
+  border: 2px solid var(--dn-accent-line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.desordem-cab__identidade {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.desordem-ficha__nome:focus {
+  border-bottom-color: var(--dn-accent);
+  box-shadow: none;
+}
+
+.desordem-cab__linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.desordem-cab__campo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-cab__campo span {
+  opacity: 0.7;
+}
+
+.desordem-cab__campo input[type='text'] {
+  width: 9em;
+  text-transform: none;
+}
+
+.desordem-cab__campo--nivel input {
+  width: 3.5em;
+  text-align: center;
+}
+
+.desordem-cab__recursos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+}
+
+.desordem-recurso {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.desordem-recurso__linha,
+.desordem-recurso__teste {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-recurso__teste {
+  justify-content: flex-end;
+}
+
+.desordem-recurso--pv {
+  --dn-recurso: var(--dn-pv);
+}
+
+.desordem-recurso--pd {
+  --dn-recurso: var(--dn-pd);
+}
+
+.desordem-barra {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  height: 2em;
+  padding: 0 8px;
+  border: 1px solid var(--dn-recurso);
+  border-radius: 6px;
+  background:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--dn-recurso) 75%, transparent) var(--pct),
+      transparent var(--pct)
+    ),
+    var(--dn-surface);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: background 0.2s;
+}
+
+.desordem-barra.is-baixo {
+  box-shadow:
+    0 0 0 1px var(--dn-recurso),
+    0 0 8px var(--dn-recurso);
+}
+
+.desordem-barra__nome {
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  color: #fff;
+}
+
+.desordem-barra__valores {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  color: #fff;
+}
+
+/* Máximo calculado ao lado da base, quando um efeito o reduz (Laceração Profunda...) */
+.desordem-barra__maximo {
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+/* Campos de valor e de base: texto (aceitam conta, como -2 ou +3; veja relative-input.js) */
+.desordem-barra input.desordem-barra__campo {
+  width: 2.8em;
+  height: 1.5em;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+}
+
+.desordem-recurso__passo {
+  flex: 0 0 auto;
+  width: 1.9em;
+  height: 1.9em;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-recurso__passo--mini {
+  width: 1.5em;
+  height: 1.5em;
+  font-size: 0.85em;
+}
+
+.desordem-dt {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 1px 10px;
+  border-color: var(--dn-recurso);
+  font-size: 0.82em;
+  line-height: 1.5;
+}
+
+.desordem-dt:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dn-recurso) 35%, transparent);
+}
+
+.desordem-cab__rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.desordem-cab__rodape:empty {
+  display: none;
+}
+
+.desordem-etiqueta {
+  padding: 1px 9px;
+  border: 1px solid var(--dn-border);
+  border-radius: 10px;
+  background: var(--dn-surface-strong);
+  font-size: 0.78em;
+  font-weight: 600;
+}
+
+.desordem-etiqueta--saude {
+  border-color: var(--dn-pv);
+  background: color-mix(in srgb, var(--dn-pv) 28%, transparent);
+}
+
+.desordem-etiqueta--mental {
+  border-color: var(--dn-mental);
+  background: color-mix(in srgb, var(--dn-mental) 28%, transparent);
+}
+
+.desordem-etiqueta--grave {
+  border-color: var(--dn-pv);
+  background: var(--dn-pv);
+  color: #fff;
+}
+
+.desordem-etiqueta--armadura {
+  border-color: var(--dn-accent);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-pips {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.desordem-pips__nome {
+  margin-right: 2px;
+  font-size: 0.75em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.desordem-pips--impeto {
+  --dn-pip: var(--dn-gold);
+}
+
+.desordem-pips--analise {
+  --dn-pip: var(--dn-accent);
+}
+
+.desordem-pip {
+  width: 15px;
+  height: 15px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--dn-pip);
+  border-radius: 3px;
+  background: var(--dn-surface);
+}
+
+.desordem-pip.is-filled {
+  background: var(--dn-pip);
+}
+
+/* Navegação por abas */
+.desordem-abas {
+  flex: 0 0 auto;
+  display: flex;
+  border-top: 1px solid var(--dn-border);
+  border-bottom: 1px solid var(--dn-border);
+  background: var(--dn-surface);
+}
+
+.desordem-abas__aba {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 4px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.desordem-abas__aba:hover {
+  background: var(--dn-surface-strong);
+}
+
+.desordem-abas__aba.is-active {
+  border-bottom-color: var(--dn-accent);
+  background: var(--dn-accent-soft);
+  color: var(--dn-accent);
+}
+
+/* Janela larga: perícias em três colunas */
+@container desordem (min-width: 820px) {
+  .desordem-ficha__pericias {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Janela estreita: abas só com ícone e cabeçalho mais compacto */
+@container desordem (max-width: 540px) {
+  .desordem-abas__nome {
+    display: none;
+  }
+
+  .desordem-cab__recursos {
+    grid-template-columns: 1fr;
+  }
+
+  .desordem-cab__campo input[type='text'] {
+    width: 7em;
+  }
+
+  .desordem-ficha__pericias {
+    grid-template-columns: 1fr;
+  }
+}
+
+.desordem-ficha__rolar--extra {
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-ficha__furtividade .desordem-ficha__campo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ===== Ficha de criatura (v0.19.0) ===== */
+.desordem-cab--criatura .desordem-cab__recursos {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.desordem-elementos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.desordem-elementos__secundarios {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8em;
+}
+
+.desordem-elementos__rotulo {
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-elementos__nenhum {
+  font-style: italic;
+  opacity: 0.55;
+}
+
+.desordem-elementos__adicionar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+}
+
+.desordem-elementos__mais {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 0.85em;
+  line-height: 1;
+}
+
+.desordem-elementos__opcoes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+}
+
+.desordem-elementos__opcoes.is-oculta {
+  display: none;
+}
+
+.desordem-elemento {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0 6px;
+  line-height: 1.6;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 999px;
+  --desordem-elemento: var(--dn-accent, #3fa7b5);
+}
+
+.desordem-elemento__remover {
+  width: auto;
+  height: auto;
+  margin: 0 -2px 0 2px;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.desordem-elemento.is-secundario {
+  border-color: var(--desordem-elemento);
+  background: color-mix(in srgb, var(--desordem-elemento) 18%, transparent);
+}
+
+.desordem-elemento.is-principal {
+  border-color: var(--desordem-elemento);
+  background: color-mix(in srgb, var(--desordem-elemento) 40%, transparent);
+  font-weight: bold;
+}
+
+.desordem-elemento--morte {
+  --desordem-elemento: #6b6f76;
+}
+
+.desordem-elemento--sangue {
+  --desordem-elemento: #b3302a;
+}
+
+.desordem-elemento--energia {
+  --desordem-elemento: #8a67d6;
+}
+
+.desordem-elemento--conhecimento {
+  --desordem-elemento: #d4a017;
+}
+
+.desordem-elemento--medo {
+  --desordem-elemento: #e6e6e6;
+}
+
+.desordem-rd {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-rd input {
+  width: 3.5em;
+  text-align: center;
+}
+
+.desordem-criatura__todas {
+  width: auto;
+  margin-bottom: 6px;
+}
+
+.desordem-criatura__texto {
+  white-space: pre-wrap;
+}
+
+/* Aba Notas (personagem e criatura; v0.23.2): um editor rico do Foundry por campo */
+.desordem-notas__campo {
+  margin-bottom: 12px;
+}
+
+.desordem-notas prose-mirror {
+  min-height: 8em;
+}
+
+/* Texto de leitura (quem só observa a ficha) */
+.desordem-notas__texto {
+  min-height: 2em;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 6px;
+  background: var(--dn-surface);
+}
+
+/* ===== Primeiros socorros (v0.19.5) ===== */
+.desordem-ficha__socorro {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+/* ===== Recursos genéricos e dados bônus no cabeçalho (v0.20.4) ===== */
+/* Recursos de habilidades novas: cor de destaque da ficha (ímpeto e análise têm a sua) */
+.desordem-pips--outro {
+  --dn-pip: var(--dn-mental);
+}
+
+/* Recurso com máximo alto: número com − e + no lugar das bolinhas */
+.desordem-pips__passo {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-pips__numero {
+  min-width: 2.5em;
+  text-align: center;
+}
+
+.desordem-etiqueta--bonus {
+  border-color: var(--dn-gold);
+  background: color-mix(in srgb, var(--dn-gold) 18%, transparent);
+}

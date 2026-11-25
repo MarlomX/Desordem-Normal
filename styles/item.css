@@ -1,0 +1,457 @@
+/* Desordem-Normal — Itens e efeitos: folhas de item, habilidades, proficiências e efeitos.
+   Carregado na ordem de system.json (styles). */
+
+/* Efeitos da aba Condição (v0.22.1): linha compacta (resumo, duração, ✎ e ×) */
+.desordem-efeito-cond__descricao {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.desordem-efeito-cond__duracao {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border: 1px solid var(--dn-border);
+  border-radius: 999px;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+/* Duração «até o fim da cena»: destaque na cor do sistema (sai na Nova cena) */
+.desordem-efeito-cond__duracao[data-duracao='cena'] {
+  border-color: var(--dn-accent-line);
+  background: var(--dn-accent-soft);
+}
+
+.desordem-efeito-cond__editar {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0 6px;
+  line-height: 1.6;
+}
+
+.desordem-efeito-cond__botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.desordem-efeito-cond__botoes button {
+  flex: 1 1 10em;
+}
+
+/* Janela de um efeito da aba Condição */
+.desordem-efeito-janela .window-content {
+  overflow-y: auto;
+}
+
+.desordem-efeito-janela__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Lista «Do compêndio» */
+.desordem-efeito-lista__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.desordem-efeito-lista__grupo h4 {
+  margin: 6px 0 4px;
+  border-bottom: 1px solid var(--dn-border);
+}
+
+/*
+ * Cada entrada é um botão: o Foundry dá ao botão uma altura fixa e centraliza o conteúdo numa
+ * linha só, o que fazia o resumo vazar para fora da borda. Aqui o botão cresce com o texto e
+ * empilha as linhas (nome e pasta; resumo), alinhadas à esquerda.
+ */
+.desordem-efeito-lista__entrada {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 2px;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+  text-align: left;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.desordem-efeito-lista__titulo {
+  display: block;
+}
+
+.desordem-efeito-lista__pasta {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.desordem-efeito-lista__resumo {
+  display: block;
+  font-size: 0.85em;
+  line-height: 1.3;
+  opacity: 0.85;
+}
+
+.desordem-item-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-item-linha__nome {
+  flex: 1 1 12em;
+}
+
+.desordem-item-linha__marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Miniatura do item nas listas (v0.23.4): clicar abre a ficha do item */
+.desordem-item-miniatura {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  line-height: 0;
+}
+
+.desordem-item-miniatura img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border: 1px solid var(--dn-border);
+  border-radius: 4px;
+}
+
+/* Proficiência marcial (v0.23.3): botão inteiro; apagado sem ela, azul com ela */
+.desordem-proficiencia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 4px 0 8px;
+  opacity: 0.55;
+  filter: grayscale(1);
+}
+
+.desordem-proficiencia.is-ativa,
+.desordem-proficiencia.is-ativa:disabled {
+  opacity: 1;
+  filter: none;
+  color: #fff;
+  background: #2f7fa8;
+  border-color: #4cc3d9;
+  box-shadow: 0 0 6px color-mix(in srgb, #4cc3d9 50%, transparent);
+}
+
+/* Vinda de uma habilidade: travado (sem a mãozinha) e com a origem ao lado */
+.desordem-proficiencia:disabled {
+  cursor: default;
+}
+
+.desordem-proficiencia__origem {
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
+.desordem-item-linha__numero {
+  width: 3.5em;
+  text-align: center;
+}
+
+.desordem-item {
+  padding: 8px;
+}
+
+.desordem-item__cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.desordem-item__imagem {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+}
+
+/* Quem pode editar troca a imagem clicando nela (v0.23.4) */
+.desordem-item__imagem.is-editavel {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.desordem-item__imagem.is-editavel:hover {
+  outline: 2px solid var(--dn-accent);
+}
+
+.desordem-item__identidade {
+  flex: 1;
+}
+
+.desordem-item__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10em, 1fr));
+  gap: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.desordem-item__descricao textarea {
+  width: 100%;
+}
+
+/* Ficha do item: nunca passa da altura da tela; o conteúdo (campos e efeitos) rola por dentro */
+.desordem-normal.item .window-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Linha de equipamento: resumo dos efeitos do item, sempre visível embaixo do nome */
+.desordem-item-linha__efeitos {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
+/* Linha de equipamento: aviso (arma marcial sem proficiência) */
+.desordem-item-linha__aviso {
+  flex: 1 1 100%;
+  font-size: 0.85em;
+  color: #c0392b;
+}
+
+.desordem-efeito-ativo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-efeito-ativo__origem {
+  flex: 0 0 4.5em;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.desordem-efeito-ativo__texto {
+  flex: 1;
+}
+
+/* Habilidades */
+.desordem-habilidade {
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-habilidade__titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Habilidades recolhíveis: o cabeçalho (summary) sempre aparece; a descrição abre e fecha */
+.desordem-habilidade__detalhes {
+  margin-bottom: 4px;
+}
+
+.desordem-habilidade__detalhes > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.desordem-habilidade__detalhes > summary::-webkit-details-marker {
+  display: none;
+}
+
+.desordem-habilidade__detalhes > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1em;
+  color: var(--dn-accent);
+  transition: transform 0.15s;
+}
+
+.desordem-habilidade__detalhes[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.desordem-habilidade__acoes {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.desordem-habilidade__todas {
+  align-self: flex-start;
+  width: auto;
+  margin: 0 0 6px;
+  padding: 1px 10px;
+  font-size: 0.85em;
+}
+
+.desordem-habilidade__controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+/* ===== Editor de efeitos da habilidade (v0.20.3) ===== */
+.desordem-hab-efeitos {
+  margin-bottom: 8px;
+}
+
+.desordem-hab-efeitos__titulo {
+  margin: 4px 0 6px;
+  border-bottom: 1px solid var(--dn-border);
+  font-size: 1em;
+}
+
+.desordem-hab-efeito {
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-hab-efeito.is-aberto {
+  border-color: var(--dn-accent-line);
+}
+
+.desordem-hab-efeito__linha {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.desordem-hab-efeito__texto {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.desordem-hab-efeito__resumo {
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.desordem-hab-efeito__aviso {
+  color: var(--dn-gold);
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+.desordem-hab-efeito__botoes {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.desordem-hab-efeito__botoes button {
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-hab-efeito__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11em, 1fr));
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+
+.desordem-hab-efeito__custo,
+.desordem-hab-efeito__pericias {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 4px 8px 6px;
+  border: 1px solid var(--dn-border);
+  border-radius: 6px;
+}
+
+.desordem-hab-efeito__custo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.desordem-hab-efeito__custo select,
+.desordem-hab-efeito__custo input {
+  flex: 1 1 6em;
+  min-width: 0;
+}
+
+.desordem-hab-efeito__pericias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9em, 1fr));
+  gap: 2px 8px;
+}
+
+.desordem-hab-efeito__pericias label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
+}
+
+.desordem-hab-efeito__pericias .desordem-ficha__dica {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+}
+
+.desordem-hab-efeitos__novo {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.desordem-hab-efeitos__novo select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.desordem-hab-efeitos__novo button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}

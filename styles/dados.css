@@ -1,0 +1,496 @@
+/* Desordem-Normal — Dados: formas dos dados, passos, bônus, atributos e a janela de aparência dos dados.
+   Carregado na ordem de system.json (styles). */
+
+.desordem-dado {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.desordem-dado--ignorado {
+  opacity: 0.45;
+}
+
+/* Dados que formam o crítico (dourado) e dados de uma falha crítica (vermelho) */
+.desordem-dado--critico .desordem-forma {
+  filter: drop-shadow(0 0 2px var(--dn-gold)) drop-shadow(0 0 6px var(--dn-gold));
+}
+
+.desordem-dado--fumble .desordem-forma {
+  filter: drop-shadow(0 0 2px var(--dn-pv)) drop-shadow(0 0 6px var(--dn-pv));
+}
+
+/* Pavor */
+/* Dado devorado pelo pavor: esmaecido e em cinza, com uma pequena aura azul pálida */
+.desordem-dado--devorado .desordem-forma {
+  opacity: 0.6;
+  filter: grayscale(0.85)
+    drop-shadow(0 0 2px color-mix(in srgb, var(--dn-pavor-brilho) 75%, transparent))
+    drop-shadow(0 0 7px color-mix(in srgb, var(--dn-pavor-brilho) 40%, transparent));
+}
+
+/* O dado de pavor é o momento dele: maior que os outros, separado e com um brilho próprio */
+.desordem-dado--pavor {
+  margin-left: 6px;
+  padding-left: 10px;
+  border-left: 1px solid color-mix(in srgb, var(--dn-pavor-brilho) 45%, transparent);
+}
+
+.desordem-dado--pavor .desordem-dado-pavor {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--dn-pavor-brilho) 60%, transparent))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--dn-pavor-brilho) 30%, transparent));
+}
+
+/* Espaço reservado do dado de pavor: mostra o número até o SVG ser montado (veja fear-chat.js) */
+.desordem-dado-pavor-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2em;
+  font-family: var(--dn-fonte-numeros);
+  font-size: 1.6em;
+  font-weight: 700;
+}
+
+.desordem-dado-pavor-slot .desordem-dado-pavor {
+  font-size: 0.625em; /* o SVG tem tamanho próprio em em: volta ao corpo normal do texto */
+}
+
+/* Tirou 1 no dado de pavor: o efeito termina, então o brilho some */
+.desordem-dado--pavor-fim .desordem-dado-pavor {
+  filter: none;
+  opacity: 0.6;
+}
+
+/* Cor de cada dado (o texto "dN" sempre aparece: a cor só reforça) */
+/* Dados: cada tamanho tem a sua silhueta (SVG em styles/dados/) e a sua cor. O número
+   aparece dentro; o tipo de dado é dado pela forma. */
+.desordem-d-0 {
+  --dn-die: #8a8f98;
+  --dn-miolo: #2c3136;
+  --dn-forma: url('dados/d0.svg');
+  --dn-linhas: url('dados/d0-linhas.svg');
+  --dn-linhas-grande: url('dados/d0-linhas-grande.svg');
+}
+
+.desordem-d-4 {
+  --dn-die: #9aa0a8;
+  --dn-miolo: #2c3136;
+  --dn-forma: url('dados/d4.svg');
+  --dn-linhas: url('dados/d4-linhas.svg');
+  --dn-linhas-grande: url('dados/d4-linhas-grande.svg');
+}
+
+.desordem-d-6 {
+  --dn-die: #4f9d69;
+  --dn-miolo: #1e3a2b;
+  --dn-forma: url('dados/d6.svg');
+  --dn-linhas: url('dados/d6-linhas.svg');
+  --dn-linhas-grande: url('dados/d6-linhas-grande.svg');
+}
+
+.desordem-d-8 {
+  --dn-die: #3b82c4;
+  --dn-miolo: #16324a;
+  --dn-forma: url('dados/d8.svg');
+  --dn-linhas: url('dados/d8-linhas.svg');
+  --dn-linhas-grande: url('dados/d8-linhas-grande.svg');
+}
+
+.desordem-d-10 {
+  --dn-die: #8b5cc7;
+  --dn-miolo: #2e2548;
+  --dn-forma: url('dados/d10.svg');
+  --dn-linhas: url('dados/d10-linhas.svg');
+  --dn-linhas-grande: url('dados/d10-linhas-grande.svg');
+}
+
+.desordem-d-12 {
+  --dn-die: #d4a017;
+  --dn-miolo: #453516;
+  --dn-forma: url('dados/d12.svg');
+  --dn-linhas: url('dados/d12-linhas.svg');
+  --dn-linhas-grande: url('dados/d12-linhas-grande.svg');
+}
+
+.desordem-d-20 {
+  --dn-die: #d9542b;
+  --dn-miolo: #48261c;
+  --dn-forma: url('dados/d20.svg');
+  --dn-linhas: url('dados/d20-linhas.svg');
+  --dn-linhas-grande: url('dados/d20-linhas-grande.svg');
+}
+
+.desordem-forma {
+  --dn-forma-cor: var(--dn-die);
+  --dn-forma-tam: 1.9em;
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: var(--dn-forma-tam);
+  height: var(--dn-forma-tam);
+  color: #fff;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Duas camadas com máscara: o miolo escuro (::after) e, por cima, o contorno colorido com as
+   linhas das facetas (::before). Ambas usam os SVG de styles/dados/. */
+.desordem-forma::before,
+.desordem-forma::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.desordem-forma::before {
+  z-index: 1;
+  background: var(--dn-forma-cor);
+  -webkit-mask: var(--dn-linhas) center / 100% 100% no-repeat;
+  mask: var(--dn-linhas) center / 100% 100% no-repeat;
+}
+
+.desordem-forma::after {
+  z-index: 0;
+  background: var(--dn-miolo);
+  -webkit-mask: var(--dn-forma) center / 100% 100% no-repeat;
+  mask: var(--dn-forma) center / 100% 100% no-repeat;
+}
+
+.desordem-forma__valor {
+  position: relative;
+  z-index: 2;
+  font-family: var(--dn-fonte-numeros);
+  font-size: calc(var(--dn-forma-tam) * 0.46);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: #fff;
+  /* Contorno escuro em volta do número (text-shadow, pois paint-order não é confiável em HTML) */
+  text-shadow:
+    -1px -1px 0 var(--dn-contorno-numero),
+    1px -1px 0 var(--dn-contorno-numero),
+    -1px 1px 0 var(--dn-contorno-numero),
+    1px 1px 0 var(--dn-contorno-numero),
+    0 -1px 0 var(--dn-contorno-numero),
+    0 1px 0 var(--dn-contorno-numero),
+    -1px 0 0 var(--dn-contorno-numero),
+    1px 0 0 var(--dn-contorno-numero),
+    0 0 0.25em var(--dn-contorno-numero);
+  pointer-events: none;
+}
+
+/* O seletor de verdade fica invisível por cima da forma: clicar nela abre a lista */
+.desordem-forma__select {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.desordem-forma:has(.desordem-forma__select:disabled) .desordem-forma__select {
+  cursor: default;
+}
+
+.desordem-forma:focus-within {
+  filter: drop-shadow(0 0 4px var(--dn-accent));
+}
+
+.desordem-forma--grande {
+  --dn-forma-tam: 3.8em;
+  --dn-linhas: var(--dn-linhas-grande);
+}
+
+.desordem-forma--grande .desordem-forma__valor {
+  font-size: calc(var(--dn-forma-tam) * 0.36);
+}
+
+.desordem-forma--mini {
+  --dn-forma-tam: 1.5em;
+}
+
+.desordem-forma--mini .desordem-forma__valor {
+  font-size: calc(var(--dn-forma-tam) * 0.56);
+}
+
+/* Atributos: três cartões grandes */
+.desordem-atributo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-atributo__nome {
+  /* Referência para a seta de passos, que fica fora do fluxo e não empurra o nome */
+  position: relative;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Passos temporários: o dado sob efeito brilha (azul ao subir, vermelho ao descer) e pulsa de leve */
+.desordem-forma.is-passo {
+  --dn-passo-cor: #4cc3d9;
+  filter: drop-shadow(0 0 2px var(--dn-passo-cor)) drop-shadow(0 0 6px var(--dn-passo-cor));
+  animation: desordem-passo-pulso 2.4s ease-in-out infinite;
+}
+
+.desordem-forma.is-passo--up {
+  --dn-passo-cor: #4cc3d9;
+}
+
+.desordem-forma.is-passo--down {
+  --dn-passo-cor: #e0675a;
+}
+
+/* Passos que se anulam (v0.23.1): o dado parece o base, mas há aumento e redução ao mesmo tempo */
+.desordem-forma.is-passo--misto {
+  --dn-passo-cor: #d9a441;
+}
+
+@keyframes desordem-passo-pulso {
+  50% {
+    filter: drop-shadow(0 0 1px var(--dn-passo-cor)) drop-shadow(0 0 3px var(--dn-passo-cor));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desordem-forma.is-passo {
+    animation: none;
+  }
+}
+
+.desordem-passo {
+  /* Logo depois do nome, sem ocupar espaço: o nome continua centralizado no cartão */
+  position: absolute;
+  top: 0;
+  left: 100%;
+  margin-left: 0.25em;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.desordem-passo--up {
+  color: #4cc3d9;
+}
+
+.desordem-passo--down {
+  color: #e0675a;
+}
+
+/* Ícone de equilíbrio ao lado do nome, quando os passos se anulam */
+.desordem-passo--misto {
+  color: #d9a441;
+}
+
+.desordem-passo sub {
+  font-size: 0.7em;
+}
+
+/* Dados bônus: dois espaços escolhidos antes do teste */
+.desordem-bonus__slots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.desordem-forma.is-vazio {
+  opacity: 0.5;
+}
+
+.desordem-passos-ctl button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Botões −/+ de passo (atributos e dado geral das perícias) */
+.desordem-passos-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-passos-ctl button {
+  min-width: 1.9em;
+  height: 1.6em;
+  margin: 0;
+  padding: 0 0.4em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.desordem-passos-ctl__valor {
+  min-width: 2.6em;
+  font-weight: 700;
+}
+
+.desordem-passos-geral {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--dn-border);
+  border-radius: 8px;
+  background: var(--dn-surface);
+}
+
+.desordem-passos-geral.is-passo {
+  border-color: #4cc3d9;
+}
+
+.desordem-passos-geral.is-passo--down {
+  border-color: #e0675a;
+}
+
+.desordem-passos-geral__nome {
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Dado de pavor em SVG (neon): dois tamanhos, o mesmo em qualquer lugar da ficha e da janela */
+.desordem-dado-pavor {
+  display: inline-block;
+  flex: none;
+  width: var(--dn-dado-tam);
+  height: var(--dn-dado-tam);
+  overflow: visible;
+  vertical-align: middle;
+}
+
+.desordem-dado-pavor--grande {
+  --dn-dado-tam: 4.6em;
+}
+
+.desordem-dado-pavor--pequeno {
+  --dn-dado-tam: 2em;
+  /* não deixa o dado pequeno esticar a linha de texto onde ele aparece */
+  margin-block: -0.4em;
+}
+
+/* Número do dado de pavor: mesma fonte legível dos outros números (o SVG herda o @font-face) */
+.desordem-dado-pavor text {
+  font-family: var(--dn-fonte-numeros);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Campo do dado de pavor na ficha: o seletor invisível fica por cima do desenho */
+.desordem-dado-campo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desordem-dado-campo:focus-within .desordem-dado-pavor {
+  filter: drop-shadow(0 0 4px var(--dn-accent));
+}
+
+.desordem-dado-campo:has(.desordem-forma__select:disabled) .desordem-forma__select {
+  cursor: default;
+}
+
+.desordem-dado-campo__vazio {
+  display: grid;
+  place-items: center;
+  width: 3.8em;
+  height: 3.8em;
+  border: 1px dashed var(--dn-border);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+/* ===== Aparência do dado de pavor (v0.25.5) ===== */
+/* As cores e a fonte da prévia vêm das variáveis --dn-ap-*, trocadas pela janela a cada campo */
+.desordem-aparencia {
+  --dn-ap-dado: #0c0d0f;
+  --dn-ap-numero: #d5d8dc;
+  --dn-ap-contorno: #0c0d0f;
+  --dn-ap-arestas: #9fd6ee;
+  --dn-ap-fonte: 'Desordem Numeros', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Prévia à esquerda; dado da prévia, «Ver em 3D» e a dica à direita */
+.desordem-aparencia__topo {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.desordem-aparencia__previa {
+  flex: 0 0 110px;
+  height: 110px;
+  width: 110px;
+}
+
+.desordem-aparencia__previa-lado {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* O dado: cor do dado por dentro, cor das arestas na borda */
+.desordem-aparencia__forma {
+  fill: var(--dn-ap-dado);
+  stroke: var(--dn-ap-arestas);
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+/* O número: contorno desenhado por baixo da cor (paint-order), como no Dice So Nice */
+.desordem-aparencia__numero {
+  fill: var(--dn-ap-numero);
+  font-family: var(--dn-ap-fonte);
+  font-size: 34px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--dn-ap-contorno);
+  stroke-width: 4;
+}
+
+/* Campos em duas colunas (uma só em janela estreita, como no celular) */
+.desordem-aparencia__campos {
+  display: grid;
+  gap: 6px 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.desordem-aparencia__campos input[type='color'] {
+  height: 28px;
+  padding: 0 2px;
+}
+
+.desordem-aparencia__botoes {
+  display: flex;
+  gap: 6px;
+}
+
+.desordem-aparencia__botoes button {
+  flex: 1 1 0;
+}

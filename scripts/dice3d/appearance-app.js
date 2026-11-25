@@ -27,7 +27,7 @@ import { t } from '../shared/i18n.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-/** Variável CSS da prévia para cada campo de cor (lida em styles/main.css). */
+/** Variável CSS da prévia para cada campo de cor (lida em styles/dados.css). */
 const PREVIEW_VARS = Object.freeze({
   background: '--dn-ap-dado',
   foreground: '--dn-ap-numero',

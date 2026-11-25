@@ -22,7 +22,20 @@
     }
   ],
   "esmodules": ["scripts/main.js"],
-  "styles": ["styles/main.css"],
+  "styles": [
+    "styles/base.css",
+    "styles/dados.css",
+    "styles/chat.css",
+    "styles/ficha.css",
+    "styles/item.css",
+    "styles/janelas.css",
+    "styles/perseguicao.css",
+    "styles/furtividade.css",
+    "styles/desafios.css",
+    "styles/combate.css",
+    "styles/oposto.css",
+    "styles/diario.css"
+  ],
   "languages": [
     {
       "lang": "pt-BR",

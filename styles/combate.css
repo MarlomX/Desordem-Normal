@@ -1,0 +1,198 @@
+/* Desordem-Normal — Combate: fases da rodada e controles.
+   Carregado na ordem de system.json (styles). */
+
+/* ===== Combate por fases (v0.19.1) ===== */
+/* Sem iniciativa nem ordem de turnos: esconde o que o Foundry mostra para isso */
+.desordem-combate-fases .token-initiative,
+.desordem-combate-fases [data-action='rollInitiative'],
+.desordem-combate-fases [data-action='rollAll'],
+.desordem-combate-fases [data-action='rollNPC'],
+.desordem-combate-fases [data-action='resetAll'],
+.desordem-combate-fases [data-action='previousTurn'],
+.desordem-combate-fases [data-action='nextTurn'],
+.desordem-combate-fases [data-control='rollInitiative'],
+.desordem-combate-fases [data-control='rollAll'],
+.desordem-combate-fases [data-control='rollNPC'],
+.desordem-combate-fases [data-control='resetAll'],
+.desordem-combate-fases [data-control='previousTurn'],
+.desordem-combate-fases [data-control='nextTurn'] {
+  display: none !important;
+}
+
+.desordem-fases-barra {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 6px;
+  background: var(--dn-surface, rgba(128, 128, 128, 0.08));
+}
+
+.desordem-fases-barra__linha {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.desordem-fases-barra__info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.desordem-fases-barra__rodada {
+  font-size: 0.8em;
+  opacity: 0.75;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-fases-barra__passos {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-fases-barra__passo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.desordem-fases-barra__passo.is-passada {
+  opacity: 0.3;
+}
+
+.desordem-fases-barra__passo.is-atual {
+  border-color: var(--dn-accent, #3fa7b5);
+  background: color-mix(in srgb, var(--dn-accent, #3fa7b5) 35%, transparent);
+  opacity: 1;
+}
+
+.desordem-fases-barra__botao {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.desordem-fases-barra__dica {
+  margin: 0;
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+.desordem-fases {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desordem-fases__area {
+  border-left: 3px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+}
+
+.desordem-fases__area.is-atual {
+  border-left-color: var(--dn-accent, #3fa7b5);
+}
+
+.desordem-fases__titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 8px;
+  border: none;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desordem-fases__contagem {
+  margin-left: auto;
+  opacity: 0.6;
+}
+
+.desordem-fases__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desordem-fases__vazia {
+  padding: 2px 12px 4px;
+  font-size: 0.8em;
+  font-style: italic;
+  opacity: 0.55;
+}
+
+.desordem-fases__original {
+  display: none !important;
+}
+
+/* Botões do mestre em grade 2 × 2 (cabem na linha estreita da barra lateral) */
+.desordem-fases-ctl {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, 20px);
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.desordem-fases-ctl__botao {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.75em;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.desordem-fases-ctl__botao.is-atual {
+  border-color: var(--dn-accent, #3fa7b5);
+  opacity: 1;
+}
+
+.desordem-fases-selo {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dn-gold, #d4a017) 30%, transparent);
+  font-size: 0.7em;
+}
+
+/* ===== Combate por fases: linha do combatente (v0.19.2) ===== */
+/* O nome do combatente encolhe; selo e botões do mestre nunca saem da linha */
+.desordem-fases__lista > [data-combatant-id] {
+  min-width: 0;
+}
+
+.desordem-fases__lista > [data-combatant-id] > :not(.desordem-fases-ctl, .desordem-fases-selo) {
+  min-width: 0;
+}
+
+.desordem-fases-barra__fase {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

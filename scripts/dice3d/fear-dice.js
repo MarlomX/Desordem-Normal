@@ -38,12 +38,12 @@ export const FEAR_EMISSIVE = Object.freeze({ color: '#dcefff', intensity: 1 });
 
 /**
  * Fonte dos números do dado de pavor: a mesma dos números da ficha e do chat
- * (`@font-face` em styles/main.css, só dígitos).
+ * (`@font-face` em styles/base.css, só dígitos).
  */
 export const FEAR_FONT = 'Desordem Numeros';
 
 /**
- * Estilo padrão do dado de pavor, com as cores do dado de pavor da ficha (styles/main.css):
+ * Estilo padrão do dado de pavor, com as cores do dado de pavor da ficha (styles/dados.css):
  * fundo quase preto, número claro e borda azul pálida. `outline` é o contorno do número e `edge`,
  * a cor das arestas. A textura `none` e o material `glass` existem no Dice So Nice 5.
  */

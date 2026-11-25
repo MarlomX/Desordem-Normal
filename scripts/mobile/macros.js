@@ -18,7 +18,7 @@ import {
 } from './mobile.js';
 import { t } from '../shared/i18n.js';
 
-/** Classe da lista de mensagens dentro da janela (o estilo fica em styles/main.css). */
+/** Classe da lista de mensagens dentro da janela (o estilo fica em styles/chat.css). */
 const LOG_CLASS = 'desordem-chat-janela';
 
 /** Espera (ms) antes de redesenhar: várias mensagens seguidas viram uma atualização só. */

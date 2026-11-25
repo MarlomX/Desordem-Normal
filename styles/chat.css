@@ -1,0 +1,264 @@
+/* Desordem-Normal — Chat: cartões de teste, dano, lesão, relação, socorro e a janela de tabela.
+   Carregado na ordem de system.json (styles). */
+
+.desordem-teste {
+  --desordem-cor: rgba(128, 128, 128, 0.7);
+  border: 1px solid var(--desordem-cor);
+  border-left-width: 4px;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.desordem-teste--sucesso {
+  --desordem-cor: rgba(46, 160, 67, 0.9);
+}
+
+.desordem-teste--falha {
+  --desordem-cor: rgba(200, 60, 60, 0.9);
+}
+
+.desordem-teste--sucesso-critico {
+  --desordem-cor: rgba(212, 160, 23, 1);
+}
+
+.desordem-teste--falha-critica {
+  --desordem-cor: rgba(140, 30, 30, 1);
+}
+
+.desordem-teste__cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.desordem-teste__titulo {
+  margin: 0;
+  border: none;
+}
+
+.desordem-teste__dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Tamanho das faces dos dados no cartão (entre o da linha de texto e o grande da ficha) */
+.desordem-teste__dados .desordem-forma--grande {
+  --dn-forma-tam: 2.8em;
+}
+
+/* Setas de passo: o dado de antes e o de depois, em miniatura */
+.desordem-teste__passo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.desordem-teste__resumo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.desordem-teste__total {
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+.desordem-teste__resultado {
+  font-weight: bold;
+  color: var(--desordem-cor);
+}
+
+.desordem-teste__ajustes,
+.desordem-teste__detalhes,
+.desordem-teste__nota {
+  margin: 2px 0;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
+.desordem-teste__ajustes span + span {
+  margin-left: 8px;
+}
+
+/* Teste oposto */
+.desordem-teste--neutro {
+  --desordem-cor: rgba(128, 128, 128, 0.7);
+}
+
+/* Dano e lesões */
+.desordem-dano__linha,
+.desordem-dano__pv {
+  margin: 0;
+}
+
+.desordem-lesao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.desordem-lesao__titulo {
+  margin: 0;
+  border: none;
+}
+
+.desordem-lesao__veredito {
+  margin: 0;
+  font-weight: bold;
+}
+
+.desordem-lesao__veredito--falha-critica {
+  color: #b3261e;
+}
+
+.desordem-lesao__efeitos {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.desordem-lesao__nome {
+  margin: 0;
+  font-weight: bold;
+}
+
+.desordem-lesao__descricao {
+  margin: 0;
+  font-size: 0.9em;
+}
+
+/* Botão (ou nota) que rola a tabela de lesão ou de trauma pendente no cartão do teste */
+.desordem-lesao__pendente {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.desordem-lesao__botao.is-oculta,
+.desordem-lesao__pendente .desordem-teste__nota.is-oculta {
+  display: none;
+}
+
+/* Janela do d20 da tabela */
+.desordem-tabela-janela {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.desordem-tabela-janela__dados {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px 0;
+}
+
+.desordem-tabela-janela__manual {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  font-size: 0.9em;
+}
+
+.desordem-tabela-janela .desordem-forma.is-rolando {
+  animation: desordem-tabela-gira 0.45s linear infinite;
+}
+
+@keyframes desordem-tabela-gira {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desordem-tabela-janela .desordem-forma.is-rolando {
+    animation: none;
+  }
+}
+
+.desordem-relacao-chat__titulo,
+.desordem-relacao-chat__descricao {
+  margin: 0 0 4px;
+}
+
+.desordem-relacao-chat__descricao {
+  font-style: italic;
+}
+
+.desordem-relacao-chat__beneficios {
+  margin: 0 0 4px;
+  padding-left: 1.2em;
+}
+
+/* Contadores da aba Condição: campos de texto curtos que aceitam conta (-1, +2) */
+.desordem-conta {
+  flex: 0 0 auto;
+  width: 4em;
+  text-align: center;
+}
+
+.desordem-teste__habilidades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+/* ===== Perseguição: barra "adicionar PA" no cartão do teste (v0.16.4) ===== */
+.desordem-teste__avanco {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.desordem-teste__avanco-texto {
+  flex: 1 1 auto;
+  font-size: 0.9em;
+}
+
+.desordem-dano__derrota {
+  margin: 4px 0 0;
+  color: var(--dn-pv, #b03a2e);
+}
+
+.desordem-socorro-barra {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dn-border, rgba(128, 128, 128, 0.4));
+  font-size: 0.9em;
+}
+
+.desordem-socorro-barra button {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+/* ===== Macros do jogador para celular (v0.25.1) ===== */
+/* Lista de mensagens da janela «Abrir chat»: rola dentro da janela (até 70% da altura da tela),
+   sem marcadores de lista. `touch-action: pan-y` deixa o dedo rolar no Swipe e
+   `overscroll-behavior` impede que o fim da lista arraste a página junto (como na v0.25.0). */
+.desordem-chat-janela {
+  list-style: none;
+  margin: 0;
+  max-height: 70vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  touch-action: pan-y;
+}

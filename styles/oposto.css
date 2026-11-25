@@ -1,0 +1,209 @@
+/* Desordem-Normal — Testes opostos: cartões e escolha de atores.
+   Carregado na ordem de system.json (styles). */
+
+.desordem-oposto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desordem-oposto__titulo {
+  margin: 0;
+  border: none;
+}
+
+.desordem-oposto__lado--vencedor .desordem-teste {
+  box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.8);
+}
+
+.desordem-oposto__veredito {
+  margin: 0;
+  font-weight: bold;
+}
+
+/* ===== Teste oposto pela ficha (v0.19.3) ===== */
+.desordem-oposto__descricao {
+  margin: 0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.desordem-oposto__linha {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 4px 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 4px;
+}
+
+.desordem-oposto__linha.is-vencedor {
+  border-color: rgba(212, 160, 23, 0.9);
+  box-shadow: 0 0 0 1px rgba(212, 160, 23, 0.6);
+}
+
+.desordem-oposto__linha.is-perdedor {
+  opacity: 0.7;
+}
+
+.desordem-oposto__quem {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.desordem-oposto__pericia {
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
+.desordem-oposto__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.desordem-oposto__total strong {
+  font-size: 1.6em;
+  line-height: 1;
+}
+
+.desordem-oposto__estado {
+  font-size: 0.8em;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.desordem-oposto__critico {
+  font-size: 0.75em;
+  color: rgba(46, 160, 67, 1);
+}
+
+.desordem-oposto__critico--falha {
+  color: rgba(200, 60, 60, 1);
+}
+
+.desordem-oposto__acoes,
+.desordem-oposto__rodape {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 4px;
+}
+
+.desordem-oposto__acoes:empty,
+.desordem-oposto__rodape:empty {
+  display: none;
+}
+
+.desordem-oposto__botao {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.desordem-oposto__propor {
+  width: auto;
+  margin-bottom: 6px;
+}
+
+.desordem-oposto-escolha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ===== Teste oposto de combate (v0.19.4) ===== */
+.desordem-oposto__ra {
+  font-size: 0.7em;
+  opacity: 0.65;
+}
+
+.desordem-oposto__acerto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.desordem-oposto__acerto.is-aplicado {
+  opacity: 0.65;
+}
+
+.desordem-oposto__veredito p {
+  margin: 0;
+}
+
+.desordem-oposto-modos .form-footer {
+  flex-direction: column;
+}
+
+/* ===== Teste oposto: janela de resposta com abas e lista (v0.25.4) ===== */
+/* Coluna: aviso, abas, busca, lista e o texto de «ninguém encontrado» */
+.desordem-oposto-ator {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Abas Personagens / Criaturas: dois botões lado a lado; a aberta fica destacada */
+.desordem-oposto-ator__abas {
+  display: flex;
+  gap: 4px;
+}
+
+.desordem-oposto-ator__aba {
+  flex: 1 1 0;
+  opacity: 0.7;
+}
+
+.desordem-oposto-ator__aba.is-ativa {
+  border-color: var(--dn-accent);
+  box-shadow: inset 0 -2px 0 var(--dn-accent);
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* Lista: rola sozinha quando é longa (também no celular, com o dedo) */
+.desordem-oposto-ator__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  max-height: 45vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  touch-action: pan-y;
+}
+
+/* `hidden` precisa vencer o `display` acima (aba fechada, linha fora da busca) */
+.desordem-oposto-ator__lista[hidden],
+.desordem-oposto-ator__linha[hidden] {
+  display: none;
+}
+
+/* Cada linha inteira é clicável: botão de marcar, retrato e nome */
+.desordem-oposto-ator__linha label {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  padding: 3px 6px;
+}
+
+.desordem-oposto-ator__linha label:has(input:checked) {
+  background: var(--dn-accent-soft);
+  border-color: var(--dn-accent);
+}
+
+.desordem-oposto-ator__linha img {
+  border: none;
+  border-radius: 4px;
+  flex: 0 0 32px;
+  height: 32px;
+  object-fit: cover;
+  width: 32px;
+}
